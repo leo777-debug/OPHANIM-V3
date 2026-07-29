@@ -17,6 +17,7 @@ import GlobalStatusBar from '@/components/GlobalStatusBar';
 import LiveAlerts from '@/components/LiveAlerts';
 import CommandPalette, { type PaletteCommand } from '@/components/CommandPalette';
 import ThreatFusionHUD from '@/components/ThreatFusionHUD';
+import WatchlistPanel from '@/components/WatchlistPanel';
 import type { ProviderMapLayer } from '@/lib/providers';
 
 const OphanimMap = dynamic(() => import('@/components/OphanimMap'), { ssr: false });
@@ -1117,6 +1118,7 @@ export default function Dashboard() {
 
       {/* ── NEW SIDEBAR (Root Level) ── */}
       {showLayers && !isMobile && <LayerPanel data={data} activeLayers={activeLayers} setActiveLayers={setActiveLayers} theme={ophanimTheme} setTheme={setOphanimTheme} />}
+      <WatchlistPanel />
 
 
 
