@@ -1,0 +1,4 @@
+import { NextRequest, NextResponse } from 'next/server'; import { removeWatchlist, subscribe } from '@/lib/watchlists/service'; import { sendVerification } from '@/lib/watchlists/email';
+const owner=(r:NextRequest)=>r.cookies.get('ophanim_watchlist_owner')?.value;
+export async function DELETE(r:NextRequest,{params}:{params:Promise<{id:string}>}){const id=owner(r);if(!id)return NextResponse.json({error:'Watchlist owner missing'},{status:403});await removeWatchlist(id,(await params).id);return NextResponse.json({ok:true});}
+export async function POST(r:NextRequest,{params}:{params:Promise<{id:string}>}){const id=owner(r);if(!id)return NextResponse.json({error:'Watchlist owner missing'},{status:403});try{const body=await r.json();const token=await subscribe(id,(await params).id,body);await sendVerification(body.email,token);return NextResponse.json({ok:true});}catch(e){return NextResponse.json({error:e instanceof Error?e.message:'Subscription failed'},{status:400});}}

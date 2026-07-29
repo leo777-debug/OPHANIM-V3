@@ -1,0 +1,2 @@
+import { NextRequest,NextResponse } from 'next/server'; import { checkDueWatchlists } from '@/lib/watchlists/service'; import { sendPendingNotifications } from '@/lib/watchlists/email'; export const runtime='nodejs';
+export async function GET(r:NextRequest){if(!process.env.WATCHLIST_CRON_SECRET||r.headers.get('authorization')!==`Bearer ${process.env.WATCHLIST_CRON_SECRET}`)return NextResponse.json({error:'Unauthorized'},{status:401});const checked=await checkDueWatchlists();const delivery=await sendPendingNotifications();return NextResponse.json({checked,delivery});}

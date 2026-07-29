@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: ophanim
+    runtime: docker
+    plan: starter
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: { name: ophanim-db, property: connectionString }
+      - key: APP_URL
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM
+        sync: false
+      - key: WATCHLIST_CRON_SECRET
+        generateValue: true
+  - type: cron
+    name: ophanim-watchlists
+    runtime: docker
+    schedule: '*/5 * * * *'
+    dockerCommand: 'sh -c "curl -fsS -H \"Authorization: Bearer $WATCHLIST_CRON_SECRET\" $APP_URL/api/watchlists/cron"'
+    envVars:
+      - key: APP_URL
+        sync: false
+      - key: WATCHLIST_CRON_SECRET
+        sync: false
+databases:
+  - name: ophanim-db
+    plan: basic-256mb
