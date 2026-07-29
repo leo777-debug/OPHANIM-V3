@@ -12,6 +12,7 @@ import { nominatimProvider } from './providers/nominatim-provider';
 import { sanctionsEntityProvider } from './providers/sanctions-entity-provider';
 import { submarineCablesProvider } from './providers/submarine-cables-provider';
 import { infrastructureMapProvider } from './providers/infrastructure-map-provider';
+import { warSanctionsProvider } from './providers/war-sanctions-provider';
 import { ProviderRegistry } from './provider-registry';
 import { classifySearch, type SearchInput } from './query-classifier';
 import type { ProviderExecutionContext } from './types';
@@ -26,6 +27,7 @@ const registry = new ProviderRegistry([
   githubUsernameProvider,
   ghostTrackProvider,
   sanctionsEntityProvider,
+  warSanctionsProvider,
   maritimeProvider,
   mapCommandProvider,
   nominatimProvider,

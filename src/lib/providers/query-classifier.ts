@@ -38,6 +38,7 @@ function classifyCommand(query: string): ProviderQuery | null {
   const commands: Array<[RegExp, ProviderQuery['command']]> = [
     [/^show (the )?submarine cables?$/, 'show_submarine_cables'],
     [/^show (the )?ghost ships?$/, 'show_ghost_ships'],
+    [/^show (the )?sanctioned vessels?$/, 'show_sanctioned_vessels'],
     [/^show (the )?ai data cent(er|re)s?$/, 'show_ai_data_centers'],
   ];
   const match = commands.find(([pattern]) => pattern.test(normalized));

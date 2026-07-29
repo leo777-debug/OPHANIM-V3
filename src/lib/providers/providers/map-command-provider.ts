@@ -6,8 +6,12 @@ const actions: Record<string, { label: string; summary: string; action: SearchAc
     action: { type: 'enable_layers', layers: ['cables'] },
   },
   show_ghost_ships: {
-    label: 'Ghost ships', summary: 'No enabled anomaly provider. Live AIS alone cannot establish a ghost-ship classification.',
-    action: { type: 'unavailable', message: 'Ghost-ship detection requires a historical AIS anomaly provider.' },
+    label: 'Ghost ships', summary: 'Enable GUR-designated Shadow Fleet associated-port markers.',
+    action: { type: 'enable_layers', layers: ['war_sanctions'] },
+  },
+  show_sanctioned_vessels: {
+    label: 'Sanctioned vessels', summary: 'Enable GUR War & Sanctions associated-port markers.',
+    action: { type: 'enable_layers', layers: ['war_sanctions'] },
   },
   show_ai_data_centers: {
     label: 'AI data centers', summary: 'No enabled data-center provider or map layer is configured.',

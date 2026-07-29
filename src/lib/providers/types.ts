@@ -12,10 +12,11 @@ export const SEARCH_INTENTS = [
 ] as const;
 export type SearchIntent = (typeof SEARCH_INTENTS)[number];
 
-export type SearchCommand = 'show_submarine_cables' | 'show_ghost_ships' | 'show_ai_data_centers' | 'unsupported_natural_language';
+export type SearchCommand = 'show_submarine_cables' | 'show_ghost_ships' | 'show_sanctioned_vessels' | 'show_ai_data_centers' | 'unsupported_natural_language';
 
 export type SearchAction =
-  | { type: 'enable_layers'; layers: Array<'maritime' | 'cables'> }
+  | { type: 'enable_layers'; layers: Array<'maritime' | 'cables' | 'war_sanctions'> }
+  | { type: 'open_entity'; href: string }
   | { type: 'unavailable'; message: string };
 
 export interface Coordinates {

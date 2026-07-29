@@ -2,6 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { classifySearch } from './query-classifier';
 
 describe('classifySearch', () => {
+  it('classifies War & Sanctions map commands deterministically', () => {
+    expect(classifySearch({ query: 'Show ghost ships' })).toMatchObject({ command: 'show_ghost_ships', intent: 'map_command' });
+    expect(classifySearch({ query: 'Show sanctioned vessels' })).toMatchObject({ command: 'show_sanctioned_vessels', intent: 'map_command' });
+  });
+
   it('classifies valid coordinate input without selecting a provider', () => {
     expect(classifySearch({ query: '40.7128, -74.0060' })).toMatchObject({
       intent: 'coordinate_lookup',

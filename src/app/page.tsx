@@ -215,6 +215,7 @@ export default function Dashboard() {
     gps_jamming: false,
     day_night: true,
     cables: true,
+    war_sanctions: false,
     sdk_sea: true,
     sdk_air: true,
     sdk_naval: true,
@@ -227,6 +228,7 @@ export default function Dashboard() {
       activeLayers.maritime && 'maritime-map',
       activeLayers.cables && 'submarine-cables',
       activeLayers.infrastructure && 'infrastructure-map',
+      activeLayers.war_sanctions && 'war-sanctions',
     ].filter((provider): provider is string => Boolean(provider));
 
     if (providers.length === 0) {
@@ -248,7 +250,7 @@ export default function Dashboard() {
     load();
     const refresh = setInterval(load, activeLayers.maritime ? 60_000 : 5 * 60_000);
     return () => { cancelled = true; clearInterval(refresh); };
-  }, [activeLayers.maritime, activeLayers.cables, activeLayers.infrastructure]);
+  }, [activeLayers.maritime, activeLayers.cables, activeLayers.infrastructure, activeLayers.war_sanctions]);
   const [liveFeedUrl, setLiveFeedUrl] = useState<string | null>(null);
   const [liveFeedName, setLiveFeedName] = useState('');
   const [liveFeedEmbedAllowed, setLiveFeedEmbedAllowed] = useState(true);
@@ -690,6 +692,7 @@ export default function Dashboard() {
       { key: 'gps_jamming', label: 'GPS Jamming', hint: 'Interference zones' },
       { key: 'malware', label: 'Live Malware', hint: 'abuse.ch threat feed' },
       { key: 'cables', label: 'Submarine Cables', hint: 'Undersea backbone' },
+      { key: 'war_sanctions', label: 'War & Sanctions', hint: 'GUR vessel-associated ports' },
       { key: 'day_night', label: 'Day / Night Terminator', hint: 'Solar overlay' },
       { key: 'terrain_3d', label: '3D Terrain & Buildings', hint: 'Elevation mesh' },
     ];
