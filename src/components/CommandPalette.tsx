@@ -145,7 +145,7 @@ export default function CommandPalette({ commands }: CommandPaletteProps) {
             exit={{ opacity: 0, y: -8, scale: 0.99 }}
             transition={{ type: 'spring', damping: 26, stiffness: 320 }}
             onClick={e => e.stopPropagation()}
-            className="relative w-[92vw] max-w-[620px] rounded-2xl overflow-hidden osiris-glow"
+            className="relative w-[92vw] max-w-[620px] rounded-2xl overflow-hidden ophanim-glow"
             style={{
               background: 'rgba(6,8,16,0.86)',
               backdropFilter: 'blur(40px) saturate(1.4)',

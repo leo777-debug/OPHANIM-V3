@@ -6,7 +6,7 @@ import { Activity, ChevronDown, ChevronUp, Crosshair, TrendingUp, TrendingDown, 
 import { type Fusion, type Domain } from '@/lib/fusion';
 
 /**
- * OSIRIS — Global Threat Fusion HUD
+ * OPHANIM — Global Threat Fusion HUD
  * Reads the server-computed /api/fusion endpoint (a ~2 KB, edge-cached payload)
  * and renders a cinematic radial gauge + domain breakdown + rotating hotspots.
  * One tiny request per client — the heavy six-feed fusion happens once on the
@@ -85,7 +85,7 @@ export default function ThreatFusionHUD({ onLocate }: Props) {
         <div className="flex items-center gap-2">
           <Radar className="w-3.5 h-3.5" style={{ color }} />
           <span className="hud-text text-[10px] text-[var(--text-primary)]">THREAT FUSION</span>
-          {loading && <span className="w-1.5 h-1.5 rounded-full animate-osiris-pulse" style={{ background: color }} />}
+          {loading && <span className="w-1.5 h-1.5 rounded-full animate-ophanim-pulse" style={{ background: color }} />}
         </div>
         {expanded ? <ChevronUp className="w-3.5 h-3.5 text-[var(--text-muted)]" /> : <ChevronDown className="w-3.5 h-3.5 text-[var(--text-muted)]" />}
       </button>

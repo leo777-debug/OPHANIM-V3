@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Search, X, MapPin, Navigation, Building2, Globe2, Landmark } from 'lucide-react';
 
 /* ═══════════════════════════════════════════════════════════════
-   OSIRIS — Enhanced Search / Locate Bar
+   OPHANIM — Enhanced Search / Locate Bar
    Street-level geocoding with intelligent zoom levels
    Ctrl+F / Cmd+F keyboard shortcut support
    ═══════════════════════════════════════════════════════════════ */
@@ -168,7 +168,7 @@ export default function SearchBar({ onLocate, alwaysExpanded = false }: SearchBa
         // Use addressdetails=1 for better type detection and limit=8 for more results
         const res = await fetch(
           `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=8&addressdetails=1&extratags=1`,
-          { headers: { 'Accept-Language': 'en', 'User-Agent': 'OSIRIS-Intelligence-Platform/1.0' } }
+          { headers: { 'Accept-Language': 'en', 'User-Agent': 'OPHANIM-Intelligence-Atlas/1.0' } }
         );
         const data = await res.json();
         setResults(data.map((r: any) => {
@@ -230,7 +230,7 @@ export default function SearchBar({ onLocate, alwaysExpanded = false }: SearchBa
     return (
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-1.5 glass-panel-sm px-3 py-2 text-[9px] font-mono tracking-[0.15em] text-[var(--text-muted)] hover:text-[var(--gold-primary)] hover:border-[var(--border-active)] transition-all hover:shadow-[0_0_12px_rgba(212,175,55,0.08)]"
+        className="flex items-center gap-1.5 glass-panel-sm px-3 py-2 text-[9px] font-mono tracking-[0.15em] text-[var(--text-muted)] hover:text-[var(--gold-primary)] hover:border-[var(--border-active)] transition-all hover:shadow-[0_0_12px_rgba(124,255,203,0.08)]"
       >
         <Search className="w-3 h-3" />
         CMD: LOCATE
@@ -241,7 +241,7 @@ export default function SearchBar({ onLocate, alwaysExpanded = false }: SearchBa
   return (
     <div className="relative w-full" ref={containerRef}>
       <div className="flex items-center gap-2 glass-panel px-3 py-2.5 !border-[var(--border-active)] transition-all"
-        style={{ boxShadow: '0 0 20px rgba(212,175,55,0.05), inset 0 0 20px rgba(0,0,0,0.2)' }}
+        style={{ boxShadow: '0 0 20px rgba(124,255,203,0.05), inset 0 0 20px rgba(0,0,0,0.2)' }}
       >
         <Search className="w-3.5 h-3.5 text-[var(--gold-primary)] flex-shrink-0" />
         <input
@@ -269,7 +269,7 @@ export default function SearchBar({ onLocate, alwaysExpanded = false }: SearchBa
       {results.length > 0 && (
         <div
           className="absolute top-full left-0 right-0 mt-1 glass-panel overflow-hidden max-h-[320px] overflow-y-auto styled-scrollbar z-[9999]"
-          style={{ boxShadow: '0 12px 40px rgba(0,0,0,0.6), 0 0 1px rgba(212,175,55,0.2)' }}
+          style={{ boxShadow: '0 12px 40px rgba(0,0,0,0.6), 0 0 1px rgba(124,255,203,0.2)' }}
         >
           {results.map((r, i) => {
             const { primary, secondary } = formatLabel(r.label);
@@ -280,7 +280,7 @@ export default function SearchBar({ onLocate, alwaysExpanded = false }: SearchBa
                 onClick={() => handleSelect(r)}
                 onMouseEnter={() => setSelectedIdx(i)}
                 className={`w-full text-left px-3 py-2.5 transition-colors border-b border-[var(--border-secondary)] last:border-0 flex items-start gap-2.5 ${
-                  isSelected ? 'bg-[rgba(212,175,55,0.08)]' : 'hover:bg-[var(--hover-accent)]'
+                  isSelected ? 'bg-[rgba(124,255,203,0.08)]' : 'hover:bg-[var(--hover-accent)]'
                 }`}
               >
                 <div className="mt-0.5">{getResultIcon(r.type, r.category)}</div>

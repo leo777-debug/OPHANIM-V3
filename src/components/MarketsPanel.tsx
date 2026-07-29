@@ -56,7 +56,7 @@ export default function MarketsPanel({ data, spaceWeather }: MarketsPanelProps) 
           <span className="gotham-tag gotham-tag--low" style={{ fontSize: '7px', padding: '1px 4px' }}>LIVE</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-[var(--alert-green)] animate-osiris-pulse" />
+          <div className="w-1.5 h-1.5 rounded-full bg-[var(--alert-green)] animate-ophanim-pulse" />
           <button onClick={(e) => { e.stopPropagation(); setMaximized(!maximized); if (!expanded && !maximized) setExpanded(true); }} className="hover:text-white transition-colors" title={maximized ? "Restore" : "Maximize"}>
             {maximized ? <Minimize2 className="w-3.5 h-3.5 text-[var(--text-muted)]" /> : <Maximize2 className="w-3.5 h-3.5 text-[var(--text-muted)]" />}
           </button>
@@ -89,7 +89,7 @@ export default function MarketsPanel({ data, spaceWeather }: MarketsPanelProps) 
 
             {/* One-click AI overview of the current market picture */}
             <div className="mb-2">
-              <AiOverview mode="markets" payload={{ markets, spaceWeather }} accent="#D4AF37" />
+              <AiOverview mode="markets" payload={{ markets, spaceWeather }} accent="#7CFFCB" />
             </div>
 
             {/* Section Tabs — icons instead of emojis */}

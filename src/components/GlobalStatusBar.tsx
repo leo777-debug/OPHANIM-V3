@@ -112,7 +112,7 @@ export default function GlobalStatusBar({ onThreatClick }: { onThreatClick?: () 
             .slice(0, 5);
           setQuakes(majorQuakes);
         }
-      } catch (e) { console.warn('[OSIRIS] Suppressed error:', e instanceof Error ? e.message : e); }
+      } catch (e) { console.warn('[OPHANIM] Suppressed error:', e instanceof Error ? e.message : e); }
     };
     fetchData();
     const iv = setInterval(fetchData, 60000); // 1 min (to keep fresh)
@@ -139,8 +139,8 @@ export default function GlobalStatusBar({ onThreatClick }: { onThreatClick?: () 
     <>
       <span className="text-[var(--border-primary)] mx-1">|</span>
       {quakes.map(quake => (
-        <span 
-          key={quake.id} 
+        <span
+          key={quake.id}
           className="inline-flex items-center gap-1 mx-2 cursor-help pointer-events-auto"
           onMouseEnter={() => setHoveredQuake(quake)}
           onMouseLeave={() => setHoveredQuake(null)}
@@ -167,10 +167,10 @@ export default function GlobalStatusBar({ onThreatClick }: { onThreatClick?: () 
       transition={{ delay: 4, duration: 0.8 }}
       className="hidden md:block absolute bottom-0 left-0 right-0 z-[198] pointer-events-none"
     >
-      <div className="h-[22px] overflow-hidden bg-black/90 border-t border-[var(--cyan-primary)]/40 flex items-center text-[8px] font-mono tracking-wider backdrop-blur-md relative" style={{ boxShadow: '0 -4px 20px rgba(0, 229, 255, 0.1)' }}>
+      <div className="h-[22px] overflow-hidden bg-black/90 border-t border-[var(--cyan-primary)]/40 flex items-center text-[8px] font-mono tracking-wider backdrop-blur-md relative" style={{ boxShadow: '0 -4px 20px rgba(137, 118, 255, 0.1)' }}>
         {/* Animated glitch line overlay */}
         <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[var(--cyan-primary)] to-transparent opacity-50" style={{ animation: 'hud-scanline 3s linear infinite' }} />
-        
+
         {/* Static label */}
         <div className="flex-shrink-0 px-3 h-full flex items-center gap-1 border-r border-[var(--cyan-primary)]/30 bg-black pointer-events-auto relative z-10 shadow-[4px_0_10px_rgba(0,0,0,0.5)]">
           <span className="text-[var(--cyan-primary)] font-bold">LIVE</span>
@@ -184,7 +184,7 @@ export default function GlobalStatusBar({ onThreatClick }: { onThreatClick?: () 
             className="flex-shrink-0 px-3 h-full flex items-center gap-1.5 border-r bg-black pointer-events-auto relative z-10 hover:bg-white/5 transition-colors"
             style={{ borderColor: `${threat.level_color}40` }}
           >
-            <span className="w-1.5 h-1.5 rounded-full animate-osiris-pulse" style={{ background: threat.level_color, boxShadow: `0 0 6px ${threat.level_color}` }} />
+            <span className="w-1.5 h-1.5 rounded-full animate-ophanim-pulse" style={{ background: threat.level_color, boxShadow: `0 0 6px ${threat.level_color}` }} />
             <span className="font-bold" style={{ color: threat.level_color }}>THREATCON {threat.threatcon}</span>
             <span className="text-[var(--text-muted)]">{threat.level_label}</span>
             <span className="tabular-nums" style={{ color: threat.level_color }}>{threat.overall}</span>

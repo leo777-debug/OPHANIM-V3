@@ -1,69 +1,59 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
-/* ═══════════════════════════════════════════════════════════════
-   OSIRIS — Global Intelligence Platform Design System
-   Egyptian Mythology × Dark Ops × Glassmorphism
-   ═══════════════════════════════════════════════════════════════ */
+/*
+   OPHANIM live intelligence interface
+   Orbital lattice, layered glass, and high-contrast signal color
+*/
 
 :root {
-  --gold-rgb: 212, 175, 55;
-  --cyan-rgb: 0, 229, 255;
-  /* ── Core Palette ── */
-  --bg-void: #04040A;
-  --bg-primary: #06060C;
-  --bg-secondary: #0C0E1A;
-  --bg-tertiary: #121628;
-  --bg-panel: rgba(8, 10, 20, 0.88);
-  --bg-panel-solid: #0C0E1A;
+  --gold-rgb: 124, 255, 203;
+  --cyan-rgb: 137, 118, 255;
 
-  /* ── Gold Accent (Eye of Horus) ── */
-  --gold-primary: #D4AF37;
-  --gold-light: #F0D060;
-  --gold-dim: #8B7325;
-  --gold-glow: rgba(var(--gold-rgb), 0.3);
+  --bg-void: #020707;
+  --bg-primary: #061010;
+  --bg-secondary: #0B1718;
+  --bg-tertiary: #102326;
+  --bg-panel: rgba(6, 16, 17, 0.84);
+  --bg-panel-solid: #0B1718;
 
-  /* ── Cyan Intel Stream ── */
-  --cyan-primary: #00E5FF;
-  --cyan-dim: #006B7A;
-  --cyan-glow: rgba(var(--cyan-rgb), 0.15);
+  /* Compatibility aliases used by existing components. */
+  --gold-primary: #7CFFCB;
+  --gold-light: #C8FFE9;
+  --gold-dim: #2E9E7E;
+  --gold-glow: rgba(var(--gold-rgb), 0.28);
 
-  /* ── Alert Colors ── */
-  --alert-red: #FF3D3D;
-  --alert-orange: #FF9500;
-  --alert-green: #00E676;
-  --alert-blue: #448AFF;
+  --cyan-primary: #8976FF;
+  --cyan-dim: #3C3486;
+  --cyan-glow: rgba(var(--cyan-rgb), 0.18);
 
-  /* ── Accent Colors (layer-specific) ── */
-  --accent-weather: #E040FB;
-  --accent-nuclear: #76FF03;
+  --alert-red: #FF4D6D;
+  --alert-orange: #FFB000;
+  --alert-green: #50FA7B;
+  --alert-blue: #5BB6FF;
 
-  /* ── Borders ── */
-  --border-primary: rgba(var(--gold-rgb), 0.15);
+  --accent-weather: #A970FF;
+  --accent-nuclear: #B7FF5A;
+
+  --border-primary: rgba(var(--gold-rgb), 0.16);
   --border-secondary: rgba(var(--gold-rgb), 0.08);
-  --border-active: rgba(var(--gold-rgb), 0.4);
-  --border-cyan: rgba(var(--cyan-rgb), 0.2);
+  --border-active: rgba(var(--gold-rgb), 0.44);
+  --border-cyan: rgba(var(--cyan-rgb), 0.24);
 
-  /* ── Text ── */
-  --text-primary: #E8E6E0;
-  --text-secondary: #9B978E;
-  --text-muted: #5C5A54;
-  --text-heading: #F5F0E0;
-  --text-gold: #D4AF37;
-  --text-cyan: #00E5FF;
+  --text-primary: #EAF7F2;
+  --text-secondary: #96B5AE;
+  --text-muted: #5F7B75;
+  --text-heading: #F7FFFC;
+  --text-gold: #7CFFCB;
+  --text-cyan: #8976FF;
 
-  /* ── Scrollbar ── */
-  --scrollbar-thumb: rgba(var(--gold-rgb), 0.2);
-  --scrollbar-thumb-hover: rgba(var(--gold-rgb), 0.4);
-
-  /* ── Hover ── */
+  --scrollbar-thumb: rgba(var(--gold-rgb), 0.22);
+  --scrollbar-thumb-hover: rgba(var(--gold-rgb), 0.42);
   --hover-accent: rgba(var(--gold-rgb), 0.08);
 
-  /* ── Fonts ── */
-  --font-hud: 'JetBrains Mono', 'Courier New', monospace;
-  --font-body: 'Inter', -apple-system, sans-serif;
+  --font-hud: 'IBM Plex Mono', 'Courier New', monospace;
+  --font-body: 'Space Grotesk', -apple-system, sans-serif;
 
-  /* ── Spacing (responsive) ── */
   --panel-gap: 12px;
   --edge-pad: 20px;
 }
@@ -72,7 +62,7 @@
    THEME TRANSITION SYSTEM
    🔥 */
 * {
-  transition: background-color 0.6s cubic-bezier(0.16, 1, 0.3, 1), 
+  transition: background-color 0.6s cubic-bezier(0.16, 1, 0.3, 1),
               border-color 0.6s cubic-bezier(0.16, 1, 0.3, 1),
               color 0.6s cubic-bezier(0.16, 1, 0.3, 1),
               box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1);
@@ -82,39 +72,39 @@
    THEME: GHOST PROTOCOL (DEEP VIOLET / PHANTOM OPS)
    ═══════════════════════════════════════════════════════════════ */
 body.theme-ghost {
-  --gold-rgb: 179, 136, 255;
-  --cyan-rgb: 124, 77, 255;
-  --bg-void: #05000F;
-  --bg-primary: #08001A;
-  --bg-secondary: #0D0025;
-  --bg-tertiary: #140033;
-  --bg-panel: rgba(8, 0, 26, 0.92);
-  --bg-panel-solid: #0D0025;
+  --gold-rgb: 170, 112, 255;
+  --cyan-rgb: 91, 182, 255;
+  --bg-void: #080611;
+  --bg-primary: #0D0B1C;
+  --bg-secondary: #15112B;
+  --bg-tertiary: #211B3F;
+  --bg-panel: rgba(13, 11, 28, 0.9);
+  --bg-panel-solid: #15112B;
 
-  --gold-primary: #B388FF;
-  --gold-light: #D1C4E9;
-  --gold-dim: #6A1B9A;
-  --gold-glow: rgba(179, 136, 255, 0.3);
+  --gold-primary: #AA70FF;
+  --gold-light: #D9C3FF;
+  --gold-dim: #6B42B6;
+  --gold-glow: rgba(170, 112, 255, 0.28);
 
-  --cyan-primary: #7C4DFF;
-  --cyan-dim: #4A148C;
-  --cyan-glow: rgba(124, 77, 255, 0.2);
+  --cyan-primary: #5BB6FF;
+  --cyan-dim: #225B88;
+  --cyan-glow: rgba(91, 182, 255, 0.2);
 
-  --border-primary: rgba(179, 136, 255, 0.2);
-  --border-secondary: rgba(179, 136, 255, 0.08);
-  --border-active: rgba(179, 136, 255, 0.45);
-  --border-cyan: rgba(124, 77, 255, 0.25);
+  --border-primary: rgba(170, 112, 255, 0.2);
+  --border-secondary: rgba(170, 112, 255, 0.08);
+  --border-active: rgba(170, 112, 255, 0.45);
+  --border-cyan: rgba(91, 182, 255, 0.25);
 
-  --text-primary: #E1BEE7;
-  --text-secondary: #9575CD;
-  --text-muted: #4A148C;
-  --text-heading: #B388FF;
-  --text-gold: #B388FF;
-  --text-cyan: #7C4DFF;
+  --text-primary: #F2ECFF;
+  --text-secondary: #B9A9DA;
+  --text-muted: #716487;
+  --text-heading: #FFFFFF;
+  --text-gold: #AA70FF;
+  --text-cyan: #5BB6FF;
 
-  --scrollbar-thumb: rgba(179, 136, 255, 0.25);
-  --scrollbar-thumb-hover: rgba(179, 136, 255, 0.5);
-  --hover-accent: rgba(179, 136, 255, 0.1);
+  --scrollbar-thumb: rgba(170, 112, 255, 0.25);
+  --scrollbar-thumb-hover: rgba(170, 112, 255, 0.5);
+  --hover-accent: rgba(170, 112, 255, 0.1);
 }
 
 @theme inline {
@@ -174,15 +164,15 @@ html, body {
   border-radius: 10px;
 }
 
-/* ── Osiris Gold Glow ── */
-.osiris-glow {
+/* Ophanim glow */
+.ophanim-glow {
   box-shadow:
     0 0 20px rgba(var(--gold-rgb), 0.12),
     0 0 60px rgba(var(--gold-rgb), 0.06),
     0 4px 30px rgba(0, 0, 0, 0.5);
 }
 
-.osiris-glow-cyan {
+.ophanim-glow-violet {
   box-shadow:
     0 0 20px rgba(var(--cyan-rgb), 0.1),
     0 0 60px rgba(var(--cyan-rgb), 0.05);
@@ -216,17 +206,17 @@ html, body {
 /* ═══════════════════════════════════════════════════════════════
    ANIMATIONS
    ═══════════════════════════════════════════════════════════════ */
-@keyframes osiris-pulse {
+@keyframes ophanim-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
 }
 
-@keyframes osiris-scan {
+@keyframes ophanim-scan {
   0% { transform: translateY(-100%); }
   100% { transform: translateY(100vh); }
 }
 
-@keyframes osiris-rotate {
+@keyframes ophanim-rotate {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
@@ -246,7 +236,7 @@ html, body {
   50% { opacity: 0.6; }
 }
 
-.animate-osiris-pulse { animation: osiris-pulse 2s ease-in-out infinite; }
+.animate-ophanim-pulse { animation: ophanim-pulse 2s ease-in-out infinite; }
 .animate-glow-pulse { animation: glow-pulse 3s ease-in-out infinite; }
 .animate-data-pulse { animation: data-pulse 2s ease-in-out infinite; }
 .animate-threat-flash { animation: threat-flash 1.5s ease-in-out infinite; }
@@ -296,7 +286,7 @@ html, body {
 /* ── Risk Badges ── */
 .risk-critical { color: #FF3D3D; text-shadow: 0 0 8px rgba(255, 61, 61, 0.5); }
 .risk-high { color: #FF9500; text-shadow: 0 0 8px rgba(255, 149, 0, 0.3); }
-.risk-medium { color: #D4AF37; }
+.risk-medium { color: var(--gold-primary); }
 .risk-low { color: #00E676; }
 
 /* ── CRT Scanlines ── */
@@ -1252,7 +1242,7 @@ html, body {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   GOTHAM COMMAND SYSTEM — Palantir-class intelligence aesthetic
+   GOTHAM COMMAND SYSTEM — layered intelligence aesthetic
    ═══════════════════════════════════════════════════════════════ */
 
 /* ── Splash Boot Sequence ── */
@@ -1388,7 +1378,7 @@ html, body {
 }
 .gotham-tag--critical { background: rgba(255,61,61,0.12); color: #FF3D3D; border-color: rgba(255,61,61,0.3); }
 .gotham-tag--high { background: rgba(255,149,0,0.12); color: #FF9500; border-color: rgba(255,149,0,0.3); }
-.gotham-tag--medium { background: rgba(var(--gold-rgb),0.12); color: #D4AF37; border-color: rgba(var(--gold-rgb),0.3); }
+.gotham-tag--medium { background: rgba(var(--gold-rgb),0.12); color: var(--gold-primary); border-color: rgba(var(--gold-rgb),0.3); }
 .gotham-tag--low { background: rgba(0,230,118,0.12); color: #00E676; border-color: rgba(0,230,118,0.3); }
 .gotham-tag--info { background: rgba(var(--cyan-rgb),0.08); color: var(--cyan-primary); border-color: rgba(var(--cyan-rgb),0.2); }
 .gotham-tag--classified { background: rgba(var(--gold-rgb),0.08); color: var(--gold-primary); border-color: rgba(var(--gold-rgb),0.25); letter-spacing: 0.2em; }
@@ -1436,7 +1426,7 @@ html, body {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   GOTHAM COMMAND SYSTEM — Palantir-Class Component Library
+   GOTHAM COMMAND SYSTEM — Ophanim Component Library
    Sovereign-grade UI primitives for global intelligence operations
    ═══════════════════════════════════════════════════════════════════════ */
 
@@ -2309,11 +2299,11 @@ button:active:not(:disabled),
 }
 
 /* ── Interactive rows get a smooth accent wash on hover ── */
-.osiris-row {
+.ophanim-row {
   border-radius: 8px;
   transition: background-color 0.18s ease, transform 0.12s ease;
 }
-.osiris-row:hover {
+.ophanim-row:hover {
   background: var(--hover-accent);
 }
 

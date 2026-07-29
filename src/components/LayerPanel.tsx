@@ -20,7 +20,7 @@ interface LayerPanelProps {
 const LAYER_GROUPS = [
   {
     label: 'SDK',
-    fullLabel: 'OSIRIS SDK',
+    fullLabel: 'OPHANIM SDK',
     icon: Database,
     layers: [
       { key: 'sdk_sea', label: 'Maritime Lines', dataKey: 'sdk_entities' },
@@ -201,7 +201,7 @@ function LayerPanel({ data, activeLayers, setActiveLayers, isMobile, theme = 'co
         {/* MOBILE GHOST TOGGLE */}
         {setTheme && (
           <div className="flex items-center justify-between mt-2 pt-3 border-t border-white/[0.06] px-1">
-            <span className="text-[9px] font-mono tracking-[0.2em] text-white/25 uppercase">Ghost Protocol</span>
+            <span className="text-[9px] font-mono tracking-[0.2em] text-white/25 uppercase">Eclipse Mode</span>
             <button
               onClick={() => setTheme(theme === 'core' ? 'ghost' : 'core')}
               className="w-8 h-8 rounded-full flex items-center justify-center transition-all"
@@ -224,11 +224,13 @@ function LayerPanel({ data, activeLayers, setActiveLayers, isMobile, theme = 'co
       initial={{ x: -60, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ type: 'spring', damping: 30, stiffness: 200, delay: 2.8 }}
-      className="absolute top-0 left-0 h-full w-[48px] flex flex-col items-center pt-24 pb-6 z-50 pointer-events-auto"
+      className="absolute top-4 left-3 bottom-4 w-[56px] flex flex-col items-center pt-20 pb-4 z-50 pointer-events-auto rounded-2xl"
       style={{
-        background: 'rgba(0,0,0,0.15)',
-        backdropFilter: 'blur(24px) saturate(1.2)',
-        WebkitBackdropFilter: 'blur(24px) saturate(1.2)',
+        background: 'linear-gradient(180deg, rgba(6,16,17,0.76), rgba(8,10,24,0.58))',
+        backdropFilter: 'blur(28px) saturate(1.35)',
+        WebkitBackdropFilter: 'blur(28px) saturate(1.35)',
+        border: '1px solid rgba(124,255,203,0.12)',
+        boxShadow: '0 18px 54px rgba(0,0,0,0.34), inset 0 1px 0 rgba(255,255,255,0.04)',
       }}
     >
       <div className="flex-1 flex flex-col items-center gap-1">
@@ -246,9 +248,14 @@ function LayerPanel({ data, activeLayers, setActiveLayers, isMobile, theme = 'co
             >
               {/* Icon Button */}
               <div
-                className="w-10 h-10 flex items-center justify-center cursor-pointer rounded-lg transition-all duration-300"
+                className="w-11 h-11 flex items-center justify-center cursor-pointer rounded-xl transition-all duration-300"
                 style={{
-                  background: isHovered ? 'rgba(255,255,255,0.05)' : 'transparent',
+                  background: groupActive
+                    ? 'linear-gradient(135deg, rgba(124,255,203,0.16), rgba(137,118,255,0.12))'
+                    : isHovered
+                      ? 'rgba(255,255,255,0.05)'
+                      : 'transparent',
+                  boxShadow: groupActive ? 'inset 0 0 0 1px rgba(124,255,203,0.26)' : 'none',
                 }}
               >
                 <Icon
@@ -257,13 +264,16 @@ function LayerPanel({ data, activeLayers, setActiveLayers, isMobile, theme = 'co
                     width: 16,
                     height: 16,
                     color: groupActive
-                      ? 'rgba(255,255,255,0.7)'
+                      ? 'var(--gold-primary)'
                       : isHovered
                         ? 'rgba(255,255,255,0.4)'
                         : 'rgba(255,255,255,0.2)',
-                    filter: groupActive ? 'drop-shadow(0 0 4px rgba(255,255,255,0.3))' : 'none',
+                    filter: groupActive ? 'drop-shadow(0 0 8px rgba(124,255,203,0.35))' : 'none',
                   }}
                 />
+                {groupActive && (
+                  <span className="absolute left-[-7px] w-[3px] h-5 rounded-full bg-[var(--gold-primary)] shadow-[0_0_10px_rgba(124,255,203,0.7)]" />
+                )}
               </div>
 
               {/* Flyout (LEFT side) */}
@@ -274,13 +284,13 @@ function LayerPanel({ data, activeLayers, setActiveLayers, isMobile, theme = 'co
                     animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
                     exit={{ opacity: 0, x: -4, filter: 'blur(2px)' }}
                     transition={{ duration: 0.18, ease: 'easeOut' }}
-                    className="absolute left-[52px] top-1/2 -translate-y-1/2 min-w-[220px] rounded-xl p-3 z-[100] pointer-events-auto"
+                    className="absolute left-[64px] top-1/2 -translate-y-1/2 min-w-[236px] rounded-2xl p-3 z-[100] pointer-events-auto"
                     style={{
-                      background: 'rgba(0,0,0,0.6)',
+                      background: 'rgba(6,16,17,0.82)',
                       backdropFilter: 'blur(40px) saturate(1.5)',
                       WebkitBackdropFilter: 'blur(40px) saturate(1.5)',
-                      border: '1px solid rgba(255,255,255,0.06)',
-                      boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+                      border: '1px solid rgba(124,255,203,0.12)',
+                      boxShadow: '0 16px 48px rgba(0,0,0,0.48), inset 0 1px 0 rgba(255,255,255,0.04)',
                     }}
                   >
                     <div className="text-[9px] font-mono tracking-[0.2em] uppercase text-white/30 mb-2.5 pb-1.5 border-b border-white/[0.04]">
@@ -321,23 +331,23 @@ function LayerPanel({ data, activeLayers, setActiveLayers, isMobile, theme = 'co
       {/* Subtle separator */}
       <div className="w-5 h-px bg-white/[0.06] my-2" />
 
-      {/* Ghost Protocol Toggle */}
+      {/* Eclipse Mode Toggle */}
       {setTheme && (
         <button
           onClick={() => setTheme(theme === 'core' ? 'ghost' : 'core')}
-          className="w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-500 cursor-pointer"
+          className="w-11 h-11 flex items-center justify-center rounded-xl transition-all duration-500 cursor-pointer"
           style={{
-            background: theme === 'ghost' ? 'rgba(179, 136, 255, 0.1)' : 'transparent',
+            background: theme === 'ghost' ? 'rgba(170, 112, 255, 0.14)' : 'rgba(124,255,203,0.06)',
           }}
-          title="Ghost Protocol"
+          title="Eclipse Mode"
         >
           <Ghost
             className="transition-all duration-500"
             style={{
               width: 15,
               height: 15,
-              color: theme === 'ghost' ? '#B388FF' : 'rgba(255,255,255,0.15)',
-              filter: theme === 'ghost' ? 'drop-shadow(0 0 6px rgba(179, 136, 255, 0.5))' : 'none',
+              color: theme === 'ghost' ? '#AA70FF' : 'rgba(124,255,203,0.5)',
+              filter: theme === 'ghost' ? 'drop-shadow(0 0 8px rgba(170, 112, 255, 0.5))' : 'drop-shadow(0 0 6px rgba(124,255,203,0.2))',
             }}
           />
         </button>
