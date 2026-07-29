@@ -17,6 +17,7 @@ import GlobalStatusBar from '@/components/GlobalStatusBar';
 import LiveAlerts from '@/components/LiveAlerts';
 import CommandPalette, { type PaletteCommand } from '@/components/CommandPalette';
 import ThreatFusionHUD from '@/components/ThreatFusionHUD';
+import type { ProviderMapLayer } from '@/lib/providers';
 
 const OphanimMap = dynamic(() => import('@/components/OphanimMap'), { ssr: false });
 const LayerPanel = dynamic(() => import('@/components/LayerPanel'));
@@ -170,6 +171,7 @@ export default function Dashboard() {
   const [entityGraphTarget, setEntityGraphTarget] = useState<{ type: string; id: string; label?: string; properties?: Record<string, any> } | null>(null);
   const [demoMode, setDemoMode] = useState(false);
   const [ophanimTheme, setOphanimTheme] = useState<'core'|'ghost'>('core');
+  const [providerLayers, setProviderLayers] = useState<ProviderMapLayer[]>([]);
 
   useEffect(() => {
     document.body.className = ophanimTheme === 'core' ? '' : `theme-${ophanimTheme}`;
@@ -219,6 +221,34 @@ export default function Dashboard() {
     terrain_3d: false,
     malware: false,
   });
+
+  useEffect(() => {
+    const providers = [
+      activeLayers.maritime && 'maritime-map',
+      activeLayers.cables && 'submarine-cables',
+      activeLayers.infrastructure && 'infrastructure-map',
+    ].filter((provider): provider is string => Boolean(provider));
+
+    if (providers.length === 0) {
+      setProviderLayers([]);
+      return;
+    }
+
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const response = await fetch(`/api/map/layers?providers=${providers.join(',')}`);
+        const data = await response.json();
+        if (!cancelled && response.ok && Array.isArray(data.layers)) setProviderLayers(data.layers);
+      } catch (error) {
+        console.warn('[OPHANIM] Provider map layers unavailable:', error);
+      }
+    };
+
+    load();
+    const refresh = setInterval(load, activeLayers.maritime ? 60_000 : 5 * 60_000);
+    return () => { cancelled = true; clearInterval(refresh); };
+  }, [activeLayers.maritime, activeLayers.cables, activeLayers.infrastructure]);
   const [liveFeedUrl, setLiveFeedUrl] = useState<string | null>(null);
   const [liveFeedName, setLiveFeedName] = useState('');
   const [liveFeedEmbedAllowed, setLiveFeedEmbedAllowed] = useState(true);
@@ -965,6 +995,7 @@ export default function Dashboard() {
           scanTargets={scanTargets}
           demoMode={demoMode}
           theme={ophanimTheme}
+          providerLayers={providerLayers}
         />
       </ErrorBoundary>
 

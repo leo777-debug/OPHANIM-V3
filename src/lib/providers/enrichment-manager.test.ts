@@ -11,6 +11,7 @@ function provider(name: string, execute: Provider['execute']): Provider {
       supportsMapLayers: false, requiresCredentials: false, timeoutMs: 20, enabled: true, priority: 10,
     },
     execute,
+    async createMapLayers() { return []; },
     normalize() {
       return [{ id: name, label: name, lat: 48.8566, lng: 2.3522, type: 'city', category: 'place', importance: 1, zoomLevel: 12, provider: name }];
     },

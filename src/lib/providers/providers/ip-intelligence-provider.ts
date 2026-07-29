@@ -6,6 +6,7 @@ export const ipIntelligenceProvider: Provider = {
     supportedEntityTypes: ['ip'], supportedIntents: ['ip_lookup'], supportsMapLayers: false,
     requiresCredentials: false, timeoutMs: 5000, enabled: true, priority: 10,
   },
+  async createMapLayers() { return []; },
   async execute(query, context) {
     const response = await fetch(`https://ipapi.co/${encodeURIComponent(query.query ?? '')}/json/`, {
       signal: context.signal, headers: { Accept: 'application/json', 'User-Agent': 'OPHANIM-Intelligence-Atlas/1.0' },

@@ -78,6 +78,8 @@ export const nominatimProvider: Provider = {
     priority: 20,
   },
 
+  async createMapLayers() { return []; },
+
   async execute(query, context) {
     const url = new URL('https://nominatim.openstreetmap.org/search');
     if (query.intent === 'reverse_geocode' && query.coordinates) {

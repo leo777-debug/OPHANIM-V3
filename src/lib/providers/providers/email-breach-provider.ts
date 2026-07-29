@@ -6,6 +6,7 @@ export const emailBreachProvider: Provider = {
     supportedEntityTypes: ['email'], supportedIntents: ['email_lookup'], supportsMapLayers: false,
     requiresCredentials: false, timeoutMs: 8000, enabled: true, priority: 10,
   },
+  async createMapLayers() { return []; },
   async execute(query, context) {
     const email = query.query ?? '';
     const response = await fetch(`https://api.xposedornot.com/v1/breach-analytics?email=${encodeURIComponent(email)}`, {

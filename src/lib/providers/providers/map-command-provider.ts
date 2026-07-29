@@ -25,6 +25,7 @@ export const mapCommandProvider: Provider = {
     supportedEntityTypes: ['command'], supportedIntents: ['map_command', 'natural_language'], supportsMapLayers: true,
     requiresCredentials: false, timeoutMs: 100, enabled: true, priority: 10,
   },
+  async createMapLayers() { return []; },
   async execute(query) { return actions[query.command ?? 'unsupported_natural_language']; },
   normalize(raw) {
     const value = raw as { label: string; summary: string; action: SearchAction };

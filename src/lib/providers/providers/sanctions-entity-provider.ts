@@ -9,6 +9,7 @@ export const sanctionsEntityProvider: Provider = {
     supportedEntityTypes: ['company', 'organization'], supportedIntents: ['company_lookup', 'organization_lookup'], supportsMapLayers: false,
     requiresCredentials: false, timeoutMs: 30000, enabled: true, priority: 10,
   },
+  async createMapLayers() { return []; },
   execute(query) {
     return search(query.query ?? '', { schema: schemas[query.entityType], limit: query.limit });
   },

@@ -8,6 +8,7 @@ export const domainIntelligenceProvider: Provider = {
     supportedEntityTypes: ['domain'], supportedIntents: ['domain_lookup'], supportsMapLayers: false,
     requiresCredentials: false, timeoutMs: 8000, enabled: true, priority: 10,
   },
+  async createMapLayers() { return []; },
   async execute(query, context): Promise<DomainRaw> {
     const domain = query.query ?? '';
     const [dnsResult, rdapResult] = await Promise.allSettled([

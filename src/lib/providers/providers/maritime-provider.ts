@@ -9,6 +9,7 @@ export const maritimeProvider: Provider = {
     supportedEntityTypes: ['vessel', 'imo', 'mmsi'], supportedIntents: ['vessel_lookup', 'imo_lookup', 'mmsi_lookup'], supportsMapLayers: true,
     requiresCredentials: false, timeoutMs: 12000, enabled: true, priority: 10,
   },
+  async createMapLayers() { return []; },
   async execute(query, context) {
     const [vesselsResponse, locationsResponse] = await Promise.all([
       fetch('https://meri.digitraffic.fi/api/ais/v1/vessels', { signal: context.signal, headers: { 'Digitraffic-User': 'OPHANIM-Intelligence-Atlas' } }),

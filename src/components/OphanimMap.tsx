@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState, useCallback, memo } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import DynamicProviderLayers from './DynamicProviderLayers';
+import type { ProviderMapLayer } from '@/lib/providers';
 
 interface OphanimMapProps {
   data: any;
@@ -18,6 +20,7 @@ interface OphanimMapProps {
   scanTargets?: any[];
   demoMode?: boolean;
   theme?: 'core' | 'ghost';
+  providerLayers?: ProviderMapLayer[];
 }
 
 function computeSolarTerminator(): [number, number][] {
@@ -42,7 +45,7 @@ function computeSolarTerminator(): [number, number][] {
 
 const EMPTY_FC = { type: 'FeatureCollection' as const, features: [] };
 
-function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightClick, onViewStateChange, flyToLocation, projection = 'globe', mapStyle = 'dark', sweepData, scanTargets = [], demoMode = false, theme = 'core' }: OphanimMapProps) {
+function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightClick, onViewStateChange, flyToLocation, projection = 'globe', mapStyle = 'dark', sweepData, scanTargets = [], demoMode = false, theme = 'core', providerLayers = [] }: OphanimMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const popupRef = useRef<maplibregl.Popup | null>(null);
@@ -1692,7 +1695,10 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     }
   }, [mapReady, mapStyle]);
 
-  return <div ref={containerRef} className="absolute inset-0 w-full h-full" />;
+  return <>
+    <div ref={containerRef} className="absolute inset-0 w-full h-full" />
+    <DynamicProviderLayers map={mapReady ? mapRef.current : null} layers={providerLayers} onEntityClick={onEntityClick} />
+  </>;
 }
 
 export default memo(OphanimMap);

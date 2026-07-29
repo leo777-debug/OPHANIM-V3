@@ -69,11 +69,46 @@ export interface ProviderExecutionContext {
   origin?: string;
 }
 
+export type ProviderMapGeometry = 'point' | 'line' | 'polygon';
+
+export interface ProviderMapFeature {
+  type: 'Feature';
+  geometry: {
+    type: 'Point' | 'LineString' | 'MultiLineString' | 'Polygon' | 'MultiPolygon';
+    coordinates: unknown;
+  };
+  properties?: Record<string, unknown>;
+}
+
+export interface ProviderMapLayer {
+  id: string;
+  provider: string;
+  name: string;
+  geometry: ProviderMapGeometry;
+  source: { type: 'FeatureCollection'; features: ProviderMapFeature[] };
+  style: {
+    color: string;
+    opacity?: number;
+    radius?: number;
+    width?: number;
+    outlineColor?: string;
+  };
+  visible: boolean;
+  interactive: boolean;
+}
+
+export interface ProviderMapLayerContext {
+  signal: AbortSignal;
+  origin?: string;
+  requestedProviders?: string[];
+}
+
 export interface Provider {
   metadata: ProviderMetadata;
   isConfigured?(): boolean;
   execute(query: ProviderQuery, context: ProviderExecutionContext): Promise<unknown>;
   normalize(raw: unknown, query: ProviderQuery): NormalizedSearchResult[];
+  createMapLayers(context: ProviderMapLayerContext): Promise<ProviderMapLayer[]>;
 }
 
 export interface ProviderDiagnostic {

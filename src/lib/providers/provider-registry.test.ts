@@ -9,6 +9,7 @@ const locationProvider: Provider = {
   },
   async execute() { return []; },
   normalize() { return []; },
+  async createMapLayers() { return []; },
 };
 
 describe('ProviderRegistry', () => {

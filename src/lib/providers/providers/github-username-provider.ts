@@ -6,6 +6,7 @@ export const githubUsernameProvider: Provider = {
     supportedEntityTypes: ['username'], supportedIntents: ['username_lookup'], supportsMapLayers: false,
     requiresCredentials: false, timeoutMs: 8000, enabled: true, priority: 10,
   },
+  async createMapLayers() { return []; },
   async execute(query, context) {
     const response = await fetch(`https://api.github.com/users/${encodeURIComponent(query.query ?? '')}`, {
       signal: context.signal, headers: { Accept: 'application/json', 'User-Agent': 'OPHANIM-Intelligence-Atlas/1.0' },
