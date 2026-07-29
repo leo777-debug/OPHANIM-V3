@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback, memo } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-interface OsirisMapProps {
+interface OphanimMapProps {
   data: any;
   activeLayers: Record<string, boolean>;
   onEntityClick?: (entity: any) => void;
@@ -42,7 +42,7 @@ function computeSolarTerminator(): [number, number][] {
 
 const EMPTY_FC = { type: 'FeatureCollection' as const, features: [] };
 
-function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightClick, onViewStateChange, flyToLocation, projection = 'globe', mapStyle = 'dark', sweepData, scanTargets = [], demoMode = false, theme = 'core' }: OsirisMapProps) {
+function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightClick, onViewStateChange, flyToLocation, projection = 'globe', mapStyle = 'dark', sweepData, scanTargets = [], demoMode = false, theme = 'core' }: OphanimMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const popupRef = useRef<maplibregl.Popup | null>(null);
@@ -119,15 +119,15 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
     // ── DEMO MODE SPINNING ──
     let spinReq: number | undefined = undefined;
     let isSpinning = false;
-    
+
     const startSpinning = () => {
       if (!map) return;
       isSpinning = true;
       let lastTime = performance.now();
-      
+
       const frame = (time: number) => {
         if (!isSpinning) return;
-        
+
         // Only spin if the user is not actively dragging or zooming the map
         if (!map.isMoving() && !map.isZooming()) {
           const dt = time - lastTime;
@@ -136,11 +136,11 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
           center.lng += (0.5 * dt) / 1000;
           map.setCenter(center);
         }
-        
+
         lastTime = time;
         spinReq = requestAnimationFrame(frame);
       };
-      
+
       spinReq = requestAnimationFrame(frame);
     };
 
@@ -162,7 +162,7 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
-    
+
     // Select basemap style
     const styleUrl = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 
@@ -184,24 +184,24 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
 
     map.on('load', () => {
       mapRef.current = map;
-      
+
       // Theme colors
       const isGhost = theme === 'ghost';
       const phantomPurple = '#B388FF';
       const phantomDark = '#1A0040';
       const cameraColor = isGhost ? '#B388FF' : '#00E676';
-      const flightCom = isGhost ? phantomPurple : '#00E5FF';
+      const flightCom = isGhost ? phantomPurple : '#5BB6FF';
       const flightPriv = isGhost ? phantomPurple : '#FFD700';
       const flightGov = isGhost ? phantomPurple : '#FF9500';
       const flightMil = isGhost ? phantomPurple : '#FF3D3D';
 
-      // Create icons — OSIRIS Unified Palette
-      createIcon(map, 'plane-cyan', flightCom, 24);   
-      createIcon(map, 'plane-green', flightPriv, 24);   
-      createIcon(map, 'plane-pink', flightGov, 24);    
-      createIcon(map, 'plane-red', flightMil, 24);     
-      createIcon(map, 'plane-grey', isGhost ? phantomPurple : '#546E7A', 24);    
-      createDot(map, 'dot-gold', isGhost ? phantomPurple : '#D4AF37', 8);
+      // Create icons — OPHANIM Unified Palette
+      createIcon(map, 'plane-cyan', flightCom, 24);
+      createIcon(map, 'plane-green', flightPriv, 24);
+      createIcon(map, 'plane-pink', flightGov, 24);
+      createIcon(map, 'plane-red', flightMil, 24);
+      createIcon(map, 'plane-grey', isGhost ? phantomPurple : '#546E7A', 24);
+      createDot(map, 'dot-gold', isGhost ? phantomPurple : '#7CFFCB', 8);
       createDot(map, 'dot-red', isGhost ? phantomPurple : '#D32F2F', 10);
       createDot(map, 'dot-orange', isGhost ? phantomPurple : '#E65100', 10);
       createDot(map, 'dot-green', isGhost ? phantomPurple : '#26A69A', 10);
@@ -311,7 +311,7 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
         'circle-stroke-color': '#000000', 'circle-stroke-opacity': 0.8,
       }});
       map.addLayer({ id: 'malware-label', type: 'symbol', source: 'malware-nodes', minzoom: 5, layout: {
-        'text-field': ['get','malware'], 'text-size': 8, 'text-font': ['JetBrains Mono Bold', 'Open Sans Bold'],
+        'text-field': ['get','malware'], 'text-size': 8, 'text-font': ['IBM Plex Mono Bold', 'Open Sans Bold'],
         'text-offset': [0, 1.5], 'text-max-width': 10, 'text-allow-overlap': false,
       }, paint: { 'text-color': malwareColor, 'text-halo-color': '#111', 'text-halo-width': 1.5, 'text-opacity': 0.85 }});
 
@@ -369,10 +369,10 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
       }});
       map.addLayer({ id: 'infra-dots', type: 'circle', source: 'infrastructure', paint: {
         'circle-radius': ['interpolate',['linear'],['zoom'], 1,4, 5,6, 10,10],
-        'circle-color': ['case', 
+        'circle-color': ['case',
           ['in', 'SEISMIC RISK', ['get', 'status']], '#E65100',
-          ['==', ['get','status'], 'Active Conflict Zone'], '#D32F2F', 
-          ['==', ['get','status'], 'Destroyed / Decommissioning'], '#546E7A', 
+          ['==', ['get','status'], 'Active Conflict Zone'], '#D32F2F',
+          ['==', ['get','status'], 'Destroyed / Decommissioning'], '#546E7A',
           '#26A69A'
         ],
         'circle-opacity': 0.75,
@@ -442,17 +442,17 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
       // SIGINT RSS news - gold markers
       map.addLayer({ id: 'sigint-news-glow', type: 'circle', source: 'sigint-news', paint: {
         'circle-radius': ['interpolate',['linear'],['zoom'], 1,6, 5,10, 10,18],
-        'circle-color': '#D4AF37', 'circle-opacity': 0.12, 'circle-blur': 1,
+        'circle-color': '#7CFFCB', 'circle-opacity': 0.12, 'circle-blur': 1,
       }});
       map.addLayer({ id: 'sigint-news-dots', type: 'circle', source: 'sigint-news', paint: {
         'circle-radius': ['interpolate',['linear'],['zoom'], 1,3, 5,5, 10,8],
-        'circle-color': '#D4AF37', 'circle-opacity': 0.9,
+        'circle-color': '#7CFFCB', 'circle-opacity': 0.9,
         'circle-stroke-width': 1.5, 'circle-stroke-color': '#FFF8DC', 'circle-stroke-opacity': 0.6,
       }});
       map.addLayer({ id: 'sigint-news-label', type: 'symbol', source: 'sigint-news', minzoom: 5, layout: {
         'text-field': ['get','source'], 'text-size': 9, 'text-font': ['Open Sans Regular'],
         'text-offset': [0, 1.6], 'text-max-width': 10, 'text-allow-overlap': false,
-      }, paint: { 'text-color': '#D4AF37', 'text-halo-color': '#000', 'text-halo-width': 1, 'text-opacity': 0.85 }});
+      }, paint: { 'text-color': '#7CFFCB', 'text-halo-color': '#000', 'text-halo-width': 1, 'text-opacity': 0.85 }});
 
       // ══ IP SWEEP — Neighborhood device visualization ══
       map.addLayer({ id: 'sweep-connections', type: 'line', source: 'ip-sweep-connections', paint: {
@@ -538,7 +538,7 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
         'text-offset': [0, 1.5], 'text-allow-overlap': false,
       }, paint: { 'text-color': ['match', ['get','status'], 'DANGER','#D32F2F', 'WARNING','#E65100', '#7E57C2'], 'text-halo-color': '#000', 'text-halo-width': 1 }});
 
-      // ══ OSIRIS SDK — Lattice Intelligence Mesh ══
+      // ══ OPHANIM SDK — Lattice Intelligence Mesh ══
       // Polybolos Style: Delicate, translucent, steel-blue splined mesh
 
       // ── SEA domain (Distinct Solid Lines) ──
@@ -649,8 +649,8 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
       popupRef.current?.remove();
       popupRef.current = new maplibregl.Popup({ closeButton: true, maxWidth: '420px', offset: 14 }).setLngLat(coords).setHTML(html).addTo(map);
     };
-    const pStyle = `background:rgba(12,14,26,0.95);backdrop-filter:blur(16px);border-radius:10px;padding:16px;font-family:'JetBrains Mono',monospace;`;
-    const linkStyle = `display:inline-block;margin-top:8px;padding:5px 12px;font-size:10px;letter-spacing:0.12em;text-decoration:none;border-radius:5px;font-family:'JetBrains Mono',monospace;`;
+    const pStyle = `background:rgba(12,14,26,0.95);backdrop-filter:blur(16px);border-radius:10px;padding:16px;font-family:'IBM Plex Mono',monospace;`;
+    const linkStyle = `display:inline-block;margin-top:8px;padding:5px 12px;font-size:10px;letter-spacing:0.12em;text-decoration:none;border-radius:5px;font-family:'IBM Plex Mono',monospace;`;
 
     // ── XSS PROTECTION HELPERS ──
     const htmlEsc = (s: any): string => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
@@ -665,25 +665,25 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
         const p = e.features[0].properties as any;
         const coords = (e.features[0].geometry as any).coordinates;
         const cs = (p.callsign||'').trim();
-        popup(coords, `<div style="${pStyle}border:1px solid rgba(212,175,55,0.3);">
+        popup(coords, `<div style="${pStyle}border:1px solid rgba(124,255,203,0.3);">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-            <span style="color:#D4AF37;font-size:16px;font-weight:700;letter-spacing:0.1em;">${htmlEsc(cs)}</span>
+            <span style="color:#7CFFCB;font-size:16px;font-weight:700;letter-spacing:0.1em;">${htmlEsc(cs)}</span>
             <span style="color:#5C5A54;font-size:10px;">${htmlEsc(p.icao24||'')}</span>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:11px;">
             <div><span style="color:#5C5A54;font-size:9px;">MODEL</span><br/><span style="color:#E8E6E0;">${htmlEsc(p.model||'—')}</span></div>
-            <div><span style="color:#5C5A54;font-size:9px;">ALT</span><br/><span style="color:#00E5FF;">${p.alt?Math.round(p.alt)+'m':'—'}</span></div>
+            <div><span style="color:#5C5A54;font-size:9px;">ALT</span><br/><span style="color:#5BB6FF;">${p.alt?Math.round(p.alt)+'m':'—'}</span></div>
             <div><span style="color:#5C5A54;font-size:9px;">SPEED</span><br/><span style="color:#E8E6E0;">${p.speed_knots||'—'}kt</span></div>
             <div><span style="color:#5C5A54;font-size:9px;">HDG</span><br/><span style="color:#E8E6E0;">${Math.round(p.heading||0)}°</span></div>
             <div><span style="color:#5C5A54;font-size:9px;">REG</span><br/><span style="color:#E8E6E0;">${htmlEsc(p.registration||'—')}</span></div>
             <div><span style="color:#5C5A54;font-size:9px;">POS</span><br/><span style="color:#E8E6E0;">${coords[1].toFixed(2)},${coords[0].toFixed(2)}</span></div>
           </div>
           <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap;">
-            <a href="https://www.flightaware.com/live/flight/${encodeURIComponent(cs)}" target="_blank" style="${linkStyle}color:#D4AF37;border:1px solid rgba(212,175,55,0.4);background:rgba(212,175,55,0.1);">⚡ FLIGHTAWARE</a>
-            <a href="https://globe.adsbexchange.com/?icao=${encodeURIComponent(p.icao24||'')}" target="_blank" style="${linkStyle}color:#00E5FF;border:1px solid rgba(0,229,255,0.4);background:rgba(0,229,255,0.1);">📡 ADS-B</a>
+            <a href="https://www.flightaware.com/live/flight/${encodeURIComponent(cs)}" target="_blank" style="${linkStyle}color:#7CFFCB;border:1px solid rgba(124,255,203,0.4);background:rgba(124,255,203,0.1);">⚡ FLIGHTAWARE</a>
+            <a href="https://globe.adsbexchange.com/?icao=${encodeURIComponent(p.icao24||'')}" target="_blank" style="${linkStyle}color:#5BB6FF;border:1px solid rgba(137,118,255,0.4);background:rgba(137,118,255,0.1);">📡 ADS-B</a>
             <a href="https://www.radarbox.com/data/flights/${encodeURIComponent(cs)}" target="_blank" style="${linkStyle}color:#FF69B4;border:1px solid rgba(255,105,180,0.4);background:rgba(255,105,180,0.1);">📍 RADARBOX</a>
           </div>
-          <button onclick="window.openOsirisIntel({ callsign: '${idSafe(cs)}', icao24: '${idSafe(p.icao24||'')}', model: '${idSafe(p.model||'')}', registration: '${idSafe(p.registration||'')}' })" style="width:100%;margin-top:8px;padding:6px 12px;background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.5);color:#D4AF37;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:bold;letter-spacing:0.1em;border-radius:4px;cursor:pointer;">[ DEEP DIVE INTEL ]</button>
+          <button onclick="window.openOphanimIntel({ callsign: '${idSafe(cs)}', icao24: '${idSafe(p.icao24||'')}', model: '${idSafe(p.model||'')}', registration: '${idSafe(p.registration||'')}' })" style="width:100%;margin-top:8px;padding:6px 12px;background:rgba(124,255,203,0.15);border:1px solid rgba(124,255,203,0.5);color:#7CFFCB;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:bold;letter-spacing:0.1em;border-radius:4px;cursor:pointer;">[ DEEP DIVE INTEL ]</button>
         </div>`);
       });
       map.on('mouseenter', layer, () => { map.getCanvas().style.cursor = 'pointer'; });
@@ -735,14 +735,14 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
       if (!e.features?.length) return;
       const p = e.features[0].properties as any;
       const coords = (e.features[0].geometry as any).coordinates;
-      popup(coords, `<div style="${pStyle}border:1px solid rgba(212,175,55,0.3);">
-        <div style="color:#D4AF37;font-size:12px;font-weight:700;letter-spacing:0.1em;margin-bottom:4px;">🛰️ ${htmlEsc(p.name)}</div>
+      popup(coords, `<div style="${pStyle}border:1px solid rgba(124,255,203,0.3);">
+        <div style="color:#7CFFCB;font-size:12px;font-weight:700;letter-spacing:0.1em;margin-bottom:4px;">🛰️ ${htmlEsc(p.name)}</div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;font-size:9px;margin-bottom:8px;">
           <div><span style="color:#5C5A54;">MISSION</span><br/><span style="color:${colorSafe(p.color)};">${htmlEsc(p.mission||'Unknown')}</span></div>
-          <div><span style="color:#5C5A54;">ALT</span><br/><span style="color:#00E5FF;">${p.alt ? p.alt+' km' : '—'}</span></div>
+          <div><span style="color:#5C5A54;">ALT</span><br/><span style="color:#5BB6FF;">${p.alt ? p.alt+' km' : '—'}</span></div>
           <div><span style="color:#5C5A54;">POS</span><br/><span style="color:#E8E6E0;">${coords[1].toFixed(2)}°, ${coords[0].toFixed(2)}°</span></div>
         </div>
-        ${p.noradId ? `<a href="https://www.n2yo.com/satellite/?s=${p.noradId}" target="_blank" style="display:block;text-align:center;padding:4px;margin-top:6px;font-size:8px;font-family:monospace;letter-spacing:0.1em;text-decoration:none;color:#00E5FF;border:1px solid rgba(0,229,255,0.4);background:rgba(0,229,255,0.1);border-radius:2px;cursor:pointer;">📡 TRACK ON N2YO</a>` : ''}
+        ${p.noradId ? `<a href="https://www.n2yo.com/satellite/?s=${p.noradId}" target="_blank" style="display:block;text-align:center;padding:4px;margin-top:6px;font-size:8px;font-family:monospace;letter-spacing:0.1em;text-decoration:none;color:#5BB6FF;border:1px solid rgba(137,118,255,0.4);background:rgba(137,118,255,0.1);border-radius:2px;cursor:pointer;">📡 TRACK ON N2YO</a>` : ''}
       </div>`);
     });
 
@@ -781,7 +781,7 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
         <div style="color:#E8E6E0;font-size:12px;font-weight:bold;margin-bottom:2px;">${htmlEsc(p.malware || 'Unidentified')}</div>
         <div style="color:#5C5A54;font-size:9px;margin-bottom:10px;">📍 ${locus}</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:9px;margin-bottom:8px;background:rgba(0,0,0,0.3);padding:6px;border-radius:4px;">
-          <div><span style="color:#5C5A54;">HOST IP</span><br/><span style="color:#00E5FF;font-family:monospace;">${htmlEsc(p.ip)}${p.port ? ':' + htmlEsc(String(p.port)) : ''}</span></div>
+          <div><span style="color:#5C5A54;">HOST IP</span><br/><span style="color:#5BB6FF;font-family:monospace;">${htmlEsc(p.ip)}${p.port ? ':' + htmlEsc(String(p.port)) : ''}</span></div>
           <div><span style="color:#5C5A54;">STATUS</span><br/><span style="color:${statusColor};">${(p.status||'UNKNOWN').toUpperCase()}</span></div>
           <div style="grid-column:1 / -1;"><span style="color:#5C5A54;">HOSTING / ASN</span><br/><span style="color:#E8E6E0;font-family:monospace;font-size:8px;">${htmlEsc(p.asn || p.isp || 'Unknown')}</span></div>
           ${p.first_seen ? `<div><span style="color:#5C5A54;">FIRST SEEN</span><br/><span style="color:#E8E6E0;">${htmlEsc(String(p.first_seen))}</span></div>` : ''}
@@ -790,7 +790,7 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
         <div style="display:flex;gap:6px;">
           <a href="${idSafe(ref)}" target="_blank" style="${linkStyle}flex:1;text-align:center;color:#E8E6E0;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.05);">ABUSE.CH RECORD ↗</a>
         </div>
-        <button onclick="window.openOsirisIntel({ type: 'ip', ip: '${idSafe(p.ip)}', threat_type: '${idSafe(p.malware || p.threat_type || '')}', status: '${idSafe(p.status || '')}' })" style="width:100%;margin-top:8px;padding:8px 12px;background:linear-gradient(90deg, ${accent}1a 0%, ${accent}33 100%);border:1px solid ${accent}99;color:${accent};font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:bold;letter-spacing:0.15em;border-radius:4px;cursor:pointer;transition:all 0.2s;">DEEP DIVE ANALYTICS</button>
+        <button onclick="window.openOphanimIntel({ type: 'ip', ip: '${idSafe(p.ip)}', threat_type: '${idSafe(p.malware || p.threat_type || '')}', status: '${idSafe(p.status || '')}' })" style="width:100%;margin-top:8px;padding:8px 12px;background:linear-gradient(90deg, ${accent}1a 0%, ${accent}33 100%);border:1px solid ${accent}99;color:${accent};font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:bold;letter-spacing:0.15em;border-radius:4px;cursor:pointer;transition:all 0.2s;">DEEP DIVE ANALYTICS</button>
       </div>`);
     });
 
@@ -800,7 +800,7 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
       if (!e.features?.length) return;
       const p = e.features[0].properties as any;
       const coords = (e.features[0].geometry as any).coordinates;
-      
+
       // Map coordinates to Liveuamap regions
       let sourceUrl = p.url || '';
       if (!sourceUrl || sourceUrl.includes('google.com')) {
@@ -839,7 +839,7 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
     });
 
 
-    // ── OSIRIS SDK link click ──
+    // ── OPHANIM SDK link click ──
     const SDK_SOURCE_URLS: Record<string, string> = {
       'AIS Maritime': 'https://www.marinetraffic.com',
       'AIS Stream': 'https://aisstream.io',
@@ -853,7 +853,7 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
         if (!e.features?.length) return;
         const p = e.features[0].properties as any;
         const coords = e.lngLat;
-        const srcUrl = p.url || SDK_SOURCE_URLS[p.source] || 'https://osirisai.live';
+        const srcUrl = p.url || SDK_SOURCE_URLS[p.source] || 'https://ophanim.live';
         const domainLabel = p.domain === 'SEA' ? '⚓ MARITIME' : p.domain === 'AIR' ? '✈ AIR CORRIDOR' : '🛡 NAVAL INTEL';
         const domainColor = p.domain === 'SEA' ? '#4FC3F7' : p.domain === 'AIR' ? '#B3E5FC' : '#81D4FA';
         const linkStyle = 'text-decoration:none;padding:3px 8px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:0.05em;';
@@ -866,7 +866,7 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
             <div><span style="color:#5C5A54;">FROM</span><br/><span style="color:#E8E6E0;">${htmlEsc(p.fromName || 'Origin')}</span></div>
             <div><span style="color:#5C5A54;">TO</span><br/><span style="color:#E8E6E0;">${htmlEsc(p.toName || 'Destination')}</span></div>
             <div><span style="color:#5C5A54;">DOMAIN</span><br/><span style="color:${domainColor};">${p.domain}</span></div>
-            <div><span style="color:#5C5A54;">SOURCE</span><br/><a href="${urlSafe(srcUrl)}" target="_blank" style="color:${domainColor};text-decoration:underline;cursor:pointer;">${htmlEsc(p.source || 'OSIRIS')}</a></div>
+            <div><span style="color:#5C5A54;">SOURCE</span><br/><a href="${urlSafe(srcUrl)}" target="_blank" style="color:${domainColor};text-decoration:underline;cursor:pointer;">${htmlEsc(p.source || 'OPHANIM')}</a></div>
           </div>
           <a href="${urlSafe(srcUrl)}" target="_blank" style="${linkStyle}color:${domainColor};border:1px solid ${domainColor}40;background:${domainColor}18;display:inline-block;margin-top:4px;">OPEN SOURCE ↗</a>
         </div>`);
@@ -888,10 +888,10 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
         <div style="color:#FF3D3D;font-size:12px;font-weight:700;margin-bottom:6px;">🎯 TARGET: ${htmlEsc(p.id)}</div>
         <div style="font-size:9px;color:#E8E6E0;margin-bottom:8px;">${htmlEsc(p.city || 'Unknown')}, ${htmlEsc(p.country || 'Unknown')} — ${htmlEsc(p.isp || 'Unknown ISP')}</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:9px;">
-          <div><span style="color:#5C5A54;">TYPE</span><br/><span style="color:#00E5FF;">${(p.type || 'UNKNOWN').toUpperCase()}</span></div>
+          <div><span style="color:#5C5A54;">TYPE</span><br/><span style="color:#5BB6FF;">${(p.type || 'UNKNOWN').toUpperCase()}</span></div>
           <div><span style="color:#5C5A54;">COORDS</span><br/><span style="color:#E8E6E0;">${coords[1].toFixed(3)}°, ${coords[0].toFixed(3)}°</span></div>
         </div>
-        <button onclick="window.openOsirisIntel({ type: 'ip', ip: '${idSafe(p.id)}' })" style="width:100%;margin-top:8px;padding:6px 12px;background:rgba(255,109,0,0.15);border:1px solid rgba(255,109,0,0.5);color:#FF6D00;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:bold;letter-spacing:0.1em;border-radius:4px;cursor:pointer;">[ IP INTEL DEEP DIVE ]</button>
+        <button onclick="window.openOphanimIntel({ type: 'ip', ip: '${idSafe(p.id)}' })" style="width:100%;margin-top:8px;padding:6px 12px;background:rgba(255,109,0,0.15);border:1px solid rgba(255,109,0,0.5);color:#FF6D00;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:bold;letter-spacing:0.1em;border-radius:4px;cursor:pointer;">[ IP INTEL DEEP DIVE ]</button>
       </div>`);
     });
 
@@ -902,7 +902,7 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
       const coords = (e.features[0].geometry as any).coordinates;
       const color = p.risk_level === 'CRITICAL' ? '#FF1744' : p.risk_level === 'HIGH' ? '#FF9500' : '#00BCD4';
       const activeThreats = p.active_threats ? JSON.parse(p.active_threats) : [];
-      
+
       let threatsHtml = '';
       if (activeThreats.length > 0) {
         threatsHtml = `<div style="margin-top:8px;padding-top:6px;border-top:1px solid ${color}40;color:${color};font-size:9px;font-weight:bold;">
@@ -939,7 +939,7 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
         </div>
         <div style="font-size:9px;color:#8A8880;margin-bottom:6px;">Open: ${ports.slice(0, 12).join(', ')}${ports.length > 12 ? ' ...' : ''}</div>
         ${vulns.length > 0 ? `<div style="font-size:9px;color:#FF3D3D;margin-bottom:6px;">⚠ CVEs: ${vulns.slice(0, 5).join(', ')}${vulns.length > 5 ? ` +${vulns.length - 5} more` : ''}</div>` : ''}
-        <button onclick="window.openOsirisIntel({ type: 'ip', ip: '${p.ip}' })" style="width:100%;margin-top:6px;padding:6px 12px;background:rgba(255,109,0,0.15);border:1px solid rgba(255,109,0,0.5);color:#FF6D00;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:bold;letter-spacing:0.1em;border-radius:4px;cursor:pointer;">[ IP INTEL DEEP DIVE ]</button>
+        <button onclick="window.openOphanimIntel({ type: 'ip', ip: '${p.ip}' })" style="width:100%;margin-top:6px;padding:6px 12px;background:rgba(255,109,0,0.15);border:1px solid rgba(255,109,0,0.5);color:#FF6D00;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:bold;letter-spacing:0.1em;border-radius:4px;cursor:pointer;">[ IP INTEL DEEP DIVE ]</button>
       </div>`);
     });
 
@@ -982,11 +982,11 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
       if (!e.features?.length) return;
       const p = e.features[0].properties as any;
       const coords = (e.features[0].geometry as any).coordinates;
-      const shipColors: Record<string,string> = { military:'#FF1744', tanker:'#FF9500', cargo:'#00E5FF', passenger:'#66BB6A', fishing:'#AB47BC', hsc:'#FFD54F' };
+      const shipColors: Record<string,string> = { military:'#FF1744', tanker:'#FF9500', cargo:'#5BB6FF', passenger:'#66BB6A', fishing:'#AB47BC', hsc:'#FFD54F' };
       const shipIcons: Record<string,string> = { military:'⚔️', tanker:'🛢️', cargo:'🚢', passenger:'🛳️', fishing:'🎣', hsc:'⚡' };
-      const color = shipColors[p.type] || '#00E5FF';
+      const color = shipColors[p.type] || '#5BB6FF';
       const icon = shipIcons[p.type] || '🚢';
-      
+
       popup(coords, `<div style="${pStyle}border:1px solid ${color}60;box-shadow:inset 0 0 12px ${color}15;">
         <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid ${color}40;padding-bottom:6px;margin-bottom:8px;">
           <div style="color:${color};font-size:12px;font-weight:700;letter-spacing:0.1em;">${icon} [ ${(p.type||'VESSEL').toUpperCase()} ]</div>
@@ -1050,7 +1050,7 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
       const coords = (e.features![0].geometry as any).coordinates;
       const typeColor = p.type === 'naval' ? '#FF3D3D' : p.type === 'energy' ? '#FF9500' : '#00BCD4';
       const typeLabel = p.type === 'naval' ? 'NAVAL BASE' : p.type === 'energy' ? 'ENERGY PORT' : 'CONTAINER PORT';
-      
+
       const congestionHtml = p.congestion ? `
         <div style="margin-top:8px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.1);">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
@@ -1150,13 +1150,13 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
     useEffect(() => {
       if (!mapReady || !mapRef.current) return;
       const map = mapRef.current;
-      
+
       const isGhost = theme === 'ghost';
       const phantomPurple = '#B388FF';
       const ghostPriv = '#CE93D8';
       const ghostGov = '#D500F9';
 
-      const flightCom = isGhost ? phantomPurple : '#00E5FF';
+      const flightCom = isGhost ? phantomPurple : '#5BB6FF';
       const flightPriv = isGhost ? ghostPriv : '#FFD700';
       const flightGov = isGhost ? ghostGov : '#FF9500';
       const flightMil = '#FF0000';
@@ -1202,13 +1202,13 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
     if (!mapReady) return;
     const sats = data.satellites || [];
     const al = activeLayers as any;
-    
+
     // If 'All Satellites' is on, show everything
     if (al.satellites) {
       setGeo('satellites', sats.map((s: any) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [s.lng, s.lat] }, properties: { name: s.name, color: s.color, mission: s.mission, alt: s.alt, noradId: s.noradId, category: s.category } })));
       return;
     }
-    
+
     // Otherwise filter by enabled sub-layers
     const enabledCategories: string[] = [];
     if (al.sat_comms) enabledCategories.push('comms');
@@ -1216,12 +1216,12 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
     if (al.sat_navigation) enabledCategories.push('navigation');
     if (al.sat_earth) enabledCategories.push('earth_obs');
     if (al.sat_science) enabledCategories.push('science');
-    
+
     if (enabledCategories.length === 0) {
       setGeo('satellites', []);
       return;
     }
-    
+
     const filtered = sats.filter((s: any) => enabledCategories.includes(s.category));
     setGeo('satellites', filtered.map((s: any) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [s.lng, s.lat] }, properties: { name: s.name, color: s.color, mission: s.mission, alt: s.alt, noradId: s.noradId, category: s.category } })));
   }, [mapReady, data.satellites, activeLayers.satellites, (activeLayers as any).sat_comms, (activeLayers as any).sat_military, (activeLayers as any).sat_navigation, (activeLayers as any).sat_earth, (activeLayers as any).sat_science, setGeo]);
@@ -1241,7 +1241,7 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
   useEffect(() => {
     if (!mapReady) return;
     const meshLinks: any[] = [];
-    
+
     // Generate Malware Botnet Mesh
     if (activeLayers.malware && data.malware_threats && data.malware_threats.length > 1) {
       const nodes = data.malware_threats;
@@ -1320,7 +1320,7 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
     setGeo('radiation', activeLayers.radiation && data.radiation ? data.radiation.map((r: any) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [r.lng, r.lat] }, properties: { name: r.name, city: r.city, country: r.country, reading: r.reading, status: r.status, network: r.network } })) : []);
   }, [mapReady, data.radiation, activeLayers.radiation, setGeo]);
 
-  // ══ OSIRIS SDK — Lattice Sensor Mesh ══
+  // ══ OPHANIM SDK — Lattice Sensor Mesh ══
   // Uses real submarine cable data for SEA domain, curated routes for AIR/INTEL
   useEffect(() => {
     if (!mapReady) return;
@@ -1339,10 +1339,10 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
       const ignoredColors = new Set(['#9BB5CC', '#A0B8CD', '#8EABC2', '#9bb5cc', '#a0b8cd', '#8eabc2']);
       for (const cable of data.submarine_cables) {
         if (!cable.geometry) continue;
-        
+
         // Remove the light blue background arcs
         if (cable.properties?.color && ignoredColors.has(cable.properties.color)) continue;
-        
+
         links.push({
           type: 'Feature',
           geometry: cable.geometry, // Raw topographic paths exactly from Submarine Map
@@ -1395,9 +1395,9 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
         const zoneFeatures = (conflictData.zones || []).map((z: any) => ({
           type: 'Feature' as const,
           geometry: { type: 'Point' as const, coordinates: [z.lng, z.lat] },
-          properties: { 
-            label: z.label, 
-            severity: z.severity, 
+          properties: {
+            label: z.label,
+            severity: z.severity,
             description: `${z.description}${z.eventCount > 0 ? ` [${z.eventCount} live events detected]` : ''}`,
             sourceUrl: z.sourceUrl,
             eventCount: z.eventCount,
@@ -1410,7 +1410,7 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
           .map((e: any) => ({
             type: 'Feature' as const,
             geometry: { type: 'Point' as const, coordinates: [e.lng, e.lat] },
-            properties: { 
+            properties: {
               label: (e.title || 'CONFLICT EVENT').substring(0, 60).toUpperCase(),
               severity: 'war',
               description: e.title || 'Live conflict event detected by GDELT.',
@@ -1552,13 +1552,13 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
   useEffect(() => {
     if (!mapReady || !mapRef.current || !scanTargets) return;
     const map = mapRef.current;
-    
+
     const features = scanTargets.map(t => ({
       type: 'Feature' as const,
       geometry: { type: 'Point' as const, coordinates: [t.lng, t.lat] },
       properties: { ...t }
     }));
-    
+
     const src = map.getSource('scan-targets') as maplibregl.GeoJSONSource;
     if (src) src.setData({ type: 'FeatureCollection', features });
   }, [scanTargets, mapReady]);
@@ -1586,7 +1586,7 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
             'fog-color': '#04040A',
             'fog-ground-blend': 0.9,
           });
-        } catch (e) { console.warn('[OSIRIS] Suppressed error:', e instanceof Error ? e.message : e); }
+        } catch (e) { console.warn('[OPHANIM] Suppressed error:', e instanceof Error ? e.message : e); }
       } else {
         map.easeTo({ pitch: 0, duration: 800 });
       }
@@ -1604,18 +1604,18 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
     try {
       if (enabled) {
         // ── 3D BUILDINGS SOURCE (OpenFreeMap CDN — no API key, globally cached) ──
-        if (!map.getSource('osiris-buildings')) {
-          map.addSource('osiris-buildings', {
+        if (!map.getSource('ophanim-buildings')) {
+          map.addSource('ophanim-buildings', {
             type: 'vector',
             url: 'https://tiles.openfreemap.org/planet',
           });
         }
 
         // ── 3D BUILDING EXTRUSION LAYER ──
-        if (!map.getLayer('osiris-3d-buildings')) {
+        if (!map.getLayer('ophanim-3d-buildings')) {
           map.addLayer({
-            id: 'osiris-3d-buildings',
-            source: 'osiris-buildings',
+            id: 'ophanim-3d-buildings',
+            source: 'ophanim-buildings',
             'source-layer': 'building',
             type: 'fill-extrusion',
             minzoom: 14.5,
@@ -1654,10 +1654,10 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
 
       } else {
         // ── DISABLE 3D ──
-        if (map.getLayer('osiris-3d-buildings')) map.removeLayer('osiris-3d-buildings');
+        if (map.getLayer('ophanim-3d-buildings')) map.removeLayer('ophanim-3d-buildings');
       }
     } catch (e) {
-      console.warn('[OSIRIS] 3D terrain toggle error:', e);
+      console.warn('[OPHANIM] 3D terrain toggle error:', e);
     }
   }, [mapReady, activeLayers.terrain_3d]);
 
@@ -1695,4 +1695,4 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
   return <div ref={containerRef} className="absolute inset-0 w-full h-full" />;
 }
 
-export default memo(OsirisMap);
+export default memo(OphanimMap);

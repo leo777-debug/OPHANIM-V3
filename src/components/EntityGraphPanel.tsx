@@ -32,7 +32,7 @@ interface GraphData { nodes: EntityNode[]; links: EntityLink[]; }
 // ── PALETTE ──
 
 const TYPE_COLORS: Record<string, string> = {
-  aircraft: '#00E5FF', vessel: '#00BCD4', company: '#D4AF37',
+  aircraft: '#5BB6FF', vessel: '#00BCD4', company: '#7CFFCB',
   person: '#B388FF', country: '#76FF03', event: '#FF9500', sanction: '#FF1744',
   ip: '#FF6D00',
 };
@@ -123,7 +123,7 @@ function EntityGraphPanel({ entity, onClose }: Props) {
     const isSelected = n === selectedNode;
     const color = TYPE_COLORS[n.type] || '#888';
     const size = isSelected ? 5 : 3.5;
-    
+
     // Clean, precise circle
     ctx.beginPath();
     ctx.arc(n.x!, n.y!, size, 0, 2 * Math.PI);
@@ -149,7 +149,7 @@ function EntityGraphPanel({ entity, onClose }: Props) {
       // BR
       ctx.moveTo(n.x! + bSize - bLen, n.y! + bSize); ctx.lineTo(n.x! + bSize, n.y! + bSize); ctx.lineTo(n.x! + bSize, n.y! + bSize - bLen);
       ctx.stroke();
-      
+
       // Faint outer ring
       ctx.beginPath(); ctx.arc(n.x!, n.y!, bSize + 2, 0, 2*Math.PI);
       ctx.strokeStyle = `${color}30`; ctx.lineWidth = 1; ctx.stroke();
@@ -158,7 +158,7 @@ function EntityGraphPanel({ entity, onClose }: Props) {
     // Clean label rendering
     const fontSize = Math.max(10 / globalScale, 3);
     if (fontSize > 3.5 || isSelected) {
-      ctx.font = `${isSelected ? 'bold ' : ''}${fontSize}px 'JetBrains Mono', monospace`;
+      ctx.font = `${isSelected ? 'bold ' : ''}${fontSize}px 'IBM Plex Mono', monospace`;
       ctx.fillStyle = isSelected ? '#fff' : `${color}cc`;
       ctx.textAlign = 'center'; ctx.textBaseline = 'top';
       // Black background for text readability
@@ -176,14 +176,14 @@ function EntityGraphPanel({ entity, onClose }: Props) {
     if (!s.x || !t.x) return;
     ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(t.x, t.y);
     // Smooth, thin, non-dashed lines
-    ctx.strokeStyle = 'rgba(212,175,55,0.15)'; // faint gold
-    ctx.lineWidth = Math.max(0.5, 1 / globalScale); 
+    ctx.strokeStyle = 'rgba(124,255,203,0.15)'; // faint gold
+    ctx.lineWidth = Math.max(0.5, 1 / globalScale);
     ctx.stroke();
-    
+
     const fs = Math.max(8 / globalScale, 2);
     if (fs > 3) {
-      ctx.font = `${fs}px 'JetBrains Mono', monospace`; 
-      ctx.fillStyle = 'rgba(212,175,55,0.4)';
+      ctx.font = `${fs}px 'IBM Plex Mono', monospace`;
+      ctx.fillStyle = 'rgba(124,255,203,0.4)';
       ctx.textAlign = 'center'; ctx.fillText(link.label || '', (s.x + t.x) / 2, (s.y + t.y) / 2);
     }
   }, []);
@@ -208,18 +208,18 @@ function EntityGraphPanel({ entity, onClose }: Props) {
         <style>{`
           .scanline {
             position: absolute; inset: 0; pointer-events: none;
-            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(212,175,55,0.03) 50%, rgba(212,175,55,0.03));
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(124,255,203,0.03) 50%, rgba(124,255,203,0.03));
             background-size: 100% 4px;
             z-index: 10;
           }
           .hud-corner {
-            position: absolute; width: 16px; height: 16px; border-color: rgba(212,175,55,0.4); border-style: solid; z-index: 20; pointer-events: none;
+            position: absolute; width: 16px; height: 16px; border-color: rgba(124,255,203,0.4); border-style: solid; z-index: 20; pointer-events: none;
           }
           .hud-tl { top: 12px; left: 12px; border-width: 2px 0 0 2px; }
           .hud-tr { top: 12px; right: 12px; border-width: 2px 2px 0 0; }
           .hud-bl { bottom: 12px; left: 12px; border-width: 0 0 2px 2px; }
           .hud-br { bottom: 12px; right: 12px; border-width: 0 2px 2px 0; }
-          
+
           .typewriter {
             display: inline-block; overflow: hidden; white-space: nowrap; border-right: 2px solid var(--gold-primary);
             animation: typing 0.8s steps(30, end) forwards, blink-caret 0.5s step-end infinite;
@@ -227,7 +227,7 @@ function EntityGraphPanel({ entity, onClose }: Props) {
           @keyframes typing { from { width: 0 } to { width: 100% } }
           @keyframes blink-caret { from, to { border-color: transparent } 50% { border-color: var(--gold-primary) } }
         `}</style>
-        
+
         <div className="scanline" />
         <div className="hud-corner hud-tl" />
         <div className="hud-corner hud-tr" />
@@ -236,8 +236,8 @@ function EntityGraphPanel({ entity, onClose }: Props) {
         {/* HEADER */}
         <div className="flex items-center justify-between px-6 py-3 border-b border-[var(--border-primary)] bg-[var(--gold-primary)]/5 relative z-20">
           <div className="flex items-center gap-3">
-            <div className="w-1.5 h-1.5 bg-[var(--gold-primary)] animate-osiris-pulse shadow-[0_0_8px_var(--gold-primary)]" />
-            <span className="text-[12px] font-mono font-bold tracking-[0.2em] text-[var(--gold-primary)]">[ OSIRIS // ENTITY INTEL ]</span>
+            <div className="w-1.5 h-1.5 bg-[var(--gold-primary)] animate-ophanim-pulse shadow-[0_0_8px_var(--gold-primary)]" />
+            <span className="text-[12px] font-mono font-bold tracking-[0.2em] text-[var(--gold-primary)]">[ OPHANIM // ENTITY INTEL ]</span>
             {loading && <Loader2 className="w-3.5 h-3.5 text-[var(--gold-primary)] animate-spin" />}
           </div>
           <div className="flex items-center gap-2">
@@ -259,7 +259,7 @@ function EntityGraphPanel({ entity, onClose }: Props) {
           </div>
         ) : (
           <div className="px-6 py-3 border-b border-[var(--border-primary)] flex items-center gap-3 bg-black/20 relative z-20">
-            <Network className="w-4 h-4 text-[var(--gold-primary)]/50 animate-osiris-pulse" />
+            <Network className="w-4 h-4 text-[var(--gold-primary)]/50 animate-ophanim-pulse" />
             <span className="text-xs font-mono text-[var(--gold-primary)]/50 tracking-widest uppercase truncate typewriter">[ AWAITING TARGET LOCK ]</span>
           </div>
         )}
@@ -284,7 +284,7 @@ function EntityGraphPanel({ entity, onClose }: Props) {
               d3AlphaDecay={0.05} d3VelocityDecay={0.4} cooldownTicks={100}
               linkDirectionalParticles={1} linkDirectionalParticleWidth={1.5}
               linkDirectionalParticleSpeed={0.003}
-              linkDirectionalParticleColor={() => 'rgba(212,175,55,0.6)'}
+              linkDirectionalParticleColor={() => 'rgba(124,255,203,0.6)'}
             />
           )}
           {graphData.nodes.length === 0 && !loading && (
@@ -303,7 +303,7 @@ function EntityGraphPanel({ entity, onClose }: Props) {
             >
               <div className="flex items-center justify-between mb-3 border-b border-[var(--border-secondary)] pb-2">
                 <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-[var(--gold-primary)] animate-osiris-pulse shadow-[0_0_8px_var(--gold-primary)]" />
+                  <div className="w-1.5 h-1.5 bg-[var(--gold-primary)] animate-ophanim-pulse shadow-[0_0_8px_var(--gold-primary)]" />
                   {(() => { const I = TYPE_ICONS[selectedNode.type] || Globe; return <I className="w-4 h-4" style={{ color: TYPE_COLORS[selectedNode.type] }} />; })()}
                   <span className="text-[13px] font-mono font-bold text-white tracking-[0.1em] uppercase">{selectedNode.label}</span>
                 </div>

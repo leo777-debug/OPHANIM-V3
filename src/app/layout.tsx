@@ -1,14 +1,15 @@
 import type { Metadata, Viewport } from "next";
-import ErrorBoundary from '@/components/ErrorBoundary';
+import ErrorBoundary from "@/components/ErrorBoundary";
 import "./globals.css";
 
-const SITE_URL = "https://osirisai.live";
-const SITE_NAME = "OSIRIS";
-const SITE_TITLE = "OSIRIS — Open Source Intelligence Platform | Live Flight Tracking, CCTV, OSINT Tools & More";
-const SITE_DESCRIPTION = "The open-source Palantir alternative. Track 10,000+ aircraft, 2,000 satellites, and worldwide CCTV cameras in real-time on a 3D globe. Run Nmap scans, DNS lookups, WHOIS queries, SSL cert analysis & threat intelligence — all from your browser. 20+ live data feeds including earthquakes, wildfires, nuclear facilities, cyber threats, and global conflicts. Free & open source.";
+const SITE_URL = "https://ophanim.live";
+const SITE_NAME = "OPHANIM";
+const SITE_TITLE = "OPHANIM - Live Intelligence Atlas | Flights, CCTV, OSINT Tools & Global Risk";
+const SITE_DESCRIPTION =
+  "A modern open-source intelligence atlas for live flight tracking, satellites, maritime activity, public CCTV, severe weather, cyber threats, financial signals, and browser-based OSINT tools.";
 
 export const viewport: Viewport = {
-  themeColor: "#D4AF37",
+  themeColor: "#7CFFCB",
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
@@ -19,44 +20,33 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default: SITE_TITLE,
-    template: "%s | OSIRIS Intelligence",
+    template: "%s | OPHANIM Intelligence",
   },
   description: SITE_DESCRIPTION,
   keywords: [
-    // OSINT Tools - Primary focus
-    "OSINT tools", "free OSINT tools", "online OSINT toolkit", "OSINT framework",
-    "nmap online", "nmap scanner online", "free nmap scan", "port scanner online",
-    "DNS lookup tool", "WHOIS lookup", "reverse DNS", "DNS records",
-    "SSL certificate checker", "certificate transparency", "cert lookup",
-    "BGP routing lookup", "ASN lookup", "IP geolocation",
-    "threat intelligence", "threat intel lookup", "IP reputation check",
-    "network reconnaissance", "recon tools", "penetration testing tools",
-    "cybersecurity tools", "infosec tools", "security scanner",
-    "linux OSINT tools", "kali linux tools online", "OSINT browser tools",
-    
-    // Intelligence Platform
-    "OSINT", "open source intelligence", "intelligence platform", "global intelligence",
-    "geospatial intelligence", "GEOINT", "SIGINT", "real-time tracking",
-    "palantir alternative", "open source palantir", "intelligence dashboard",
-    
-    // Tracking & Data
-    "flight tracker", "aircraft tracking", "ADS-B tracker", "live flight radar",
-    "satellite tracking", "ISS tracker", "space station tracker",
-    "CCTV cameras live", "security cameras worldwide", "live cameras",
-    "earthquake monitor", "seismic activity", "USGS earthquake",
-    "wildfire tracker", "NASA FIRMS", "active fires",
-    "nuclear facilities map", "nuclear power plants",
-    "severe weather alerts", "weather radar",
-    "cyber threats dashboard", "CVE tracker",
-    "space weather", "solar storm", "GPS jamming",
-    "defense stocks", "commodities tracker",
-    
-    // Brand
-    "osiris", "osirisai", "osirisai.live",
+    "OSINT tools",
+    "open source intelligence",
+    "intelligence atlas",
+    "geospatial intelligence",
+    "real-time tracking",
+    "flight tracker",
+    "satellite tracking",
+    "CCTV cameras live",
+    "earthquake monitor",
+    "wildfire tracker",
+    "cyber threats dashboard",
+    "weather alerts",
+    "DNS lookup",
+    "WHOIS lookup",
+    "BGP routing lookup",
+    "IP geolocation",
+    "threat intelligence",
+    "ophanim",
+    "ophanim intelligence",
   ],
-  authors: [{ name: "Osiris Project", url: SITE_URL }],
-  creator: "Osiris Project",
-  publisher: "Osiris Project",
+  authors: [{ name: "Ophanim Project", url: SITE_URL }],
+  creator: "Ophanim Project",
+  publisher: "Ophanim Project",
   robots: {
     index: true,
     follow: true,
@@ -75,9 +65,7 @@ export const metadata: Metadata = {
       { url: "/android-chrome-192x192.png", type: "image/png", sizes: "192x192" },
       { url: "/android-chrome-512x512.png", type: "image/png", sizes: "512x512" },
     ],
-    apple: [
-      { url: "/apple-touch-icon.png", sizes: "180x180" },
-    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
     shortcut: "/favicon.ico",
     other: [
       {
@@ -91,8 +79,8 @@ export const metadata: Metadata = {
     canonical: SITE_URL,
   },
   openGraph: {
-    title: "OSIRIS — The Open-Source Palantir Alternative | Live Flights, CCTV, Satellites & OSINT Tools",
-    description: "Track 10K+ aircraft, 2K satellites & worldwide CCTV on a 3D globe. Run Nmap, DNS, WHOIS & threat intel scans from your browser. 20+ live intelligence feeds. Free. Open source.",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
     type: "website",
     siteName: SITE_NAME,
     locale: "en_US",
@@ -102,17 +90,15 @@ export const metadata: Metadata = {
         url: `${SITE_URL}/og-image.png`,
         width: 1200,
         height: 630,
-        alt: "OSIRIS — Open Source Intelligence Platform with Live Tracking & OSINT Tools",
+        alt: "OPHANIM live intelligence atlas with map layers and OSINT tools",
         type: "image/png",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "🛰️ OSIRIS — Open Source Palantir Alternative | Live Tracking + OSINT Tools",
-    description: "Track 10K+ flights, satellites & CCTV worldwide. Run Nmap, DNS, WHOIS scans from your browser. 20+ live intel feeds. Free & open source.",
-    creator: "@simplifaisoul",
-    site: "@simplifaisoul",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
     images: [`${SITE_URL}/og-image.png`],
   },
   category: "technology",
@@ -120,19 +106,18 @@ export const metadata: Metadata = {
   other: {
     "apple-mobile-web-app-capable": "yes",
     "apple-mobile-web-app-status-bar-style": "black-translucent",
-    "apple-mobile-web-app-title": "OSIRIS",
+    "apple-mobile-web-app-title": SITE_NAME,
     "mobile-web-app-capable": "yes",
-    "msapplication-TileColor": "#06060C",
+    "msapplication-TileColor": "#081011",
     "msapplication-config": "none",
   },
 };
 
-// JSON-LD Structured Data
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  name: "OSIRIS — OSINT Toolkit & Intelligence Platform",
-  alternateName: ["OSIRIS", "OsirisAI", "Osiris OSINT"],
+  name: "OPHANIM - OSINT Toolkit & Live Intelligence Atlas",
+  alternateName: ["OPHANIM", "Ophanim Intelligence", "Ophanim Atlas"],
   url: SITE_URL,
   description: SITE_DESCRIPTION,
   applicationCategory: "SecurityApplication",
@@ -145,31 +130,15 @@ const jsonLd = {
     availability: "https://schema.org/InStock",
   },
   featureList: [
-    "Nmap port scanning from the browser — no install required",
-    "DNS record lookup (A, AAAA, MX, NS, TXT, CNAME)",
-    "WHOIS domain registration lookup",
-    "SSL/TLS certificate transparency search",
-    "BGP routing & ASN lookup",
-    "IP geolocation & threat intelligence",
-    "Real-time flight tracking (10,000+ aircraft via ADS-B)",
-    "Satellite tracking (2,000+ objects including ISS)",
-    "Worldwide CCTV camera monitoring (1,400+ feeds)",
-    "Earthquake monitoring (USGS live feed)",
-    "Wildfire detection (NASA FIRMS satellite data)",
-    "Nuclear facility mapping (worldwide)",
-    "Severe weather alerts & tracking",
-    "Cyber threat & CVE intelligence",
-    "Space weather & solar storm monitoring",
-    "GPS jamming detection",
-    "Defense & commodity market tracking",
-    "SIGINT news aggregation feed",
-    "Interactive 3D globe with day/night cycle",
-    "Region intelligence dossier reports",
+    "Browser-based OSINT toolkit",
+    "DNS, WHOIS, BGP, certificate, CVE, and IP intelligence lookups",
+    "Real-time flight, maritime, satellite, CCTV, hazard, market, and cyber layers",
+    "Interactive 3D globe with day/night cycle and regional dossiers",
   ],
   screenshot: `${SITE_URL}/og-image.png`,
   author: {
     "@type": "Organization",
-    name: "Osiris Project",
+    name: "Ophanim Project",
     url: SITE_URL,
   },
 };
@@ -189,18 +158,13 @@ export default function RootLayout({
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="canonical" href={SITE_URL} />
-        
-        {/* JSON-LD Structured Data */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-
       </head>
       <body className="antialiased">
-        <ErrorBoundary name="OSIRIS Core">
-          {children}
-        </ErrorBoundary>
+        <ErrorBoundary name="OPHANIM Core">{children}</ErrorBoundary>
       </body>
     </html>
   );
