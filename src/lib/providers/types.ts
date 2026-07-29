@@ -1,8 +1,22 @@
-export const PROVIDER_ENTITY_TYPES = ['location', 'coordinate'] as const;
+export const PROVIDER_ENTITY_TYPES = [
+  'location', 'coordinate', 'ip', 'domain', 'email', 'username', 'company',
+  'organization', 'vessel', 'port', 'imo', 'mmsi', 'country', 'region', 'command',
+] as const;
 export type ProviderEntityType = (typeof PROVIDER_ENTITY_TYPES)[number];
 
-export const SEARCH_INTENTS = ['forward_geocode', 'reverse_geocode', 'coordinate_lookup'] as const;
+export const SEARCH_INTENTS = [
+  'forward_geocode', 'reverse_geocode', 'coordinate_lookup', 'ip_lookup', 'domain_lookup',
+  'email_lookup', 'username_lookup', 'company_lookup', 'organization_lookup', 'vessel_lookup',
+  'port_lookup', 'imo_lookup', 'mmsi_lookup', 'country_lookup', 'region_lookup', 'map_command',
+  'natural_language',
+] as const;
 export type SearchIntent = (typeof SEARCH_INTENTS)[number];
+
+export type SearchCommand = 'show_submarine_cables' | 'show_ghost_ships' | 'show_ai_data_centers' | 'unsupported_natural_language';
+
+export type SearchAction =
+  | { type: 'enable_layers'; layers: Array<'maritime' | 'cables'> }
+  | { type: 'unavailable'; message: string };
 
 export interface Coordinates {
   lat: number;
@@ -18,6 +32,7 @@ export interface ProviderMetadata {
   requiresCredentials: boolean;
   timeoutMs: number;
   enabled: boolean;
+  priority: number;
 }
 
 export interface ProviderQuery {
@@ -25,19 +40,22 @@ export interface ProviderQuery {
   entityType: ProviderEntityType;
   query?: string;
   coordinates?: Coordinates;
+  command?: SearchCommand;
   limit: number;
 }
 
 export interface NormalizedSearchResult {
   id: string;
   label: string;
-  lat: number;
-  lng: number;
+  lat?: number;
+  lng?: number;
   type: string;
   category: string;
   importance: number;
   zoomLevel: number;
   provider: string;
+  summary?: string;
+  action?: SearchAction;
   location?: {
     locality?: string;
     region?: string;
@@ -48,6 +66,7 @@ export interface NormalizedSearchResult {
 export interface ProviderExecutionContext {
   signal: AbortSignal;
   locale: string;
+  origin?: string;
 }
 
 export interface Provider {

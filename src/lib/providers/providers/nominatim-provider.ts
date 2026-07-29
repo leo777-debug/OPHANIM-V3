@@ -69,12 +69,13 @@ export const nominatimProvider: Provider = {
   metadata: {
     name: 'nominatim',
     description: 'OpenStreetMap geocoding and reverse-geocoding service.',
-    supportedEntityTypes: ['location'],
-    supportedIntents: ['forward_geocode', 'reverse_geocode'],
+    supportedEntityTypes: ['location', 'port', 'country', 'region'],
+    supportedIntents: ['forward_geocode', 'reverse_geocode', 'port_lookup', 'country_lookup', 'region_lookup'],
     supportsMapLayers: false,
     requiresCredentials: false,
     timeoutMs: 5000,
     enabled: process.env.OPHANIM_NOMINATIM_ENABLED !== 'false',
+    priority: 20,
   },
 
   async execute(query, context) {

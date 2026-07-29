@@ -27,4 +27,30 @@ describe('classifySearch', () => {
     });
     expect(() => classifySearch({ mode: 'reverse', lat: '91', lng: '0' })).toThrow();
   });
+
+  it.each([
+    ['8.8.8.8', 'ip_lookup', 'ip'],
+    ['tesla.com', 'domain_lookup', 'domain'],
+    ['analyst@example.com', 'email_lookup', 'email'],
+    ['@octocat', 'username_lookup', 'username'],
+    ['company Tesla', 'company_lookup', 'company'],
+    ['organization OpenAI', 'organization_lookup', 'organization'],
+    ['Track MSC IRINA', 'vessel_lookup', 'vessel'],
+    ['Port Singapore', 'port_lookup', 'port'],
+    ['9074729', 'imo_lookup', 'imo'],
+    ['123456789', 'mmsi_lookup', 'mmsi'],
+    ['country France', 'country_lookup', 'country'],
+    ['region Lombardy', 'region_lookup', 'region'],
+    ['Show submarine cables', 'map_command', 'command'],
+    ['Show ghost ships', 'map_command', 'command'],
+    ['Show AI data centers', 'map_command', 'command'],
+  ] as const)('classifies %s deterministically', (query, intent, entityType) => {
+    expect(classifySearch({ query })).toMatchObject({ intent, entityType });
+  });
+
+  it('classifies unsupported natural language without AI routing', () => {
+    expect(classifySearch({ query: 'Show unknown network assets' })).toMatchObject({
+      intent: 'natural_language', entityType: 'command', command: 'unsupported_natural_language',
+    });
+  });
 });

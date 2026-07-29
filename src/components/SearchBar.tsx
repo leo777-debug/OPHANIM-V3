@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Search, X, MapPin, Navigation, Building2, Globe2, Landmark } from 'lucide-react';
+import type { NormalizedSearchResult, SearchAction } from '@/lib/providers/types';
 
 /* ═══════════════════════════════════════════════════════════════
    OPHANIM — Enhanced Search / Locate Bar
@@ -9,18 +10,11 @@ import { Search, X, MapPin, Navigation, Building2, Globe2, Landmark } from 'luci
    Ctrl+F / Cmd+F keyboard shortcut support
    ═══════════════════════════════════════════════════════════════ */
 
-interface SearchResult {
-  label: string;
-  lat: number;
-  lng: number;
-  type: string;
-  importance: number;
-  category: string;
-  zoomLevel: number;
-}
+type SearchResult = NormalizedSearchResult;
 
 interface SearchBarProps {
   onLocate: (lat: number, lng: number, zoom?: number) => void;
+  onAction?: (action: SearchAction) => void;
   alwaysExpanded?: boolean;
 }
 
@@ -51,7 +45,7 @@ function formatLabel(displayName: string): { primary: string; secondary: string 
   };
 }
 
-export default function SearchBar({ onLocate, alwaysExpanded = false }: SearchBarProps) {
+export default function SearchBar({ onLocate, onAction, alwaysExpanded = false }: SearchBarProps) {
   const [open, setOpen] = useState(alwaysExpanded);
   const [value, setValue] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -117,7 +111,8 @@ export default function SearchBar({ onLocate, alwaysExpanded = false }: SearchBa
   }, []);
 
   const handleSelect = (r: SearchResult) => {
-    onLocate(r.lat, r.lng, r.zoomLevel);
+    if (r.action) onAction?.(r.action);
+    if (r.lat !== undefined && r.lng !== undefined) onLocate(r.lat, r.lng, r.zoomLevel);
     if (!alwaysExpanded) setOpen(false);
     setValue('');
     setResults([]);
@@ -201,6 +196,7 @@ export default function SearchBar({ onLocate, alwaysExpanded = false }: SearchBa
         >
           {results.map((r, i) => {
             const { primary, secondary } = formatLabel(r.label);
+            const detail = r.summary || secondary;
             const isSelected = i === selectedIdx;
             return (
               <button
@@ -214,17 +210,15 @@ export default function SearchBar({ onLocate, alwaysExpanded = false }: SearchBa
                 <div className="mt-0.5">{getResultIcon(r.type, r.category)}</div>
                 <div className="flex-1 min-w-0">
                   <div className="text-[10px] text-[var(--text-primary)] font-mono truncate leading-tight">{primary}</div>
-                  {secondary && (
-                    <div className="text-[8px] text-[var(--text-muted)] font-mono truncate mt-0.5">{secondary}</div>
+                  {detail && (
+                    <div className="text-[8px] text-[var(--text-muted)] font-mono truncate mt-0.5">{detail}</div>
                   )}
                 </div>
                 <div className="flex flex-col items-end flex-shrink-0">
                   <span className="text-[7px] text-[var(--text-muted)] font-mono uppercase tracking-wider">
                     {r.type === 'coordinate' ? 'COORDS' : r.type}
                   </span>
-                  <span className="text-[7px] text-[var(--gold-primary)] font-mono opacity-40">
-                    Z{r.zoomLevel}
-                  </span>
+                  {r.lat !== undefined && r.lng !== undefined && <span className="text-[7px] text-[var(--gold-primary)] font-mono opacity-40">Z{r.zoomLevel}</span>}
                 </div>
               </button>
             );

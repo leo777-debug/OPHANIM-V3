@@ -27,6 +27,24 @@ function parseLimit(value?: string | null): number {
   return Math.min(Math.max(Math.floor(parsed), 1), 20);
 }
 
+function isValidImo(value: string): boolean {
+  if (!/^\d{7}$/.test(value)) return false;
+  const checksum = value.slice(0, 6).split('').reduce((total, digit, index) => total + Number(digit) * (7 - index), 0) % 10;
+  return checksum === Number(value[6]);
+}
+
+function classifyCommand(query: string): ProviderQuery | null {
+  const normalized = query.toLowerCase().replace(/\s+/g, ' ').trim();
+  const commands: Array<[RegExp, ProviderQuery['command']]> = [
+    [/^show (the )?submarine cables?$/, 'show_submarine_cables'],
+    [/^show (the )?ghost ships?$/, 'show_ghost_ships'],
+    [/^show (the )?ai data cent(er|re)s?$/, 'show_ai_data_centers'],
+  ];
+  const match = commands.find(([pattern]) => pattern.test(normalized));
+  if (!match) return null;
+  return { intent: 'map_command', entityType: 'command', query, command: match[1], limit: 1 };
+}
+
 export function classifySearch(input: SearchInput): ProviderQuery {
   const limit = parseLimit(input.limit);
   if (input.mode === 'reverse') {
@@ -52,6 +70,62 @@ export function classifySearch(input: SearchInput): ProviderQuery {
       coordinates,
       limit: 1,
     };
+  }
+
+  const command = classifyCommand(query);
+  if (command) return command;
+
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(query)) {
+    return { intent: 'email_lookup', entityType: 'email', query: query.toLowerCase(), limit: 1 };
+  }
+  if (/^(?:\d{1,3}\.){3}\d{1,3}$/.test(query) || (/^[0-9a-fA-F:]{2,}$/.test(query) && query.includes(':'))) {
+    return { intent: 'ip_lookup', entityType: 'ip', query, limit: 1 };
+  }
+  if (isValidImo(query)) {
+    return { intent: 'imo_lookup', entityType: 'imo', query, limit: 1 };
+  }
+  if (/^\d{9}$/.test(query)) {
+    return { intent: 'mmsi_lookup', entityType: 'mmsi', query, limit: 1 };
+  }
+  if (/^[a-zA-Z0-9][a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(query)) {
+    return { intent: 'domain_lookup', entityType: 'domain', query: query.toLowerCase(), limit: 1 };
+  }
+  if (/^@[a-zA-Z0-9-]{1,39}$/.test(query)) {
+    return { intent: 'username_lookup', entityType: 'username', query: query.slice(1), limit: 1 };
+  }
+
+  const imoPrefix = query.match(/^imo\s*[:\-]?\s*(\d{7})$/i);
+  if (imoPrefix && isValidImo(imoPrefix[1])) {
+    return { intent: 'imo_lookup', entityType: 'imo', query: imoPrefix[1], limit: 1 };
+  }
+  const mmsiPrefix = query.match(/^mmsi\s*[:\-]?\s*(\d{9})$/i);
+  if (mmsiPrefix) {
+    return { intent: 'mmsi_lookup', entityType: 'mmsi', query: mmsiPrefix[1], limit: 1 };
+  }
+
+  const prefixed = query.match(/^(company|organization|organisation|org|vessel|ship|port|country|region)\s*[:\-]?\s+(.+)$/i);
+  if (prefixed) {
+    const [, kind, value] = prefixed;
+    const normalizedKind = kind.toLowerCase();
+    const mapping: Record<string, Pick<ProviderQuery, 'intent' | 'entityType'>> = {
+      company: { intent: 'company_lookup', entityType: 'company' },
+      organization: { intent: 'organization_lookup', entityType: 'organization' },
+      organisation: { intent: 'organization_lookup', entityType: 'organization' },
+      org: { intent: 'organization_lookup', entityType: 'organization' },
+      vessel: { intent: 'vessel_lookup', entityType: 'vessel' },
+      ship: { intent: 'vessel_lookup', entityType: 'vessel' },
+      port: { intent: 'port_lookup', entityType: 'port' },
+      country: { intent: 'country_lookup', entityType: 'country' },
+      region: { intent: 'region_lookup', entityType: 'region' },
+    };
+    return { ...mapping[normalizedKind], query: value.trim(), limit };
+  }
+
+  const track = query.match(/^track\s+(.+)$/i);
+  if (track) return { intent: 'vessel_lookup', entityType: 'vessel', query: track[1].trim(), limit };
+
+  if (/^(show|find|locate)\s+/i.test(query)) {
+    return { intent: 'natural_language', entityType: 'command', query, command: 'unsupported_natural_language', limit: 1 };
   }
 
   if (query.length < 2) throw new Error('Search query must be at least 2 characters');

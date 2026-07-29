@@ -8,7 +8,7 @@ function provider(name: string, execute: Provider['execute']): Provider {
   return {
     metadata: {
       name, description: 'test', supportedEntityTypes: ['location'], supportedIntents: ['forward_geocode'],
-      supportsMapLayers: false, requiresCredentials: false, timeoutMs: 20, enabled: true,
+      supportsMapLayers: false, requiresCredentials: false, timeoutMs: 20, enabled: true, priority: 10,
     },
     execute,
     normalize() {

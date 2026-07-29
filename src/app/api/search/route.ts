@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
       lng: searchParams.get('lng'),
       limit: searchParams.get('limit'),
       mode: searchParams.get('mode'),
-    });
+    }, { locale: request.headers.get('accept-language')?.split(',')[0] || 'en' });
     return NextResponse.json(response, { headers: { 'Cache-Control': 'private, max-age=60' } });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Invalid search request';

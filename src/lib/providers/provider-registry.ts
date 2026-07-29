@@ -10,6 +10,6 @@ export class ProviderRegistry {
       if (metadata.requiresCredentials && (!provider.isConfigured || !provider.isConfigured())) return false;
       return metadata.supportedEntityTypes.includes(query.entityType)
         && metadata.supportedIntents.includes(query.intent);
-    });
+    }).sort((a, b) => a.metadata.priority - b.metadata.priority || a.metadata.name.localeCompare(b.metadata.name));
   }
 }
