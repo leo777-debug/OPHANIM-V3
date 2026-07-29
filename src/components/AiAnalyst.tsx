@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { readClientAiConfig, writeClientAiConfig } from '@/lib/ai/client-config';
+import { AI_TASKS, type AiTask } from '@/lib/ai/providers/types';
 import {
   Brain,
   Send,
@@ -197,17 +199,22 @@ export default function AiAnalyst({ data }: AiAnalystProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState('');
+  const [baseUrlInput, setBaseUrlInput] = useState('');
+  const [modelInput, setModelInput] = useState('');
+  const [enabledTasks, setEnabledTasks] = useState<AiTask[]>([...AI_TASKS]);
   const [keySaved, setKeySaved] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Load saved key on mount
+  // Provider credentials are held only for the current browser session.
   useEffect(() => {
-    const saved = localStorage.getItem(GEMINI_KEY_STORAGE) || localStorage.getItem(LEGACY_GEMINI_KEY_STORAGE);
+    const saved = readClientAiConfig();
     if (saved) {
-      localStorage.setItem(GEMINI_KEY_STORAGE, saved);
-      setApiKeyInput(saved);
+      setApiKeyInput(saved.apiKey);
+      setBaseUrlInput(saved.baseUrl);
+      setModelInput(saved.model);
+      setEnabledTasks(saved.enabledTasks);
       setKeySaved(true);
     }
   }, []);
@@ -249,10 +256,11 @@ export default function AiAnalyst({ data }: AiAnalystProps) {
 
     try {
       const context = buildContext(data);
-      const res = await fetch('/api/ai/analyze', {
+      const aiConfig = readClientAiConfig();
+      const res = await fetch('/api/ai/generate', {
         method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify({ query, context }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ task: 'explain', input: query, context, config: aiConfig }),
       });
 
       const json = await res.json();
@@ -262,13 +270,13 @@ export default function AiAnalyst({ data }: AiAnalystProps) {
         throw new Error(errorBody.error || `HTTP ${res.status}`);
       }
 
-      const responseBody = json as { analysis: string; model: string; timestamp: string };
+      const responseBody = json as { analysis?: string; output?: string; model: string; timestamp?: string; generatedAt?: string };
 
       const analystMsg: ChatMessage = {
         id: generateId(),
         role: 'analyst',
-        content: responseBody.analysis,
-        timestamp: responseBody.timestamp,
+        content: responseBody.output ?? responseBody.analysis ?? '',
+        timestamp: responseBody.generatedAt ?? responseBody.timestamp ?? new Date().toISOString(),
       };
       setMessages((prev) => [...prev, analystMsg]);
     } catch (err: unknown) {
@@ -300,10 +308,11 @@ export default function AiAnalyst({ data }: AiAnalystProps) {
 
     try {
       const context = buildContext(data);
-      const res = await fetch('/api/ai/briefing', {
+      const aiConfig = readClientAiConfig();
+      const res = await fetch('/api/ai/generate', {
         method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify({ context }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ task: 'summarize', input: 'Write an operational intelligence briefing from this supplied context.', context, config: aiConfig }),
       });
 
       const json = await res.json();
@@ -313,13 +322,13 @@ export default function AiAnalyst({ data }: AiAnalystProps) {
         throw new Error(errorBody.error || `HTTP ${res.status}`);
       }
 
-      const responseBody = json as { briefing: string; generatedAt: string };
+      const responseBody = json as { briefing?: string; output?: string; generatedAt?: string };
 
       const analystMsg: ChatMessage = {
         id: generateId(),
         role: 'analyst',
-        content: responseBody.briefing,
-        timestamp: responseBody.generatedAt,
+        content: responseBody.output ?? responseBody.briefing ?? '',
+        timestamp: responseBody.generatedAt ?? new Date().toISOString(),
       };
       setMessages((prev) => [...prev, analystMsg]);
     } catch (err: unknown) {
@@ -349,17 +358,21 @@ export default function AiAnalyst({ data }: AiAnalystProps) {
 
   const saveApiKey = useCallback(() => {
     const key = apiKeyInput.trim();
-    if (key) {
-      localStorage.setItem(GEMINI_KEY_STORAGE, key);
+    const baseUrl = baseUrlInput.trim();
+    const model = modelInput.trim();
+    if (key && baseUrl && model) {
+      writeClientAiConfig({ apiKey: key, baseUrl, model, enabledTasks });
       setKeySaved(true);
       setTimeout(() => setShowSettings(false), 600);
     }
-  }, [apiKeyInput]);
+  }, [apiKeyInput, baseUrlInput, modelInput, enabledTasks]);
 
   const clearApiKey = useCallback(() => {
-    localStorage.removeItem(GEMINI_KEY_STORAGE);
-    localStorage.removeItem(LEGACY_GEMINI_KEY_STORAGE);
+    sessionStorage.removeItem('ophanim-ai-provider-config');
     setApiKeyInput('');
+    setBaseUrlInput('');
+    setModelInput('');
+    setEnabledTasks([...AI_TASKS]);
     setKeySaved(false);
   }, []);
 
@@ -511,10 +524,10 @@ export default function AiAnalyst({ data }: AiAnalystProps) {
                       <div className="flex items-center gap-2">
                         <Key className="w-3 h-3 text-[var(--gold-dim)]" />
                         <span className="hud-label" style={{ fontSize: '8px' }}>
-                          GEMINI API KEY (OPTIONAL)
+                          OPENAI-COMPATIBLE AI PROVIDER
                         </span>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="grid grid-cols-1 gap-2">
                         <input
                           type="password"
                           value={apiKeyInput}
@@ -522,10 +535,15 @@ export default function AiAnalyst({ data }: AiAnalystProps) {
                             setApiKeyInput(e.target.value);
                             setKeySaved(false);
                           }}
-                          placeholder="AIza..."
+                          placeholder="API key"
                           className="flex-1 bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded-lg px-3 py-2 text-[11px] font-mono text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--gold-dim)] transition-colors"
                         />
-                        {apiKeyInput.trim() && (
+                        <input value={baseUrlInput} onChange={(e) => { setBaseUrlInput(e.target.value); setKeySaved(false); }} placeholder="Base URL, e.g. https://api.openai.com/v1" className="bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded-lg px-3 py-2 text-[11px] font-mono text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--gold-dim)] transition-colors" />
+                        <input value={modelInput} onChange={(e) => { setModelInput(e.target.value); setKeySaved(false); }} placeholder="Model, e.g. gpt-4o-mini" className="bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded-lg px-3 py-2 text-[11px] font-mono text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--gold-dim)] transition-colors" />
+                        <div className="flex flex-wrap gap-2">
+                          {AI_TASKS.map((task) => <label key={task} className="flex items-center gap-1 text-[8px] font-mono text-[var(--text-muted)]"><input type="checkbox" checked={enabledTasks.includes(task)} onChange={() => { setEnabledTasks((current) => current.includes(task) ? current.filter((value) => value !== task) : [...current, task]); setKeySaved(false); }} />{task.replace(/_/g, ' ')}</label>)}
+                        </div>
+                        {apiKeyInput.trim() && baseUrlInput.trim() && modelInput.trim() && (
                           <>
                             <button
                               onClick={saveApiKey}
@@ -551,17 +569,7 @@ export default function AiAnalyst({ data }: AiAnalystProps) {
                           </>
                         )}
                       </div>
-                      <p className="text-[8px] font-mono text-[var(--text-muted)] leading-relaxed">
-                        Your key is stored locally and sent only to the OPHANIM server. Get a free key at{' '}
-                        <a
-                          href="https://aistudio.google.com/apikey"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[var(--cyan-primary)] hover:underline"
-                        >
-                          aistudio.google.com
-                        </a>
-                      </p>
+                      <p className="text-[8px] font-mono text-[var(--text-muted)] leading-relaxed">Settings are kept for this browser session and used only for permitted writing tasks. Local URLs must be allowlisted by the server.</p>
                     </div>
                   </motion.div>
                 )}
