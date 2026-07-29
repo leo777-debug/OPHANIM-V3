@@ -3,6 +3,7 @@ import { MapLayerManager } from './map-layer-manager';
 import { domainIntelligenceProvider } from './providers/domain-intelligence-provider';
 import { emailBreachProvider } from './providers/email-breach-provider';
 import { githubUsernameProvider } from './providers/github-username-provider';
+import { ghostTrackProvider } from './providers/ghosttrack-provider';
 import { ipIntelligenceProvider } from './providers/ip-intelligence-provider';
 import { mapCommandProvider } from './providers/map-command-provider';
 import { maritimeProvider } from './providers/maritime-provider';
@@ -23,6 +24,7 @@ const registry = new ProviderRegistry([
   domainIntelligenceProvider,
   emailBreachProvider,
   githubUsernameProvider,
+  ghostTrackProvider,
   sanctionsEntityProvider,
   maritimeProvider,
   mapCommandProvider,

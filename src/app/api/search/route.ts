@@ -3,6 +3,7 @@ import { searchProviders } from '@/lib/providers';
 import { getClientIp, isRateLimited } from '@/lib/ssrf-guard';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
   const clientIp = getClientIp(request);
