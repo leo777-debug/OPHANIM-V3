@@ -85,6 +85,33 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
     map.addImage(id, { width: size, height: size, data: new Uint8Array(ctx.getImageData(0, 0, size, size).data) });
   }, []);
 
+  // Directional vessel hull (bow points "north" so icon-rotate can aim it at the
+  // ship's heading). Dark outline keeps it crisp over land or sea. Reads as a
+  // live AIS plot rather than a field of flat dots.
+  const createShipIcon = useCallback((map: maplibregl.Map, id: string, color: string, size = 22) => {
+    if (map.hasImage(id)) return;
+    const canvas = document.createElement('canvas');
+    canvas.width = size; canvas.height = size;
+    const ctx = canvas.getContext('2d')!;
+    const cx = size / 2, cy = size / 2;
+    const hull = () => {
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - size * 0.44);              // bow
+      ctx.lineTo(cx + size * 0.17, cy - size * 0.06);
+      ctx.lineTo(cx + size * 0.17, cy + size * 0.34); // stern (starboard)
+      ctx.lineTo(cx - size * 0.17, cy + size * 0.34); // stern (port)
+      ctx.lineTo(cx - size * 0.17, cy - size * 0.06);
+      ctx.closePath();
+    };
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = 'rgba(0,12,18,0.92)';
+    ctx.lineWidth = Math.max(1.5, size * 0.1);
+    hull(); ctx.stroke();
+    ctx.fillStyle = color;
+    hull(); ctx.fill();
+    map.addImage(id, { width: size, height: size, data: new Uint8Array(ctx.getImageData(0, 0, size, size).data) });
+  }, []);
+
   useEffect(() => {
     if (!mapRef.current) return;
     const map = mapRef.current;
@@ -145,14 +172,14 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
       center: [25.48, 42.70], zoom: 6.5, minZoom: 1.5, maxZoom: 18,
       attributionControl: false,
       maxPitch: 85,
-      transformRequest: (url: string) => {
-        // Route all CARTO CDN requests through the internal Next.js proxy API
-        if (url.includes('cartocdn.com')) {
-          const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-          return { url: `${baseUrl}/api/proxy-tiles?url=${encodeURIComponent(url)}` };
-        }
-        return { url };
-      },
+      // Load CARTO basemap tiles DIRECTLY in the browser. Previously every tile
+      // was routed through /api/proxy-tiles, so the map fired dozens of server-side
+      // tile fetches per pan/zoom — when CARTO was momentarily slow these hung and
+      // poisoned the Next server's shared outbound connection pool, which silently
+      // broke the data feeds (CCTV, earthquakes, malware, …). CARTO's public tiles
+      // are CORS-enabled (Access-Control-Allow-Origin: *), so direct loading is
+      // correct, faster, and keeps the server's fetch pool healthy for real data.
+      transformRequest: (url: string) => ({ url }),
     });
 
     map.on('load', () => {
@@ -262,39 +289,49 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
 
 
 
-      // ══ NETWORK INTEL — Live Malware (abuse.ch) — crimson threat ══
+      // ══ NETWORK INTEL — Live Malware (abuse.ch) — colour-coded by severity ══
+      // critical = live botnet C2 (crimson), high = malware distribution (amber).
+      const malwareColor = ['match', ['get', 'severity'],
+        'critical', '#FF1744',
+        'high', '#FF9500',
+        '#FFD54F' /* medium / default */] as any;
       map.addLayer({ id: 'malware-glow', type: 'circle', source: 'malware-nodes', paint: {
-        'circle-radius': ['interpolate',['linear'],['zoom'], 1,6, 5,12, 10,20],
-        'circle-color': '#D32F2F', 'circle-opacity': 0.06, 'circle-blur': 0.5,
+        'circle-radius': ['interpolate',['linear'],['zoom'], 1,6, 5,12, 10,22],
+        'circle-color': malwareColor, 'circle-opacity': 0.07, 'circle-blur': 0.5,
       }});
       map.addLayer({ id: 'malware-dots', type: 'circle', source: 'malware-nodes', paint: {
-        'circle-radius': ['interpolate',['linear'],['zoom'], 1,2, 5,4, 10,6],
-        'circle-color': '#D32F2F',
+        // Critical C2 nodes render larger than distribution hosts.
+        'circle-radius': ['interpolate',['linear'],['zoom'],
+          1, ['case', ['==', ['get','severity'], 'critical'], 3.5, 2],
+          5, ['case', ['==', ['get','severity'], 'critical'], 6, 4],
+          10, ['case', ['==', ['get','severity'], 'critical'], 9, 6]],
+        'circle-color': malwareColor,
         'circle-opacity': 0.9,
-        'circle-stroke-width': 1, 'circle-stroke-color': '#000000', 'circle-stroke-opacity': 0.8,
+        'circle-stroke-width': ['case', ['==', ['get','severity'], 'critical'], 1.5, 1],
+        'circle-stroke-color': '#000000', 'circle-stroke-opacity': 0.8,
       }});
       map.addLayer({ id: 'malware-label', type: 'symbol', source: 'malware-nodes', minzoom: 5, layout: {
         'text-field': ['get','malware'], 'text-size': 8, 'text-font': ['JetBrains Mono Bold', 'Open Sans Bold'],
         'text-offset': [0, 1.5], 'text-max-width': 10, 'text-allow-overlap': false,
-      }, paint: { 'text-color': '#D32F2F', 'text-halo-color': '#111', 'text-halo-width': 1.5, 'text-opacity': 0.85 }});
+      }, paint: { 'text-color': malwareColor, 'text-halo-color': '#111', 'text-halo-width': 1.5, 'text-opacity': 0.85 }});
 
-      // ── NETWORK INTEL MESH (SDK STYLE) ──
+      // ── NETWORK INTEL MESH — Live Malware botnet web (always red) ──
       map.addLayer({ id: 'network-mesh-atmo', type: 'line', source: 'network-mesh', paint: {
-
+        'line-color': '#FF1744',
         'line-width': ['interpolate',['linear'],['zoom'], 1, 2, 5, 4, 10, 8],
         'line-opacity': 0.08,
         'line-blur': 4,
       }});
       map.addLayer({ id: 'network-mesh-glow', type: 'line', source: 'network-mesh', paint: {
-
+        'line-color': '#FF1744',
         'line-width': ['interpolate',['linear'],['zoom'], 1, 1, 5, 2, 10, 4],
         'line-opacity': 0.2,
         'line-blur': 1.5,
       }});
       map.addLayer({ id: 'network-mesh-core', type: 'line', source: 'network-mesh', paint: {
-
+        'line-color': '#FF3D3D',
         'line-width': ['interpolate',['linear'],['zoom'], 1, 0.2, 5, 0.5, 10, 1.5],
-        'line-opacity': 0.4,
+        'line-opacity': 0.45,
       }});
 
 
@@ -550,16 +587,47 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
         'line-opacity': ['interpolate',['linear'],['zoom'], 1, 0.3, 5, 0.45, 10, 0.7],
       }});
 
-      // Maritime Ships (moving entities) — ocean teal family
-      map.addLayer({ id: 'ship-dots', type: 'circle', source: 'maritime-ships', paint: {
-        'circle-radius': ['interpolate',['linear'],['zoom'], 1,2, 5,4, 10,6],
-        'circle-color': ['match', ['get','type'], 'military','#D32F2F', 'tanker','#E65100', 'cargo','#26C6DA', '#B0BEC5'],
-        'circle-opacity': 0.75,
+      // Maritime Ships — colored by vessel class.
+      const shipColor = ['match', ['get','type'],
+        'military','#FF5252', 'tanker','#FF9100', 'cargo','#26C6DA',
+        'passenger','#69F0AE', 'fishing','#E040FB', 'hsc','#FFD54F',
+        '#B0BEC5'] as any;
+      const shipIcon = ['match', ['get','type'],
+        'military','ship-military', 'tanker','ship-tanker', 'cargo','ship-cargo',
+        'passenger','ship-passenger', 'fishing','ship-fishing', 'hsc','ship-hsc',
+        'ship-other'] as any;
+      createShipIcon(map, 'ship-military', '#FF5252');
+      createShipIcon(map, 'ship-tanker', '#FF9100');
+      createShipIcon(map, 'ship-cargo', '#26C6DA');
+      createShipIcon(map, 'ship-passenger', '#69F0AE');
+      createShipIcon(map, 'ship-fishing', '#E040FB');
+      createShipIcon(map, 'ship-hsc', '#FFD54F');
+      createShipIcon(map, 'ship-other', '#B0BEC5');
+
+      // Far/regional zoom: cheap GPU dots. These carry the whole-globe view so the
+      // expensive rotated-symbol layer never draws thousands of icons at once.
+      // maxzoom hands off to ship-vessels with no overlapping double-draw.
+      map.addLayer({ id: 'ship-dots', type: 'circle', source: 'maritime-ships', maxzoom: 6.5, paint: {
+        'circle-radius': ['interpolate',['linear'],['zoom'], 1,1, 4,1.8, 6.5,3.2],
+        'circle-color': shipColor,
+        'circle-opacity': ['interpolate',['linear'],['zoom'], 1,0.75, 6.5,0.95],
+        'circle-blur': 0.25,
       }});
-      map.addLayer({ id: 'ship-label', type: 'symbol', source: 'maritime-ships', minzoom: 5, layout: {
-        'text-field': ['get','name'], 'text-size': 9, 'text-font': ['Open Sans Regular'],
-        'text-offset': [0, 1.2], 'text-allow-overlap': false,
-      }, paint: { 'text-color': ['match', ['get','type'], 'military','#D32F2F', 'tanker','#E65100', 'cargo','#26C6DA', '#B0BEC5'], 'text-halo-color': '#000', 'text-halo-width': 1 }});
+      // Zoomed in (>= 6.5, so the viewport holds few vessels): directional hulls
+      // rotated to heading — a live AIS plot. Bounded viewport count keeps it smooth
+      // even with allow-overlap (which skips per-symbol collision cost).
+      map.addLayer({ id: 'ship-vessels', type: 'symbol', source: 'maritime-ships', minzoom: 6.5, layout: {
+        'icon-image': shipIcon,
+        'icon-size': ['interpolate',['linear'],['zoom'], 6.5,0.5, 9,0.8, 13,1.2],
+        'icon-rotate': ['coalesce', ['get','heading'], 0],
+        'icon-rotation-alignment': 'map',
+        'icon-allow-overlap': true,
+        'icon-ignore-placement': true,
+      }});
+      map.addLayer({ id: 'ship-label', type: 'symbol', source: 'maritime-ships', minzoom: 8, layout: {
+        'text-field': ['get','name'], 'text-size': 10, 'text-font': ['Open Sans Regular'],
+        'text-offset': [0, 1.5], 'text-allow-overlap': false, 'text-optional': true,
+      }, paint: { 'text-color': '#CFD8DC', 'text-halo-color': '#00121a', 'text-halo-width': 1.2 }});
 
       setMapReady(true);
     });
@@ -693,28 +761,36 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
       </div>`);
     });
 
-    // ── Malware Threats (Abuse.ch) ──
+    // ── Malware Threats (abuse.ch — Feodo C2 + URLhaus distribution) ──
     map.on('click', 'malware-dots', e => {
       if (!e.features?.length) return;
       const p = e.features[0].properties as any;
       const coords = (e.features[0].geometry as any).coordinates;
-      const tType = (p.threat_type || 'MALWARE').toUpperCase();
-      const statusColor = p.status === 'online' ? '#39FF14' : '#FF1744';
-      
-      popup(coords, `<div style="${pStyle}border:1px solid rgba(255,23,68,0.4);box-shadow:inset 0 0 12px rgba(255,23,68,0.1);">
-        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,23,68,0.3);padding-bottom:6px;margin-bottom:8px;">
-          <div style="color:#FF1744;font-size:12px;font-weight:700;letter-spacing:0.1em;text-shadow:0 0 4px rgba(255,23,68,0.5);">[ ${htmlEsc(tType)} ]</div>
-          <div style="color:#5C5A54;font-size:9px;">${htmlEsc(p.country || 'UNKNOWN')}</div>
+      const sev = (p.severity || 'high') as string;
+      const accent = sev === 'critical' ? '#FF1744' : sev === 'high' ? '#FF9500' : '#FFD54F';
+      const typeLabel = ({ botnet_c2: 'BOTNET C2', malware_download: 'MALWARE DOWNLOAD', payload_delivery: 'PAYLOAD DELIVERY', malware: 'MALWARE' } as Record<string,string>)[p.threat_type] || 'MALWARE';
+      const statusColor = (p.status || '').toLowerCase() === 'online' ? '#39FF14' : (p.status || '').toLowerCase() === 'offline' ? '#8A8880' : '#FF9500';
+      const ref = p.reference || 'https://urlhaus.abuse.ch/';
+      const locus = [p.city, p.country].filter(Boolean).map(htmlEsc).join(', ') || 'UNKNOWN';
+
+      popup(coords, `<div style="${pStyle}border:1px solid ${accent}66;box-shadow:inset 0 0 12px ${accent}1a;">
+        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid ${accent}4d;padding-bottom:6px;margin-bottom:8px;">
+          <div style="color:${accent};font-size:12px;font-weight:700;letter-spacing:0.1em;text-shadow:0 0 4px ${accent}80;">[ ${typeLabel} ]</div>
+          <div style="color:${accent};font-size:8px;font-weight:700;border:1px solid ${accent}66;border-radius:3px;padding:1px 5px;letter-spacing:0.1em;">${sev.toUpperCase()}</div>
         </div>
-        <div style="color:#E8E6E0;font-size:11px;font-weight:bold;margin-bottom:10px;">${htmlEsc(p.malware || 'Unidentified Threat Payload')}</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:9px;margin-bottom:12px;background:rgba(0,0,0,0.3);padding:6px;border-radius:4px;">
-          <div><span style="color:#5C5A54;">TARGET IP</span><br/><span style="color:#00E5FF;font-family:monospace;">${htmlEsc(p.ip)}</span></div>
+        <div style="color:#E8E6E0;font-size:12px;font-weight:bold;margin-bottom:2px;">${htmlEsc(p.malware || 'Unidentified')}</div>
+        <div style="color:#5C5A54;font-size:9px;margin-bottom:10px;">📍 ${locus}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:9px;margin-bottom:8px;background:rgba(0,0,0,0.3);padding:6px;border-radius:4px;">
+          <div><span style="color:#5C5A54;">HOST IP</span><br/><span style="color:#00E5FF;font-family:monospace;">${htmlEsc(p.ip)}${p.port ? ':' + htmlEsc(String(p.port)) : ''}</span></div>
           <div><span style="color:#5C5A54;">STATUS</span><br/><span style="color:${statusColor};">${(p.status||'UNKNOWN').toUpperCase()}</span></div>
+          <div style="grid-column:1 / -1;"><span style="color:#5C5A54;">HOSTING / ASN</span><br/><span style="color:#E8E6E0;font-family:monospace;font-size:8px;">${htmlEsc(p.asn || p.isp || 'Unknown')}</span></div>
+          ${p.first_seen ? `<div><span style="color:#5C5A54;">FIRST SEEN</span><br/><span style="color:#E8E6E0;">${htmlEsc(String(p.first_seen))}</span></div>` : ''}
+          ${p.last_online ? `<div><span style="color:#5C5A54;">LAST ONLINE</span><br/><span style="color:#E8E6E0;">${htmlEsc(String(p.last_online))}</span></div>` : ''}
         </div>
         <div style="display:flex;gap:6px;">
-          <a href="https://feodotracker.abuse.ch/browse/" target="_blank" style="${linkStyle}flex:1;text-align:center;color:#E8E6E0;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.05);">THREAT INTEL ↗</a>
+          <a href="${idSafe(ref)}" target="_blank" style="${linkStyle}flex:1;text-align:center;color:#E8E6E0;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.05);">ABUSE.CH RECORD ↗</a>
         </div>
-        <button onclick="window.openOsirisIntel({ type: 'ip', ip: '${idSafe(p.ip)}', threat_type: '${idSafe(p.malware || p.threat_type || '')}', status: '${idSafe(p.status || '')}' })" style="width:100%;margin-top:8px;padding:8px 12px;background:linear-gradient(90deg, rgba(255,23,68,0.1) 0%, rgba(255,23,68,0.2) 100%);border:1px solid rgba(255,23,68,0.6);color:#FF1744;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:bold;letter-spacing:0.15em;border-radius:4px;cursor:pointer;transition:all 0.2s;">DEEP DIVE ANALYTICS</button>
+        <button onclick="window.openOsirisIntel({ type: 'ip', ip: '${idSafe(p.ip)}', threat_type: '${idSafe(p.malware || p.threat_type || '')}', status: '${idSafe(p.status || '')}' })" style="width:100%;margin-top:8px;padding:8px 12px;background:linear-gradient(90deg, ${accent}1a 0%, ${accent}33 100%);border:1px solid ${accent}99;color:${accent};font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:bold;letter-spacing:0.15em;border-radius:4px;cursor:pointer;transition:all 0.2s;">DEEP DIVE ANALYTICS</button>
       </div>`);
     });
 
@@ -906,8 +982,10 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
       if (!e.features?.length) return;
       const p = e.features[0].properties as any;
       const coords = (e.features[0].geometry as any).coordinates;
-      const color = p.type === 'military' ? '#FF1744' : p.type === 'tanker' ? '#FF9500' : '#00E5FF';
-      const icon = p.type === 'military' ? '⚔️' : p.type === 'tanker' ? '🛢️' : '🚢';
+      const shipColors: Record<string,string> = { military:'#FF1744', tanker:'#FF9500', cargo:'#00E5FF', passenger:'#66BB6A', fishing:'#AB47BC', hsc:'#FFD54F' };
+      const shipIcons: Record<string,string> = { military:'⚔️', tanker:'🛢️', cargo:'🚢', passenger:'🛳️', fishing:'🎣', hsc:'⚡' };
+      const color = shipColors[p.type] || '#00E5FF';
+      const icon = shipIcons[p.type] || '🚢';
       
       popup(coords, `<div style="${pStyle}border:1px solid ${color}60;box-shadow:inset 0 0 12px ${color}15;">
         <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid ${color}40;padding-bottom:6px;margin-bottom:8px;">
@@ -1156,7 +1234,7 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
   // Malware Threats
   useEffect(() => {
     if (!mapReady) return;
-    setGeo('malware-nodes', activeLayers.malware && data.malware_threats ? data.malware_threats.map((t: any) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [t.lng, t.lat] }, properties: { ip: t.ip, malware: t.malware, status: t.status, threat_type: t.threat_type, country: t.country } })) : []);
+    setGeo('malware-nodes', activeLayers.malware && data.malware_threats ? data.malware_threats.map((t: any) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [t.lng, t.lat] }, properties: { ip: t.ip, malware: t.malware, status: t.status, threat_type: t.threat_type, severity: t.severity, country: t.country, city: t.city, isp: t.isp, asn: t.asn, port: t.port, first_seen: t.first_seen, last_online: t.last_online, reference: t.reference } })) : []);
   }, [mapReady, data.malware_threats, activeLayers.malware, setGeo]);
 
   // Network Mesh Generation (Nearest Neighbor Lattice)
@@ -1214,6 +1292,23 @@ function OsirisMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightCl
     setGeo('maritime-choke', activeLayers.maritime && data.maritime_chokepoints ? data.maritime_chokepoints.map((c: any) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [c.lng, c.lat] }, properties: { name: c.name, traffic: c.traffic, risk: c.risk } })) : []);
     setGeo('maritime-ships', activeLayers.maritime && data.maritime_ships ? data.maritime_ships.map((s: any) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [s.lng, s.lat] }, properties: { name: s.name || s.mmsi?.toString(), type: s.type || 'cargo', speed: s.speed, heading: s.heading, destination: s.destination, flag: s.flag } })) : []);
   }, [mapReady, data.maritime_ports, data.maritime_chokepoints, data.maritime_ships, activeLayers.maritime, setGeo]);
+
+  // Ship-type sublayers — filter the vessel dots by which categories are enabled.
+  useEffect(() => {
+    if (!mapReady) return;
+    const map = mapRef.current;
+    if (!map) return;
+    const enabled: string[] = [];
+    if (activeLayers.ship_cargo) enabled.push('cargo', 'hsc', 'other');
+    if (activeLayers.ship_tanker) enabled.push('tanker');
+    if (activeLayers.ship_passenger) enabled.push('passenger');
+    if (activeLayers.ship_fishing) enabled.push('fishing');
+    if (activeLayers.ship_military) enabled.push('military');
+    const filter = ['in', ['get', 'type'], ['literal', enabled]] as any;
+    for (const id of ['ship-dots', 'ship-vessels', 'ship-label']) {
+      if (map.getLayer(id)) map.setFilter(id, filter);
+    }
+  }, [mapReady, activeLayers.ship_cargo, activeLayers.ship_tanker, activeLayers.ship_passenger, activeLayers.ship_fishing, activeLayers.ship_military]);
 
   useEffect(() => {
     if (!mapReady) return;

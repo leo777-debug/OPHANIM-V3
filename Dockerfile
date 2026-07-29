@@ -13,6 +13,11 @@ FROM node:22-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
+# curl is required by the maritime route's MarineTraffic tile fetch (Cloudflare
+# 403s Node's fetch on TLS fingerprint; curl with the same headers passes).
+# node:alpine ships without it, so install it explicitly.
+RUN apk add --no-cache curl
+
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 

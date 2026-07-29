@@ -22,6 +22,8 @@ import { fetchSwitzerlandCameras } from './switzerland';
 import { fetchFinlandCameras } from './finland';
 import { fetchHongKongCameras } from './hongkong';
 import { fetchUtahCameras } from './utah';
+import { fetchIcelandCameras } from './iceland';
+import { fetchNewZealandCameras } from './newzealand';
 
 /**
  * OSIRIS — Worldwide CCTV Camera API v2
@@ -427,6 +429,8 @@ const REGION_FETCHERS: Record<string, () => Promise<any[]>> = {
   'finland': fetchFinlandCameras,
   'hongkong': fetchHongKongCameras,
   'utah': fetchUtahCameras,
+  'iceland': fetchIcelandCameras,
+  'newzealand': fetchNewZealandCameras,
 };
 
 // Determine which regions to fetch based on viewport bounds
@@ -459,12 +463,14 @@ function getRegionsForBounds(lat: number, lng: number, radius: number): string[]
   const inSpain = lat > 27 && lat < 43.8 && lng > -18.2 && lng < 4.4;
   const inPoland = lat > 49.0 && lat < 55.0 && lng > 14.1 && lng < 24.1;
   const inFinland = lat > 59.5 && lat < 70.1 && lng > 20 && lng < 31.6;
+  const inIceland = lat > 63 && lat < 67 && lng > -25 && lng < -13;
   const inBalkans = inBulgaria || inGreece || inSerbia || inMacedonia || inRomania || inTurkey;
   const inWesternEurope = inItaly || inCzechia || inSlovakia || inGermany || inFrance || inSpain || inPoland || inFinland;
 
   if (lat > 35 && lat < 72 && lng > -11 && lng < 40 && !inBalkans && !inWesternEurope) {
     regions.push('europe');
   }
+  if (inIceland) regions.push('iceland');
   if (inBulgaria) regions.push('bulgaria');
   if (inGreece) regions.push('greece');
   if (inSerbia) regions.push('serbia');
@@ -486,6 +492,8 @@ function getRegionsForBounds(lat: number, lng: number, radius: number): string[]
 
   // Japan
   if (lat > 24 && lat < 46 && lng > 122 && lng < 154) regions.push('japan');
+  // New Zealand
+  if (lat > -47.5 && lat < -34 && lng > 166 && lng < 179) regions.push('newzealand');
 
   // Hong Kong
   if (lat > 22.1 && lat < 22.6 && lng > 113.8 && lng < 114.4) regions.push('hongkong');
@@ -497,6 +505,66 @@ function getRegionsForBounds(lat: number, lng: number, radius: number): string[]
 
   return regions.length > 0 ? regions : ['uk', 'us-east']; // Default fallback
 }
+
+// Per-region camera cache. A single region timing out under load (e.g. Caltrans,
+// which serves San Diego D11 + LA D7) must NOT drop its cameras from the aggregate —
+// otherwise a partial page-load fetch permanently loses them for the session. Each
+// region is bounded by a budget; on failure we serve the last good result.
+const REGION_BUDGET_MS = 20000;
+const REGION_CACHE_TTL = 15 * 60 * 1000;
+const regionCache = new Map<string, { cams: any[]; at: number }>();
+
+function withBudget(p: Promise<any[]>): Promise<any[]> {
+  return Promise.race([
+    p.catch(() => []),
+    new Promise<any[]>(resolve => setTimeout(() => resolve([]), REGION_BUDGET_MS)),
+  ]);
+}
+
+async function fetchRegionCached(r: string): Promise<any[]> {
+  const fresh = await withBudget(REGION_FETCHERS[r]());
+  if (fresh.length > 0) {
+    regionCache.set(r, { cams: fresh, at: Date.now() });
+    return fresh;
+  }
+  const cached = regionCache.get(r);
+  if (cached && Date.now() - cached.at < REGION_CACHE_TTL) return cached.cams; // keep last-good
+  return fresh;
+}
+
+// Fetch regions with bounded concurrency. Firing all ~29 regions at once
+// saturates Node's outbound socket pool, so multi-endpoint regions (Caltrans →
+// 9 CA DOT districts, Canada, Europe) have their upstream fetches time out and
+// return empty — which is why LA/San Diego dropped out of a cold region=all
+// even though each loads fine on its own. A small pool keeps every region healthy.
+async function fetchRegionsPooled(regions: string[], concurrency: number): Promise<any[][]> {
+  const out: any[][] = new Array(regions.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < regions.length) {
+      const i = next++;
+      try { out[i] = await fetchRegionCached(regions[i]); } catch { out[i] = []; }
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(concurrency, regions.length) }, worker));
+  return out;
+}
+
+// Warm every region's last-good cache in the background at boot, and refresh it
+// periodically. Fetched a few at a time (no user waiting, no socket-pool
+// stampede) so even slow regions like Caltrans succeed and get cached. This is
+// what lets a cold user-facing region=all return LA/San Diego/etc. immediately
+// instead of dropping the regions that can't finish under the concurrent load.
+let warming = false;
+async function warmAllRegions() {
+  if (warming) return;
+  warming = true;
+  try { await fetchRegionsPooled(Object.keys(REGION_FETCHERS), 4); }
+  catch { /* best effort */ }
+  finally { warming = false; }
+}
+warmAllRegions();
+setInterval(warmAllRegions, 10 * 60 * 1000);
 
 export async function GET(request: Request) {
   try {
@@ -519,19 +587,17 @@ export async function GET(request: Request) {
       regionsToFetch = Object.keys(REGION_FETCHERS);
     }
 
-    const results = await Promise.allSettled(
-      regionsToFetch.map(r => REGION_FETCHERS[r]())
-    );
+    // Bounded concurrency so a big region=all doesn't collapse the socket pool
+    // and silently drop slow regions (Caltrans/LA/San Diego, Canada, Europe).
+    const perRegion = await fetchRegionsPooled(regionsToFetch, 6);
 
     const allCameras: any[] = [];
     const sources: Record<string, number> = {};
 
-    for (const result of results) {
-      if (result.status === 'fulfilled') {
-        for (const cam of result.value) {
-          allCameras.push(cam);
-          sources[cam.source] = (sources[cam.source] || 0) + 1;
-        }
+    for (const cams of perRegion) {
+      for (const cam of (cams || [])) {
+        allCameras.push(cam);
+        sources[cam.source] = (sources[cam.source] || 0) + 1;
       }
     }
 

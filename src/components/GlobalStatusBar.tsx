@@ -42,11 +42,27 @@ const formatPrice = (price: number) => {
   return `$${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
-export default function GlobalStatusBar() {
+interface ThreatState { threatcon: number; level_label: string; level_color: string; overall: number; dominant_domain?: string; }
+
+export default function GlobalStatusBar({ onThreatClick }: { onThreatClick?: () => void }) {
   const [crypto, setCrypto] = useState<CryptoPrice[]>([]);
   const [quakes, setQuakes] = useState<Earthquake[]>([]);
+  const [threat, setThreat] = useState<ThreatState | null>(null);
 
   const [hoveredQuake, setHoveredQuake] = useState<Earthquake | null>(null);
+
+  // Live THREATCON from the server-computed fusion (tiny, edge-cached payload).
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const r = await fetch('/api/fusion', { signal: AbortSignal.timeout(30000) });
+        if (r.ok) setThreat(await r.json());
+      } catch { /* keep last */ }
+    };
+    load();
+    const iv = setInterval(load, 60000);
+    return () => clearInterval(iv);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -103,7 +119,7 @@ export default function GlobalStatusBar() {
     return () => clearInterval(iv);
   }, []);
 
-  if (crypto.length === 0 && quakes.length === 0) return null;
+  if (crypto.length === 0 && quakes.length === 0 && !threat) return null;
 
   const cryptoContent = crypto.length > 0 ? (
     <>
@@ -159,6 +175,21 @@ export default function GlobalStatusBar() {
         <div className="flex-shrink-0 px-3 h-full flex items-center gap-1 border-r border-[var(--cyan-primary)]/30 bg-black pointer-events-auto relative z-10 shadow-[4px_0_10px_rgba(0,0,0,0.5)]">
           <span className="text-[var(--cyan-primary)] font-bold">LIVE</span>
         </div>
+
+        {/* THREATCON badge — live fusion read, click to open the Threat Fusion panel */}
+        {threat && (
+          <button
+            onClick={onThreatClick}
+            title={`Global threat: ${threat.overall}/100 · dominant ${threat.dominant_domain || '—'} — open Threat Fusion`}
+            className="flex-shrink-0 px-3 h-full flex items-center gap-1.5 border-r bg-black pointer-events-auto relative z-10 hover:bg-white/5 transition-colors"
+            style={{ borderColor: `${threat.level_color}40` }}
+          >
+            <span className="w-1.5 h-1.5 rounded-full animate-osiris-pulse" style={{ background: threat.level_color, boxShadow: `0 0 6px ${threat.level_color}` }} />
+            <span className="font-bold" style={{ color: threat.level_color }}>THREATCON {threat.threatcon}</span>
+            <span className="text-[var(--text-muted)]">{threat.level_label}</span>
+            <span className="tabular-nums" style={{ color: threat.level_color }}>{threat.overall}</span>
+          </button>
+        )}
 
         {/* CSS-animated ticker */}
         <div className="flex-1 overflow-hidden relative" style={{ maskImage: 'linear-gradient(to right, transparent, black 5%, black 95%, transparent)' }}>

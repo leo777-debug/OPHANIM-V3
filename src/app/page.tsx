@@ -15,6 +15,8 @@ import ViewPresets from '@/components/ViewPresets';
 import KeyboardShortcuts from '@/components/KeyboardShortcuts';
 import GlobalStatusBar from '@/components/GlobalStatusBar';
 import LiveAlerts from '@/components/LiveAlerts';
+import CommandPalette, { type PaletteCommand } from '@/components/CommandPalette';
+import ThreatFusionHUD from '@/components/ThreatFusionHUD';
 
 const OsirisMap = dynamic(() => import('@/components/OsirisMap'), { ssr: false });
 const LayerPanel = dynamic(() => import('@/components/LayerPanel'));
@@ -107,6 +109,7 @@ export default function Dashboard() {
   const [showIntel, setShowIntel] = useState(false);
   const [showEntityGraph, setShowEntityGraph] = useState(false);
   const [showDesktopSearch, setShowDesktopSearch] = useState(false);
+  const [showFusion, setShowFusion] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [mobilePanel, setMobilePanel] = useState<'layers'|'markets'|'intel'|'search'|'recon'|null>(null);
   const [mapProjection, setMapProjection] = useState<'globe'|'mercator'>('globe');
@@ -115,7 +118,7 @@ export default function Dashboard() {
   const [scanTargets, setScanTargets] = useState<any[]>([]);
   const [entityGraphTarget, setEntityGraphTarget] = useState<{ type: string; id: string; label?: string; properties?: Record<string, any> } | null>(null);
   const [demoMode, setDemoMode] = useState(false);
-  const [osirisTheme, setOsirisTheme] = useState<'core'|'ghost'>('ghost');
+  const [osirisTheme, setOsirisTheme] = useState<'core'|'ghost'>('core');
 
   useEffect(() => {
     document.body.className = osirisTheme === 'core' ? '' : `theme-${osirisTheme}`;
@@ -134,6 +137,11 @@ export default function Dashboard() {
     jets: false,
     military: false,
     maritime: true,
+    ship_cargo: true,
+    ship_tanker: true,
+    ship_passenger: true,
+    ship_fishing: true,
+    ship_military: true,
     satellites: false,
     sat_comms: false,
     sat_military: false,
@@ -392,6 +400,10 @@ export default function Dashboard() {
     if (activeLayers.cctv && !layerFetchedRef.current.has('cctv')) {
       fetchEndpoint(`/api/cctv?region=all&_t=${Date.now()}`);
       layerFetchedRef.current.add('cctv');
+      // Backfill once ~35s later: right after a deploy the server cache is cold,
+      // and slow regions (Caltrans → LA/San Diego) can drop out of the first
+      // region=all. By 35s the server has warmed, so this refetch fills them in.
+      setTimeout(() => fetchEndpoint(`/api/cctv?region=all&_t=${Date.now()}`), 35000);
     }
     // Maritime
     if (activeLayers.maritime && !layerFetchedRef.current.has('maritime')) {
@@ -469,7 +481,7 @@ export default function Dashboard() {
       intervals.push(setInterval(() => fetchEndpoint('/api/radiation', d => ({ radiation: d.stations })), 300000)); // 5m
     }
     if (activeLayers.maritime) {
-      intervals.push(setInterval(() => fetchEndpoint('/api/maritime', d => ({ maritime_ports: d.ports, maritime_chokepoints: d.chokepoints, maritime_ships: d.ships })), 10000)); // 10s
+      intervals.push(setInterval(() => fetchEndpoint('/api/maritime', d => ({ maritime_ports: d.ports, maritime_chokepoints: d.chokepoints, maritime_ships: d.ships })), 60000)); // 60s — was 10s; a 3MB poll every 10s OOM'd the prod container
     }
     return () => intervals.forEach(clearInterval);
   }, [activeLayers, fetchEndpoint]);
@@ -560,6 +572,130 @@ export default function Dashboard() {
   const totalFlights = useMemo(() => (
     (data.commercial_flights?.length||0)+(data.private_flights?.length||0)+(data.private_jets?.length||0)+(data.military_flights?.length||0)
   ), [data.commercial_flights, data.private_flights, data.private_jets, data.military_flights]);
+
+  // ── COMMAND PALETTE (⌘K) — unified launcher for layers, navigation, panels & display ──
+  const flyTo = useCallback((lat: number, lng: number, zoom: number) => {
+    setFlyToLocation({ lat, lng, ts: Date.now() });
+    setMapView(v => ({ ...v, zoom }));
+  }, []);
+  const closeRightPanels = useCallback(() => {
+    setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); setShowDesktopSearch(false); setShowFusion(false);
+  }, []);
+  const toggleFullscreen = useCallback(() => {
+    if (typeof document === 'undefined') return;
+    if (document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen().catch(() => {});
+  }, []);
+
+  const paletteCommands = useMemo<PaletteCommand[]>(() => {
+    const LAYER_DEFS: { key: keyof typeof activeLayers; label: string; hint: string }[] = [
+      { key: 'flights', label: 'Commercial Flights', hint: 'ADS-B / OpenSky' },
+      { key: 'private', label: 'Private Aircraft', hint: 'ADS-B' },
+      { key: 'jets', label: 'Private Jets', hint: 'ADS-B' },
+      { key: 'military', label: 'Military Aircraft', hint: 'ADS-B' },
+      { key: 'maritime', label: 'Maritime / Naval', hint: 'Ports · Chokepoints · Ships' },
+      { key: 'satellites', label: 'Satellites', hint: 'Orbital tracking' },
+      { key: 'sat_military', label: 'Military Satellites', hint: 'Intel constellations' },
+      { key: 'balloons', label: 'High-Altitude Balloons', hint: 'Stratospheric' },
+      { key: 'cctv', label: 'CCTV Cameras', hint: 'Public traffic cams' },
+      { key: 'live_news', label: 'Live News Feeds', hint: '24/7 broadcasters' },
+      { key: 'news_intel', label: 'SIGINT News', hint: 'Geoparsed RSS' },
+      { key: 'earthquakes', label: 'Earthquakes', hint: 'USGS M2.5+' },
+      { key: 'fires', label: 'Active Fires', hint: 'NASA FIRMS' },
+      { key: 'weather', label: 'Severe Weather', hint: 'EONET + NWS + GDACS' },
+      { key: 'radiation', label: 'Radiation Monitors', hint: 'Geiger network' },
+      { key: 'infrastructure', label: 'Nuclear Facilities', hint: 'Critical infra' },
+      { key: 'global_incidents', label: 'Global Incidents', hint: 'GDELT events' },
+      { key: 'gps_jamming', label: 'GPS Jamming', hint: 'Interference zones' },
+      { key: 'malware', label: 'Live Malware', hint: 'abuse.ch threat feed' },
+      { key: 'cables', label: 'Submarine Cables', hint: 'Undersea backbone' },
+      { key: 'day_night', label: 'Day / Night Terminator', hint: 'Solar overlay' },
+      { key: 'terrain_3d', label: '3D Terrain & Buildings', hint: 'Elevation mesh' },
+    ];
+    const layerCount = (k: string): string => {
+      const map: Record<string, string> = {
+        flights: 'commercial_flights', private: 'private_flights', jets: 'private_jets', military: 'military_flights',
+        maritime: 'maritime_ships', satellites: 'satellites', earthquakes: 'earthquakes', fires: 'fires',
+        cctv: 'cameras', live_news: 'live_feeds', global_incidents: 'gdelt', malware: 'malware_threats',
+      };
+      const dk = map[k];
+      const arr = dk ? (data as Record<string, unknown>)[dk] : undefined;
+      return Array.isArray(arr) && arr.length ? String(arr.length) : '';
+    };
+
+    const NAV: { label: string; hint: string; lat: number; lng: number; zoom: number }[] = [
+      { label: 'Global View', hint: 'Whole earth', lat: 20, lng: 0, zoom: 2.5 },
+      { label: 'Ukraine', hint: 'Active conflict', lat: 49, lng: 32, zoom: 6 },
+      { label: 'Middle East', hint: 'Regional theatre', lat: 30, lng: 45, zoom: 4.5 },
+      { label: 'Gaza / Israel', hint: 'Conflict zone', lat: 31.5, lng: 34.7, zoom: 8 },
+      { label: 'Taiwan Strait', hint: 'Flashpoint', lat: 24.5, lng: 120, zoom: 6.5 },
+      { label: 'South China Sea', hint: 'Disputed waters', lat: 14, lng: 114, zoom: 5 },
+      { label: 'Strait of Hormuz', hint: 'Oil chokepoint', lat: 26.6, lng: 56.3, zoom: 7.5 },
+      { label: 'Suez Canal', hint: 'Maritime chokepoint', lat: 30.5, lng: 32.35, zoom: 8 },
+      { label: 'Panama Canal', hint: 'Maritime chokepoint', lat: 9.1, lng: -79.7, zoom: 8 },
+      { label: 'Bab-el-Mandeb', hint: 'Red Sea gate', lat: 12.6, lng: 43.3, zoom: 7.5 },
+      { label: 'Washington DC', hint: 'Capital', lat: 38.9, lng: -77.04, zoom: 9 },
+      { label: 'Moscow', hint: 'Capital', lat: 55.75, lng: 37.62, zoom: 9 },
+      { label: 'Beijing', hint: 'Capital', lat: 39.9, lng: 116.4, zoom: 9 },
+      { label: 'London', hint: 'Capital', lat: 51.5, lng: -0.12, zoom: 9 },
+      { label: 'Kyiv', hint: 'Capital', lat: 50.45, lng: 30.52, zoom: 9 },
+      { label: 'Tehran', hint: 'Capital', lat: 35.7, lng: 51.4, zoom: 9 },
+      { label: 'Pyongyang', hint: 'Capital', lat: 39.04, lng: 125.76, zoom: 9 },
+    ];
+
+    const cmds: PaletteCommand[] = [];
+
+    // Layers
+    for (const l of LAYER_DEFS) {
+      const on = !!activeLayers[l.key];
+      const cnt = on ? layerCount(l.key as string) : '';
+      cmds.push({
+        id: `layer:${String(l.key)}`,
+        group: 'LAYERS',
+        title: `${on ? 'Hide' : 'Show'} ${l.label}`,
+        subtitle: l.hint,
+        keywords: `layer toggle ${l.label} ${l.hint}`,
+        icon: <Layers className="w-4 h-4" />,
+        badge: on ? (cnt || 'ON') : 'OFF',
+        active: on,
+        keepOpen: true,
+        run: () => setActiveLayers(prev => ({ ...prev, [l.key]: !prev[l.key] })),
+      });
+    }
+
+    // Navigation
+    for (const n of NAV) {
+      cmds.push({
+        id: `nav:${n.label}`,
+        group: 'NAVIGATE',
+        title: `Fly to ${n.label}`,
+        subtitle: n.hint,
+        keywords: `go navigate location ${n.label} ${n.hint}`,
+        icon: <Crosshair className="w-4 h-4" />,
+        run: () => flyTo(n.lat, n.lng, n.zoom),
+      });
+    }
+
+    // Panels & tools
+    cmds.push(
+      { id: 'panel:recon', group: 'TOOLS', title: 'Open RECON / OSINT Toolkit', subtitle: 'Scanner · WHOIS · DNS · Crypto · Sanctions', keywords: 'recon osint scanner whois dns vuln crypto sanctions', icon: <Radar className="w-4 h-4" />, run: () => { closeRightPanels(); setShowIntel(true); } },
+      { id: 'panel:markets', group: 'TOOLS', title: 'Open Markets & Intel', subtitle: 'Indices · commodities · space weather', keywords: 'markets stocks commodities finance', icon: <BarChart3 className="w-4 h-4" />, run: () => { closeRightPanels(); setShowMarkets(true); } },
+      { id: 'panel:alerts', group: 'TOOLS', title: 'Open Live Alerts', subtitle: 'Real-time event stream', keywords: 'alerts warnings events', icon: <AlertTriangle className="w-4 h-4" />, run: () => { closeRightPanels(); setShowAlerts(true); } },
+      { id: 'panel:graph', group: 'TOOLS', title: 'Open Entity Graph', subtitle: 'Link analysis & fusion', keywords: 'entity graph network link analysis', icon: <Network className="w-4 h-4" />, run: () => { closeRightPanels(); setShowEntityGraph(true); } },
+      { id: 'panel:search', group: 'TOOLS', title: 'Open Search', subtitle: 'Find places & entities', keywords: 'search find place', icon: <Search className="w-4 h-4" />, run: () => { closeRightPanels(); setShowDesktopSearch(true); } },
+      { id: 'panel:layers', group: 'TOOLS', title: 'Toggle Layer Sidebar', subtitle: 'Show / hide layer rail', keywords: 'layers panel sidebar', icon: <Layers className="w-4 h-4" />, keepOpen: true, run: () => setShowLayers(p => !p) },
+    );
+
+    // Display
+    cmds.push(
+      { id: 'disp:proj', group: 'DISPLAY', title: mapProjection === 'globe' ? 'Switch to 2D Map' : 'Switch to 3D Globe', subtitle: 'Map projection', keywords: 'globe mercator 2d 3d projection', icon: <Globe className="w-4 h-4" />, badge: mapProjection === 'globe' ? 'GLOBE' : 'FLAT', active: mapProjection === 'globe', keepOpen: true, run: () => setMapProjection(p => p === 'globe' ? 'mercator' : 'globe') },
+      { id: 'disp:style', group: 'DISPLAY', title: mapStyle === 'dark' ? 'Satellite Imagery' : 'Night / Dark Basemap', subtitle: 'Basemap style', keywords: 'satellite imagery dark night basemap style', icon: <Satellite className="w-4 h-4" />, badge: mapStyle === 'satellite' ? 'SAT' : 'DARK', active: mapStyle === 'satellite', keepOpen: true, run: () => setMapStyle(s => s === 'dark' ? 'satellite' : 'dark') },
+      { id: 'disp:theme', group: 'DISPLAY', title: osirisTheme === 'ghost' ? 'Core Protocol (Gold)' : 'Ghost Protocol (Violet)', subtitle: 'Interface theme', keywords: 'theme ghost core gold violet colour', icon: <Moon className="w-4 h-4" />, badge: osirisTheme === 'ghost' ? 'GHOST' : 'CORE', active: osirisTheme === 'ghost', keepOpen: true, run: () => setOsirisTheme(t => t === 'core' ? 'ghost' : 'core') },
+      { id: 'disp:fs', group: 'DISPLAY', title: 'Toggle Fullscreen', subtitle: 'Immersive mode', keywords: 'fullscreen immersive', icon: <MapPinned className="w-4 h-4" />, run: toggleFullscreen },
+    );
+
+    return cmds;
+  }, [activeLayers, mapProjection, mapStyle, osirisTheme, data, flyTo, closeRightPanels, toggleFullscreen]);
 
 
   return (
@@ -780,44 +916,51 @@ export default function Dashboard() {
       </ErrorBoundary>
 
 
-      {/* ── MAP VIEW CONTROLS (3D/2D + SATELLITE TOGGLE) ── */}
+      {/* ── MAP VIEW CONTROLS (3D/2D + SATELLITE TOGGLE) — unified glass control ── */}
       <motion.div
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 3.5 }}
-        className="absolute bottom-[75px] md:bottom-[100px] z-[200] flex items-center gap-2 pointer-events-none"
+        className="absolute bottom-[75px] md:bottom-[100px] z-[200] flex items-center pointer-events-none"
         style={{ left: isMobile ? '12px' : '120px' }}
       >
-        {/* 3D/2D Toggle */}
-        <button
-          onClick={() => setMapProjection(p => p === 'globe' ? 'mercator' : 'globe')}
-          className="glass-panel p-3.5 pointer-events-auto hover:border-[var(--gold-primary)]/40 transition-colors group relative"
-          title={mapProjection === 'globe' ? 'Switch to 2D Map' : 'Switch to 3D Globe'}
-        >
-          {mapProjection === 'globe' ? (
-            <MapPinned className="w-5 h-5 text-[var(--gold-primary)] group-hover:scale-110 transition-transform" />
-          ) : (
-            <Globe className="w-5 h-5 text-[var(--cyan-primary)] group-hover:scale-110 transition-transform" />
-          )}
-          <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 text-[9px] font-mono text-[var(--text-muted)] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity glass-panel px-2 py-1 z-[300]">
-            {mapProjection === 'globe' ? '2D MAP' : '3D GLOBE'}
-          </span>
-        </button>
+        <div className="glass-panel flex items-center gap-1 p-1 pointer-events-auto">
+          {/* 3D/2D Toggle */}
+          <button
+            onClick={() => setMapProjection(p => p === 'globe' ? 'mercator' : 'globe')}
+            className="group relative flex items-center justify-center w-10 h-10 rounded-[10px] transition-colors"
+            style={{
+              background: mapProjection === 'globe' ? 'rgba(0,229,255,0.12)' : 'transparent',
+              boxShadow: mapProjection === 'globe' ? 'inset 0 0 0 1px rgba(0,229,255,0.35)' : 'none',
+            }}
+            title={mapProjection === 'globe' ? 'Switch to 2D Map' : 'Switch to 3D Globe'}
+          >
+            {mapProjection === 'globe'
+              ? <Globe className="w-[18px] h-[18px] text-[var(--cyan-primary)] group-hover:scale-110 transition-transform" />
+              : <MapPinned className="w-[18px] h-[18px] text-[var(--text-secondary)] group-hover:text-[var(--gold-primary)] group-hover:scale-110 transition-all" />}
+            <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 text-[8px] font-mono tracking-widest text-[var(--text-secondary)] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity glass-panel px-2 py-1 z-[300]">
+              {mapProjection === 'globe' ? '3D GLOBE' : '2D MAP'}
+            </span>
+          </button>
 
-        {/* Map Style Toggle */}
-        <button
-          onClick={() => setMapStyle(s => s === 'dark' ? 'satellite' : 'dark')}
-          className="glass-panel p-3.5 pointer-events-auto hover:border-[var(--gold-primary)]/40 transition-colors group relative"
-          title={mapStyle === 'dark' ? 'Satellite View' : 'Night View'}
-        >
-          {mapStyle === 'dark' ? (
-            <Satellite className="w-5 h-5 text-[var(--alert-green)] group-hover:scale-110 transition-transform" />
-          ) : (
-            <Moon className="w-5 h-5 text-[var(--cyan-primary)] group-hover:scale-110 transition-transform" />
-          )}
-          <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 text-[9px] font-mono text-[var(--text-muted)] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity glass-panel px-2 py-1 z-[300]">
-            {mapStyle === 'dark' ? 'SATELLITE' : 'NIGHT MODE'}
-          </span>
-        </button>
+          <div className="w-px h-6 bg-white/10" />
 
+          {/* Map Style Toggle */}
+          <button
+            onClick={() => setMapStyle(s => s === 'dark' ? 'satellite' : 'dark')}
+            className="group relative flex items-center justify-center w-10 h-10 rounded-[10px] transition-colors"
+            style={{
+              background: mapStyle === 'satellite' ? 'rgba(0,230,118,0.12)' : 'transparent',
+              boxShadow: mapStyle === 'satellite' ? 'inset 0 0 0 1px rgba(0,230,118,0.35)' : 'none',
+            }}
+            title={mapStyle === 'dark' ? 'Switch to Satellite' : 'Switch to Night'}
+          >
+            {mapStyle === 'satellite'
+              ? <Satellite className="w-[18px] h-[18px] text-[var(--alert-green)] group-hover:scale-110 transition-transform" />
+              : <Moon className="w-[18px] h-[18px] text-[var(--text-secondary)] group-hover:text-[var(--cyan-primary)] group-hover:scale-110 transition-all" />}
+            <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 text-[8px] font-mono tracking-widest text-[var(--text-secondary)] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity glass-panel px-2 py-1 z-[300]">
+              {mapStyle === 'satellite' ? 'SATELLITE' : 'NIGHT'}
+            </span>
+          </button>
+        </div>
       </motion.div>
 
       {/* ── HEADER ── */}
@@ -897,14 +1040,28 @@ export default function Dashboard() {
       {/* ── RIGHT TOOL STRIP (desktop only — mobile uses bottom nav) ── */}
       {!isMobile && <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-[250] pointer-events-auto bg-black/40 backdrop-blur-sm p-1 rounded-full border border-white/5">
         <div className="relative group">
-          <button onClick={() => { setShowIntel(!showIntel); setShowMarkets(false); setShowAlerts(false); }} className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${showIntel ? 'bg-[var(--cyan-primary)]/20' : 'hover:bg-white/10'}`}>
+          <button onClick={() => { setShowFusion(!showFusion); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${showFusion ? 'bg-[#FF1744]/20' : 'hover:bg-white/10'}`} title="Global Threat Fusion">
+            <Activity className={`w-4 h-4 ${showFusion ? 'text-[#FF1744]' : 'text-white/60'}`} />
+          </button>
+          {/* Threat Fusion HUD Slideout */}
+          <AnimatePresence>
+            {showFusion && (
+              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="absolute right-12 top-1/2 -translate-y-1/2">
+                <ThreatFusionHUD onLocate={(lat, lng) => { setFlyToLocation({ lat, lng, ts: Date.now() }); setMapView(v => ({ ...v, zoom: Math.max(v.zoom, 5) })); }} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        <div className="relative group">
+          <button onClick={() => { setShowIntel(!showIntel); setShowMarkets(false); setShowAlerts(false); setShowFusion(false); }} className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${showIntel ? 'bg-[var(--cyan-primary)]/20' : 'hover:bg-white/10'}`}>
             <Radar className={`w-4 h-4 ${showIntel ? 'text-[var(--cyan-primary)]' : 'text-white/60'}`} />
           </button>
           {/* OSINT / Recon Panel Slideout */}
           <AnimatePresence>
             {showIntel && (
               <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="absolute right-12 top-1/2 -translate-y-1/2 w-80">
-                <OsintPanel theme={osirisTheme} setTheme={setOsirisTheme} onSweepVisualize={setSweepData} onScanGeolocate={(target, data) => {
+                <OsintPanel onSweepVisualize={setSweepData} onScanGeolocate={(target, data) => {
                   setScanTargets(prev => {
                     const existing = prev.filter(t => t.id !== target);
                     return [{ id: target, timestamp: Date.now(), ...data }, ...existing].slice(0, 10);
@@ -917,7 +1074,7 @@ export default function Dashboard() {
         </div>
 
         <div className="relative group">
-          <button onClick={() => { setShowMarkets(!showMarkets); setShowIntel(false); setShowAlerts(false); }} className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${showMarkets ? 'bg-[var(--gold-primary)]/20' : 'hover:bg-white/10'}`}>
+          <button onClick={() => { setShowMarkets(!showMarkets); setShowIntel(false); setShowAlerts(false); setShowFusion(false); }} className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${showMarkets ? 'bg-[var(--gold-primary)]/20' : 'hover:bg-white/10'}`}>
             <BarChart3 className={`w-4 h-4 ${showMarkets ? 'text-[var(--gold-primary)]' : 'text-white/60'}`} />
           </button>
           {/* Markets Panel Slideout */}
@@ -931,7 +1088,7 @@ export default function Dashboard() {
         </div>
 
         <div className="relative group">
-          <button onClick={() => { setShowAlerts(!showAlerts); setShowIntel(false); setShowMarkets(false); setShowEntityGraph(false); }} className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${showAlerts ? 'bg-[#FF3D3D]/20' : 'hover:bg-white/10'}`}>
+          <button onClick={() => { setShowAlerts(!showAlerts); setShowIntel(false); setShowMarkets(false); setShowEntityGraph(false); setShowFusion(false); }} className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${showAlerts ? 'bg-[#FF3D3D]/20' : 'hover:bg-white/10'}`}>
             <AlertTriangle className={`w-4 h-4 ${showAlerts ? 'text-[#FF3D3D]' : 'text-white/60'}`} />
           </button>
           {/* Alerts Panel Slideout */}
@@ -1229,15 +1386,18 @@ export default function Dashboard() {
         </div>
       ))}
 
+      {/* Command Palette (⌘K / Ctrl+K) */}
+      <CommandPalette commands={paletteCommands} />
+
       {/* Keyboard Shortcuts Overlay */}
       <KeyboardShortcuts />
 
       {/* ── GLOBAL STATUS TICKER (bottom) ── */}
-      <GlobalStatusBar />
+      <GlobalStatusBar onThreatClick={() => { closeRightPanels(); setShowFusion(true); }} />
 
       {/* Shortcut hint */}
       <div className="desktop-only absolute bottom-[26px] right-5 z-[200] pointer-events-none text-[6px] font-mono text-[var(--text-muted)]/40 tracking-widest">
-        [?] SHORTCUTS · [F] FULLSCREEN · [S] SHARE · [R] RESET VIEW
+        [⌘K] COMMAND · [?] SHORTCUTS · [F] FULLSCREEN · [S] SHARE · [R] RESET VIEW
       </div>
 
 

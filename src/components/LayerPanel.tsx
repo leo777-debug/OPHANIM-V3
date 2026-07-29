@@ -42,7 +42,12 @@ const LAYER_GROUPS = [
     fullLabel: 'MARITIME',
     icon: Ship,
     layers: [
-      { key: 'maritime', label: 'Maritime / Naval', dataKey: 'maritime_ships,maritime_ports,maritime_chokepoints' },
+      { key: 'maritime', label: 'Ports · Chokepoints · Ships', dataKey: 'maritime_ships,maritime_ports,maritime_chokepoints' },
+      { key: 'ship_cargo', label: 'Cargo Vessels', dataKey: 'maritime_ships', catKey: 'cargo' },
+      { key: 'ship_tanker', label: 'Tankers', dataKey: 'maritime_ships', catKey: 'tanker' },
+      { key: 'ship_passenger', label: 'Passenger / Ferry', dataKey: 'maritime_ships', catKey: 'passenger' },
+      { key: 'ship_fishing', label: 'Fishing', dataKey: 'maritime_ships', catKey: 'fishing' },
+      { key: 'ship_military', label: 'Naval / Military', dataKey: 'maritime_ships', catKey: 'military' },
     ],
   },
   {
