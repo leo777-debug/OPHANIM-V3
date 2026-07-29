@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Search, X, MapPin, Navigation, Building2, Globe2, Landmark } from 'lucide-react';
+import type { NormalizedSearchResult, SearchAction } from '@/lib/providers/types';
 
 /* ═══════════════════════════════════════════════════════════════
    OPHANIM — Enhanced Search / Locate Bar
@@ -9,54 +10,12 @@ import { Search, X, MapPin, Navigation, Building2, Globe2, Landmark } from 'luci
    Ctrl+F / Cmd+F keyboard shortcut support
    ═══════════════════════════════════════════════════════════════ */
 
-interface SearchResult {
-  label: string;
-  lat: number;
-  lng: number;
-  type: string;          // nominatim type (e.g. 'house', 'road', 'city')
-  importance: number;    // nominatim importance score
-  category: string;      // nominatim class (e.g. 'place', 'highway', 'building')
-  zoomLevel: number;     // computed ideal zoom
-}
+type SearchResult = NormalizedSearchResult;
 
 interface SearchBarProps {
   onLocate: (lat: number, lng: number, zoom?: number) => void;
+  onAction?: (action: SearchAction) => void;
   alwaysExpanded?: boolean;
-}
-
-// Map Nominatim result types to appropriate zoom levels
-function getZoomForType(type: string, category: string, boundingbox?: string[]): number {
-  // If we have a bounding box, use it to estimate zoom
-  if (boundingbox && boundingbox.length === 4) {
-    const latDiff = Math.abs(parseFloat(boundingbox[1]) - parseFloat(boundingbox[0]));
-    const lngDiff = Math.abs(parseFloat(boundingbox[3]) - parseFloat(boundingbox[2]));
-    const maxDiff = Math.max(latDiff, lngDiff);
-    // Rough zoom estimation from bounding box span
-    if (maxDiff < 0.002) return 19;  // building / address
-    if (maxDiff < 0.01) return 17;   // street block
-    if (maxDiff < 0.05) return 15;   // neighborhood
-    if (maxDiff < 0.2) return 13;    // small town
-    if (maxDiff < 1) return 11;      // city
-    if (maxDiff < 5) return 8;       // region
-    if (maxDiff < 20) return 6;      // country
-    return 4;                        // continent
-  }
-
-  // Fallback: type-based zoom
-  if (['house', 'building', 'address', 'shop', 'amenity', 'office'].includes(type)) return 18;
-  if (['road', 'street', 'highway', 'path', 'residential', 'tertiary', 'secondary', 'primary'].includes(type)) return 17;
-  if (['neighbourhood', 'quarter', 'suburb', 'hamlet', 'isolated_dwelling'].includes(type)) return 15;
-  if (['village', 'town', 'borough'].includes(type)) return 14;
-  if (['city', 'municipality'].includes(type)) return 12;
-  if (['county', 'state_district', 'state', 'province'].includes(type)) return 8;
-  if (['country'].includes(type)) return 5;
-  if (['continent'].includes(type)) return 3;
-  if (category === 'boundary') return 8;
-  if (category === 'place') return 13;
-  if (category === 'highway') return 17;
-  if (category === 'building') return 18;
-  if (category === 'amenity') return 17;
-  return 13; // safe default
 }
 
 // Icon for result type
@@ -86,7 +45,7 @@ function formatLabel(displayName: string): { primary: string; secondary: string 
   };
 }
 
-export default function SearchBar({ onLocate, alwaysExpanded = false }: SearchBarProps) {
+export default function SearchBar({ onLocate, onAction, alwaysExpanded = false }: SearchBarProps) {
   const [open, setOpen] = useState(alwaysExpanded);
   const [value, setValue] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -133,31 +92,9 @@ export default function SearchBar({ onLocate, alwaysExpanded = false }: SearchBa
     return () => document.removeEventListener('mousedown', handler);
   }, [open, alwaysExpanded]);
 
-  const parseCoords = (s: string): { lat: number; lng: number } | null => {
-    const m = s.trim().match(/^([+-]?\d+\.?\d*)[,\s]+([+-]?\d+\.?\d*)$/);
-    if (!m) return null;
-    const lat = parseFloat(m[1]), lng = parseFloat(m[2]);
-    if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) return { lat, lng };
-    return null;
-  };
-
   const handleSearch = useCallback(async (q: string) => {
     setValue(q);
     setSelectedIdx(-1);
-
-    // Direct coordinate input
-    const coords = parseCoords(q);
-    if (coords) {
-      setResults([{
-        label: `${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`,
-        ...coords,
-        type: 'coordinate',
-        importance: 1,
-        category: 'coordinate',
-        zoomLevel: 15,
-      }]);
-      return;
-    }
 
     if (timerRef.current) clearTimeout(timerRef.current);
     if (q.trim().length < 2) { setResults([]); return; }
@@ -165,31 +102,21 @@ export default function SearchBar({ onLocate, alwaysExpanded = false }: SearchBa
     timerRef.current = setTimeout(async () => {
       setLoading(true);
       try {
-        // Use addressdetails=1 for better type detection and limit=8 for more results
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=8&addressdetails=1&extratags=1`,
-          { headers: { 'Accept-Language': 'en', 'User-Agent': 'OPHANIM-Intelligence-Atlas/1.0' } }
-        );
+        const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&limit=8`);
         const data = await res.json();
-        setResults(data.map((r: any) => {
-          const zoom = getZoomForType(r.type, r.class, r.boundingbox);
-          return {
-            label: r.display_name,
-            lat: parseFloat(r.lat),
-            lng: parseFloat(r.lon),
-            type: r.type || 'unknown',
-            importance: r.importance || 0,
-            category: r.class || 'unknown',
-            zoomLevel: zoom,
-          };
-        }));
+        setResults(res.ok && Array.isArray(data.results) ? data.results : []);
       } catch { setResults([]); }
       setLoading(false);
     }, 300);
   }, []);
 
   const handleSelect = (r: SearchResult) => {
-    onLocate(r.lat, r.lng, r.zoomLevel);
+    if (r.action?.type === 'open_entity') {
+      window.location.assign(r.action.href);
+      return;
+    }
+    if (r.action) onAction?.(r.action);
+    if (r.lat !== undefined && r.lng !== undefined) onLocate(r.lat, r.lng, r.zoomLevel);
     if (!alwaysExpanded) setOpen(false);
     setValue('');
     setResults([]);
@@ -273,6 +200,7 @@ export default function SearchBar({ onLocate, alwaysExpanded = false }: SearchBa
         >
           {results.map((r, i) => {
             const { primary, secondary } = formatLabel(r.label);
+            const detail = r.summary || secondary;
             const isSelected = i === selectedIdx;
             return (
               <button
@@ -286,17 +214,15 @@ export default function SearchBar({ onLocate, alwaysExpanded = false }: SearchBa
                 <div className="mt-0.5">{getResultIcon(r.type, r.category)}</div>
                 <div className="flex-1 min-w-0">
                   <div className="text-[10px] text-[var(--text-primary)] font-mono truncate leading-tight">{primary}</div>
-                  {secondary && (
-                    <div className="text-[8px] text-[var(--text-muted)] font-mono truncate mt-0.5">{secondary}</div>
+                  {detail && (
+                    <div className="text-[8px] text-[var(--text-muted)] font-mono truncate mt-0.5">{detail}</div>
                   )}
                 </div>
                 <div className="flex flex-col items-end flex-shrink-0">
                   <span className="text-[7px] text-[var(--text-muted)] font-mono uppercase tracking-wider">
                     {r.type === 'coordinate' ? 'COORDS' : r.type}
                   </span>
-                  <span className="text-[7px] text-[var(--gold-primary)] font-mono opacity-40">
-                    Z{r.zoomLevel}
-                  </span>
+                  {r.lat !== undefined && r.lng !== undefined && <span className="text-[7px] text-[var(--gold-primary)] font-mono opacity-40">Z{r.zoomLevel}</span>}
                 </div>
               </button>
             );

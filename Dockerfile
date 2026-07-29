@@ -15,8 +15,14 @@ ENV NODE_ENV=production
 
 # curl is required by the maritime route's MarineTraffic tile fetch (Cloudflare
 # 403s Node's fetch on TLS fingerprint; curl with the same headers passes).
-# node:alpine ships without it, so install it explicitly.
-RUN apk add --no-cache curl
+# GhostTrack is pinned to a reviewed upstream commit and runs only behind the
+# backend provider; it is never exposed as a web service.
+ARG GHOSTTRACK_REF=a5cb8ad4c08acd803f166fb067b7dac724d6cb3d
+RUN apk add --no-cache curl git python3 py3-pip py3-virtualenv && \
+    git clone https://github.com/HunxByts/GhostTrack.git /opt/ghosttrack && \
+    git -C /opt/ghosttrack checkout --detach "$GHOSTTRACK_REF" && \
+    python3 -m venv /opt/ghosttrack/.venv && \
+    /opt/ghosttrack/.venv/bin/pip install --no-cache-dir -r /opt/ghosttrack/requirements.txt
 
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
@@ -29,5 +35,8 @@ USER nextjs
 EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
+ENV GHOSTTRACK_DIR="/opt/ghosttrack"
+ENV GHOSTTRACK_PYTHON="/opt/ghosttrack/.venv/bin/python"
+ENV GHOSTTRACK_ENABLED="true"
 
 CMD ["node", "server.js"]

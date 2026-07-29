@@ -17,6 +17,8 @@ import GlobalStatusBar from '@/components/GlobalStatusBar';
 import LiveAlerts from '@/components/LiveAlerts';
 import CommandPalette, { type PaletteCommand } from '@/components/CommandPalette';
 import ThreatFusionHUD from '@/components/ThreatFusionHUD';
+import WatchlistPanel from '@/components/WatchlistPanel';
+import type { ProviderMapLayer } from '@/lib/providers';
 
 const OphanimMap = dynamic(() => import('@/components/OphanimMap'), { ssr: false });
 const LayerPanel = dynamic(() => import('@/components/LayerPanel'));
@@ -170,6 +172,7 @@ export default function Dashboard() {
   const [entityGraphTarget, setEntityGraphTarget] = useState<{ type: string; id: string; label?: string; properties?: Record<string, any> } | null>(null);
   const [demoMode, setDemoMode] = useState(false);
   const [ophanimTheme, setOphanimTheme] = useState<'core'|'ghost'>('core');
+  const [providerLayers, setProviderLayers] = useState<ProviderMapLayer[]>([]);
 
   useEffect(() => {
     document.body.className = ophanimTheme === 'core' ? '' : `theme-${ophanimTheme}`;
@@ -213,12 +216,42 @@ export default function Dashboard() {
     gps_jamming: false,
     day_night: true,
     cables: true,
+    war_sanctions: false,
     sdk_sea: true,
     sdk_air: true,
     sdk_naval: true,
     terrain_3d: false,
     malware: false,
   });
+
+  useEffect(() => {
+    const providers = [
+      activeLayers.maritime && 'maritime-map',
+      activeLayers.cables && 'submarine-cables',
+      activeLayers.infrastructure && 'infrastructure-map',
+      activeLayers.war_sanctions && 'war-sanctions',
+    ].filter((provider): provider is string => Boolean(provider));
+
+    if (providers.length === 0) {
+      setProviderLayers([]);
+      return;
+    }
+
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const response = await fetch(`/api/map/layers?providers=${providers.join(',')}`);
+        const data = await response.json();
+        if (!cancelled && response.ok && Array.isArray(data.layers)) setProviderLayers(data.layers);
+      } catch (error) {
+        console.warn('[OPHANIM] Provider map layers unavailable:', error);
+      }
+    };
+
+    load();
+    const refresh = setInterval(load, activeLayers.maritime ? 60_000 : 5 * 60_000);
+    return () => { cancelled = true; clearInterval(refresh); };
+  }, [activeLayers.maritime, activeLayers.cables, activeLayers.infrastructure, activeLayers.war_sanctions]);
   const [liveFeedUrl, setLiveFeedUrl] = useState<string | null>(null);
   const [liveFeedName, setLiveFeedName] = useState('');
   const [liveFeedEmbedAllowed, setLiveFeedEmbedAllowed] = useState(true);
@@ -324,11 +357,11 @@ export default function Dashboard() {
       const gk = `${coords.lat.toFixed(1)},${coords.lng.toFixed(1)}`; // coarser grid = more cache hits
       if (geocodeCache.current.has(gk)) { setLocationLabel(geocodeCache.current.get(gk)!); lastGeocodedPos.current = coords; return; }
       try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${coords.lat}&lon=${coords.lng}&format=json&zoom=10&addressdetails=1`, { headers: { 'Accept-Language': 'en' } });
+        const res = await fetch(`/api/search?mode=reverse&lat=${coords.lat}&lng=${coords.lng}`);
         if (res.ok) {
           const d = await res.json();
-          const a = d.address || {};
-          const label = [a.city||a.town||a.village||a.county, a.state||a.region, a.country].filter(Boolean).join(', ') || 'Unknown';
+          const location = d.results?.[0]?.location || {};
+          const label = [location.locality, location.region, location.country].filter(Boolean).join(', ') || 'Unknown';
           if (geocodeCache.current.size > 500) { const it = geocodeCache.current.keys(); for (let i=0;i<100;i++) { const k = it.next().value; if(k) geocodeCache.current.delete(k); }}
           geocodeCache.current.set(gk, label);
           setLocationLabel(label);
@@ -660,6 +693,7 @@ export default function Dashboard() {
       { key: 'gps_jamming', label: 'GPS Jamming', hint: 'Interference zones' },
       { key: 'malware', label: 'Live Malware', hint: 'abuse.ch threat feed' },
       { key: 'cables', label: 'Submarine Cables', hint: 'Undersea backbone' },
+      { key: 'war_sanctions', label: 'War & Sanctions', hint: 'GUR vessel-associated ports' },
       { key: 'day_night', label: 'Day / Night Terminator', hint: 'Solar overlay' },
       { key: 'terrain_3d', label: '3D Terrain & Buildings', hint: 'Elevation mesh' },
     ];
@@ -965,6 +999,7 @@ export default function Dashboard() {
           scanTargets={scanTargets}
           demoMode={demoMode}
           theme={ophanimTheme}
+          providerLayers={providerLayers}
         />
       </ErrorBoundary>
 
@@ -1083,6 +1118,7 @@ export default function Dashboard() {
 
       {/* ── NEW SIDEBAR (Root Level) ── */}
       {showLayers && !isMobile && <LayerPanel data={data} activeLayers={activeLayers} setActiveLayers={setActiveLayers} theme={ophanimTheme} setTheme={setOphanimTheme} />}
+      <WatchlistPanel />
 
 
 
@@ -1163,7 +1199,15 @@ export default function Dashboard() {
           <AnimatePresence>
             {showDesktopSearch && (
               <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="absolute right-12 top-1/2 -translate-y-1/2 w-80">
-                <SearchBar alwaysExpanded onLocate={(lat, lng, zoom) => { setFlyToLocation({ lat, lng, zoom, ts: Date.now() }); setShowDesktopSearch(false); }} />
+                <SearchBar
+                  alwaysExpanded
+                  onLocate={(lat, lng, zoom) => { setFlyToLocation({ lat, lng, zoom, ts: Date.now() }); setShowDesktopSearch(false); }}
+                  onAction={(action) => {
+                    if (action.type !== 'enable_layers') return;
+                    setActiveLayers((previous) => ({ ...previous, ...Object.fromEntries(action.layers.map((layer) => [layer, true])) }));
+                    setShowDesktopSearch(false);
+                  }}
+                />
               </motion.div>
             )}
           </AnimatePresence>
@@ -1329,7 +1373,14 @@ export default function Dashboard() {
                   {mobilePanel === 'intel' && <IntelFeed data={data} onLocate={(lat, lng) => { setFlyToLocation({ lat, lng, ts: Date.now() }); setMobilePanel(null); }} />}
                   {mobilePanel === 'search' && (
                     <div className="space-y-2">
-                      <SearchBar onLocate={(lat, lng, zoom) => { setFlyToLocation({ lat, lng, zoom, ts: Date.now() }); setMobilePanel(null); }} />
+                      <SearchBar
+                        onLocate={(lat, lng, zoom) => { setFlyToLocation({ lat, lng, zoom, ts: Date.now() }); setMobilePanel(null); }}
+                        onAction={(action) => {
+                          if (action.type !== 'enable_layers') return;
+                          setActiveLayers((previous) => ({ ...previous, ...Object.fromEntries(action.layers.map((layer) => [layer, true])) }));
+                          setMobilePanel(null);
+                        }}
+                      />
                       <SharePanel mapView={mapView} activeLayers={activeLayers} mouseCoords={null} />
                     </div>
                   )}

@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Loader2, RefreshCw, X } from 'lucide-react';
+import { readClientAiConfig } from '@/lib/ai/client-config';
 
 /**
  * OPHANIM — One-Click AI Overview
@@ -35,13 +36,15 @@ export default function AiOverview({ mode, payload, accent = '#7C4DFF' }: AiOver
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/ai/overview', {
+      const config = readClientAiConfig();
+      const res = await fetch(config ? '/api/ai/generate' : '/api/ai/overview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode, payload }),
+        body: JSON.stringify(config ? { task: 'summarize', input: `Summarize the ${mode} panel.`, context: payload, config } : { mode, payload }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      setResult(await res.json());
+      const data = await res.json();
+      setResult(config ? { overview: data.output, highlights: [], generatedBy: 'gemini', generatedAt: data.generatedAt } : data);
     } catch (e: any) {
       setError(e?.message || 'Failed to generate overview');
     } finally {
