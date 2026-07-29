@@ -324,11 +324,11 @@ export default function Dashboard() {
       const gk = `${coords.lat.toFixed(1)},${coords.lng.toFixed(1)}`; // coarser grid = more cache hits
       if (geocodeCache.current.has(gk)) { setLocationLabel(geocodeCache.current.get(gk)!); lastGeocodedPos.current = coords; return; }
       try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${coords.lat}&lon=${coords.lng}&format=json&zoom=10&addressdetails=1`, { headers: { 'Accept-Language': 'en' } });
+        const res = await fetch(`/api/search?mode=reverse&lat=${coords.lat}&lng=${coords.lng}`);
         if (res.ok) {
           const d = await res.json();
-          const a = d.address || {};
-          const label = [a.city||a.town||a.village||a.county, a.state||a.region, a.country].filter(Boolean).join(', ') || 'Unknown';
+          const location = d.results?.[0]?.location || {};
+          const label = [location.locality, location.region, location.country].filter(Boolean).join(', ') || 'Unknown';
           if (geocodeCache.current.size > 500) { const it = geocodeCache.current.keys(); for (let i=0;i<100;i++) { const k = it.next().value; if(k) geocodeCache.current.delete(k); }}
           geocodeCache.current.set(gk, label);
           setLocationLabel(label);
