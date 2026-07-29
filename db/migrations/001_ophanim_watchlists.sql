@@ -1,3 +1,5 @@
+create extension if not exists pgcrypto;
+
 create table if not exists ophanim_watchlists (
   id uuid primary key default gen_random_uuid(), public_id uuid unique not null default gen_random_uuid(), owner_id uuid not null,
   entity_type text not null, entity_value text not null, label text, enabled boolean not null default true,
