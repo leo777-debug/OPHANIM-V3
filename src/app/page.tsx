@@ -25,7 +25,6 @@ const LayerPanel = dynamic(() => import('@/components/LayerPanel'));
 const CameraViewer = dynamic(() => import('@/components/CameraViewer'));
 const OsintPanel = dynamic(() => import('@/components/OsintPanel'));
 const EntityGraphPanel = dynamic(() => import('@/components/EntityGraphPanel'));
-const TokenPanel = dynamic(() => import('@/components/TokenPanel'));
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -1098,14 +1097,12 @@ export default function Dashboard() {
         <UptimeClock />
         <span className="text-[10px] font-bold tracking-[0.2em] text-[var(--text-muted)] opacity-50 ml-2">V.4.1</span>
 
-        <TokenPanel />
 
       </motion.div>
 
       {/* ── MOBILE: Compact top status ── */}
       {isMobile && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2.5 }} className="absolute top-3 right-3 z-[200] pointer-events-auto flex items-center gap-2">
-          <TokenPanel />
         </motion.div>
       )}
       {isMobile && (
