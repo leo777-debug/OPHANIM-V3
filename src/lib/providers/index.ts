@@ -7,12 +7,14 @@ import { ghostTrackProvider } from './providers/ghosttrack-provider';
 import { ipIntelligenceProvider } from './providers/ip-intelligence-provider';
 import { mapCommandProvider } from './providers/map-command-provider';
 import { maritimeProvider } from './providers/maritime-provider';
+import { maigretProvider } from './providers/maigret-provider';
 import { maritimeMapProvider } from './providers/maritime-map-provider';
 import { nominatimProvider } from './providers/nominatim-provider';
 import { sanctionsEntityProvider } from './providers/sanctions-entity-provider';
 import { submarineCablesProvider } from './providers/submarine-cables-provider';
 import { infrastructureMapProvider } from './providers/infrastructure-map-provider';
 import { warSanctionsProvider } from './providers/war-sanctions-provider';
+import { voidAccessProvider } from './providers/voidaccess-provider';
 import { ProviderRegistry } from './provider-registry';
 import { classifySearch, type SearchInput } from './query-classifier';
 import type { ProviderExecutionContext, ProviderQuery } from './types';
@@ -25,7 +27,9 @@ const registry = new ProviderRegistry([
   domainIntelligenceProvider,
   emailBreachProvider,
   githubUsernameProvider,
+  maigretProvider,
   ghostTrackProvider,
+  voidAccessProvider,
   sanctionsEntityProvider,
   warSanctionsProvider,
   maritimeProvider,
@@ -37,6 +41,10 @@ const registry = new ProviderRegistry([
 ]);
 const enrichmentManager = new EnrichmentManager();
 const mapLayerManager = new MapLayerManager();
+
+export function getProviderCatalog() {
+  return registry.getCatalog();
+}
 
 export async function searchProviders(input: SearchInput, context: Omit<ProviderExecutionContext, 'signal'> = { locale: 'en' }) {
   const query = classifySearch(input);

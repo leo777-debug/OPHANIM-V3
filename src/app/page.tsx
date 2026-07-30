@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Layers, BarChart3, Newspaper, Search, X, Globe, MapPinned, Radar, Satellite, Moon, ExternalLink, AlertTriangle, Activity, Database, Wifi, Play, Network, Crosshair } from 'lucide-react';
+import { Layers, BarChart3, Newspaper, Search, X, Globe, MapPinned, Radar, Satellite, Moon, ExternalLink, AlertTriangle, Activity, Database, Wifi, Play, Network, Crosshair, Brain, Bookmark, Settings } from 'lucide-react';
 import IntelFeed from '@/components/IntelFeed';
 import MarketsPanel from '@/components/MarketsPanel';
 import ScmPanel from '@/components/ScmPanel';
@@ -18,6 +18,7 @@ import LiveAlerts from '@/components/LiveAlerts';
 import CommandPalette, { type PaletteCommand } from '@/components/CommandPalette';
 import ThreatFusionHUD from '@/components/ThreatFusionHUD';
 import WatchlistPanel from '@/components/WatchlistPanel';
+import ProviderStatusPanel from '@/components/ProviderStatusPanel';
 import type { ProviderMapLayer } from '@/lib/providers';
 
 const OphanimMap = dynamic(() => import('@/components/OphanimMap'), { ssr: false });
@@ -25,6 +26,7 @@ const LayerPanel = dynamic(() => import('@/components/LayerPanel'));
 const CameraViewer = dynamic(() => import('@/components/CameraViewer'));
 const OsintPanel = dynamic(() => import('@/components/OsintPanel'));
 const EntityGraphPanel = dynamic(() => import('@/components/EntityGraphPanel'));
+const AiAnalyst = dynamic(() => import('@/components/AiAnalyst'));
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -46,11 +48,11 @@ function useIsMobile() {
 }
 const UptimeClock = () => {
   const [uptime, setUptime] = useState('00:00:00');
-  const startTime = useRef(0);
-  if (startTime.current === 0) startTime.current = Date.now();
+  const startTime = useRef<number | null>(null);
   useEffect(() => {
+    startTime.current = Date.now();
     const iv = setInterval(() => {
-      const e = Math.floor((Date.now() - startTime.current) / 1000);
+      const e = Math.floor((Date.now() - (startTime.current ?? Date.now())) / 1000);
       setUptime(`${String(Math.floor(e/3600)).padStart(2,'0')}:${String(Math.floor((e%3600)/60)).padStart(2,'0')}:${String(e%60).padStart(2,'0')}`);
     }, 1000);
     return () => clearInterval(iv);
@@ -88,13 +90,13 @@ const OphanimMark = ({ className = '', animated = false }: { className?: string;
   >
     <defs>
       <linearGradient id="ophanimMarkStroke" x1="18" y1="18" x2="102" y2="102">
-        <stop stopColor="var(--gold-primary)" />
-        <stop offset="0.55" stopColor="var(--cyan-primary)" />
-        <stop offset="1" stopColor="var(--alert-green)" />
+        <stop stopColor="var(--logo-primary)" />
+        <stop offset="0.55" stopColor="var(--logo-secondary)" />
+        <stop offset="1" stopColor="var(--logo-core)" />
       </linearGradient>
       <radialGradient id="ophanimMarkCore" cx="50%" cy="50%" r="50%">
-        <stop stopColor="var(--gold-primary)" stopOpacity="0.85" />
-        <stop offset="0.55" stopColor="var(--cyan-primary)" stopOpacity="0.26" />
+        <stop stopColor="var(--logo-core)" stopOpacity="0.85" />
+        <stop offset="0.55" stopColor="var(--logo-primary)" stopOpacity="0.26" />
         <stop offset="1" stopColor="transparent" />
       </radialGradient>
     </defs>
@@ -121,12 +123,12 @@ const OphanimMark = ({ className = '', animated = false }: { className?: string;
         const rad = (deg * Math.PI) / 180;
         const x = 60 + Math.cos(rad) * 35;
         const y = 60 + Math.sin(rad) * 35;
-        return <circle key={deg} cx={x} cy={y} r="3.1" fill="var(--bg-void)" stroke="var(--gold-primary)" strokeWidth="1.2" />;
+        return <circle key={deg} cx={x} cy={y} r="3.1" fill="var(--bg-void)" stroke="var(--logo-primary)" strokeWidth="1.2" />;
       })}
     </g>
     <circle cx="60" cy="60" r="14" fill="url(#ophanimMarkCore)" />
     <path d="M44 60c6-9 26-9 32 0-6 9-26 9-32 0Z" stroke="var(--text-heading)" strokeWidth="1.5" opacity="0.88" />
-    <circle cx="60" cy="60" r="4.4" fill="var(--gold-primary)" />
+    <circle cx="60" cy="60" r="4.4" fill="var(--logo-core)" />
   </svg>
 );
 
@@ -162,6 +164,9 @@ export default function Dashboard() {
   const [showEntityGraph, setShowEntityGraph] = useState(false);
   const [showDesktopSearch, setShowDesktopSearch] = useState(false);
   const [showFusion, setShowFusion] = useState(false);
+  const [showAiAnalyst, setShowAiAnalyst] = useState(false);
+  const [showProviders, setShowProviders] = useState(false);
+  const [aiPanelMode, setAiPanelMode] = useState<'briefing' | 'settings'>('briefing');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [mobilePanel, setMobilePanel] = useState<'layers'|'markets'|'intel'|'search'|'recon'|null>(null);
   const [mapProjection, setMapProjection] = useState<'globe'|'mercator'>('globe');
@@ -189,7 +194,6 @@ export default function Dashboard() {
   }, [ophanimTheme]);
 
   const isMobile = useIsMobile();
-  const startTime = useRef(Date.now());
   const geocodeCache = useRef<Map<string, string>>(new Map());
   const geocodeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastGeocodedPos = useRef<{ lat: number; lng: number } | null>(null);
@@ -445,6 +449,7 @@ export default function Dashboard() {
     const eqTransform = (data: any) => ({ earthquakes: (data.features || []).map((f: any) => ({ id: f.id, lat: f.geometry?.coordinates?.[1] || 0, lng: f.geometry?.coordinates?.[0] || 0, depth: f.geometry?.coordinates?.[2] || 0, magnitude: f.properties?.mag, place: f.properties?.place, time: f.properties?.time, url: f.properties?.url, tsunami: f.properties?.tsunami, type: f.properties?.type, felt: f.properties?.felt, alert: f.properties?.alert })) });
     fetchEndpoint(eqUrl, eqTransform);
     fetchEndpoint('/api/news');
+    fetchEndpoint('/api/cyber-threats', (response) => ({ cyberThreats: response.threats || [] }));
     const marketTimer = setTimeout(() => fetchEndpoint('/api/markets', d => ({ markets: d })), 800);
 
     // Priority 2: Space Weather (needed for MarketsPanel)
@@ -459,6 +464,7 @@ export default function Dashboard() {
     const intervals = [
       setInterval(() => fetchEndpoint(eqUrl, eqTransform), 900000),  // 15 min (was 5)
       setInterval(() => fetchEndpoint('/api/news'), 1800000),        // 30 min (was 10)
+      setInterval(() => fetchEndpoint('/api/cyber-threats', (response) => ({ cyberThreats: response.threats || [] })), 1800000),
       setInterval(() => fetchEndpoint('/api/markets', d => ({ markets: d })), 900000), // 15 min (was 5)
     ];
     return () => {
@@ -673,7 +679,7 @@ export default function Dashboard() {
     setMapView(v => ({ ...v, zoom }));
   }, []);
   const closeRightPanels = useCallback(() => {
-    setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); setShowDesktopSearch(false); setShowFusion(false);
+    setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); setShowDesktopSearch(false); setShowFusion(false); setShowAiAnalyst(false);
   }, []);
   const toggleFullscreen = useCallback(() => {
     if (typeof document === 'undefined') return;
@@ -1018,7 +1024,7 @@ export default function Dashboard() {
       <motion.div
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 3.5 }}
         className="absolute bottom-[75px] md:bottom-[100px] z-[200] flex items-center pointer-events-none"
-        style={{ left: isMobile ? '12px' : '120px' }}
+        style={{ left: isMobile ? '12px' : '226px' }}
       >
         <div className="glass-panel flex items-center gap-1 p-1 pointer-events-auto">
           {/* 3D/2D Toggle */}
@@ -1062,20 +1068,29 @@ export default function Dashboard() {
       </motion.div>
 
       {/* ── HEADER ── */}
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, delay: 2.5 }} className={`absolute top-4 z-[200] pointer-events-none flex flex-col`} style={{ left: isMobile ? '24px' : '64px', right: '24px' }}>
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, delay: 2.5 }} className={`ophanim-brand-block absolute top-5 z-[200] pointer-events-none flex flex-col`} style={{ left: isMobile ? '20px' : '28px', right: '24px' }}>
         <div className="flex items-center gap-3 w-fit">
           <OphanimMark className="w-9 h-9 md:w-11 md:h-11 shrink-0 drop-shadow-[0_0_16px_rgba(124,255,203,0.32)]" />
           <div className="flex flex-col items-start gap-0.5">
-            <h1 className="text-lg md:text-xl font-bold tracking-[0.4em] text-[var(--gold-primary)] font-mono">OPHANIM</h1>
-            <span className="text-[8px] md:text-[9px] font-mono tracking-[0.2em] opacity-80 uppercase text-[var(--gold-primary)]">LIVE INTELLIGENCE ATLAS</span>
+            <h1 className="text-lg md:text-xl font-extrabold tracking-[0.06em] text-[var(--text-heading)]">OPHANIM</h1>
+            <span className="text-[8px] md:text-[9px] font-semibold tracking-[0.08em] opacity-80 uppercase text-[var(--cyan-primary)]">Global intelligence workspace</span>
           </div>
         </div>
         <div className="flex items-center gap-3 mt-1.5 pl-[44px] min-w-0 pr-4">
-          <span className="text-[5px] md:text-[6px] text-[var(--text-muted)] font-mono tracking-[0.2em] md:tracking-[0.3em] uppercase opacity-40 truncate">
-            OPHANIM OPEN SOURCE INTELLIGENCE <span className="hidden md:inline">/ CORE: SIGNAL LATTICE / SENSORS: LIVE ORBITS / NET: OPEN FEEDS</span>
+          <span className="text-[8px] text-[var(--text-muted)] font-medium tracking-[0.03em] opacity-70 truncate">
+            Search, observe, and investigate live signals
           </span>
         </div>
       </motion.div>
+
+      {!isMobile && (
+        <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 2.65 }} className="ophanim-command-bar ophanim-header-command absolute top-5 z-[220] flex items-center gap-2 pointer-events-auto">
+          <div className="w-[min(46vw,560px)]"><SearchBar alwaysExpanded onLocate={(lat, lng, zoom) => setFlyToLocation({ lat, lng, zoom, ts: Date.now() })} onAction={(action) => { if (action.type === 'enable_layers') setActiveLayers((previous) => ({ ...previous, ...Object.fromEntries(action.layers.map((layer) => [layer, true])) })); }} /></div>
+          <button onClick={() => { setAiPanelMode('settings'); setShowAiAnalyst(true); setShowFusion(false); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className="ophanim-command-button ophanim-command-button--primary" title="Configure API key or local AI model"><Settings className="w-4 h-4" /><span>SET UP AI</span></button>
+          <button onClick={() => window.dispatchEvent(new Event('ophanim:open-watchlists'))} className="ophanim-command-button" title="Open Watchlists"><Bookmark className="w-4 h-4" /><span>WATCH</span></button>
+          <button onClick={() => setShowProviders((value) => !value)} className="ophanim-command-button" title="View provider and source status"><Database className="w-4 h-4" /><span>SOURCES</span></button>
+        </motion.div>
+      )}
 
 
       {/* ── TOP-RIGHT STATUS (desktop) — C2 DISPLAY ── */}
@@ -1115,14 +1130,30 @@ export default function Dashboard() {
       {/* ── NEW SIDEBAR (Root Level) ── */}
       {showLayers && !isMobile && <LayerPanel data={data} activeLayers={activeLayers} setActiveLayers={setActiveLayers} theme={ophanimTheme} setTheme={setOphanimTheme} />}
       <WatchlistPanel />
+      <AnimatePresence>
+        {showProviders && !isMobile && (
+          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="absolute top-[86px] left-1/2 z-[260] w-[min(440px,calc(100vw-32px))] -translate-x-1/2 pointer-events-auto">
+            <ProviderStatusPanel />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
 
 
       {/* ── RIGHT TOOL STRIP (desktop only — mobile uses bottom nav) ── */}
-      {!isMobile && <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-[250] pointer-events-auto bg-black/40 backdrop-blur-sm p-1 rounded-full border border-white/5">
+      {!isMobile && <div className="ophanim-context-rail absolute right-4 top-[88px] flex flex-col gap-1 z-[250] pointer-events-auto">
+        <div className="ophanim-context-title">WORKSPACE</div>
         <div className="relative group">
-          <button onClick={() => { setShowFusion(!showFusion); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${showFusion ? 'bg-[#FF1744]/20' : 'hover:bg-white/10'}`} title="Global Threat Fusion">
+          <button onClick={() => { setAiPanelMode('briefing'); setShowAiAnalyst(!showAiAnalyst); setShowFusion(false); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className={`ophanim-context-button ${showAiAnalyst ? 'is-active' : ''}`} title="AI Analyst">
+            <Brain className={`w-4 h-4 ${showAiAnalyst ? 'text-[var(--cyan-primary)]' : 'text-white/60'}`} />
+            <span>Analyst</span>
+          </button>
+          <AnimatePresence>{showAiAnalyst && <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="absolute right-12 top-1/2 -translate-y-1/2 w-80"><AiAnalyst data={data} mode={aiPanelMode} /></motion.div>}</AnimatePresence>
+        </div>
+        <div className="relative group">
+          <button onClick={() => { setShowFusion(!showFusion); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className={`ophanim-context-button ${showFusion ? 'is-active is-alert' : ''}`} title="Global Threat Fusion">
             <Activity className={`w-4 h-4 ${showFusion ? 'text-[#FF1744]' : 'text-white/60'}`} />
+            <span>Fusion</span>
           </button>
           {/* Threat Fusion HUD Slideout */}
           <AnimatePresence>
@@ -1135,8 +1166,9 @@ export default function Dashboard() {
         </div>
 
         <div className="relative group">
-          <button onClick={() => { setShowIntel(!showIntel); setShowMarkets(false); setShowAlerts(false); setShowFusion(false); }} className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${showIntel ? 'bg-[var(--cyan-primary)]/20' : 'hover:bg-white/10'}`}>
+          <button onClick={() => { setShowIntel(!showIntel); setShowMarkets(false); setShowAlerts(false); setShowFusion(false); }} className={`ophanim-context-button ${showIntel ? 'is-active' : ''}`} title="Recon tools">
             <Radar className={`w-4 h-4 ${showIntel ? 'text-[var(--cyan-primary)]' : 'text-white/60'}`} />
+            <span>Recon</span>
           </button>
           {/* OSINT / Recon Panel Slideout */}
           <AnimatePresence>
@@ -1155,8 +1187,9 @@ export default function Dashboard() {
         </div>
 
         <div className="relative group">
-          <button onClick={() => { setShowMarkets(!showMarkets); setShowIntel(false); setShowAlerts(false); setShowFusion(false); }} className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${showMarkets ? 'bg-[var(--gold-primary)]/20' : 'hover:bg-white/10'}`}>
+          <button onClick={() => { setShowMarkets(!showMarkets); setShowIntel(false); setShowAlerts(false); setShowFusion(false); }} className={`ophanim-context-button ${showMarkets ? 'is-active' : ''}`} title="Markets">
             <BarChart3 className={`w-4 h-4 ${showMarkets ? 'text-[var(--gold-primary)]' : 'text-white/60'}`} />
+            <span>Markets</span>
           </button>
           {/* Markets Panel Slideout */}
           <AnimatePresence>
@@ -1169,8 +1202,9 @@ export default function Dashboard() {
         </div>
 
         <div className="relative group">
-          <button onClick={() => { setShowAlerts(!showAlerts); setShowIntel(false); setShowMarkets(false); setShowEntityGraph(false); setShowFusion(false); }} className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${showAlerts ? 'bg-[#FF3D3D]/20' : 'hover:bg-white/10'}`}>
+          <button onClick={() => { setShowAlerts(!showAlerts); setShowIntel(false); setShowMarkets(false); setShowEntityGraph(false); setShowFusion(false); }} className={`ophanim-context-button ${showAlerts ? 'is-active is-alert' : ''}`} title="Live alerts">
             <AlertTriangle className={`w-4 h-4 ${showAlerts ? 'text-[#FF3D3D]' : 'text-white/60'}`} />
+            <span>Alerts</span>
           </button>
           {/* Alerts Panel Slideout */}
           <AnimatePresence>
@@ -1183,14 +1217,16 @@ export default function Dashboard() {
         </div>
 
         <div className="relative group">
-          <button onClick={() => { setShowEntityGraph(!showEntityGraph); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); }} className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${showEntityGraph ? 'bg-[var(--gold-primary)]/20' : 'hover:bg-white/10'}`}>
+          <button onClick={() => { setShowEntityGraph(!showEntityGraph); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); }} className={`ophanim-context-button ${showEntityGraph ? 'is-active' : ''}`} title="Entity graph">
             <Network className={`w-4 h-4 ${showEntityGraph ? 'text-[var(--gold-primary)]' : 'text-white/60'}`} />
+            <span>Entities</span>
           </button>
         </div>
 
         <div className="relative group">
-          <button onClick={() => { setShowDesktopSearch(!showDesktopSearch); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${showDesktopSearch ? 'bg-[var(--gold-primary)]/20' : 'hover:bg-white/10'}`}>
+          <button onClick={() => { setShowDesktopSearch(!showDesktopSearch); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className={`ophanim-context-button ${showDesktopSearch ? 'is-active' : ''}`} title="Search tools">
             <Search className={`w-4 h-4 ${showDesktopSearch ? 'text-[var(--gold-primary)]' : 'text-white/60'}`} />
+            <span>Search</span>
           </button>
           <AnimatePresence>
             {showDesktopSearch && (

@@ -87,6 +87,21 @@ export default function LiveAlerts({ data, onLocate, onWatchFeed }: LiveAlertsPr
     });
   }
 
+  // CISA's publicly maintained Known Exploited Vulnerabilities catalog.
+  if (data.cyberThreats) {
+    data.cyberThreats.slice(0, 10).forEach((threat: any) => {
+      alerts.push({
+        type: 'cyber',
+        title: `${threat.id || 'CISA advisory'}: ${threat.name || 'Known exploited vulnerability'}`,
+        description: `${threat.vendor || 'Unknown vendor'} ${threat.product || ''}`.trim(),
+        source: threat.source || 'CISA KEV',
+        time: threat.date,
+        severity: threat.severity || 'HIGH',
+        url: threat.id ? `https://www.cisa.gov/known-exploited-vulnerabilities-catalog?search_api_fulltext=${encodeURIComponent(threat.id)}` : undefined,
+      });
+    });
+  }
+
   // Built-in live feeds (always present)
   BUILTIN_FEEDS.forEach(f => {
     alerts.push({
@@ -107,6 +122,7 @@ export default function LiveAlerts({ data, onLocate, onWatchFeed }: LiveAlertsPr
       case 'news': return Newspaper;
       case 'quake': return AlertTriangle;
       case 'feed': return Radio;
+      case 'cyber': return AlertTriangle;
       default: return Newspaper;
     }
   };

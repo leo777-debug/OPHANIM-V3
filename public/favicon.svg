@@ -5,9 +5,9 @@
       <stop offset="100%" stop-color="#020707"/>
     </radialGradient>
     <linearGradient id="stroke" x1="96" y1="96" x2="416" y2="416">
-      <stop stop-color="#7CFFCB"/>
-      <stop offset="0.55" stop-color="#8976FF"/>
-      <stop offset="1" stop-color="#50FA7B"/>
+      <stop stop-color="#38e1c4"/>
+      <stop offset="0.55" stop-color="#75a7ff"/>
+      <stop offset="1" stop-color="#ff6f91"/>
     </linearGradient>
     <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
       <feGaussianBlur stdDeviation="8" result="blur"/>
@@ -26,7 +26,7 @@
     <path d="M256 78v356M78 256h356M130 130l252 252M382 130 130 382" stroke-width="4" opacity="0.45"/>
     <path d="M160 256c36-52 156-52 192 0-36 52-156 52-192 0Z" stroke="#F7FFFC" stroke-width="8" opacity="0.86"/>
   </g>
-  <g fill="#020707" stroke="#7CFFCB" stroke-width="6">
+  <g fill="#020707" stroke="#38e1c4" stroke-width="6">
     <circle cx="256" cy="78" r="15"/>
     <circle cx="256" cy="434" r="15"/>
     <circle cx="78" cy="256" r="15"/>
@@ -36,6 +36,6 @@
     <circle cx="130" cy="382" r="13"/>
     <circle cx="382" cy="382" r="13"/>
   </g>
-  <circle cx="256" cy="256" r="24" fill="#7CFFCB"/>
+  <circle cx="256" cy="256" r="24" fill="#ff6f91"/>
   <circle cx="256" cy="256" r="9" fill="#020707"/>
 </svg>

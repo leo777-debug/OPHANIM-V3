@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, ChevronDown, ChevronUp, Crosshair, TrendingUp, TrendingDown, Minus, Radar } from 'lucide-react';
+import { Activity, ChevronDown, ChevronUp, Crosshair, TrendingUp, TrendingDown, Minus, Orbit } from 'lucide-react';
 import { type Fusion, type Domain } from '@/lib/fusion';
 
 /**
@@ -78,13 +78,13 @@ export default function ThreatFusionHUD({ onLocate }: Props) {
     <motion.div
       initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
       className="glass-panel pointer-events-auto overflow-hidden"
-      style={{ width: 280, borderColor: `${color}55`, boxShadow: `0 0 28px -8px ${color}55, 0 4px 30px rgba(0,0,0,0.5)` }}
+      style={{ width: 300, borderColor: `${color}44`, boxShadow: `0 14px 42px rgba(0,0,0,0.45)` }}
     >
       {/* Header */}
       <button onClick={() => setExpanded(e => !e)} className="w-full flex items-center justify-between px-3 py-2 border-b" style={{ borderColor: `${color}33` }}>
         <div className="flex items-center gap-2">
-          <Radar className="w-3.5 h-3.5" style={{ color }} />
-          <span className="hud-text text-[10px] text-[var(--text-primary)]">THREAT FUSION</span>
+          <Orbit className="w-3.5 h-3.5" style={{ color }} />
+          <span className="hud-text text-[10px] text-[var(--text-primary)]">SIGNAL POSTURE</span>
           {loading && <span className="w-1.5 h-1.5 rounded-full animate-ophanim-pulse" style={{ background: color }} />}
         </div>
         {expanded ? <ChevronUp className="w-3.5 h-3.5 text-[var(--text-muted)]" /> : <ChevronDown className="w-3.5 h-3.5 text-[var(--text-muted)]" />}
@@ -107,7 +107,7 @@ export default function ThreatFusionHUD({ onLocate }: Props) {
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <span className="font-mono font-bold leading-none" style={{ color, fontSize: 26, textShadow: `0 0 12px ${color}99` }}>{level}</span>
-                  <span className="hud-label" style={{ fontSize: 6 }}>THREATCON</span>
+                  <span className="hud-label" style={{ fontSize: 6 }}>POSTURE</span>
                 </div>
               </div>
 

@@ -7,6 +7,15 @@ describe('classifySearch', () => {
     expect(classifySearch({ query: 'Show sanctioned vessels' })).toMatchObject({ command: 'show_sanctioned_vessels', intent: 'map_command' });
   });
 
+  it('classifies explicit dark-web investigations without AI routing', () => {
+    expect(classifySearch({ query: 'dark web mentions of MSC IRINA' })).toMatchObject({
+      intent: 'dark_web_lookup', entityType: 'command', query: 'MSC IRINA',
+    });
+    expect(classifySearch({ query: 'search darkweb intelligence for LockBit' })).toMatchObject({
+      intent: 'dark_web_lookup', entityType: 'command', query: 'LockBit',
+    });
+  });
+
   it('classifies valid coordinate input without selecting a provider', () => {
     expect(classifySearch({ query: '40.7128, -74.0060' })).toMatchObject({
       intent: 'coordinate_lookup',

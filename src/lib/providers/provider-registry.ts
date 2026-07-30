@@ -3,6 +3,15 @@ import type { Provider, ProviderQuery } from './types';
 export class ProviderRegistry {
   constructor(private readonly providers: Provider[]) {}
 
+  getCatalog() {
+    return this.providers
+      .map((provider) => ({
+        ...provider.metadata,
+        configured: !provider.metadata.requiresCredentials || Boolean(provider.isConfigured?.()),
+      }))
+      .sort((a, b) => a.priority - b.priority || a.name.localeCompare(b.name));
+  }
+
   findProviders(query: ProviderQuery): Provider[] {
     return this.enabledProviders().filter((provider) => {
       const { metadata } = provider;

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 /*
@@ -7,24 +7,24 @@
 */
 
 :root {
-  --gold-rgb: 124, 255, 203;
-  --cyan-rgb: 137, 118, 255;
+  --gold-rgb: 255, 111, 145;
+  --cyan-rgb: 48, 211, 195;
 
-  --bg-void: #020707;
-  --bg-primary: #061010;
-  --bg-secondary: #0B1718;
-  --bg-tertiary: #102326;
-  --bg-panel: rgba(6, 16, 17, 0.84);
-  --bg-panel-solid: #0B1718;
+  --bg-void: #080a0c;
+  --bg-primary: #101417;
+  --bg-secondary: #171c20;
+  --bg-tertiary: #20272c;
+  --bg-panel: rgba(14, 18, 21, 0.9);
+  --bg-panel-solid: #171c20;
 
   /* Compatibility aliases used by existing components. */
-  --gold-primary: #7CFFCB;
-  --gold-light: #C8FFE9;
-  --gold-dim: #2E9E7E;
+  --gold-primary: #ff6f91;
+  --gold-light: #ffb4c5;
+  --gold-dim: #b34d69;
   --gold-glow: rgba(var(--gold-rgb), 0.28);
 
-  --cyan-primary: #8976FF;
-  --cyan-dim: #3C3486;
+  --cyan-primary: #30d3c3;
+  --cyan-dim: #1c8078;
   --cyan-glow: rgba(var(--cyan-rgb), 0.18);
 
   --alert-red: #FF4D6D;
@@ -34,6 +34,10 @@
 
   --accent-weather: #A970FF;
   --accent-nuclear: #B7FF5A;
+
+  --logo-primary: #38e1c4;
+  --logo-secondary: #75a7ff;
+  --logo-core: #ff6f91;
 
   --border-primary: rgba(var(--gold-rgb), 0.16);
   --border-secondary: rgba(var(--gold-rgb), 0.08);
@@ -51,12 +55,142 @@
   --scrollbar-thumb-hover: rgba(var(--gold-rgb), 0.42);
   --hover-accent: rgba(var(--gold-rgb), 0.08);
 
-  --font-hud: 'IBM Plex Mono', 'Courier New', monospace;
-  --font-body: 'Space Grotesk', -apple-system, sans-serif;
+  --font-hud: 'Sora', sans-serif;
+  --font-body: 'Figtree', -apple-system, sans-serif;
 
   --panel-gap: 12px;
   --edge-pad: 20px;
 }
+
+.ophanim-command-bar {
+  padding: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 8px;
+  background: rgba(14, 20, 24, 0.96);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.26);
+}
+
+.ophanim-search-surface {
+  min-height: 40px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: rgba(255,255,255,0.055);
+  box-shadow: none;
+}
+
+.ophanim-search-surface:focus-within { border-color: var(--cyan-primary); box-shadow: 0 0 0 3px rgba(48, 211, 195, 0.14); }
+
+.ophanim-command-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 11px;
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+  border-radius: 7px;
+  font: 700 10px var(--font-body);
+  letter-spacing: 0;
+}
+
+.ophanim-command-button:hover { color: var(--text-heading); border-color: rgba(255, 255, 255, 0.12); background: rgba(255,255,255,0.08); }
+.ophanim-command-button--primary { color: #061211; background: var(--cyan-primary); border-color: var(--cyan-primary); }
+.ophanim-command-button--primary:hover { color: #061211; background: #75eee1; border-color: #75eee1; }
+
+.ophanim-header-command {
+  left: 380px !important;
+  right: 420px !important;
+  transform: none !important;
+  translate: none !important;
+}
+
+.ophanim-header-command > :first-child {
+  flex: 1 1 auto;
+  width: auto !important;
+  min-width: 180px;
+}
+
+@media (max-width: 1440px) {
+  .ophanim-header-command {
+    left: 270px !important;
+    right: 250px !important;
+  }
+
+  .ophanim-header-command .ophanim-command-button span {
+    display: none;
+  }
+
+  .ophanim-header-command .ophanim-command-button {
+    width: 40px;
+    justify-content: center;
+    padding: 0;
+  }
+}
+
+.ophanim-context-rail {
+  width: 116px;
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(12, 18, 22, 0.95);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.3);
+}
+
+.ophanim-context-title {
+  padding: 4px 6px 8px;
+  color: var(--text-muted);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.ophanim-context-button {
+  display: flex;
+  width: 100%;
+  min-height: 34px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  color: rgba(234, 247, 242, 0.65);
+  font-size: 10px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.ophanim-context-button:hover,
+.ophanim-context-button.is-active {
+  border-color: rgba(48, 211, 195, 0.3);
+  background: rgba(48, 211, 195, 0.1);
+  color: var(--text-heading);
+}
+
+.ophanim-context-button.is-alert {
+  border-color: rgba(255, 77, 109, 0.3);
+  background: rgba(255, 77, 109, 0.1);
+}
+
+.ophanim-context-rail .absolute.right-12 {
+  right: 124px;
+}
+
+.ophanim-status-strip {
+  background: rgba(12, 18, 22, 0.96);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 -8px 22px rgba(0, 0, 0, 0.18);
+}
+
+.ophanim-status-strip .animate-ticker {
+  animation: none;
+}
+
+
+/* Ophanim replaces the inherited terminal console treatment with a quiet intelligence workspace. */
+.font-mono { font-family: var(--font-body) !important; letter-spacing: 0 !important; }
+.glass-panel, .glass-panel-sm { border-radius: 8px; backdrop-filter: blur(20px) saturate(1.1); }
+.glass-panel { background: rgba(14,18,21,0.9); border-color: rgba(255,255,255,0.1); box-shadow: 0 14px 34px rgba(0,0,0,0.3); }
+.glass-panel:hover { border-color: rgba(48,211,195,0.28); box-shadow: 0 18px 44px rgba(0,0,0,0.36); }
 
 /* 🔥
    THEME TRANSITION SYSTEM
@@ -144,7 +278,7 @@ html, body {
   backdrop-filter: blur(24px) saturate(1.3);
   -webkit-backdrop-filter: blur(24px) saturate(1.3);
   border: 1px solid var(--border-primary);
-  border-radius: 14px;
+  border-radius: 8px;
   box-shadow:
     0 4px 30px rgba(0, 0, 0, 0.5),
     0 1px 0 rgba(var(--gold-rgb), 0.06) inset,
@@ -1222,6 +1356,13 @@ html, body {
     animation-duration: 0.01ms !important;
   }
 }
+
+/* Final Ophanim workspace treatment: these live last to override inherited HUD rules. */
+.font-mono { font-family: var(--font-body) !important; letter-spacing: 0 !important; }
+.glass-panel, .glass-panel-sm { background: rgba(14, 18, 21, 0.9) !important; border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 8px !important; box-shadow: 0 14px 34px rgba(0,0,0,0.3) !important; }
+.glass-panel:hover { border-color: rgba(48,211,195,0.3) !important; }
+.ophanim-command-bar { border-radius: 10px; }
+@media (max-width: 900px) { .ophanim-command-bar { left: 12px; right: 12px; transform: none; } }
 
 /* IP Sweep animations */
 @keyframes sweep-pulse {
