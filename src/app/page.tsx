@@ -1086,6 +1086,7 @@ export default function Dashboard() {
       {!isMobile && (
         <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 2.65 }} className="ophanim-command-bar ophanim-header-command absolute top-5 z-[220] flex items-center gap-2 pointer-events-auto">
           <div className="w-[min(46vw,560px)]"><SearchBar alwaysExpanded onLocate={(lat, lng, zoom) => setFlyToLocation({ lat, lng, zoom, ts: Date.now() })} onAction={(action) => { if (action.type === 'enable_layers') setActiveLayers((previous) => ({ ...previous, ...Object.fromEntries(action.layers.map((layer) => [layer, true])) })); }} /></div>
+          <button onClick={() => { setAiPanelMode('settings'); setShowAiAnalyst(true); setShowFusion(false); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className="ophanim-command-button ophanim-command-button--primary" title="Configure API key or local AI model"><Settings className="w-4 h-4" /><span>SET UP AI</span></button>
           <button onClick={() => window.dispatchEvent(new Event('ophanim:open-watchlists'))} className="ophanim-command-button" title="Open Watchlists"><Bookmark className="w-4 h-4" /><span>WATCH</span></button>
           <button onClick={() => setShowProviders((value) => !value)} className="ophanim-command-button" title="View provider and source status"><Database className="w-4 h-4" /><span>SOURCES</span></button>
         </motion.div>
@@ -1142,12 +1143,6 @@ export default function Dashboard() {
       {/* ── RIGHT TOOL STRIP (desktop only — mobile uses bottom nav) ── */}
       {!isMobile && <div className="ophanim-context-rail absolute right-4 top-[88px] flex flex-col gap-1 z-[250] pointer-events-auto">
         <div className="ophanim-context-title">WORKSPACE</div>
-        <div className="relative group">
-          <button onClick={() => { setAiPanelMode('settings'); setShowAiAnalyst(true); setShowFusion(false); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className={`ophanim-context-button ${showAiAnalyst && aiPanelMode === 'settings' ? 'is-active' : ''}`} title="Configure AI provider">
-            <Settings className={`w-4 h-4 ${showAiAnalyst && aiPanelMode === 'settings' ? 'text-[var(--cyan-primary)]' : 'text-white/60'}`} />
-            <span>AI Settings</span>
-          </button>
-        </div>
         <div className="relative group">
           <button onClick={() => { setAiPanelMode('briefing'); setShowAiAnalyst(!showAiAnalyst); setShowFusion(false); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className={`ophanim-context-button ${showAiAnalyst ? 'is-active' : ''}`} title="AI Analyst">
             <Brain className={`w-4 h-4 ${showAiAnalyst ? 'text-[var(--cyan-primary)]' : 'text-white/60'}`} />
