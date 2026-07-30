@@ -98,10 +98,10 @@
 .ophanim-command-button--primary:hover { color: #061211; background: #75eee1; border-color: #75eee1; }
 
 .ophanim-header-command {
-  left: 270px !important;
-  right: 390px;
+  left: 380px !important;
+  right: 420px !important;
   transform: none !important;
-  translate: 0 !important;
+  translate: none !important;
 }
 
 .ophanim-header-command > :first-child {
@@ -112,8 +112,8 @@
 
 @media (max-width: 1440px) {
   .ophanim-header-command {
-    left: 240px !important;
-    right: 250px;
+    left: 270px !important;
+    right: 250px !important;
   }
 
   .ophanim-header-command .ophanim-command-button span {
