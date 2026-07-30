@@ -10,20 +10,20 @@
   --gold-rgb: 124, 255, 203;
   --cyan-rgb: 137, 118, 255;
 
-  --bg-void: #020707;
-  --bg-primary: #061010;
-  --bg-secondary: #0B1718;
-  --bg-tertiary: #102326;
-  --bg-panel: rgba(6, 16, 17, 0.84);
-  --bg-panel-solid: #0B1718;
+  --bg-void: #06070b;
+  --bg-primary: #0b0d14;
+  --bg-secondary: #12151d;
+  --bg-tertiary: #1b1f2a;
+  --bg-panel: rgba(12, 14, 21, 0.88);
+  --bg-panel-solid: #12151d;
 
   /* Compatibility aliases used by existing components. */
-  --gold-primary: #7CFFCB;
+  --gold-primary: #5de2c4;
   --gold-light: #C8FFE9;
   --gold-dim: #2E9E7E;
   --gold-glow: rgba(var(--gold-rgb), 0.28);
 
-  --cyan-primary: #8976FF;
+  --cyan-primary: #87a8ff;
   --cyan-dim: #3C3486;
   --cyan-glow: rgba(var(--cyan-rgb), 0.18);
 
@@ -144,7 +144,7 @@ html, body {
   backdrop-filter: blur(24px) saturate(1.3);
   -webkit-backdrop-filter: blur(24px) saturate(1.3);
   border: 1px solid var(--border-primary);
-  border-radius: 14px;
+  border-radius: 8px;
   box-shadow:
     0 4px 30px rgba(0, 0, 0, 0.5),
     0 1px 0 rgba(var(--gold-rgb), 0.06) inset,

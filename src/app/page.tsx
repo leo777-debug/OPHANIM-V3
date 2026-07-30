@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Layers, BarChart3, Newspaper, Search, X, Globe, MapPinned, Radar, Satellite, Moon, ExternalLink, AlertTriangle, Activity, Database, Wifi, Play, Network, Crosshair } from 'lucide-react';
+import { Layers, BarChart3, Newspaper, Search, X, Globe, MapPinned, Radar, Satellite, Moon, ExternalLink, AlertTriangle, Activity, Database, Wifi, Play, Network, Crosshair, Brain } from 'lucide-react';
 import IntelFeed from '@/components/IntelFeed';
 import MarketsPanel from '@/components/MarketsPanel';
 import ScmPanel from '@/components/ScmPanel';
@@ -25,6 +25,7 @@ const LayerPanel = dynamic(() => import('@/components/LayerPanel'));
 const CameraViewer = dynamic(() => import('@/components/CameraViewer'));
 const OsintPanel = dynamic(() => import('@/components/OsintPanel'));
 const EntityGraphPanel = dynamic(() => import('@/components/EntityGraphPanel'));
+const AiAnalyst = dynamic(() => import('@/components/AiAnalyst'));
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -162,6 +163,7 @@ export default function Dashboard() {
   const [showEntityGraph, setShowEntityGraph] = useState(false);
   const [showDesktopSearch, setShowDesktopSearch] = useState(false);
   const [showFusion, setShowFusion] = useState(false);
+  const [showAiAnalyst, setShowAiAnalyst] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [mobilePanel, setMobilePanel] = useState<'layers'|'markets'|'intel'|'search'|'recon'|null>(null);
   const [mapProjection, setMapProjection] = useState<'globe'|'mercator'>('globe');
@@ -673,7 +675,7 @@ export default function Dashboard() {
     setMapView(v => ({ ...v, zoom }));
   }, []);
   const closeRightPanels = useCallback(() => {
-    setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); setShowDesktopSearch(false); setShowFusion(false);
+    setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); setShowDesktopSearch(false); setShowFusion(false); setShowAiAnalyst(false);
   }, []);
   const toggleFullscreen = useCallback(() => {
     if (typeof document === 'undefined') return;
@@ -1120,6 +1122,12 @@ export default function Dashboard() {
 
       {/* ── RIGHT TOOL STRIP (desktop only — mobile uses bottom nav) ── */}
       {!isMobile && <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-[250] pointer-events-auto bg-black/40 backdrop-blur-sm p-1 rounded-full border border-white/5">
+        <div className="relative group">
+          <button onClick={() => { setShowAiAnalyst(!showAiAnalyst); setShowFusion(false); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${showAiAnalyst ? 'bg-[var(--cyan-primary)]/20' : 'hover:bg-white/10'}`} title="AI Analyst">
+            <Brain className={`w-4 h-4 ${showAiAnalyst ? 'text-[var(--cyan-primary)]' : 'text-white/60'}`} />
+          </button>
+          <AnimatePresence>{showAiAnalyst && <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="absolute right-12 top-1/2 -translate-y-1/2 w-80"><AiAnalyst data={data} /></motion.div>}</AnimatePresence>
+        </div>
         <div className="relative group">
           <button onClick={() => { setShowFusion(!showFusion); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${showFusion ? 'bg-[#FF1744]/20' : 'hover:bg-white/10'}`} title="Global Threat Fusion">
             <Activity className={`w-4 h-4 ${showFusion ? 'text-[#FF1744]' : 'text-white/60'}`} />
