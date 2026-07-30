@@ -46,6 +46,13 @@ function classifyCommand(query: string): ProviderQuery | null {
   return { intent: 'map_command', entityType: 'command', query, command: match[1], limit: 1 };
 }
 
+function classifyDarkWebQuery(query: string, limit: number): ProviderQuery | null {
+  const match = query.match(/^(?:(?:search|find|show)\s+(?:the\s+)?(?:dark\s*web|darkweb)(?:\s+(?:mentions?|intel(?:ligence)?))?|(?:dark\s*web|darkweb)\s+(?:mentions?|intel(?:ligence)?))\s*(?:(?:for|of|about)\s+)?(.+)$/i);
+  const subject = match?.[1]?.trim();
+  if (!subject) return null;
+  return { intent: 'dark_web_lookup', entityType: 'command', query: subject, limit };
+}
+
 export function classifySearch(input: SearchInput): ProviderQuery {
   const limit = parseLimit(input.limit);
   if (input.mode === 'reverse') {
@@ -75,6 +82,9 @@ export function classifySearch(input: SearchInput): ProviderQuery {
 
   const command = classifyCommand(query);
   if (command) return command;
+
+  const darkWebQuery = classifyDarkWebQuery(query, limit);
+  if (darkWebQuery) return darkWebQuery;
 
   if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(query)) {
     return { intent: 'email_lookup', entityType: 'email', query: query.toLowerCase(), limit: 1 };
