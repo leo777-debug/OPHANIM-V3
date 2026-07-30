@@ -15,19 +15,37 @@ function settings() {
   return {
     apiUrl: process.env.VOIDACCESS_API_URL?.replace(/\/$/, ''),
     token: process.env.VOIDACCESS_API_TOKEN,
+    email: process.env.VOIDACCESS_API_EMAIL,
+    password: process.env.VOIDACCESS_API_PASSWORD,
   };
 }
 
-function headers() {
+async function getToken(signal: AbortSignal) {
+  const { apiUrl, token, email, password } = settings();
+  if (token) return token;
+  if (!apiUrl || !email || !password) return undefined;
+
+  const response = await fetch(`${apiUrl}/auth/login`, {
+    method: 'POST',
+    signal,
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!response.ok) throw new Error(`VoidAccess login returned ${response.status}.`);
+  const body = await response.json() as { access_token?: unknown };
+  return typeof body.access_token === 'string' ? body.access_token : undefined;
+}
+
+function headers(token: string) {
   return {
-    Authorization: `Bearer ${settings().token}`,
+    Authorization: `Bearer ${token}`,
     Accept: 'application/json',
     'Content-Type': 'application/json',
   };
 }
 
-async function request(url: string, init: RequestInit, signal: AbortSignal) {
-  const response = await fetch(url, { ...init, signal, headers: { ...headers(), ...init.headers } });
+async function request(url: string, init: RequestInit, signal: AbortSignal, token: string) {
+  const response = await fetch(url, { ...init, signal, headers: { ...headers(token), ...init.headers } });
   if (!response.ok) throw new Error(`VoidAccess returned ${response.status}.`);
   return response.json() as Promise<Record<string, unknown>>;
 }
@@ -52,29 +70,31 @@ export const voidAccessProvider: Provider = {
     priority: 20,
   },
   isConfigured() {
-    const { apiUrl, token } = settings();
-    return Boolean(apiUrl && token);
+    const { apiUrl, token, email, password } = settings();
+    return Boolean(apiUrl && (token || (email && password)));
   },
   async createMapLayers() { return []; },
   async execute(query, context): Promise<VoidAccessRaw> {
-    const { apiUrl, token } = settings();
+    const { apiUrl } = settings();
     const subject = query.query ?? '';
-    if (!apiUrl || !token) return { status: 'unavailable', query: subject, message: 'Dark-web intelligence is not configured on this server.' };
+    if (!apiUrl || !this.isConfigured()) return { status: 'unavailable', query: subject, message: 'Dark-web intelligence is not configured on this server.' };
 
     try {
+      const token = await getToken(context.signal);
+      if (!token) throw new Error('VoidAccess did not return a usable access token.');
       const created = await request(`${apiUrl}/investigations`, {
         method: 'POST', body: JSON.stringify({ query: subject, run_crawler: false }),
-      }, context.signal);
+      }, context.signal, token);
       const runId = typeof created.run_id === 'string' ? created.run_id : undefined;
       if (!runId) throw new Error('VoidAccess did not return an investigation identifier.');
 
       // The remote pipeline is asynchronous. A brief poll returns quick hits without holding the request open.
       for (let attempt = 0; attempt < 2; attempt += 1) {
         await pause(1200, context.signal);
-        const investigation = await request(`${apiUrl}/investigations/${encodeURIComponent(runId)}`, { method: 'GET' }, context.signal);
+        const investigation = await request(`${apiUrl}/investigations/${encodeURIComponent(runId)}`, { method: 'GET' }, context.signal, token);
         const status = investigation.status as VoidAccessStatus | undefined;
         if (status === 'completed' || status === 'completed_no_results') {
-          const entityResponse = await request(`${apiUrl}/investigations/${encodeURIComponent(runId)}/entities?limit=${query.limit}`, { method: 'GET' }, context.signal);
+          const entityResponse = await request(`${apiUrl}/investigations/${encodeURIComponent(runId)}/entities?limit=${query.limit}`, { method: 'GET' }, context.signal, token);
           return {
             status: 'complete', query: subject, runId,
             investigation: investigation as VoidAccessRaw['investigation'],
