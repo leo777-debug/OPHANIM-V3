@@ -7,6 +7,7 @@ import { ghostTrackProvider } from './providers/ghosttrack-provider';
 import { ipIntelligenceProvider } from './providers/ip-intelligence-provider';
 import { mapCommandProvider } from './providers/map-command-provider';
 import { maritimeProvider } from './providers/maritime-provider';
+import { maigretProvider } from './providers/maigret-provider';
 import { maritimeMapProvider } from './providers/maritime-map-provider';
 import { nominatimProvider } from './providers/nominatim-provider';
 import { sanctionsEntityProvider } from './providers/sanctions-entity-provider';
@@ -26,6 +27,7 @@ const registry = new ProviderRegistry([
   domainIntelligenceProvider,
   emailBreachProvider,
   githubUsernameProvider,
+  maigretProvider,
   ghostTrackProvider,
   voidAccessProvider,
   sanctionsEntityProvider,
