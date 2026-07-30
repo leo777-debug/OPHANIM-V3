@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
 interface CryptoPrice { symbol: string; price: number; }
-interface CyberThreat { id: string; name: string; vendor: string; product: string; date: string; }
 interface Earthquake { id: string; magnitude: number; place: string; time: number; depth: number; }
 
 const CryptoIcon = ({ symbol }: { symbol: string }) => {
@@ -68,43 +67,15 @@ export default function GlobalStatusBar({ onThreatClick }: { onThreatClick?: () 
     const fetchData = async () => {
       try {
         const [cryptoRes, quakeRes] = await Promise.allSettled([
-          fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd')
-            .then(res => res.ok ? res.json() : Promise.reject('CoinGecko error'))
-            .then(data => {
-              const prices: CryptoPrice[] = [];
-              if (data.bitcoin?.usd) prices.push({ symbol: 'BTC', price: data.bitcoin.usd });
-              if (data.ethereum?.usd) prices.push({ symbol: 'ETH', price: data.ethereum.usd });
-              if (data.solana?.usd) prices.push({ symbol: 'SOL', price: data.solana.usd });
-              return { ok: true, json: async () => prices };
-            }),
-          fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson')
-            .then(res => res.ok ? res.json() : Promise.reject('USGS error'))
-            .then(data => ({
-              ok: true,
-              json: async () => ({
-                earthquakes: (data.features || []).map((f: any) => ({
-                  id: f.id,
-                  lat: f.geometry?.coordinates?.[1] || 0,
-                  lng: f.geometry?.coordinates?.[0] || 0,
-                  depth: f.geometry?.coordinates?.[2] || 0,
-                  magnitude: f.properties?.mag,
-                  place: f.properties?.place,
-                  time: f.properties?.time,
-                  url: f.properties?.url,
-                  tsunami: f.properties?.tsunami,
-                  type: f.properties?.type,
-                  felt: f.properties?.felt,
-                  alert: f.properties?.alert,
-                }))
-              })
-            })),
+          fetch('/api/crypto', { signal: AbortSignal.timeout(15000) }).then((response) => response.ok ? response.json() : Promise.reject(new Error('Crypto unavailable'))),
+          fetch('/api/earthquakes', { signal: AbortSignal.timeout(15000) }).then((response) => response.ok ? response.json() : Promise.reject(new Error('Earthquakes unavailable'))),
         ]);
 
-        if (cryptoRes.status === 'fulfilled' && cryptoRes.value.ok) {
-          setCrypto(await cryptoRes.value.json());
+        if (cryptoRes.status === 'fulfilled') {
+          setCrypto(Array.isArray(cryptoRes.value) ? cryptoRes.value : []);
         }
-        if (quakeRes.status === 'fulfilled' && quakeRes.value.ok) {
-          const quakeData = await quakeRes.value.json();
+        if (quakeRes.status === 'fulfilled') {
+          const quakeData = quakeRes.value;
           // Filter to mag >= 4.0 and take top 5 most recent
           const majorQuakes = (quakeData.earthquakes || [])
             .filter((q: Earthquake) => q.magnitude >= 4.0)
@@ -167,13 +138,12 @@ export default function GlobalStatusBar({ onThreatClick }: { onThreatClick?: () 
       transition={{ delay: 4, duration: 0.8 }}
       className="hidden md:block absolute bottom-0 left-0 right-0 z-[198] pointer-events-none"
     >
-      <div className="h-[22px] overflow-hidden bg-black/90 border-t border-[var(--cyan-primary)]/40 flex items-center text-[8px] font-mono tracking-wider backdrop-blur-md relative" style={{ boxShadow: '0 -4px 20px rgba(137, 118, 255, 0.1)' }}>
-        {/* Animated glitch line overlay */}
-        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[var(--cyan-primary)] to-transparent opacity-50" style={{ animation: 'hud-scanline 3s linear infinite' }} />
+      <div className="ophanim-status-strip h-[28px] overflow-hidden flex items-center text-[9px] font-medium tracking-[0.04em] relative">
 
         {/* Static label */}
-        <div className="flex-shrink-0 px-3 h-full flex items-center gap-1 border-r border-[var(--cyan-primary)]/30 bg-black pointer-events-auto relative z-10 shadow-[4px_0_10px_rgba(0,0,0,0.5)]">
-          <span className="text-[var(--cyan-primary)] font-bold">LIVE</span>
+        <div className="flex-shrink-0 px-4 h-full flex items-center gap-1.5 border-r border-white/10 pointer-events-auto relative z-10">
+          <span className="w-1.5 h-1.5 rounded-full bg-[var(--alert-green)]" />
+          <span className="text-[var(--text-secondary)] font-semibold">LIVE SIGNALS</span>
         </div>
 
         {/* THREATCON badge — live fusion read, click to open the Threat Fusion panel */}

@@ -103,6 +103,7 @@ interface ChatMessage {
 
 interface AiAnalystProps {
   data: DashboardData;
+  mode?: 'briefing' | 'settings';
 }
 
 const GEMINI_KEY_STORAGE = 'ophanim-gemini-key';
@@ -192,12 +193,12 @@ function renderMarkdown(text: string): string {
    Component
    ───────────────────────────────────────────────────────────── */
 
-export default function AiAnalyst({ data }: AiAnalystProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
+  const [isOpen, setIsOpen] = useState(true);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
+  const [showSettings, setShowSettings] = useState(() => mode === 'settings');
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [baseUrlInput, setBaseUrlInput] = useState('');
   const [modelInput, setModelInput] = useState('');
@@ -218,6 +219,11 @@ export default function AiAnalyst({ data }: AiAnalystProps) {
       setKeySaved(true);
     }
   }, []);
+
+  useEffect(() => {
+    setIsOpen(true);
+    setShowSettings(mode === 'settings');
+  }, [mode]);
 
   // Auto-scroll to bottom
   useEffect(() => {

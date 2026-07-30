@@ -167,8 +167,7 @@ export default function SearchBar({ onLocate, onAction, alwaysExpanded = false }
 
   return (
     <div className="relative w-full" ref={containerRef}>
-      <div className="flex items-center gap-2 glass-panel px-3 py-2.5 !border-[var(--border-active)] transition-all"
-        style={{ boxShadow: '0 0 20px rgba(124,255,203,0.05), inset 0 0 20px rgba(0,0,0,0.2)' }}
+      <div className="ophanim-search-surface flex items-center gap-2 px-3 py-2.5 transition-all"
       >
         <Search className="w-3.5 h-3.5 text-[var(--gold-primary)] flex-shrink-0" />
         <input
@@ -176,13 +175,13 @@ export default function SearchBar({ onLocate, onAction, alwaysExpanded = false }
           value={value}
           onChange={(e) => handleSearch(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="SEARCH ADDRESS, CITY, OR COORDINATES..."
-          className="flex-1 bg-transparent text-[10px] text-[var(--text-primary)] font-mono tracking-wider outline-none placeholder:text-[var(--text-muted)]"
+          placeholder="Search IPs, domains, vessels, places, and live layers"
+          className="flex-1 bg-transparent text-[11px] text-[var(--text-primary)] font-mono outline-none placeholder:text-[var(--text-muted)]"
           autoComplete="off"
           spellCheck={false}
         />
         {loading && <div className="w-3 h-3 border border-[var(--gold-primary)] border-t-transparent rounded-full animate-spin" />}
-        <span className="text-[8px] text-[var(--text-muted)] font-mono opacity-50 hidden md:inline">CTRL+F</span>
+        <span className="text-[8px] text-[var(--text-muted)] font-mono opacity-70 hidden md:inline">CTRL+F</span>
         {(value || !alwaysExpanded) && (
           <button onClick={() => {
             if (alwaysExpanded) { setValue(''); setResults([]); }

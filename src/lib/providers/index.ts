@@ -42,6 +42,10 @@ const registry = new ProviderRegistry([
 const enrichmentManager = new EnrichmentManager();
 const mapLayerManager = new MapLayerManager();
 
+export function getProviderCatalog() {
+  return registry.getCatalog();
+}
+
 export async function searchProviders(input: SearchInput, context: Omit<ProviderExecutionContext, 'signal'> = { locale: 'en' }) {
   const query = classifySearch(input);
   if (query.intent === 'coordinate_lookup' && query.coordinates) {

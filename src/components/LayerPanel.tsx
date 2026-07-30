@@ -225,16 +225,17 @@ function LayerPanel({ data, activeLayers, setActiveLayers, isMobile, theme = 'co
       initial={{ x: -60, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ type: 'spring', damping: 30, stiffness: 200, delay: 2.8 }}
-      className="absolute top-4 left-3 bottom-4 w-[56px] flex flex-col items-center pt-20 pb-4 z-50 pointer-events-auto rounded-2xl"
+      className="ophanim-layer-dock absolute top-[88px] left-4 bottom-10 w-[218px] flex flex-col items-stretch px-2 pt-3 pb-3 z-50 pointer-events-auto rounded-lg"
       style={{
-        background: 'linear-gradient(180deg, rgba(6,16,17,0.76), rgba(8,10,24,0.58))',
-        backdropFilter: 'blur(28px) saturate(1.35)',
-        WebkitBackdropFilter: 'blur(28px) saturate(1.35)',
-        border: '1px solid rgba(124,255,203,0.12)',
-        boxShadow: '0 18px 54px rgba(0,0,0,0.34), inset 0 1px 0 rgba(255,255,255,0.04)',
+        background: 'rgba(12, 18, 22, 0.96)',
+        backdropFilter: 'blur(14px)',
+        WebkitBackdropFilter: 'blur(14px)',
+        border: '1px solid rgba(255,255,255,0.1)',
+        boxShadow: '0 16px 42px rgba(0,0,0,0.34)',
       }}
     >
-      <div className="flex-1 flex flex-col items-center gap-1">
+      <div className="mb-3 px-2 text-[9px] font-semibold tracking-[0.12em] text-white/45">MAP LAYERS</div>
+      <div className="flex-1 flex flex-col gap-1">
         {LAYER_GROUPS.map((group) => {
           const groupActive = group.layers.some(l => activeLayers[l.key]);
           const isHovered = hoveredGroup === group.label;
@@ -243,20 +244,20 @@ function LayerPanel({ data, activeLayers, setActiveLayers, isMobile, theme = 'co
           return (
             <div
               key={group.label}
-              className="relative flex items-center justify-center"
+              className="relative flex"
               onMouseEnter={() => setHoveredGroup(group.label)}
               onMouseLeave={() => setHoveredGroup(null)}
             >
               {/* Icon Button */}
               <div
-                className="w-11 h-11 flex items-center justify-center cursor-pointer rounded-xl transition-all duration-300"
+                className="h-10 w-full flex items-center gap-3 px-3 cursor-pointer rounded-lg transition-all duration-300"
                 style={{
                   background: groupActive
-                    ? 'linear-gradient(135deg, rgba(124,255,203,0.16), rgba(137,118,255,0.12))'
+                    ? 'rgba(48,211,195,0.14)'
                     : isHovered
                       ? 'rgba(255,255,255,0.05)'
                       : 'transparent',
-                  boxShadow: groupActive ? 'inset 0 0 0 1px rgba(124,255,203,0.26)' : 'none',
+                  boxShadow: groupActive ? 'inset 0 0 0 1px rgba(48,211,195,0.34)' : 'none',
                 }}
               >
                 <Icon
@@ -272,8 +273,9 @@ function LayerPanel({ data, activeLayers, setActiveLayers, isMobile, theme = 'co
                     filter: groupActive ? 'drop-shadow(0 0 8px rgba(124,255,203,0.35))' : 'none',
                   }}
                 />
+                <span className={`text-[10px] font-medium tracking-[0.04em] ${groupActive ? 'text-white/90' : 'text-white/45'}`}>{group.label}</span>
                 {groupActive && (
-                  <span className="absolute left-[-7px] w-[3px] h-5 rounded-full bg-[var(--gold-primary)] shadow-[0_0_10px_rgba(124,255,203,0.7)]" />
+                  <span className="absolute left-0 w-[2px] h-5 rounded-full bg-[var(--cyan-primary)] shadow-[0_0_10px_rgba(48,211,195,0.7)]" />
                 )}
               </div>
 
@@ -285,13 +287,13 @@ function LayerPanel({ data, activeLayers, setActiveLayers, isMobile, theme = 'co
                     animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
                     exit={{ opacity: 0, x: -4, filter: 'blur(2px)' }}
                     transition={{ duration: 0.18, ease: 'easeOut' }}
-                    className="absolute left-[64px] top-1/2 -translate-y-1/2 min-w-[236px] rounded-2xl p-3 z-[100] pointer-events-auto"
+                    className="absolute left-[226px] top-1/2 -translate-y-1/2 min-w-[250px] rounded-lg p-3 z-[100] pointer-events-auto"
                     style={{
-                      background: 'rgba(6,16,17,0.82)',
-                      backdropFilter: 'blur(40px) saturate(1.5)',
-                      WebkitBackdropFilter: 'blur(40px) saturate(1.5)',
-                      border: '1px solid rgba(124,255,203,0.12)',
-                      boxShadow: '0 16px 48px rgba(0,0,0,0.48), inset 0 1px 0 rgba(255,255,255,0.04)',
+                      background: 'rgba(12,18,22,0.98)',
+                      backdropFilter: 'blur(16px)',
+                      WebkitBackdropFilter: 'blur(16px)',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      boxShadow: '0 18px 48px rgba(0,0,0,0.52)',
                     }}
                   >
                     <div className="text-[9px] font-mono tracking-[0.2em] uppercase text-white/30 mb-2.5 pb-1.5 border-b border-white/[0.04]">
@@ -336,7 +338,7 @@ function LayerPanel({ data, activeLayers, setActiveLayers, isMobile, theme = 'co
       {setTheme && (
         <button
           onClick={() => setTheme(theme === 'core' ? 'ghost' : 'core')}
-          className="w-11 h-11 flex items-center justify-center rounded-xl transition-all duration-500 cursor-pointer"
+          className="w-full h-10 flex items-center gap-3 px-3 rounded-md transition-all duration-500 cursor-pointer"
           style={{
             background: theme === 'ghost' ? 'rgba(170, 112, 255, 0.14)' : 'rgba(124,255,203,0.06)',
           }}
@@ -351,6 +353,7 @@ function LayerPanel({ data, activeLayers, setActiveLayers, isMobile, theme = 'co
               filter: theme === 'ghost' ? 'drop-shadow(0 0 8px rgba(170, 112, 255, 0.5))' : 'drop-shadow(0 0 6px rgba(124,255,203,0.2))',
             }}
           />
+          <span className="text-[10px] font-medium text-white/50">Appearance</span>
         </button>
       )}
     </motion.div>
