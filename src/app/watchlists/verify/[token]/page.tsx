@@ -1,0 +1,2 @@
+import { verifySubscription } from '@/lib/watchlists/service';
+export default async function VerifyPage({params}:{params:Promise<{token:string}>}){await verifySubscription((await params).token);return <main className="min-h-screen bg-[#020707] p-8 text-white"><p className="text-xs text-emerald-300">OPHANIM</p><h1 className="mt-2 text-3xl">Email confirmed</h1><p className="mt-2 text-zinc-400">Watchlist notifications are enabled.</p></main>}

@@ -50,6 +50,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
   const mapRef = useRef<maplibregl.Map | null>(null);
   const popupRef = useRef<maplibregl.Popup | null>(null);
   const [mapReady, setMapReady] = useState(false);
+  const [mapRecovery, setMapRecovery] = useState(false);
   const prevStyleRef = useRef(mapStyle);
 
   // Create aircraft icon on canvas (for WebGL symbol layer)
@@ -166,8 +167,22 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
-    // Select basemap style
+    // CARTO remains the primary style. A small raster fallback prevents a blank
+    // canvas when that remote vector style cannot finish loading in a browser.
     const styleUrl = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
+    const fallbackStyle: maplibregl.StyleSpecification = {
+      version: 8,
+      sources: {
+        'ophanim-fallback-basemap': {
+          type: 'raster',
+          tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+          tileSize: 256,
+          maxzoom: 19,
+          attribution: '© OpenStreetMap contributors',
+        },
+      },
+      layers: [{ id: 'ophanim-fallback-basemap', type: 'raster', source: 'ophanim-fallback-basemap' }],
+    };
 
     const map = new maplibregl.Map({
       container: containerRef.current,
@@ -185,8 +200,21 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
       transformRequest: (url: string) => ({ url }),
     });
 
+    let usingFallback = false;
+    let mapIdle = false;
+    const recoverBasemap = () => {
+      if (usingFallback || mapIdle) return;
+      usingFallback = true;
+      setMapRecovery(true);
+      map.setStyle(fallbackStyle);
+    };
+    const recoveryTimer = window.setTimeout(recoverBasemap, 12_000);
+    map.on('error', () => recoverBasemap());
+    map.once('idle', () => { mapIdle = true; window.clearTimeout(recoveryTimer); });
+
     map.on('load', () => {
       mapRef.current = map;
+      setMapRecovery(false);
 
       // Theme colors
       const isGhost = theme === 'ghost';
@@ -1100,7 +1128,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
       });
     });
 
-    return () => { map.remove(); mapRef.current = null; };
+    return () => { window.clearTimeout(recoveryTimer); map.remove(); mapRef.current = null; };
   }, []);
 
   // Day/Night
@@ -1697,6 +1725,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
 
   return <>
     <div ref={containerRef} className="absolute inset-0 w-full h-full" />
+    {mapRecovery && <div className="absolute left-1/2 top-1/2 z-[210] -translate-x-1/2 -translate-y-1/2 bg-black/75 px-3 py-2 text-[10px] font-mono tracking-widest text-[var(--gold-primary)]">RECOVERING BASEMAP</div>}
     <DynamicProviderLayers map={mapReady ? mapRef.current : null} layers={providerLayers} onEntityClick={onEntityClick} />
   </>;
 }
