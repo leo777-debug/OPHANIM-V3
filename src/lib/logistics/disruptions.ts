@@ -4,6 +4,7 @@ import type { OrganizationActor } from '@/lib/operations/types';
 import type { ProviderMapLayer } from '@/lib/providers';
 import { listShipments, type ShipmentRecord } from './shipments';
 import { validateDisruptionInput, type DisruptionEvidenceInput, type DisruptionInput, type DisruptionStatus, type DisruptionType } from './disruption-validation';
+import type { NormalizedOsirisDisruption } from './osiris-disruption-normalizer';
 
 export interface DisruptionEvidence extends DisruptionEvidenceInput {
   id: string;
@@ -15,6 +16,8 @@ export interface DisruptionRecord extends Omit<DisruptionInput, 'evidence'> {
   organizationId: string;
   createdAt: string;
   updatedAt: string;
+  provider?: string;
+  confidence?: number;
   evidence: DisruptionEvidence[];
   impactCount?: number;
 }
@@ -59,7 +62,7 @@ interface DisruptionRow {
   id: string; organization_id: string; source: string; source_reference: string | null; title: string;
   disruption_type: DisruptionType; severity: number; status: DisruptionStatus; description: string | null;
   effective_at: string | null; reported_at: string | null; latitude: number | null; longitude: number | null;
-  radius_km: number | null; affected_ports: unknown; affected_vessels: unknown; source_url: string | null;
+  radius_km: number | null; affected_ports: unknown; affected_vessels: unknown; source_url: string | null; provider: string | null; confidence: number | null;
   created_at: string; updated_at: string; impact_count?: number;
 }
 
@@ -74,7 +77,7 @@ interface AssessmentRow {
 
 const disruptionFields = `
   id, organization_id, source, source_reference, title, disruption_type, severity, status, description,
-  effective_at, reported_at, latitude, longitude, radius_km, affected_ports, affected_vessels, source_url, created_at, updated_at
+  effective_at, reported_at, latitude, longitude, radius_km, affected_ports, affected_vessels, source_url, provider, confidence, created_at, updated_at
 `;
 
 function stringList(value: unknown): string[] {
@@ -92,7 +95,7 @@ function toRecord(row: DisruptionRow, evidence: DisruptionEvidence[] = []): Disr
     effectiveAt: row.effective_at ?? undefined, reportedAt: row.reported_at ?? undefined, latitude: row.latitude ?? undefined,
     longitude: row.longitude ?? undefined, radiusKm: row.radius_km ?? undefined, affectedPorts: stringList(row.affected_ports),
     affectedVessels: stringList(row.affected_vessels), sourceUrl: row.source_url ?? undefined, createdAt: row.created_at,
-    updatedAt: row.updated_at, evidence, impactCount: Number(row.impact_count ?? 0),
+    updatedAt: row.updated_at, provider: row.provider ?? undefined, confidence: row.confidence ?? undefined, evidence, impactCount: Number(row.impact_count ?? 0),
   };
 }
 
@@ -203,6 +206,17 @@ export async function createDisruption(actor: OrganizationActor, input: unknown)
     await client.query('rollback');
     throw error;
   } finally { client.release(); }
+}
+
+export async function upsertIngestedDisruption(organizationId: string, input: NormalizedOsirisDisruption): Promise<DisruptionRecord> {
+  const result = await db().query<DisruptionRow>(
+    `insert into ophanim_disruptions (organization_id, source, source_reference, title, disruption_type, severity, status, description, effective_at, reported_at, latitude, longitude, source_url, provider, confidence)
+     values ($1, $2, $3, $4, $5, $6, 'active', $7, $8, $9, $10, $11, $12, $13, $14)
+     on conflict (organization_id, source, source_reference) do update set title = excluded.title, disruption_type = excluded.disruption_type, severity = excluded.severity, status = 'active', description = excluded.description, effective_at = excluded.effective_at, reported_at = excluded.reported_at, latitude = excluded.latitude, longitude = excluded.longitude, source_url = excluded.source_url, provider = excluded.provider, confidence = excluded.confidence, updated_at = now()
+     returning ${disruptionFields}`,
+    [organizationId, input.source, input.sourceReference, input.title, input.disruptionType, input.severity, input.description ?? null, input.effectiveAt ?? null, input.reportedAt ?? null, input.latitude, input.longitude, input.sourceUrl, input.provider, input.confidence],
+  );
+  return toRecord(result.rows[0], await evidenceFor(result.rows[0].id));
 }
 
 function toAssessment(row: AssessmentRow): ShipmentImpactAssessment {

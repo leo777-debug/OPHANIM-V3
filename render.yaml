@@ -15,6 +15,8 @@ services:
         sync: false
       - key: WATCHLIST_CRON_SECRET
         generateValue: true
+      - key: DISRUPTION_SYNC_CRON_SECRET
+        generateValue: true
   - type: cron
     name: ophanim-watchlists
     runtime: docker
@@ -24,6 +26,16 @@ services:
       - key: APP_URL
         sync: false
       - key: WATCHLIST_CRON_SECRET
+        sync: false
+  - type: cron
+    name: ophanim-disruption-sync
+    runtime: docker
+    schedule: '*/10 * * * *'
+    dockerCommand: 'sh -c "curl -fsS -H \"Authorization: Bearer $DISRUPTION_SYNC_CRON_SECRET\" $APP_URL/api/logistics/disruptions/sync"'
+    envVars:
+      - key: APP_URL
+        sync: false
+      - key: DISRUPTION_SYNC_CRON_SECRET
         sync: false
 databases:
   - name: ophanim-db
