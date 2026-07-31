@@ -17,6 +17,8 @@ describe('organization authorization', () => {
     expect(can(analyst, 'disruption:write')).toBe(false);
     expect(can(analyst, 'rescue:read')).toBe(true);
     expect(can(analyst, 'rescue:write')).toBe(false);
+    expect(can(analyst, 'vulnerability:read')).toBe(true);
+    expect(can(analyst, 'vulnerability:write')).toBe(false);
   });
 
   it('rejects a request scoped to another organization', () => {

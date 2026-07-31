@@ -1,0 +1,4 @@
+import { NextRequest, NextResponse } from 'next/server'; import { requireAuthenticatedActor } from '@/lib/auth/actor'; import { OrganizationAccessError } from '@/lib/operations/authorization'; import { createRollCall, listRollCalls } from '@/lib/logistics/roll-call';
+const failure=(error:unknown)=>NextResponse.json({error:error instanceof Error?error.message:'Roll call request failed.'},{status:error instanceof OrganizationAccessError?403:400});
+export async function GET(request:NextRequest){try{return NextResponse.json({rollCalls:await listRollCalls(await requireAuthenticatedActor(request,'vulnerability:read'))})}catch(error){return failure(error)}}
+export async function POST(request:NextRequest){try{return NextResponse.json({rollCall:await createRollCall(await requireAuthenticatedActor(request,'vulnerability:write'),await request.json())},{status:201})}catch(error){return failure(error)}}

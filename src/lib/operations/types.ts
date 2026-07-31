@@ -16,4 +16,6 @@ export type OrganizationPermission =
   | 'disruption:write'
   | 'rescue:read'
   | 'rescue:write'
+  | 'vulnerability:read'
+  | 'vulnerability:write'
   | 'organization:manage';
