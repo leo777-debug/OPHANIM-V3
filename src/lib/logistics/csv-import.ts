@@ -5,13 +5,13 @@ import { ShipmentValidationError, validateShipmentInput } from './shipment-valid
 export const MAX_SHIPMENT_IMPORT_BYTES = 5 * 1024 * 1024;
 export const MAX_SHIPMENT_IMPORT_ROWS = 5_000;
 
-const shipmentFields = [
+export const SHIPMENT_IMPORT_FIELDS = [
   'shipmentReference', 'bookingNumber', 'containerNumber', 'billOfLadingReference', 'carrier', 'vesselName', 'imoNumber',
   'originPortName', 'originPortCode', 'destinationPortName', 'destinationPortCode', 'operationalTimezone',
   'plannedDepartureAt', 'plannedArrivalAt', 'actualDepartureAt', 'actualArrivalAt', 'cargoType', 'priority', 'currentStatus',
 ] as const;
 
-export type ShipmentImportField = (typeof shipmentFields)[number];
+export type ShipmentImportField = (typeof SHIPMENT_IMPORT_FIELDS)[number];
 export type ShipmentColumnMapping = Partial<Record<ShipmentImportField, string>>;
 
 export interface ShipmentImportRow {
@@ -122,7 +122,7 @@ export function parseCsv(csv: string): string[][] {
 
 export function detectShipmentColumnMapping(headers: string[]): ShipmentColumnMapping {
   const normalizedHeaders = new Map(headers.map((header) => [normalizeHeader(header), header]));
-  return Object.fromEntries(shipmentFields.flatMap((field) => {
+  return Object.fromEntries(SHIPMENT_IMPORT_FIELDS.flatMap((field) => {
     const source = aliases[field].map((alias) => normalizedHeaders.get(alias)).find(Boolean);
     return source ? [[field, source]] : [];
   })) as ShipmentColumnMapping;
@@ -132,7 +132,7 @@ export function validateShipmentColumnMapping(headers: string[], mapping: Shipme
   const available = new Set(headers);
   const used = new Set<string>();
   for (const [field, source] of Object.entries(mapping)) {
-    if (!shipmentFields.includes(field as ShipmentImportField) || !source || !available.has(source)) {
+    if (!SHIPMENT_IMPORT_FIELDS.includes(field as ShipmentImportField) || !source || !available.has(source)) {
       throw new ShipmentImportError('CSV column mapping is invalid.');
     }
     if (used.has(source)) throw new ShipmentImportError('Each CSV column may be mapped once.');
