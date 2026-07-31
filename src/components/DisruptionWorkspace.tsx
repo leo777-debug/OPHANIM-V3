@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ExternalLink, LoaderCircle, MapPinned, Radar, Save } from 'lucide-react';
+import { ExternalLink, LoaderCircle, MapPinned, Radar, RefreshCw, Save } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { DisruptionInput } from '@/lib/logistics/disruption-validation';
 import type { DisruptionRecord, ShipmentImpactAssessment } from '@/lib/logistics/disruptions';
@@ -32,6 +32,7 @@ export default function DisruptionWorkspace() {
   const [evidenceUrl, setEvidenceUrl] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
@@ -71,10 +72,20 @@ export default function DisruptionWorkspace() {
     finally { setSaving(false); }
   };
 
+  const syncLiveFeeds = async () => {
+    setSyncing(true); setError('');
+    try {
+      const result = await requestJson<{ errors: string[] }>('/api/logistics/disruptions/manual-sync', { method: 'POST', body: '{}' });
+      await load();
+      if (result.errors.length) setError(result.errors.join(' '));
+    } catch (syncError) { setError(syncError instanceof Error ? syncError.message : 'Unable to sync live feeds.'); }
+    finally { setSyncing(false); }
+  };
+
   if (loading) return <main className="grid min-h-screen place-items-center bg-[var(--bg-void)] text-[var(--text-primary)]"><LoaderCircle className="h-5 w-5 animate-spin" /></main>;
 
   return <main className="min-h-screen bg-[var(--bg-void)] p-4 font-mono text-[var(--text-primary)] md:p-8"><div className="mx-auto max-w-6xl">
-    <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border-secondary)] pb-5"><div><p className="text-[10px] uppercase tracking-[0.18em] text-[var(--cyan-primary)]">Logistics Operations</p><h1 className="mt-1 text-2xl font-semibold">Disruptions</h1></div><div className="flex gap-2"><Link href="/logistics" className="border border-[var(--border-secondary)] px-3 py-2 text-xs hover:border-[var(--cyan-primary)]">Shipments</Link><Link href="/logistics/rescue" className="border border-[var(--border-secondary)] px-3 py-2 text-xs hover:border-[var(--cyan-primary)]">Rescue cases</Link></div></header>
+    <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border-secondary)] pb-5"><div><p className="text-[10px] uppercase tracking-[0.18em] text-[var(--cyan-primary)]">Logistics Operations</p><h1 className="mt-1 text-2xl font-semibold">Disruptions</h1></div><div className="flex flex-wrap gap-2"><button disabled={syncing} onClick={() => void syncLiveFeeds()} className="border border-[var(--cyan-primary)] px-3 py-2 text-xs text-[var(--cyan-primary)] disabled:opacity-50"><RefreshCw className={`mr-1 inline h-3.5 w-3.5 ${syncing ? 'animate-spin' : ''}`} />{syncing ? 'Syncing' : 'Sync live feeds'}</button><Link href="/logistics" className="border border-[var(--border-secondary)] px-3 py-2 text-xs hover:border-[var(--cyan-primary)]">Shipments</Link><Link href="/logistics/rescue" className="border border-[var(--border-secondary)] px-3 py-2 text-xs hover:border-[var(--cyan-primary)]">Rescue cases</Link></div></header>
     {error && <p className="mt-4 border border-[var(--alert-red)] px-3 py-2 text-xs text-[var(--alert-red)]">{error}</p>}
     <section className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]"><section className="border border-[var(--border-secondary)]"><div className="border-b border-[var(--border-secondary)] px-4 py-3"><h2 className="text-sm">Recorded disruptions</h2></div><div className="divide-y divide-[var(--border-secondary)]">{disruptions.length === 0 && <p className="p-4 text-xs text-[var(--text-muted)]">No organization disruptions recorded.</p>}{disruptions.map((item) => <button key={item.id} onClick={() => void open(item)} className="w-full p-4 text-left hover:bg-[var(--hover-accent)]"><div className="flex items-start justify-between gap-3"><div><p className="text-sm">{item.title}</p><p className="mt-1 text-[10px] text-[var(--text-muted)]">{item.source} · {item.disruptionType.replace('_', ' ')} · severity {item.severity}</p></div><span className="text-xs text-[var(--cyan-primary)]">{item.impactCount ?? 0} impacts</span></div></button>)}</div></section>
       <section className="border border-[var(--border-secondary)] p-4"><h2 className="text-sm">Record disruption</h2><DisruptionForm form={form} setForm={setForm} ports={ports} setPorts={setPorts} vessels={vessels} setVessels={setVessels} evidenceUrl={evidenceUrl} setEvidenceUrl={setEvidenceUrl} onSave={create} saving={saving} /></section></section>
