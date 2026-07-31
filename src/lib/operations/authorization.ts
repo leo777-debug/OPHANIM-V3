@@ -13,10 +13,10 @@ export class OrganizationAccessError extends Error {
 }
 
 const permissions: Record<OphanimMemberRole, OrganizationPermission[]> = {
-  owner: ['shipment:read', 'shipment:write', 'shipment:archive', 'organization:manage'],
-  operations_manager: ['shipment:read', 'shipment:write', 'shipment:archive'],
-  analyst: ['shipment:read', 'shipment:write'],
-  viewer: ['shipment:read'],
+  owner: ['shipment:read', 'shipment:write', 'shipment:archive', 'disruption:read', 'disruption:write', 'organization:manage'],
+  operations_manager: ['shipment:read', 'shipment:write', 'shipment:archive', 'disruption:read', 'disruption:write'],
+  analyst: ['shipment:read', 'shipment:write', 'disruption:read'],
+  viewer: ['shipment:read', 'disruption:read'],
 };
 
 export function isOphanimMemberRole(value: unknown): value is OphanimMemberRole {

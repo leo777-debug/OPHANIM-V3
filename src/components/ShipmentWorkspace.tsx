@@ -132,7 +132,7 @@ export default function ShipmentWorkspace({ shipmentId }: { shipmentId?: string 
       <div className="mx-auto max-w-6xl">
         <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border-secondary)] pb-5">
           <div><p className="text-[10px] uppercase tracking-[0.18em] text-[var(--cyan-primary)]">Logistics Operations</p><h1 className="mt-1 text-2xl font-semibold">{isDetail ? shipment?.shipmentReference ?? 'Shipment' : 'Shipments'}</h1></div>
-          <div className="flex gap-2"><Link className="border border-[var(--border-secondary)] px-3 py-2 text-xs hover:border-[var(--cyan-primary)]" href="/logistics">Shipment list</Link><Link className="bg-[var(--cyan-primary)] px-3 py-2 text-xs text-black" href="/logistics?new=1"><Plus className="mr-1 inline h-3.5 w-3.5" />New shipment</Link></div>
+          <div className="flex gap-2"><Link className="border border-[var(--border-secondary)] px-3 py-2 text-xs hover:border-[var(--cyan-primary)]" href="/logistics">Shipment list</Link><Link className="border border-[var(--border-secondary)] px-3 py-2 text-xs hover:border-[var(--cyan-primary)]" href="/logistics/disruptions">Disruptions</Link><Link className="bg-[var(--cyan-primary)] px-3 py-2 text-xs text-black" href="/logistics?new=1"><Plus className="mr-1 inline h-3.5 w-3.5" />New shipment</Link></div>
         </header>
         {error && <p className="mt-4 border border-[var(--alert-red)] px-3 py-2 text-xs text-[var(--alert-red)]">{error}</p>}
 
