@@ -668,6 +668,27 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
         const p = e.features[0].properties as any;
         const coords = (e.features[0].geometry as any).coordinates;
         const cs = (p.callsign||'').trim();
+        onEntityClick?.({
+          type: 'aircraft',
+          id: cs || p.icao24,
+          label: cs || p.icao24 || 'Unidentified aircraft',
+          properties: {
+            callsign: cs || undefined,
+            icao24: p.icao24 || undefined,
+            registration: p.registration || undefined,
+            model: p.model || undefined,
+            category: p.category || undefined,
+            aircraft_category: p.aircraft_category || undefined,
+            altitude_m: p.alt,
+            speed_knots: p.speed_knots,
+            heading: p.heading,
+            grounded: p.grounded,
+            latitude: coords[1],
+            longitude: coords[0],
+            source: p.source || undefined,
+            updated_at: p.updated_at || undefined,
+          },
+        });
         popup(coords, `<div style="${pStyle}border:1px solid rgba(124,255,203,0.3);">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
             <span style="color:#7CFFCB;font-size:16px;font-weight:700;letter-spacing:0.1em;">${htmlEsc(cs)}</span>
@@ -990,6 +1011,26 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
       const color = shipColors[p.type] || '#5BB6FF';
       const icon = shipIcons[p.type] || '🚢';
 
+      const vesselId = String(p.imo || p.mmsi || p.id || p.name || '').trim();
+      onEntityClick?.({
+        type: 'vessel',
+        id: vesselId,
+        label: p.name || (p.mmsi ? `MMSI ${p.mmsi}` : 'Unidentified vessel'),
+        properties: {
+          mmsi: p.mmsi || undefined,
+          imo: p.imo || undefined,
+          vessel_type: p.type || undefined,
+          flag: p.flag || undefined,
+          destination: p.destination || undefined,
+          speed_knots: p.speed,
+          heading: p.heading,
+          latitude: coords[1],
+          longitude: coords[0],
+          source: p.source || undefined,
+          updated_at: p.updated_at || undefined,
+        },
+      });
+
       popup(coords, `<div style="${pStyle}border:1px solid ${color}60;box-shadow:inset 0 0 12px ${color}15;">
         <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid ${color}40;padding-bottom:6px;margin-bottom:8px;">
           <div style="color:${color};font-size:12px;font-weight:700;letter-spacing:0.1em;">${icon} [ ${(p.type||'VESSEL').toUpperCase()} ]</div>
@@ -1140,14 +1181,27 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
       }
       return filtered.map((f: any) => ({
         type: 'Feature' as const, geometry: { type: 'Point' as const, coordinates: [f.lng, f.lat] },
-        properties: { callsign: f.callsign, heading: f.heading || 0, alt: f.alt, model: f.model, speed_knots: f.speed_knots, registration: f.registration, icao24: f.icao24 },
+        properties: {
+          callsign: f.callsign,
+          heading: f.heading || 0,
+          alt: f.alt,
+          model: f.model,
+          speed_knots: f.speed_knots,
+          registration: f.registration,
+          icao24: f.icao24,
+          category: f.category,
+          aircraft_category: f.aircraft_category,
+          grounded: f.grounded,
+          source: data.flight_source,
+          updated_at: data.flight_timestamp,
+        },
       }));
     };
     setGeo('flights', activeLayers.flights ? toFeatures(data.commercial_flights, 10) : []);
     setGeo('private-fl', activeLayers.private ? toFeatures(data.private_flights, 2) : []);
     setGeo('jets', activeLayers.jets ? toFeatures(data.private_jets, 2) : []);
     setGeo('military', activeLayers.military ? toFeatures(data.military_flights) : []);
-  }, [mapReady, data.commercial_flights, data.private_flights, data.private_jets, data.military_flights, activeLayers.flights, activeLayers.private, activeLayers.jets, activeLayers.military]);
+  }, [mapReady, data.commercial_flights, data.private_flights, data.private_jets, data.military_flights, data.flight_source, data.flight_timestamp, activeLayers.flights, activeLayers.private, activeLayers.jets, activeLayers.military]);
 
     // Update aircraft icon colors dynamically on theme switch
     useEffect(() => {
@@ -1293,8 +1347,24 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     if (!mapReady) return;
     setGeo('maritime', activeLayers.maritime && data.maritime_ports ? data.maritime_ports.map((p: any) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [p.lng, p.lat] }, properties: { name: p.name, country: p.country, type: p.type, volume: p.volume, fleet: p.fleet, rank: p.rank } })) : []);
     setGeo('maritime-choke', activeLayers.maritime && data.maritime_chokepoints ? data.maritime_chokepoints.map((c: any) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [c.lng, c.lat] }, properties: { name: c.name, traffic: c.traffic, risk: c.risk } })) : []);
-    setGeo('maritime-ships', activeLayers.maritime && data.maritime_ships ? data.maritime_ships.map((s: any) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [s.lng, s.lat] }, properties: { name: s.name || s.mmsi?.toString(), type: s.type || 'cargo', speed: s.speed, heading: s.heading, destination: s.destination, flag: s.flag } })) : []);
-  }, [mapReady, data.maritime_ports, data.maritime_chokepoints, data.maritime_ships, activeLayers.maritime, setGeo]);
+    setGeo('maritime-ships', activeLayers.maritime && data.maritime_ships ? data.maritime_ships.map((s: any) => ({
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [s.lng, s.lat] },
+      properties: {
+        id: s.id,
+        mmsi: s.mmsi,
+        imo: s.imo || s.imoNumber,
+        name: s.name || s.mmsi?.toString(),
+        type: s.type || 'cargo',
+        speed: s.speed,
+        heading: s.heading,
+        destination: s.destination,
+        flag: s.flag,
+        source: s.source || data.maritime_sources?.join(', '),
+        updated_at: s.timestamp || data.maritime_timestamp,
+      },
+    })) : []);
+  }, [mapReady, data.maritime_ports, data.maritime_chokepoints, data.maritime_ships, data.maritime_sources, data.maritime_timestamp, activeLayers.maritime, setGeo]);
 
   // Ship-type sublayers — filter the vessel dots by which categories are enabled.
   useEffect(() => {
