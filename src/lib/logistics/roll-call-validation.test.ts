@@ -1,0 +1,3 @@
+import { describe, expect, it } from 'vitest';
+import { RollCallValidationError, validateAsset, validateRollCall } from './roll-call-validation';
+describe('zero-day roll call validation', () => { it('accepts a CVE and governed asset', () => { expect(validateRollCall({ cveId: 'cve-2026-12345', title: 'Critical advisory', cvss: 9.8 }).cveId).toBe('CVE-2026-12345'); expect(validateAsset({ assetName: 'edge-gateway', assetType: 'network', criticality: 5 }).criticality).toBe(5); }); it('rejects malformed CVEs', () => expect(() => validateRollCall({ cveId: 'CVE-nope', title: 'x' })).toThrow(RollCallValidationError)); });

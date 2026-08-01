@@ -254,15 +254,22 @@ export default function Dashboard() {
     let cancelled = false;
     const load = async () => {
       try {
-        const response = await fetch(`/api/map/layers?providers=${providers.join(',')}`);
-        const data = await response.json();
-        if (!cancelled && response.ok && Array.isArray(data.layers)) setProviderLayers(data.layers);
-      } catch (error) {
-        console.warn('[OPHANIM] Provider map layers unavailable:', error);
+        const response = await fetch(`/api/map/layers?providers=${providers.join(',')}`, {
+          cache: 'no-store',
+          signal: AbortSignal.timeout(15_000),
+        });
+        if (!response.ok) return;
+
+        const data: unknown = await response.json();
+        if (!cancelled && typeof data === 'object' && data !== null && Array.isArray((data as { layers?: unknown }).layers)) {
+          setProviderLayers((data as { layers: ProviderMapLayer[] }).layers);
+        }
+      } catch {
+        // Provider layers are optional; retain the last successful map state.
       }
     };
 
-    load();
+    void load();
     const refresh = setInterval(load, activeLayers.maritime ? 60_000 : 5 * 60_000);
     return () => { cancelled = true; clearInterval(refresh); };
   }, [activeLayers.maritime, activeLayers.cables, activeLayers.infrastructure, activeLayers.war_sanctions]);
