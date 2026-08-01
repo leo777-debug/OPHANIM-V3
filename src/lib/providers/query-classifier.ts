@@ -114,7 +114,7 @@ export function classifySearch(input: SearchInput): ProviderQuery {
     return { intent: 'mmsi_lookup', entityType: 'mmsi', query: mmsiPrefix[1], limit: 1 };
   }
 
-  const prefixed = query.match(/^(company|organization|organisation|org|vessel|ship|port|country|region)\s*[:\-]?\s+(.+)$/i);
+  const prefixed = query.match(/^(company|organization|organisation|org|person|individual|vessel|ship|port|country|region)\s*[:\-]?\s+(.+)$/i);
   if (prefixed) {
     const [, kind, value] = prefixed;
     const normalizedKind = kind.toLowerCase();
@@ -123,6 +123,8 @@ export function classifySearch(input: SearchInput): ProviderQuery {
       organization: { intent: 'organization_lookup', entityType: 'organization' },
       organisation: { intent: 'organization_lookup', entityType: 'organization' },
       org: { intent: 'organization_lookup', entityType: 'organization' },
+      person: { intent: 'person_lookup', entityType: 'person' },
+      individual: { intent: 'person_lookup', entityType: 'person' },
       vessel: { intent: 'vessel_lookup', entityType: 'vessel' },
       ship: { intent: 'vessel_lookup', entityType: 'vessel' },
       port: { intent: 'port_lookup', entityType: 'port' },

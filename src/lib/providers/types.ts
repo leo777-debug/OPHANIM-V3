@@ -1,12 +1,12 @@
 export const PROVIDER_ENTITY_TYPES = [
   'location', 'coordinate', 'ip', 'domain', 'email', 'username', 'company',
-  'organization', 'vessel', 'port', 'imo', 'mmsi', 'country', 'region', 'command',
+  'organization', 'person', 'vessel', 'port', 'imo', 'mmsi', 'country', 'region', 'command',
 ] as const;
 export type ProviderEntityType = (typeof PROVIDER_ENTITY_TYPES)[number];
 
 export const SEARCH_INTENTS = [
   'forward_geocode', 'reverse_geocode', 'coordinate_lookup', 'ip_lookup', 'domain_lookup',
-  'email_lookup', 'username_lookup', 'company_lookup', 'organization_lookup', 'vessel_lookup',
+  'email_lookup', 'username_lookup', 'company_lookup', 'organization_lookup', 'person_lookup', 'vessel_lookup',
   'port_lookup', 'imo_lookup', 'mmsi_lookup', 'country_lookup', 'region_lookup', 'map_command',
   'dark_web_lookup', 'natural_language',
 ] as const;
