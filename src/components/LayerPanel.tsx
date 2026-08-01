@@ -89,7 +89,7 @@ const LAYER_GROUPS = [
     icon: AlertTriangle,
     layers: [
       { key: 'infrastructure', label: 'Nuclear Facilities', dataKey: 'infrastructure' },
-      { key: 'war_sanctions', label: 'War & Sanctions Ports', dataKey: 'war_sanctions' },
+      { key: 'war_sanctions', label: 'GUR Shadow Fleet & Sanctions', dataKey: 'war_sanctions' },
       { key: 'global_incidents', label: 'Global Incidents', dataKey: 'gdelt' },
       { key: 'gps_jamming', label: 'GPS Jamming', dataKey: 'gps_jamming' },
     ],

@@ -27,11 +27,16 @@ describe('War & Sanctions public-page parser', () => {
   });
 
   it('parses source-listed ports from a public vessel profile', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(profileHtml, { status: 200 })));
-    const vessel = await getWarSanctionsVessel('561');
+    const fetchMock = vi.fn().mockResolvedValue(new Response(profileHtml, { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+    const vessel = await getWarSanctionsVessel('561', 'shadow-fleet');
     expect(vessel).toMatchObject({
-      name: 'FRUNZE', imo: '9263643', mmsi: '123456789', isShadowFleet: true,
+      catalogue: 'shadow-fleet', name: 'FRUNZE', imo: '9263643', mmsi: '123456789', isShadowFleet: true,
       ports: [{ name: 'Busan', lat: 35.1, lng: 129.03 }],
     });
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://war-sanctions.gur.gov.ua/en/transport/shadow-fleet/561',
+      expect.any(Object),
+    );
   });
 });

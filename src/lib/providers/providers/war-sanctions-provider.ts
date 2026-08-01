@@ -2,7 +2,7 @@ import { findWarSanctionsVessels, getWarSanctionsMapVessels, getWarSanctionsVess
 import type { Provider, ProviderMapLayer } from '../types';
 
 function sourceLink(vessel: WarSanctionsVessel): string {
-  return `/entity/war-sanctions/${vessel.id}`;
+  return `/entity/war-sanctions/vessels/${vessel.catalogue}/${vessel.id}`;
 }
 
 function toLayer(id: string, name: string, color: string, vessels: WarSanctionsVessel[]): ProviderMapLayer {
@@ -12,6 +12,7 @@ function toLayer(id: string, name: string, color: string, vessels: WarSanctionsV
     properties: {
       entityType: 'port', port: port.name, vessel: vessel.name, imo: vessel.imo,
       classification: vessel.isShadowFleet ? 'Shadow Fleet' : 'Sanctioned vessel',
+      catalogue: vessel.catalogue,
       sourceUrl: vessel.sourceUrl,
     },
   })));
@@ -36,7 +37,7 @@ export const warSanctionsProvider: Provider = {
       const target = (query.query ?? '').toLowerCase();
       return !target || [vessel.name, vessel.imo, vessel.mmsi].filter(Boolean).some((value) => value!.toLowerCase().includes(target));
     }).slice(0, query.limit);
-    return Promise.all(filtered.map((vessel) => getWarSanctionsVessel(vessel.id, context.signal)));
+    return Promise.all(filtered.map((vessel) => getWarSanctionsVessel(vessel.id, vessel.catalogue, context.signal)));
   },
   normalize(raw, query) {
     if (query.intent === 'map_command') return [];
@@ -54,7 +55,7 @@ export const warSanctionsProvider: Provider = {
       getWarSanctionsMapVessels('ships', context.signal),
     ]);
     return [
-      toLayer('war-sanctions-shadow-fleet-ports', 'Shadow Fleet associated ports', '#ff4d6d', shadowFleet),
+      toLayer('war-sanctions-shadow-fleet-ports', 'GUR Shadow Fleet associated ports', '#ff4d6d', shadowFleet),
       toLayer('war-sanctions-sanctioned-vessel-ports', 'Sanctioned vessel associated ports', '#f6c453', sanctioned),
     ];
   },

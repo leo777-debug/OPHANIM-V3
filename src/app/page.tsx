@@ -230,7 +230,7 @@ export default function Dashboard() {
     gps_jamming: false,
     day_night: true,
     cables: true,
-    war_sanctions: false,
+    war_sanctions: true,
     sdk_sea: true,
     sdk_air: true,
     sdk_naval: true,
@@ -716,7 +716,7 @@ export default function Dashboard() {
       { key: 'gps_jamming', label: 'GPS Jamming', hint: 'Interference zones' },
       { key: 'malware', label: 'Live Malware', hint: 'abuse.ch threat feed' },
       { key: 'cables', label: 'Submarine Cables', hint: 'Undersea backbone' },
-      { key: 'war_sanctions', label: 'War & Sanctions', hint: 'GUR vessel-associated ports' },
+      { key: 'war_sanctions', label: 'GUR Shadow Fleet & Sanctions', hint: 'Source-listed vessel-associated ports' },
       { key: 'day_night', label: 'Day / Night Terminator', hint: 'Solar overlay' },
       { key: 'terrain_3d', label: '3D Terrain & Buildings', hint: 'Elevation mesh' },
     ];

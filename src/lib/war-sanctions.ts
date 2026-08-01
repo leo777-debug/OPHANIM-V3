@@ -9,6 +9,7 @@ export interface WarSanctionsPort {
 
 export interface WarSanctionsVessel {
   id: string;
+  catalogue: WarSanctionsCatalogue;
   name: string;
   imo?: string;
   mmsi?: string;
@@ -74,6 +75,7 @@ function parseList(html: string, catalogue: WarSanctionsCatalogue): WarSanctions
     if (!name) continue;
     vessels.set(id, {
       id,
+      catalogue,
       name,
       imo: field(card, 'IMO'),
       flag: field(card, 'Flag (Current)'),
@@ -101,15 +103,16 @@ function parsePorts(html: string): WarSanctionsPort[] {
   }
 }
 
-function parseProfile(html: string, id: string): WarSanctionsVessel {
+function parseProfile(html: string, id: string, catalogue: WarSanctionsCatalogue): WarSanctionsVessel {
   const canonical = html.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i)?.[1]
-    ?? `${BASE_URL}/ships/${id}`;
+    ?? `${BASE_URL}/${catalogue}/${id}`;
   const title = decode(html.match(/property=["']og:title["']\s+content=["']([^"']+)["']/i)?.[1]);
   const name = title.replace(/;\s*IMO\s*\d{7}$/i, '') || `Vessel ${id}`;
   const imo = title.match(/IMO\s*(\d{7})/i)?.[1] ?? field(html, 'IMO');
   const mmsi = html.match(/MMSI\D{0,180}?(\d{9})/i)?.[1];
   return {
     id,
+    catalogue: /\/shadow-fleet\//i.test(canonical) ? 'shadow-fleet' : catalogue,
     name,
     imo,
     mmsi,
@@ -138,16 +141,21 @@ export async function findWarSanctionsVessels(query: string, signal?: AbortSigna
   return [...byId.values()];
 }
 
-export async function getWarSanctionsVessel(id: string, signal?: AbortSignal): Promise<WarSanctionsVessel> {
+export async function getWarSanctionsVessel(
+  id: string,
+  catalogue: WarSanctionsCatalogue = 'ships',
+  signal?: AbortSignal,
+): Promise<WarSanctionsVessel> {
   if (!/^\d+$/.test(id)) throw new Error('Invalid War & Sanctions vessel id');
-  const existing = cached(profileCache, id);
+  const cacheKey = `${catalogue}:${id}`;
+  const existing = cached(profileCache, cacheKey);
   if (existing) return existing;
-  const html = await fetchPublicPage(`${BASE_URL}/ships/${id}`, signal);
-  return cache(profileCache, id, parseProfile(html, id));
+  const html = await fetchPublicPage(`${BASE_URL}/${catalogue}/${id}`, signal);
+  return cache(profileCache, cacheKey, parseProfile(html, id, catalogue));
 }
 
 export async function getWarSanctionsMapVessels(catalogue: WarSanctionsCatalogue, signal?: AbortSignal): Promise<WarSanctionsVessel[]> {
   const list = await findWarSanctionsVessels('', signal);
   const selected = list.filter((vessel) => vessel.isShadowFleet === (catalogue === 'shadow-fleet')).slice(0, 12);
-  return Promise.all(selected.map((vessel) => getWarSanctionsVessel(vessel.id, signal)));
+  return Promise.all(selected.map((vessel) => getWarSanctionsVessel(vessel.id, vessel.catalogue, signal)));
 }
