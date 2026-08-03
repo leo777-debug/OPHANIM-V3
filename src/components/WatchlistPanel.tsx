@@ -48,17 +48,15 @@ export default function WatchlistPanel() {
     }
   }, []);
 
-  useEffect(() => {
+  const openWatchlists = useCallback(() => {
+    setOpen(true);
     void load();
-
-    const handleOpen = () => {
-      setOpen(true);
-      void load();
-    };
-
-    window.addEventListener('ophanim:open-watchlists', handleOpen);
-    return () => window.removeEventListener('ophanim:open-watchlists', handleOpen);
   }, [load]);
+
+  useEffect(() => {
+    window.addEventListener('ophanim:open-watchlists', openWatchlists);
+    return () => window.removeEventListener('ophanim:open-watchlists', openWatchlists);
+  }, [openWatchlists]);
 
   const addWatchlist = async () => {
     const value = entityValue.trim();
@@ -145,7 +143,13 @@ export default function WatchlistPanel() {
     <>
       <button
         type="button"
-        onClick={() => setOpen((visible) => !visible)}
+        onClick={() => {
+          if (open) {
+            setOpen(false);
+          } else {
+            openWatchlists();
+          }
+        }}
         title="Watchlists"
         aria-label="Open watchlists"
         className="fixed left-3 top-1/2 z-[840] flex h-9 w-9 -translate-y-1/2 items-center justify-center glass-panel transition-colors hover:border-[var(--gold-primary)]"
@@ -217,7 +221,7 @@ export default function WatchlistPanel() {
                 </button>
               </div>
 
-              <div className="mt-3 grid grid-cols-[minmax(0,1fr)_96px] gap-2">
+              <div className="mt-3 grid grid-cols-[minmax(0,1fr)_132px] gap-2">
                 <input
                   type="email"
                   value={email}
