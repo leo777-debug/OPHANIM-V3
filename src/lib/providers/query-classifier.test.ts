@@ -49,6 +49,7 @@ describe('classifySearch', () => {
     ['@octocat', 'username_lookup', 'username'],
     ['company Tesla', 'company_lookup', 'company'],
     ['organization OpenAI', 'organization_lookup', 'organization'],
+    ['person ZAHED Hossein Ghorbani', 'person_lookup', 'person'],
     ['Track MSC IRINA', 'vessel_lookup', 'vessel'],
     ['Port Singapore', 'port_lookup', 'port'],
     ['9074729', 'imo_lookup', 'imo'],

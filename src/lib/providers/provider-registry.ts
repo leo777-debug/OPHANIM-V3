@@ -1,4 +1,6 @@
 import type { Provider, ProviderQuery } from './types';
+import { providerHealth } from './provider-health';
+import { sourceGovernance } from './source-governance';
 
 export class ProviderRegistry {
   constructor(private readonly providers: Provider[]) {}
@@ -8,6 +10,8 @@ export class ProviderRegistry {
       .map((provider) => ({
         ...provider.metadata,
         configured: !provider.metadata.requiresCredentials || Boolean(provider.isConfigured?.()),
+        health: providerHealth.get(provider.metadata.name),
+        governance: sourceGovernance(provider.metadata.name),
       }))
       .sort((a, b) => a.priority - b.priority || a.name.localeCompare(b.name));
   }

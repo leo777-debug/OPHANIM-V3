@@ -9,6 +9,7 @@ export interface WarSanctionsPort {
 
 export interface WarSanctionsVessel {
   id: string;
+  catalogue: WarSanctionsCatalogue;
   name: string;
   imo?: string;
   mmsi?: string;
@@ -21,10 +22,51 @@ export interface WarSanctionsVessel {
   ports: WarSanctionsPort[];
 }
 
+export type WarSanctionsPublicCatalogue =
+  | 'sanctions-persons'
+  | 'sanctions-companies'
+  | 'component-companies'
+  | 'uav-companies'
+  | 'rostec'
+  | 'executives'
+  | 'scientists'
+  | 'kidnappers'
+  | 'propaganda'
+  | 'sports';
+
+export interface WarSanctionsPublicEntity {
+  id: string;
+  catalogue: WarSanctionsPublicCatalogue;
+  label: string;
+  entityType: 'person' | 'company' | 'organization';
+  sourceUrl: string;
+  summary?: string;
+}
+
 const BASE_URL = 'https://war-sanctions.gur.gov.ua/en/transport';
+const PUBLIC_BASE_URL = 'https://war-sanctions.gur.gov.ua/en';
 const CACHE_TTL_MS = 15 * 60 * 1000;
 const listCache = new Map<string, { expiresAt: number; value: WarSanctionsVessel[] }>();
 const profileCache = new Map<string, { expiresAt: number; value: WarSanctionsVessel }>();
+const publicEntityCache = new Map<string, { expiresAt: number; value: WarSanctionsPublicEntity[] }>();
+const publicProfileCache = new Map<string, { expiresAt: number; value: WarSanctionsPublicEntity }>();
+
+const PUBLIC_CATALOGUES: Record<WarSanctionsPublicCatalogue, {
+  path: string;
+  entityType: WarSanctionsPublicEntity['entityType'];
+  label: string;
+}> = {
+  'sanctions-persons': { path: 'sanctions/persons', entityType: 'person', label: 'Sanctioned person' },
+  'sanctions-companies': { path: 'sanctions/companies', entityType: 'company', label: 'Sanctioned company' },
+  'component-companies': { path: 'components/companies', entityType: 'company', label: 'Weapon component company' },
+  'uav-companies': { path: 'uav/companies', entityType: 'company', label: 'UAV company' },
+  rostec: { path: 'rostec', entityType: 'organization', label: 'Rostec entity' },
+  executives: { path: 'executives', entityType: 'person', label: 'Executive' },
+  scientists: { path: 'scientists/persons', entityType: 'person', label: 'Scientist' },
+  kidnappers: { path: 'kidnappers/persons', entityType: 'person', label: 'Abductor' },
+  propaganda: { path: 'propaganda/persons', entityType: 'person', label: 'Propaganda actor' },
+  sports: { path: 'sport/persons', entityType: 'person', label: 'Sport-linked person' },
+};
 
 function decode(value: string | undefined): string {
   return (value ?? '')
@@ -74,6 +116,7 @@ function parseList(html: string, catalogue: WarSanctionsCatalogue): WarSanctions
     if (!name) continue;
     vessels.set(id, {
       id,
+      catalogue,
       name,
       imo: field(card, 'IMO'),
       flag: field(card, 'Flag (Current)'),
@@ -101,15 +144,54 @@ function parsePorts(html: string): WarSanctionsPort[] {
   }
 }
 
-function parseProfile(html: string, id: string): WarSanctionsVessel {
+function publicEntityName(card: string): string | undefined {
+  const labelled = field(card, 'Name') ?? field(card, 'Full name');
+  if (labelled) return labelled;
+  const bold = decode(card.match(/class=["'][^"']*font-weight-bold[^"']*["'][^>]*>\s*([^<]+)/i)?.[1]);
+  if (bold) return bold;
+  const imageAlt = decode(card.match(/<img[^>]+alt=["']([^"']+)["']/i)?.[1]);
+  return imageAlt || undefined;
+}
+
+function parsePublicList(html: string, catalogue: WarSanctionsPublicCatalogue): WarSanctionsPublicEntity[] {
+  const definition = PUBLIC_CATALOGUES[catalogue];
+  const escapedPath = definition.path.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const pattern = new RegExp(`<a[^>]+href=["']https:\\/\\/war-sanctions\\.gur\\.gov\\.ua\\/en\\/${escapedPath}\\/(\\d+)["'][^>]*>([\\s\\S]*?)<\\/a>`, 'gi');
+  const entries = new Map<string, WarSanctionsPublicEntity>();
+  for (const match of html.matchAll(pattern)) {
+    const label = publicEntityName(match[2]);
+    if (!label) continue;
+    entries.set(match[1], {
+      id: match[1], catalogue, label, entityType: definition.entityType,
+      sourceUrl: `${PUBLIC_BASE_URL}/${definition.path}/${match[1]}`,
+      summary: definition.label,
+    });
+  }
+  return [...entries.values()];
+}
+
+function parsePublicProfile(html: string, catalogue: WarSanctionsPublicCatalogue, id: string): WarSanctionsPublicEntity {
+  const definition = PUBLIC_CATALOGUES[catalogue];
   const canonical = html.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i)?.[1]
-    ?? `${BASE_URL}/ships/${id}`;
+    ?? `${PUBLIC_BASE_URL}/${definition.path}/${id}`;
+  const title = decode(html.match(/property=["']og:title["']\s+content=["']([^"']+)["']/i)?.[1])
+    || decode(html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]);
+  const summary = decode(html.match(/name=["']description["']\s+content=["']([^"']+)["']/i)?.[1])
+    || decode(html.match(/long-text-multiline[^>]*>([\s\S]*?)<\/div>/i)?.[1])
+    || definition.label;
+  return { id, catalogue, label: title || `${definition.label} ${id}`, entityType: definition.entityType, sourceUrl: canonical, summary };
+}
+
+function parseProfile(html: string, id: string, catalogue: WarSanctionsCatalogue): WarSanctionsVessel {
+  const canonical = html.match(/<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i)?.[1]
+    ?? `${BASE_URL}/${catalogue}/${id}`;
   const title = decode(html.match(/property=["']og:title["']\s+content=["']([^"']+)["']/i)?.[1]);
   const name = title.replace(/;\s*IMO\s*\d{7}$/i, '') || `Vessel ${id}`;
   const imo = title.match(/IMO\s*(\d{7})/i)?.[1] ?? field(html, 'IMO');
   const mmsi = html.match(/MMSI\D{0,180}?(\d{9})/i)?.[1];
   return {
     id,
+    catalogue: /\/shadow-fleet\//i.test(canonical) ? 'shadow-fleet' : catalogue,
     name,
     imo,
     mmsi,
@@ -138,16 +220,60 @@ export async function findWarSanctionsVessels(query: string, signal?: AbortSigna
   return [...byId.values()];
 }
 
-export async function getWarSanctionsVessel(id: string, signal?: AbortSignal): Promise<WarSanctionsVessel> {
+export async function getWarSanctionsVessel(
+  id: string,
+  catalogue: WarSanctionsCatalogue = 'ships',
+  signal?: AbortSignal,
+): Promise<WarSanctionsVessel> {
   if (!/^\d+$/.test(id)) throw new Error('Invalid War & Sanctions vessel id');
-  const existing = cached(profileCache, id);
+  const cacheKey = `${catalogue}:${id}`;
+  const existing = cached(profileCache, cacheKey);
   if (existing) return existing;
-  const html = await fetchPublicPage(`${BASE_URL}/ships/${id}`, signal);
-  return cache(profileCache, id, parseProfile(html, id));
+  const html = await fetchPublicPage(`${BASE_URL}/${catalogue}/${id}`, signal);
+  return cache(profileCache, cacheKey, parseProfile(html, id, catalogue));
 }
 
 export async function getWarSanctionsMapVessels(catalogue: WarSanctionsCatalogue, signal?: AbortSignal): Promise<WarSanctionsVessel[]> {
   const list = await findWarSanctionsVessels('', signal);
   const selected = list.filter((vessel) => vessel.isShadowFleet === (catalogue === 'shadow-fleet')).slice(0, 12);
-  return Promise.all(selected.map((vessel) => getWarSanctionsVessel(vessel.id, signal)));
+  return Promise.all(selected.map((vessel) => getWarSanctionsVessel(vessel.id, vessel.catalogue, signal)));
+}
+
+export function getWarSanctionsPublicCatalogues(entityType: WarSanctionsPublicEntity['entityType']): WarSanctionsPublicCatalogue[] {
+  return (Object.keys(PUBLIC_CATALOGUES) as WarSanctionsPublicCatalogue[])
+    .filter((catalogue) => PUBLIC_CATALOGUES[catalogue].entityType === entityType);
+}
+
+export async function findWarSanctionsPublicEntities(
+  query: string,
+  entityType: WarSanctionsPublicEntity['entityType'],
+  signal?: AbortSignal,
+): Promise<WarSanctionsPublicEntity[]> {
+  const normalized = query.trim();
+  if (!normalized) return [];
+  const catalogues = getWarSanctionsPublicCatalogues(entityType);
+  const groups = await Promise.all(catalogues.map(async (catalogue) => {
+    const definition = PUBLIC_CATALOGUES[catalogue];
+    const url = new URL(`${PUBLIC_BASE_URL}/${definition.path}`);
+    url.searchParams.set('f[search]', normalized);
+    const key = url.toString();
+    const existing = cached(publicEntityCache, key);
+    if (existing) return existing;
+    return cache(publicEntityCache, key, parsePublicList(await fetchPublicPage(key, signal), catalogue));
+  }));
+  const normalizedNeedle = normalized.toLocaleLowerCase();
+  return groups.flat().filter((entity) => entity.label.toLocaleLowerCase().includes(normalizedNeedle));
+}
+
+export async function getWarSanctionsPublicEntity(
+  catalogue: WarSanctionsPublicCatalogue,
+  id: string,
+  signal?: AbortSignal,
+): Promise<WarSanctionsPublicEntity> {
+  if (!PUBLIC_CATALOGUES[catalogue] || !/^\d+$/.test(id)) throw new Error('Invalid War & Sanctions public entity');
+  const cacheKey = `${catalogue}:${id}`;
+  const existing = cached(publicProfileCache, cacheKey);
+  if (existing) return existing;
+  const html = await fetchPublicPage(`${PUBLIC_BASE_URL}/${PUBLIC_CATALOGUES[catalogue].path}/${id}`, signal);
+  return cache(publicProfileCache, cacheKey, parsePublicProfile(html, catalogue, id));
 }

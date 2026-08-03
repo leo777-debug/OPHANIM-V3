@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { findWarSanctionsVessels, getWarSanctionsVessel } from './war-sanctions';
+import { findWarSanctionsPublicEntities, findWarSanctionsVessels, getWarSanctionsPublicEntity, getWarSanctionsVessel } from './war-sanctions';
 
 const listHtml = `
   <a href="https://war-sanctions.gur.gov.ua/en/transport/ships/561">
@@ -17,6 +17,16 @@ const profileHtml = `
   <div class="long-text-multiline">Documented official source description.</div>
   <script>MapLibreWidget={"options":{},"geodata":[{"id":1,"lat":35.1,"lng":129.03,"title":"Busan"}]};</script>`;
 
+const personListHtml = `
+  <a href="https://war-sanctions.gur.gov.ua/en/sanctions/persons/36893">
+    <div class="font-weight-bold font-1">ZAHED Hossein Ghorbani</div>
+  </a>`;
+
+const personProfileHtml = `
+  <link rel="canonical" href="https://war-sanctions.gur.gov.ua/en/sanctions/persons/36893">
+  <meta property="og:title" content="ZAHED Hossein Ghorbani">
+  <meta name="description" content="Official public sanctions record.">`;
+
 afterEach(() => vi.unstubAllGlobals());
 
 describe('War & Sanctions public-page parser', () => {
@@ -27,11 +37,29 @@ describe('War & Sanctions public-page parser', () => {
   });
 
   it('parses source-listed ports from a public vessel profile', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(profileHtml, { status: 200 })));
-    const vessel = await getWarSanctionsVessel('561');
+    const fetchMock = vi.fn().mockResolvedValue(new Response(profileHtml, { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+    const vessel = await getWarSanctionsVessel('561', 'shadow-fleet');
     expect(vessel).toMatchObject({
-      name: 'FRUNZE', imo: '9263643', mmsi: '123456789', isShadowFleet: true,
+      catalogue: 'shadow-fleet', name: 'FRUNZE', imo: '9263643', mmsi: '123456789', isShadowFleet: true,
       ports: [{ name: 'Busan', lat: 35.1, lng: 129.03 }],
     });
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://war-sanctions.gur.gov.ua/en/transport/shadow-fleet/561',
+      expect.any(Object),
+    );
+  });
+
+  it('searches and opens a public sanctioned-person record', async () => {
+    vi.stubGlobal('fetch', vi.fn((url: string) => Promise.resolve(new Response(
+      url.includes('/sanctions/persons/36893') ? personProfileHtml : url.includes('/sanctions/persons') ? personListHtml : '',
+      { status: 200 },
+    ))));
+    const entries = await findWarSanctionsPublicEntities('ZAHED', 'person');
+    expect(entries).toEqual([expect.objectContaining({
+      id: '36893', catalogue: 'sanctions-persons', entityType: 'person', label: 'ZAHED Hossein Ghorbani',
+    })]);
+    const entity = await getWarSanctionsPublicEntity('sanctions-persons', '36893');
+    expect(entity).toMatchObject({ label: 'ZAHED Hossein Ghorbani', summary: 'Official public sanctions record.' });
   });
 });

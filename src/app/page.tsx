@@ -230,7 +230,7 @@ export default function Dashboard() {
     gps_jamming: false,
     day_night: true,
     cables: true,
-    war_sanctions: false,
+    war_sanctions: true,
     sdk_sea: true,
     sdk_air: true,
     sdk_naval: true,
@@ -408,6 +408,17 @@ export default function Dashboard() {
       setLiveFeedName(entity.name);
       setLiveFeedEmbedAllowed(entity.embed_allowed !== false);
     }
+    if (entity?.type === 'aircraft' || entity?.type === 'vessel') {
+      const id = String(entity.id || entity.icao24 || entity.mmsi || entity.name || '').trim();
+      if (!id) return;
+      setEntityGraphTarget({
+        type: entity.type,
+        id,
+        label: entity.label || entity.name || id,
+        properties: entity.properties || {},
+      });
+      setShowEntityGraph(true);
+    }
   }, []);
 
   // Global handler for map popups to manually open the Intel Graph
@@ -488,7 +499,7 @@ export default function Dashboard() {
     // Flights
     if (activeLayers.flights || activeLayers.military || activeLayers.jets || activeLayers.private) {
       if (!layerFetchedRef.current.has('flights')) {
-        fetchEndpoint('/api/flights');
+        fetchEndpoint('/api/flights', d => ({ ...d, flight_source: d.source, flight_timestamp: d.timestamp }));
         layerFetchedRef.current.add('flights');
       }
     }
@@ -514,7 +525,7 @@ export default function Dashboard() {
     }
     // Maritime
     if (activeLayers.maritime && !layerFetchedRef.current.has('maritime')) {
-      fetchEndpoint('/api/maritime', d => ({ maritime_ports: d.ports, maritime_chokepoints: d.chokepoints, maritime_ships: d.ships }));
+      fetchEndpoint('/api/maritime', d => ({ maritime_ports: d.ports, maritime_chokepoints: d.chokepoints, maritime_ships: d.ships, maritime_sources: d.sources, maritime_timestamp: d.timestamp }));
       layerFetchedRef.current.add('maritime');
     }
     // Balloons
@@ -578,7 +589,7 @@ export default function Dashboard() {
   useEffect(() => {
     const intervals: ReturnType<typeof setInterval>[] = [];
     if (activeLayers.flights || activeLayers.military || activeLayers.jets || activeLayers.private) {
-      intervals.push(setInterval(() => fetchEndpoint('/api/flights'), 300000)); // 5 min (was 2 min)
+      intervals.push(setInterval(() => fetchEndpoint('/api/flights', d => ({ ...d, flight_source: d.source, flight_timestamp: d.timestamp })), 300000)); // 5 min (was 2 min)
     }
 
     if (activeLayers.balloons) {
@@ -716,7 +727,7 @@ export default function Dashboard() {
       { key: 'gps_jamming', label: 'GPS Jamming', hint: 'Interference zones' },
       { key: 'malware', label: 'Live Malware', hint: 'abuse.ch threat feed' },
       { key: 'cables', label: 'Submarine Cables', hint: 'Undersea backbone' },
-      { key: 'war_sanctions', label: 'War & Sanctions', hint: 'GUR vessel-associated ports' },
+      { key: 'war_sanctions', label: 'GUR Shadow Fleet & Sanctions', hint: 'Source-listed vessel-associated ports' },
       { key: 'day_night', label: 'Day / Night Terminator', hint: 'Solar overlay' },
       { key: 'terrain_3d', label: '3D Terrain & Buildings', hint: 'Elevation mesh' },
     ];

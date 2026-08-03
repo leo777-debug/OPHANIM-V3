@@ -1,8 +1,19 @@
-import { findWarSanctionsVessels, getWarSanctionsMapVessels, getWarSanctionsVessel, type WarSanctionsVessel } from '@/lib/war-sanctions';
+import {
+  findWarSanctionsPublicEntities,
+  findWarSanctionsVessels,
+  getWarSanctionsMapVessels,
+  getWarSanctionsVessel,
+  type WarSanctionsPublicEntity,
+  type WarSanctionsVessel,
+} from '@/lib/war-sanctions';
 import type { Provider, ProviderMapLayer } from '../types';
 
 function sourceLink(vessel: WarSanctionsVessel): string {
-  return `/entity/war-sanctions/${vessel.id}`;
+  return `/entity/war-sanctions/vessels/${vessel.catalogue}/${vessel.id}`;
+}
+
+function publicEntityLink(entity: WarSanctionsPublicEntity): string {
+  return `/entity/war-sanctions/catalogues/${entity.catalogue}/${entity.id}`;
 }
 
 function toLayer(id: string, name: string, color: string, vessels: WarSanctionsVessel[]): ProviderMapLayer {
@@ -12,6 +23,7 @@ function toLayer(id: string, name: string, color: string, vessels: WarSanctionsV
     properties: {
       entityType: 'port', port: port.name, vessel: vessel.name, imo: vessel.imo,
       classification: vessel.isShadowFleet ? 'Shadow Fleet' : 'Sanctioned vessel',
+      catalogue: vessel.catalogue,
       sourceUrl: vessel.sourceUrl,
     },
   })));
@@ -25,21 +37,31 @@ function toLayer(id: string, name: string, color: string, vessels: WarSanctionsV
 export const warSanctionsProvider: Provider = {
   metadata: {
     name: 'war-sanctions', description: 'GUR War & Sanctions public vessel and Shadow Fleet catalogue.',
-    supportedEntityTypes: ['vessel', 'imo', 'mmsi', 'command'],
-    supportedIntents: ['vessel_lookup', 'imo_lookup', 'mmsi_lookup', 'map_command'],
+    supportedEntityTypes: ['vessel', 'imo', 'mmsi', 'company', 'organization', 'person', 'command'],
+    supportedIntents: ['vessel_lookup', 'imo_lookup', 'mmsi_lookup', 'company_lookup', 'organization_lookup', 'person_lookup', 'map_command'],
     supportsMapLayers: true, requiresCredentials: false, timeoutMs: 30000, enabled: true, priority: 8,
   },
   async execute(query, context) {
     if (query.intent === 'map_command') return [];
+    if (query.entityType === 'company' || query.entityType === 'organization' || query.entityType === 'person') {
+      return findWarSanctionsPublicEntities(query.query ?? '', query.entityType, context.signal);
+    }
     const candidates = await findWarSanctionsVessels(query.query ?? '', context.signal);
     const filtered = candidates.filter((vessel) => {
       const target = (query.query ?? '').toLowerCase();
       return !target || [vessel.name, vessel.imo, vessel.mmsi].filter(Boolean).some((value) => value!.toLowerCase().includes(target));
     }).slice(0, query.limit);
-    return Promise.all(filtered.map((vessel) => getWarSanctionsVessel(vessel.id, context.signal)));
+    return Promise.all(filtered.map((vessel) => getWarSanctionsVessel(vessel.id, vessel.catalogue, context.signal)));
   },
   normalize(raw, query) {
     if (query.intent === 'map_command') return [];
+    if (query.entityType === 'company' || query.entityType === 'organization' || query.entityType === 'person') {
+      return (raw as WarSanctionsPublicEntity[]).map((entity) => ({
+        id: `war-sanctions:${entity.catalogue}:${entity.id}`, label: entity.label, type: entity.entityType,
+        category: 'war_sanctions', importance: 0.9, zoomLevel: 0, provider: 'war-sanctions',
+        summary: entity.summary, action: { type: 'open_entity', href: publicEntityLink(entity) },
+      }));
+    }
     return (raw as WarSanctionsVessel[]).map((vessel) => ({
       id: `war-sanctions:${vessel.id}`, label: vessel.name, type: 'vessel', category: 'sanctions', importance: vessel.isShadowFleet ? 1 : 0.92,
       zoomLevel: 0, provider: 'war-sanctions',
@@ -54,7 +76,7 @@ export const warSanctionsProvider: Provider = {
       getWarSanctionsMapVessels('ships', context.signal),
     ]);
     return [
-      toLayer('war-sanctions-shadow-fleet-ports', 'Shadow Fleet associated ports', '#ff4d6d', shadowFleet),
+      toLayer('war-sanctions-shadow-fleet-ports', 'GUR Shadow Fleet associated ports', '#ff4d6d', shadowFleet),
       toLayer('war-sanctions-sanctioned-vessel-ports', 'Sanctioned vessel associated ports', '#f6c453', sanctioned),
     ];
   },

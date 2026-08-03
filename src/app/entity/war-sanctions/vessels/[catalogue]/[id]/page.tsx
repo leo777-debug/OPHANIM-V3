@@ -1,14 +1,22 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getWarSanctionsVessel } from '@/lib/war-sanctions';
+import { getWarSanctionsVessel, type WarSanctionsCatalogue } from '@/lib/war-sanctions';
+
+const catalogues = new Set<WarSanctionsCatalogue>(['ships', 'shadow-fleet']);
 
 export const dynamic = 'force-dynamic';
 
-export default async function WarSanctionsEntityPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export default async function WarSanctionsCatalogueEntityPage({
+  params,
+}: {
+  params: Promise<{ catalogue: string; id: string }>;
+}) {
+  const { catalogue, id } = await params;
+  if (!catalogues.has(catalogue as WarSanctionsCatalogue)) notFound();
+
   let vessel;
   try {
-    vessel = await getWarSanctionsVessel(id, 'ships');
+    vessel = await getWarSanctionsVessel(id, catalogue as WarSanctionsCatalogue);
   } catch {
     notFound();
   }

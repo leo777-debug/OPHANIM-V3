@@ -11,6 +11,8 @@ type ProviderRecord = {
   requiresCredentials: boolean;
   enabled: boolean;
   configured: boolean;
+  health: { status: 'unknown' | 'healthy' | 'degraded' | 'circuit_open'; consecutiveFailures: number };
+  governance: { attribution: string; licensing: string; retentionHours: number };
 };
 
 type ProviderResponse = {
@@ -73,6 +75,7 @@ export default function ProviderStatusPanel() {
         {!loading && !state && <div className="px-4 py-7 text-center text-xs text-white/45">Source status is temporarily unavailable.</div>}
         {state?.providers.map((provider) => {
           const ready = provider.enabled && provider.configured;
+          const healthLabel = provider.health.status === 'circuit_open' ? 'PAUSED' : provider.health.status === 'degraded' ? 'DEGRADED' : ready ? 'READY' : provider.enabled ? 'SETUP' : 'OFF';
           return (
             <div key={provider.name} className="border-b border-white/[0.07] px-4 py-3 last:border-b-0">
               <div className="flex items-start gap-2">
@@ -80,13 +83,14 @@ export default function ProviderStatusPanel() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
                     <span className="truncate text-[11px] font-medium text-white/90">{provider.name}</span>
-                    <span className={`shrink-0 text-[9px] ${ready ? 'text-emerald-300' : 'text-amber-200'}`}>{ready ? 'READY' : provider.enabled ? 'SETUP' : 'OFF'}</span>
+                    <span className={`shrink-0 text-[9px] ${healthLabel === 'READY' ? 'text-emerald-300' : healthLabel === 'PAUSED' ? 'text-red-300' : 'text-amber-200'}`}>{healthLabel}</span>
                   </div>
                   <p className="mt-1 text-[10px] leading-4 text-white/45">{provider.description}</p>
                   <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[9px] text-white/40">
                     <span>{provider.supportedEntityTypes.join(', ')}</span>
                     {provider.supportsMapLayers && <span className="inline-flex items-center gap-1"><Map className="h-2.5 w-2.5" /> map layer</span>}
                     {provider.requiresCredentials && <span className="inline-flex items-center gap-1"><KeyRound className="h-2.5 w-2.5" /> credentials</span>}
+                    <span>retention {provider.governance.retentionHours}h</span>
                   </div>
                 </div>
               </div>
