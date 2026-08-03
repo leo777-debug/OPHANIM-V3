@@ -115,7 +115,9 @@
     left: 270px !important;
     right: 250px !important;
   }
+}
 
+@media (max-width: 1240px) {
   .ophanim-header-command .ophanim-command-button span {
     display: none;
   }
@@ -124,6 +126,15 @@
     width: 40px;
     justify-content: center;
     padding: 0;
+  }
+
+  .ophanim-header-command .ophanim-command-button--primary {
+    width: auto;
+    padding: 0 11px;
+  }
+
+  .ophanim-header-command .ophanim-command-button--primary span {
+    display: inline;
   }
 }
 
