@@ -18,7 +18,7 @@ export class ProviderHealthTracker {
   get(provider: string): ProviderHealthRecord {
     const record = this.records.get(provider);
     if (!record) return { provider, status: 'unknown', consecutiveFailures: 0 };
-    if (record.status === 'circuit_open' && record.circuitOpenUntil && Date.parse(record.circuitOpen) <= Date.now()) {
+    if (record.status === 'circuit_open' && record.circuitOpenUntil && Date.parse(record.circuitOpenUntil) <= Date.now()) {
       const recovered = { ...record, status: 'degraded' as const, circuitOpenUntil: undefined };
       this.records.set(provider, recovered);
       return recovered;

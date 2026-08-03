@@ -139,14 +139,6 @@ function getYouTubeWatchUrl(url: string): string {
   return url;
 }
 
-function isTransientNetworkTimeout(reason: unknown): boolean {
-  if (!reason || typeof reason !== 'object') return false;
-  const { name, message } = reason as { name?: unknown; message?: unknown };
-  return (name === 'TimeoutError' || name === 'AbortError')
-    && typeof message === 'string'
-    && /signal timed out|request was aborted/i.test(message);
-}
-
 export default function Dashboard() {
   const dataRef = useRef<any>({});
   const [dataVersion, setDataVersion] = useState(0);
@@ -157,13 +149,6 @@ export default function Dashboard() {
   const [flyToLocation, setFlyToLocation] = useState<{ lat: number; lng: number; zoom?: number; ts: number } | null>(null);
   const [globalStats, setGlobalStats] = useState<any>(null);
 
-  useEffect(() => {
-    const suppressTransientTimeout = (event: PromiseRejectionEvent) => {
-      if (isTransientNetworkTimeout(event.reason)) event.preventDefault();
-    };
-    window.addEventListener('unhandledrejection', suppressTransientTimeout);
-    return () => window.removeEventListener('unhandledrejection', suppressTransientTimeout);
-  }, []);
   const mouseCoordsRef = useRef<{ lat: number; lng: number } | null>(null);
   const coordsDisplayRef = useRef<HTMLDivElement>(null);
   const [locationLabel, setLocationLabel] = useState('');
@@ -1126,6 +1111,14 @@ export default function Dashboard() {
         </motion.div>
       )}
 
+      {isMobile && (
+        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 2.65 }} className="absolute top-[108px] left-3 right-3 z-[230] grid grid-cols-3 gap-1.5 pointer-events-auto">
+          <button onClick={() => { setAiPanelMode('settings'); setShowAiAnalyst(true); setShowProviders(false); setMobilePanel(null); }} className="ophanim-command-button ophanim-command-button--primary min-w-0 justify-center" title="Configure API key or local AI model"><Settings className="w-3.5 h-3.5 shrink-0" /><span>AI SETUP</span></button>
+          <button onClick={() => { setMobilePanel(null); window.dispatchEvent(new Event('ophanim:open-watchlists')); }} className="ophanim-command-button min-w-0 justify-center" title="Open Watchlists"><Bookmark className="w-3.5 h-3.5 shrink-0" /><span>WATCH</span></button>
+          <button onClick={() => { setShowProviders((value) => !value); setShowAiAnalyst(false); setMobilePanel(null); }} className="ophanim-command-button min-w-0 justify-center" title="View provider and source status"><Database className="w-3.5 h-3.5 shrink-0" /><span>SOURCES</span></button>
+        </motion.div>
+      )}
+
 
       {/* ── TOP-RIGHT STATUS (desktop) — C2 DISPLAY ── */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 3 }} className="status-bar-desktop absolute top-4 right-6 z-[200] pointer-events-none flex items-center gap-4 text-[9px] font-mono tracking-widest text-[var(--text-muted)]">
@@ -1164,9 +1157,10 @@ export default function Dashboard() {
       {/* ── NEW SIDEBAR (Root Level) ── */}
       {showLayers && !isMobile && <LayerPanel data={data} activeLayers={activeLayers} setActiveLayers={setActiveLayers} theme={ophanimTheme} setTheme={setOphanimTheme} />}
       <WatchlistPanel />
+      {isMobile && showAiAnalyst && <AiAnalyst data={data} mode={aiPanelMode} />}
       <AnimatePresence>
-        {showProviders && !isMobile && (
-          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="absolute top-[86px] left-1/2 z-[260] w-[min(440px,calc(100vw-32px))] -translate-x-1/2 pointer-events-auto">
+        {showProviders && (
+          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className={`absolute left-1/2 z-[260] w-[min(440px,calc(100vw-32px))] -translate-x-1/2 pointer-events-auto ${isMobile ? 'top-[156px]' : 'top-[86px]'}`}>
             <ProviderStatusPanel />
           </motion.div>
         )}

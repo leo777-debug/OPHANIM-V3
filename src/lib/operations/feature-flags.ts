@@ -10,6 +10,15 @@ export const OPHANIM_FEATURES = [
 
 export type OphanimFeature = (typeof OPHANIM_FEATURES)[number];
 export type OphanimEdition = 'core' | 'logistics' | 'cyber' | 'maritime' | 'full';
+export interface FeatureFlagEnvironment {
+  OPHANIM_EDITION?: string;
+  OPHANIM_FEATURE_FLAGS?: string;
+}
+
+const runtimeFeatureFlagEnvironment: FeatureFlagEnvironment = {
+  OPHANIM_EDITION: process.env.OPHANIM_EDITION,
+  OPHANIM_FEATURE_FLAGS: process.env.OPHANIM_FEATURE_FLAGS,
+};
 
 const EDITION_FEATURES: Record<OphanimEdition, OphanimFeature[]> = {
   core: ['global_map', 'provider_registry', 'watchlists'],
@@ -33,7 +42,7 @@ function overrides(value: string | undefined): Map<OphanimFeature, boolean> {
   return result;
 }
 
-export function getFeatureFlags(environment = process.env): { edition: OphanimEdition; features: Record<OphanimFeature, boolean> } {
+export function getFeatureFlags(environment: FeatureFlagEnvironment = runtimeFeatureFlagEnvironment): { edition: OphanimEdition; features: Record<OphanimFeature, boolean> } {
   const selectedEdition = edition(environment.OPHANIM_EDITION);
   const enabled = new Set(EDITION_FEATURES[selectedEdition]);
   for (const [feature, value] of overrides(environment.OPHANIM_FEATURE_FLAGS)) {
@@ -46,6 +55,6 @@ export function getFeatureFlags(environment = process.env): { edition: OphanimEd
   };
 }
 
-export function isFeatureEnabled(feature: OphanimFeature, environment = process.env): boolean {
+export function isFeatureEnabled(feature: OphanimFeature, environment: FeatureFlagEnvironment = runtimeFeatureFlagEnvironment): boolean {
   return getFeatureFlags(environment).features[feature];
 }

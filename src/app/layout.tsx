@@ -133,6 +133,16 @@ const jsonLd = {
   },
 };
 
+const transientTimeoutGuard = `window.addEventListener('unhandledrejection', function (event) {
+  var reason = event && event.reason;
+  if (!reason || typeof reason !== 'object') return;
+  var name = reason.name;
+  var message = reason.message;
+  if ((name === 'TimeoutError' || name === 'AbortError') && typeof message === 'string' && /signal timed out|request was aborted/i.test(message)) {
+    event.preventDefault();
+  }
+}, true);`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -141,6 +151,7 @@ export default function RootLayout({
   return (
     <html lang="en" dir="ltr" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: transientTimeoutGuard }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
