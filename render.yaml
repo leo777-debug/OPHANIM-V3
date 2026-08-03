@@ -17,6 +17,10 @@ services:
         generateValue: true
       - key: DISRUPTION_SYNC_CRON_SECRET
         generateValue: true
+      - key: AI_SANDBOX_RESEARCH_URL
+        sync: false
+      - key: AI_SANDBOX_RESEARCH_TOKEN
+        sync: false
   - type: cron
     name: ophanim-watchlists
     runtime: docker

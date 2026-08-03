@@ -114,7 +114,7 @@ export interface Provider {
 
 export interface ProviderDiagnostic {
   provider: string;
-  status: 'success' | 'timeout' | 'error';
+  status: 'success' | 'timeout' | 'error' | 'circuit_open';
   resultCount: number;
 }
 

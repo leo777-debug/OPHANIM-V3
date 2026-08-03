@@ -99,6 +99,7 @@ interface ChatMessage {
   content: string;
   timestamp: string;
   isError?: boolean;
+  sources?: Array<{ title: string; url: string }>;
 }
 
 interface AiAnalystProps {
@@ -351,6 +352,56 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
       setIsLoading(false);
     }
   }, [isLoading, data, getHeaders]);
+
+  const handleSandboxResearch = useCallback(async () => {
+    const subject = inputText.trim();
+    if (!subject || isLoading) return;
+
+    setMessages((previous) => [...previous, {
+      id: generateId(),
+      role: 'user',
+      content: `Source check: ${subject}`,
+      timestamp: new Date().toISOString(),
+    }]);
+    setInputText('');
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('/api/ai/research', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject,
+          purpose: 'assess_risk',
+          context: JSON.stringify(buildContext(data)).slice(0, 8_000),
+        }),
+      });
+      const payload = await response.json() as {
+        error?: string;
+        research?: { summary: string; riskIndicator: string; uncertainty: string; sources: Array<{ title: string; url: string }> };
+      };
+      if (!response.ok || !payload.research) throw new Error(payload.error || `HTTP ${response.status}`);
+      const research = payload.research;
+      setMessages((previous) => [...previous, {
+        id: generateId(),
+        role: 'analyst',
+        content: `SANDBOX SOURCE ASSESSMENT\n\nRisk indicator: ${research.riskIndicator.toUpperCase()}\n\n${research.summary}\n\nUncertainty: ${research.uncertainty}`,
+        timestamp: new Date().toISOString(),
+        sources: research.sources,
+      }]);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Sandbox source check failed';
+      setMessages((previous) => [...previous, {
+        id: generateId(),
+        role: 'analyst',
+        content: `SANDBOX SOURCE CHECK ERROR\n\n${message}`,
+        timestamp: new Date().toISOString(),
+        isError: true,
+      }]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [data, inputText, isLoading]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -719,6 +770,18 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
                           {msg.content}
                         </p>
                       )}
+                      {msg.sources && msg.sources.length > 0 && (
+                        <div className="mt-3 border-t border-white/10 pt-2">
+                          <span className="text-[8px] font-mono tracking-[0.14em] text-[var(--text-muted)]">SANDBOX SOURCES</span>
+                          <div className="mt-1.5 space-y-1">
+                            {msg.sources.map((source) => (
+                              <a key={source.url} href={source.url} target="_blank" rel="noreferrer" className="block truncate text-[9px] font-mono text-[var(--cyan-primary)] hover:underline">
+                                {source.title}
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </motion.div>
                 ))}
@@ -779,6 +842,20 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
                   >
                     <Sparkles className="w-3 h-3" />
                     GENERATE BRIEFING
+                  </button>
+                  <button
+                    onClick={handleSandboxResearch}
+                    disabled={!inputText.trim() || isLoading}
+                    title="Run a source-attributed check in the configured research sandbox"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-mono tracking-[0.1em] uppercase transition-all disabled:opacity-40"
+                    style={{
+                      background: 'rgba(91, 182, 255, 0.08)',
+                      border: '1px solid rgba(91, 182, 255, 0.2)',
+                      color: 'var(--cyan-primary)',
+                    }}
+                  >
+                    <Shield className="w-3 h-3" />
+                    SOURCE CHECK
                   </button>
                   <div className="flex-1" />
                   <span className="flex items-center text-[7px] font-mono text-[var(--text-muted)] tracking-wider">
