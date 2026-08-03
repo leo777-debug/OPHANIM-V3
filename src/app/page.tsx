@@ -139,6 +139,14 @@ function getYouTubeWatchUrl(url: string): string {
   return url;
 }
 
+function isTransientNetworkTimeout(reason: unknown): boolean {
+  if (!reason || typeof reason !== 'object') return false;
+  const { name, message } = reason as { name?: unknown; message?: unknown };
+  return (name === 'TimeoutError' || name === 'AbortError')
+    && typeof message === 'string'
+    && /signal timed out|request was aborted/i.test(message);
+}
+
 export default function Dashboard() {
   const dataRef = useRef<any>({});
   const [dataVersion, setDataVersion] = useState(0);
@@ -148,6 +156,14 @@ export default function Dashboard() {
   const [mapView, setMapView] = useState({ zoom: 2.5, latitude: 20 });
   const [flyToLocation, setFlyToLocation] = useState<{ lat: number; lng: number; zoom?: number; ts: number } | null>(null);
   const [globalStats, setGlobalStats] = useState<any>(null);
+
+  useEffect(() => {
+    const suppressTransientTimeout = (event: PromiseRejectionEvent) => {
+      if (isTransientNetworkTimeout(event.reason)) event.preventDefault();
+    };
+    window.addEventListener('unhandledrejection', suppressTransientTimeout);
+    return () => window.removeEventListener('unhandledrejection', suppressTransientTimeout);
+  }, []);
   const mouseCoordsRef = useRef<{ lat: number; lng: number } | null>(null);
   const coordsDisplayRef = useRef<HTMLDivElement>(null);
   const [locationLabel, setLocationLabel] = useState('');
