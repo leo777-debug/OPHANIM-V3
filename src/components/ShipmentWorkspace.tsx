@@ -11,8 +11,8 @@ import type { ShipmentRecord } from '@/lib/logistics/shipments';
 const emptyShipment: ShipmentInput = { shipmentReference: '', operationalTimezone: 'UTC', priority: 3, currentStatus: 'planned' };
 const labels: Record<ShipmentImportField, string> = {
   shipmentReference: 'Shipment reference', bookingNumber: 'Booking number', containerNumber: 'Container number', billOfLadingReference: 'Bill of lading',
-  carrier: 'Carrier', vesselName: 'Vessel', imoNumber: 'IMO', originPortName: 'Origin port', originPortCode: 'Origin code',
-  destinationPortName: 'Destination port', destinationPortCode: 'Destination code', operationalTimezone: 'Timezone',
+  carrier: 'Carrier', vesselName: 'Vessel', imoNumber: 'IMO', mmsiNumber: 'MMSI', originPortName: 'Origin port', originPortCode: 'Origin code',
+  destinationPortName: 'Destination port', destinationPortCode: 'Destination code', transshipmentPorts: 'Transshipment ports', customerId: 'Customer ID', customerContact: 'Customer contact', operationalTimezone: 'Timezone',
   plannedDepartureAt: 'Planned departure', plannedArrivalAt: 'Planned arrival', actualDepartureAt: 'Actual departure', actualArrivalAt: 'Actual arrival',
   cargoType: 'Cargo type', priority: 'Priority', currentStatus: 'Status',
 };
@@ -26,10 +26,14 @@ function asForm(shipment: ShipmentRecord): ShipmentInput {
     carrier: shipment.carrier,
     vesselName: shipment.vesselName,
     imoNumber: shipment.imoNumber,
+    mmsiNumber: shipment.mmsiNumber,
     originPortName: shipment.originPortName,
     originPortCode: shipment.originPortCode,
     destinationPortName: shipment.destinationPortName,
     destinationPortCode: shipment.destinationPortCode,
+    transshipmentPorts: shipment.transshipmentPorts,
+    customerId: shipment.customerId,
+    customerContact: shipment.customerContact,
     operationalTimezone: shipment.operationalTimezone,
     plannedDepartureAt: shipment.plannedDepartureAt,
     plannedArrivalAt: shipment.plannedArrivalAt,
@@ -161,8 +165,8 @@ function Metric({ label, value }: { label: string; value: number }) {
 
 function ShipmentForm({ form, onChange, onSave, saving }: { form: ShipmentInput; onChange: (field: keyof ShipmentInput, value: string | number) => void; onSave: () => void; saving: boolean }) {
   const fields: Array<{ field: keyof ShipmentInput; label: string; type?: string }> = [
-    { field: 'shipmentReference', label: 'Shipment reference' }, { field: 'carrier', label: 'Carrier' }, { field: 'vesselName', label: 'Vessel' }, { field: 'imoNumber', label: 'IMO' },
-    { field: 'originPortName', label: 'Origin port' }, { field: 'destinationPortName', label: 'Destination port' }, { field: 'plannedDepartureAt', label: 'Planned departure', type: 'datetime-local' }, { field: 'plannedArrivalAt', label: 'Planned arrival', type: 'datetime-local' },
+    { field: 'shipmentReference', label: 'Shipment reference' }, { field: 'carrier', label: 'Carrier' }, { field: 'vesselName', label: 'Vessel' }, { field: 'imoNumber', label: 'IMO' }, { field: 'mmsiNumber', label: 'MMSI' },
+    { field: 'originPortName', label: 'Origin port' }, { field: 'destinationPortName', label: 'Destination port' }, { field: 'transshipmentPorts', label: 'Transshipment ports' }, { field: 'customerId', label: 'Customer ID' }, { field: 'customerContact', label: 'Customer contact' }, { field: 'plannedDepartureAt', label: 'Planned departure', type: 'datetime-local' }, { field: 'plannedArrivalAt', label: 'Planned arrival', type: 'datetime-local' },
   ];
   return <div className="mt-4 grid gap-3 md:grid-cols-2">{fields.map(({ field, label, type = 'text' }) => <label key={field} className="text-xs text-[var(--text-muted)]">{label}<input className="mt-1 w-full border border-[var(--border-secondary)] bg-[var(--bg-tertiary)] px-2 py-2 text-[var(--text-primary)]" type={type} value={String(form[field] ?? '')} onChange={(event) => onChange(field, event.target.value)} /></label>)}<label className="text-xs text-[var(--text-muted)]">Priority<select className="mt-1 w-full border border-[var(--border-secondary)] bg-[var(--bg-tertiary)] px-2 py-2 text-[var(--text-primary)]" value={form.priority ?? 3} onChange={(event) => onChange('priority', Number(event.target.value))}>{[1, 2, 3, 4, 5].map((value) => <option key={value} value={value}>{value}</option>)}</select></label><label className="text-xs text-[var(--text-muted)]">Status<select className="mt-1 w-full border border-[var(--border-secondary)] bg-[var(--bg-tertiary)] px-2 py-2 text-[var(--text-primary)]" value={form.currentStatus ?? 'planned'} onChange={(event) => onChange('currentStatus', event.target.value)}>{['planned', 'booked', 'in_transit', 'at_port', 'delivered', 'cancelled'].map((value) => <option key={value} value={value}>{value}</option>)}</select></label><button className="bg-[var(--cyan-primary)] px-3 py-2 text-xs text-black disabled:opacity-50 md:col-span-2" disabled={saving} onClick={onSave}><Save className="mr-1 inline h-3.5 w-3.5" />{saving ? 'Saving' : 'Save shipment'}</button></div>;
 }

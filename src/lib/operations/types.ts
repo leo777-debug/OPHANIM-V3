@@ -20,5 +20,9 @@ export type OrganizationPermission =
   | 'rescue:write'
   | 'vulnerability:read'
   | 'vulnerability:write'
+  | 'cyber:read'
+  | 'cyber:write'
+  | 'intelligence:read'
+  | 'intelligence:write'
   | 'research:run'
   | 'organization:manage';

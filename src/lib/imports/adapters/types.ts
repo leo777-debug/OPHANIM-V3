@@ -1,6 +1,7 @@
 import type { OrganizationActor } from '@/lib/operations/types';
 import type { ImportColumnDefinition, ImportType } from '../types';
 import { shipmentImportAdapter } from './shipment';
+import { cyberAssetImportAdapter, cyberClientImportAdapter, vendorDependencyImportAdapter } from './cyber';
 
 export interface ImportAdapter<T extends object = Record<string, unknown>> {
   type: ImportType;
@@ -15,22 +16,11 @@ export interface ImportAdapter<T extends object = Record<string, unknown>> {
   persist?(actor: OrganizationActor, value: T): Promise<{ entityType: string; entityId: string }>;
 }
 
-const unavailableAdapter = (type: Exclude<ImportType, 'shipment'>, label: string, description: string): ImportAdapter => ({
-  type,
-  label,
-  description,
-  available: false,
-  unavailableReason: `${label} imports will be available after the tenant-scoped ${label.toLowerCase()} model is added in Phase 3.`,
-  columns: [],
-  normalize: () => { throw new Error(`${label} imports are unavailable.`); },
-  duplicateKey: () => '',
-});
-
 export const importAdapters: Record<ImportType, ImportAdapter> = {
   shipment: shipmentImportAdapter as unknown as ImportAdapter,
-  cyber_client: unavailableAdapter('cyber_client', 'Cyber client', 'Managed cybersecurity clients.'),
-  cyber_asset: unavailableAdapter('cyber_asset', 'Cyber asset', 'Client-scoped cybersecurity assets.'),
-  vendor_dependency: unavailableAdapter('vendor_dependency', 'Vendor dependency', 'Client vendor and dependency records.'),
+  cyber_client: cyberClientImportAdapter,
+  cyber_asset: cyberAssetImportAdapter as unknown as ImportAdapter,
+  vendor_dependency: vendorDependencyImportAdapter as unknown as ImportAdapter,
 };
 
 export function getImportAdapter(type: ImportType): ImportAdapter { return importAdapters[type]; }

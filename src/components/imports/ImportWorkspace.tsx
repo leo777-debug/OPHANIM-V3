@@ -6,19 +6,30 @@ import type { ImportColumnMapping, ImportPreview, ImportType, PersistedImport } 
 
 const importOptions: Array<{ type: ImportType; label: string; description: string; available: boolean }> = [
   { type: 'shipment', label: 'Shipments', description: 'Logistics shipment references and operational data.', available: true },
-  { type: 'cyber_client', label: 'Cyber clients', description: 'Available with the Phase 3 client model.', available: false },
-  { type: 'cyber_asset', label: 'Cyber assets', description: 'Available with the Phase 3 asset model.', available: false },
-  { type: 'vendor_dependency', label: 'Vendor dependencies', description: 'Available with the Phase 3 dependency model.', available: false },
+  { type: 'cyber_client', label: 'Cyber clients', description: 'Managed cybersecurity client records.', available: true },
+  { type: 'cyber_asset', label: 'Cyber assets', description: 'Client-scoped inventory records.', available: true },
+  { type: 'vendor_dependency', label: 'Vendor dependencies', description: 'Client vendor and service dependencies.', available: true },
 ];
 
 const shipmentFields: Array<{ key: string; label: string }> = [
   ['shipmentReference', 'Shipment reference'], ['bookingNumber', 'Booking number'], ['containerNumber', 'Container number'],
-  ['billOfLadingReference', 'Bill of lading'], ['carrier', 'Carrier'], ['vesselName', 'Vessel name'], ['imoNumber', 'IMO number'],
+  ['billOfLadingReference', 'Bill of lading'], ['carrier', 'Carrier'], ['vesselName', 'Vessel name'], ['imoNumber', 'IMO number'], ['mmsiNumber', 'MMSI number'],
   ['originPortName', 'Origin port'], ['originPortCode', 'Origin port code'], ['destinationPortName', 'Destination port'],
-  ['destinationPortCode', 'Destination port code'], ['operationalTimezone', 'Operational timezone'], ['plannedDepartureAt', 'Planned departure'],
+  ['destinationPortCode', 'Destination port code'], ['transshipmentPorts', 'Transshipment ports'], ['customerId', 'Customer ID'], ['customerContact', 'Customer contact'], ['operationalTimezone', 'Operational timezone'], ['plannedDepartureAt', 'Planned departure'],
   ['plannedArrivalAt', 'Planned arrival'], ['actualDepartureAt', 'Actual departure'], ['actualArrivalAt', 'Actual arrival'],
   ['cargoType', 'Cargo type'], ['priority', 'Priority'], ['currentStatus', 'Current status'],
 ].map(([key, label]) => ({ key, label }));
+
+const cyberClientFields = [
+  ['name', 'Client name'], ['reference', 'Client identifier'], ['timezone', 'Timezone'], ['securityContact', 'Security contact'], ['executiveContact', 'Executive contact'], ['escalationContact', 'Escalation contact'], ['serviceTier', 'Service tier'], ['responseSlaHours', 'Response SLA hours'], ['remediationSlaHours', 'Remediation SLA hours'], ['tags', 'Tags'],
+].map(([key, label]) => ({ key, label }));
+const cyberAssetFields = [
+  ['clientIdentifier', 'Client identifier'], ['assetName', 'Asset name'], ['assetType', 'Asset type'], ['hostname', 'Hostname'], ['domain', 'Domain'], ['ipAddress', 'IP address'], ['exposureScope', 'Exposure scope'], ['internetFacing', 'Internet facing'], ['vendor', 'Vendor'], ['product', 'Product'], ['productVersion', 'Product version'], ['operatingSystem', 'Operating system'], ['softwarePackage', 'Software package'], ['cloudProvider', 'Cloud provider'], ['cloudAccount', 'Cloud account'], ['cloudRegion', 'Cloud region'], ['environment', 'Environment'], ['criticality', 'Criticality'], ['assetOwner', 'Asset owner'], ['inventorySource', 'Inventory source'], ['inventoryConfidence', 'Inventory confidence'], ['lastObservedAt', 'Last observed'], ['lastVerifiedAt', 'Last verified'], ['verificationStatus', 'Verification status'],
+].map(([key, label]) => ({ key, label }));
+const dependencyFields = [
+  ['clientIdentifier', 'Client identifier'], ['vendor', 'Vendor'], ['productOrService', 'Product or service'], ['dependencyType', 'Dependency type'], ['businessCriticality', 'Business criticality'], ['internalOwner', 'Internal owner'], ['securityContact', 'Security contact'], ['verificationStatus', 'Verification status'], ['lastVerifiedAt', 'Last verified'],
+].map(([key, label]) => ({ key, label }));
+const importFields: Record<ImportType, Array<{ key: string; label: string }>> = { shipment: shipmentFields, cyber_client: cyberClientFields, cyber_asset: cyberAssetFields, vendor_dependency: dependencyFields };
 
 interface PreviewResponse {
   import: PersistedImport;
@@ -44,7 +55,7 @@ export default function ImportWorkspace() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
-  const visibleFields = importType === 'shipment' ? shipmentFields : [];
+  const visibleFields = importFields[importType];
   const invalidRows = useMemo(() => preview?.rows.filter((row) => row.status !== 'valid').slice(0, 12) ?? [], [preview]);
   const isQueued = imported?.status === 'queued' || imported?.status === 'running';
 
@@ -105,7 +116,7 @@ export default function ImportWorkspace() {
         <section className="border border-[var(--border-secondary)] bg-[var(--bg-secondary)] p-5">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border-secondary)] pb-4">
             <div><h2 className="text-base font-medium">1. Select a UTF-8 CSV</h2><p className="mt-1 text-xs text-[var(--text-muted)]">Maximum 5 MB and 5,000 rows. Formulas are rejected before import.</p></div>
-            <label className="cursor-pointer border border-[var(--cyan-primary)] px-3 py-2 text-xs text-[var(--cyan-primary)] hover:bg-[var(--bg-tertiary)]"><FileUp className="mr-1 inline h-3.5 w-3.5" />Select CSV<input className="hidden" type="file" accept=".csv,text/csv" onChange={(event) => { const selected = event.target.files?.[0] ?? null; setFile(selected); setPreview(null); setImported(null); setMapping({}); setError(''); }} /></label>
+            <div className="flex items-center gap-2"><a className="border border-[var(--border-secondary)] px-3 py-2 text-xs hover:border-[var(--cyan-primary)]" href={`/api/imports/template/${importType}`}><Download className="mr-1 inline h-3.5 w-3.5" />Template</a><label className="cursor-pointer border border-[var(--cyan-primary)] px-3 py-2 text-xs text-[var(--cyan-primary)] hover:bg-[var(--bg-tertiary)]"><FileUp className="mr-1 inline h-3.5 w-3.5" />Select CSV<input className="hidden" type="file" accept=".csv,text/csv" onChange={(event) => { const selected = event.target.files?.[0] ?? null; setFile(selected); setPreview(null); setImported(null); setMapping({}); setError(''); }} /></label></div>
           </div>
           {file && <div className="mt-4 flex flex-wrap items-center justify-between gap-3"><p className="text-sm">{file.name} <span className="ml-2 text-xs text-[var(--text-muted)]">{Math.ceil(file.size / 1024)} KB</span></p><button type="button" disabled={busy} onClick={() => void requestPreview()} className="border border-[var(--cyan-primary)] px-3 py-2 text-xs text-[var(--cyan-primary)] disabled:opacity-50"><Upload className="mr-1 inline h-3.5 w-3.5" />{busy ? 'Preparing' : 'Preview import'}</button></div>}
 

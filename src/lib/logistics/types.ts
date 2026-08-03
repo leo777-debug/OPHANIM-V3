@@ -17,6 +17,11 @@ export const SHIPMENT_MILESTONE_TYPES = [
 export type ShipmentStatus = (typeof SHIPMENT_STATUSES)[number];
 export type ShipmentMilestoneType = (typeof SHIPMENT_MILESTONE_TYPES)[number];
 
+export interface ShipmentMilestoneInput {
+  milestoneType: ShipmentMilestoneType;
+  deadlineAt: string;
+}
+
 export interface ShipmentInput {
   shipmentReference: string;
   bookingNumber?: string;
@@ -25,10 +30,15 @@ export interface ShipmentInput {
   carrier?: string;
   vesselName?: string;
   imoNumber?: string;
+  mmsiNumber?: string;
   originPortName?: string;
   originPortCode?: string;
   destinationPortName?: string;
   destinationPortCode?: string;
+  transshipmentPorts?: string[];
+  customerId?: string;
+  customerContact?: string;
+  ownerUserId?: string;
   operationalTimezone?: string;
   plannedDepartureAt?: string;
   plannedArrivalAt?: string;
@@ -37,4 +47,5 @@ export interface ShipmentInput {
   cargoType?: string;
   priority?: number;
   currentStatus?: ShipmentStatus;
+  milestones?: ShipmentMilestoneInput[];
 }

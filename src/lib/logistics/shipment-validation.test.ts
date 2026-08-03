@@ -13,6 +13,10 @@ describe('shipment validation', () => {
     expect(() => validateShipmentInput({ shipmentReference: 'OPH-2941', imoNumber: '123' })).toThrow(ShipmentValidationError);
   });
 
+  it('normalizes an MMSI and transshipment ports', () => {
+    expect(validateShipmentInput({ shipmentReference: 'OPH-2941', mmsiNumber: '123 456 789', transshipmentPorts: ' Singapore ; Rotterdam ' })).toMatchObject({ mmsiNumber: '123456789', transshipmentPorts: ['Singapore', 'Rotterdam'] });
+  });
+
   it('rejects a fabricated deadline timestamp', () => {
     expect(() => validateShipmentInput({ shipmentReference: 'OPH-2941', plannedArrivalAt: 'not-a-date' })).toThrow(ShipmentValidationError);
   });
