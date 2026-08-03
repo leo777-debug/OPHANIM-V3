@@ -47,4 +47,4 @@ ENV GHOSTTRACK_ENABLED="true"
 ENV MAIGRET_COMMAND="/opt/maigret/.venv/bin/maigret"
 ENV MAIGRET_ENABLED="true"
 
-CMD ["node", "server.js"]
+CMD ["sh", "-c", "node db/run-migrations.mjs && node server.js"]

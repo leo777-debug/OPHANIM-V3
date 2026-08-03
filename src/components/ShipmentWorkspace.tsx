@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FileUp, LoaderCircle, Plus, Save, Upload } from 'lucide-react';
-import { SHIPMENT_IMPORT_FIELDS, type ShipmentColumnMapping, type ShipmentImportField, type ShipmentImportPreview } from '@/lib/logistics/csv-import';
+import { SHIPMENT_IMPORT_FIELDS, type ShipmentColumnMapping, type ShipmentImportField, type ShipmentImportPreview } from '@/lib/logistics/shipment-import-schema';
 import type { ShipmentInput } from '@/lib/logistics/types';
 import type { ShipmentRecord } from '@/lib/logistics/shipments';
 
