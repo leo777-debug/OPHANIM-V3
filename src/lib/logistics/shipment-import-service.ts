@@ -22,6 +22,8 @@ export interface PersistedShipmentImport {
   duplicateRows: number;
 }
 
+/** @deprecated Shipment API routes now persist through the shared import pipeline. */
+
 interface StoredImportRow {
   id: string;
   normalized_data: ShipmentInput | null;

@@ -9,6 +9,8 @@ export interface OrganizationActor {
 }
 
 export type OrganizationPermission =
+  | 'import:read'
+  | 'import:write'
   | 'shipment:read'
   | 'shipment:write'
   | 'shipment:archive'

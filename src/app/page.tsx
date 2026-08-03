@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Layers, BarChart3, Newspaper, Search, X, Globe, MapPinned, Radar, Satellite, Moon, ExternalLink, AlertTriangle, Activity, Database, Wifi, Play, Network, Crosshair, Brain, Bookmark, Settings } from 'lucide-react';
+import { Layers, BarChart3, Newspaper, Search, X, Globe, MapPinned, Radar, Satellite, Moon, ExternalLink, AlertTriangle, Activity, Database, Wifi, Play, Network, Crosshair, Brain, Bookmark, Settings, FileUp } from 'lucide-react';
 import IntelFeed from '@/components/IntelFeed';
 import MarketsPanel from '@/components/MarketsPanel';
 import ScmPanel from '@/components/ScmPanel';
@@ -803,6 +803,7 @@ export default function Dashboard() {
       { id: 'panel:alerts', group: 'TOOLS', title: 'Open Live Alerts', subtitle: 'Real-time event stream', keywords: 'alerts warnings events', icon: <AlertTriangle className="w-4 h-4" />, run: () => { closeRightPanels(); setShowAlerts(true); } },
       { id: 'panel:graph', group: 'TOOLS', title: 'Open Entity Graph', subtitle: 'Link analysis & fusion', keywords: 'entity graph network link analysis', icon: <Network className="w-4 h-4" />, run: () => { closeRightPanels(); setShowEntityGraph(true); } },
       { id: 'panel:search', group: 'TOOLS', title: 'Open Search', subtitle: 'Find places & entities', keywords: 'search find place', icon: <Search className="w-4 h-4" />, run: () => { closeRightPanels(); setShowDesktopSearch(true); } },
+      { id: 'nav:imports', group: 'WORKSPACE', title: 'Open CSV Import', subtitle: 'Import organization-scoped operational data', keywords: 'csv import shipment client asset inventory', icon: <FileUp className="w-4 h-4" />, run: () => window.location.assign('/imports') },
       { id: 'panel:layers', group: 'TOOLS', title: 'Toggle Layer Sidebar', subtitle: 'Show / hide layer rail', keywords: 'layers panel sidebar', icon: <Layers className="w-4 h-4" />, keepOpen: true, run: () => setShowLayers(p => !p) },
     );
 
@@ -1248,6 +1249,13 @@ export default function Dashboard() {
           <button onClick={() => { setShowEntityGraph(!showEntityGraph); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); }} className={`ophanim-context-button ${showEntityGraph ? 'is-active' : ''}`} title="Entity graph">
             <Network className={`w-4 h-4 ${showEntityGraph ? 'text-[var(--gold-primary)]' : 'text-white/60'}`} />
             <span>Entities</span>
+          </button>
+        </div>
+
+        <div className="relative group">
+          <button onClick={() => window.location.assign('/imports')} className="ophanim-context-button" title="Import organization data">
+            <FileUp className="w-4 h-4 text-white/60" />
+            <span>Import</span>
           </button>
         </div>
 

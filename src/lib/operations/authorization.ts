@@ -13,10 +13,10 @@ export class OrganizationAccessError extends Error {
 }
 
 const permissions: Record<OphanimMemberRole, OrganizationPermission[]> = {
-  owner: ['shipment:read', 'shipment:write', 'shipment:archive', 'disruption:read', 'disruption:write', 'rescue:read', 'rescue:write', 'vulnerability:read', 'vulnerability:write', 'research:run', 'organization:manage'],
-  operations_manager: ['shipment:read', 'shipment:write', 'shipment:archive', 'disruption:read', 'disruption:write', 'rescue:read', 'rescue:write', 'vulnerability:read', 'vulnerability:write', 'research:run'],
-  analyst: ['shipment:read', 'shipment:write', 'disruption:read', 'rescue:read', 'vulnerability:read', 'research:run'],
-  viewer: ['shipment:read', 'disruption:read', 'rescue:read', 'vulnerability:read'],
+  owner: ['import:read', 'import:write', 'shipment:read', 'shipment:write', 'shipment:archive', 'disruption:read', 'disruption:write', 'rescue:read', 'rescue:write', 'vulnerability:read', 'vulnerability:write', 'research:run', 'organization:manage'],
+  operations_manager: ['import:read', 'import:write', 'shipment:read', 'shipment:write', 'shipment:archive', 'disruption:read', 'disruption:write', 'rescue:read', 'rescue:write', 'vulnerability:read', 'vulnerability:write', 'research:run'],
+  analyst: ['import:read', 'import:write', 'shipment:read', 'shipment:write', 'disruption:read', 'rescue:read', 'vulnerability:read', 'research:run'],
+  viewer: ['import:read', 'shipment:read', 'disruption:read', 'rescue:read', 'vulnerability:read'],
 };
 
 export function isOphanimMemberRole(value: unknown): value is OphanimMemberRole {

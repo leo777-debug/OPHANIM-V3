@@ -2,6 +2,7 @@ export const OPHANIM_FEATURES = [
   'global_map',
   'provider_registry',
   'watchlists',
+  'imports',
   'logistics',
   'cyber',
   'dark_web',
@@ -22,8 +23,8 @@ const runtimeFeatureFlagEnvironment: FeatureFlagEnvironment = {
 
 const EDITION_FEATURES: Record<OphanimEdition, OphanimFeature[]> = {
   core: ['global_map', 'provider_registry', 'watchlists'],
-  logistics: ['global_map', 'provider_registry', 'watchlists', 'logistics'],
-  cyber: ['global_map', 'provider_registry', 'watchlists', 'cyber'],
+  logistics: ['global_map', 'provider_registry', 'watchlists', 'imports', 'logistics'],
+  cyber: ['global_map', 'provider_registry', 'watchlists', 'imports', 'cyber'],
   maritime: ['global_map', 'provider_registry', 'watchlists', 'dark_web'],
   full: [...OPHANIM_FEATURES],
 };
