@@ -1,3 +1,3 @@
-import OperationsWorkspace from '@/components/OperationsWorkspace';
+import { redirect } from 'next/navigation';
 
-export default function LogisticsControlPage() { return <OperationsWorkspace edition="logistics" />; }
+export default function LogisticsControlPage() { redirect('/logistics/command'); }

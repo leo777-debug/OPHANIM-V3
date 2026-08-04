@@ -1,5 +1,10 @@
-import DisruptionWorkspace from '@/components/DisruptionWorkspace';
+import { Suspense } from "react";
+import DisruptionWorkspace from "@/components/DisruptionWorkspace";
 
 export default function LogisticsDisruptionsPage() {
-  return <DisruptionWorkspace />;
+  return (
+    <Suspense fallback={null}>
+      <DisruptionWorkspace />
+    </Suspense>
+  );
 }
