@@ -39,7 +39,7 @@ export default function ThreatFusionHUD({ onLocate }: Props) {
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await fetch('/api/fusion', { signal: AbortSignal.timeout(30000) });
+      const r = await fetch('/api/fusion', { cache: 'no-store' });
       if (r.ok) setFusion(await r.json());
     } catch {
       /* keep last good read */

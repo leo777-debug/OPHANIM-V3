@@ -257,7 +257,6 @@ export default function Dashboard() {
       try {
         const response = await fetch(`/api/map/layers?providers=${providers.join(',')}`, {
           cache: 'no-store',
-          signal: AbortSignal.timeout(15_000),
         });
         if (!response.ok) return;
 
