@@ -35,6 +35,7 @@ RUN addgroup --system --gid 1001 nodejs && \
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/db ./db
 
 USER nextjs
 EXPOSE 3000
@@ -46,4 +47,4 @@ ENV GHOSTTRACK_ENABLED="true"
 ENV MAIGRET_COMMAND="/opt/maigret/.venv/bin/maigret"
 ENV MAIGRET_ENABLED="true"
 
-CMD ["node", "server.js"]
+CMD ["sh", "-c", "node db/run-migrations.mjs && node server.js"]

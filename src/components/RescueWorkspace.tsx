@@ -1,41 +1,620 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useState } from 'react';
-import Link from 'next/link';
-import { CheckCircle2, ExternalLink, FilePlus2, LoaderCircle, ShieldCheck } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import type { ShipmentRecord } from '@/lib/logistics/shipments';
-import type { DisruptionRecord } from '@/lib/logistics/disruptions';
-import type { RescueAction, RescueCase, RescueDecisionRecord, RescueEvidenceRecord } from '@/lib/logistics/rescue';
-
-async function requestJson<T>(url: string, init?: RequestInit): Promise<T> { const response = await fetch(url, { ...init, headers: { 'Content-Type': 'application/json', ...init?.headers } }); const body = await response.json().catch(() => ({})); if (!response.ok) throw new Error(typeof body.error === 'string' ? body.error : 'Request failed.'); return body as T; }
+import { type ReactNode, useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { CheckCircle2, FilePlus2, Plus, ShieldCheck } from "lucide-react";
+import { useRouter } from "next/navigation";
+import type { ShipmentRecord } from "@/lib/logistics/shipments";
+import type { DisruptionRecord } from "@/lib/logistics/disruptions";
+import type {
+  RescueAction,
+  RescueCase,
+  RescueDecisionRecord,
+  RescueEvidenceRecord,
+} from "@/lib/logistics/rescue";
+import {
+  hrefForMap,
+  isoDate,
+  label,
+  requestJson,
+} from "@/lib/logistics/client";
+import ActionWindow from "./logistics/ActionWindow";
+import EmptyState from "./logistics/EmptyState";
+import ErrorState from "./logistics/ErrorState";
+import EvidenceStatus from "./logistics/EvidenceStatus";
+import RescueStatus from "./logistics/RescueStatus";
+import ShipmentRoute from "./logistics/ShipmentRoute";
 
 export default function RescueWorkspace() {
   const router = useRouter();
-  const [cases, setCases] = useState<RescueCase[]>([]); const [shipments, setShipments] = useState<ShipmentRecord[]>([]); const [disruptions, setDisruptions] = useState<DisruptionRecord[]>([]);
-  const [selected, setSelected] = useState<RescueCase | null>(null); const [shipmentId, setShipmentId] = useState(''); const [disruptionId, setDisruptionId] = useState(''); const [objective, setObjective] = useState('');
-  const [actionType, setActionType] = useState('reroute'); const [actionTitle, setActionTitle] = useState(''); const [decision, setDecision] = useState('approved'); const [decisionActionId, setDecisionActionId] = useState(''); const [rationale, setRationale] = useState('');
-  const [evidenceType, setEvidenceType] = useState('source'); const [evidenceTitle, setEvidenceTitle] = useState(''); const [evidenceUrl, setEvidenceUrl] = useState(''); const [loading, setLoading] = useState(true); const [saving, setSaving] = useState(false); const [error, setError] = useState('');
+  const [cases, setCases] = useState<RescueCase[]>([]);
+  const [shipments, setShipments] = useState<ShipmentRecord[]>([]);
+  const [disruptions, setDisruptions] = useState<DisruptionRecord[]>([]);
+  const [selected, setSelected] = useState<RescueCase | null>(null);
+  const [shipmentId, setShipmentId] = useState("");
+  const [disruptionId, setDisruptionId] = useState("");
+  const [objective, setObjective] = useState("");
+  const [actionType, setActionType] = useState("reroute");
+  const [actionTitle, setActionTitle] = useState("");
+  const [targetAt, setTargetAt] = useState("");
+  const [decision, setDecision] = useState("approved");
+  const [rationale, setRationale] = useState("");
+  const [evidenceType, setEvidenceType] = useState("source");
+  const [evidenceTitle, setEvidenceTitle] = useState("");
+  const [evidenceUrl, setEvidenceUrl] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
-  const load = useCallback(async () => { setLoading(true); try { const [caseData, shipmentData, disruptionData] = await Promise.all([requestJson<{ cases: RescueCase[] }>('/api/logistics/rescue-cases'), requestJson<{ shipments: ShipmentRecord[] }>('/api/logistics/shipments'), requestJson<{ disruptions: DisruptionRecord[] }>('/api/logistics/disruptions')]); setCases(caseData.cases); setShipments(shipmentData.shipments); setDisruptions(disruptionData.disruptions); } catch (loadError) { if (loadError instanceof Error && loadError.message === 'Authentication is required.') router.replace('/login'); else setError(loadError instanceof Error ? loadError.message : 'Unable to load rescue workflow.'); } finally { setLoading(false); } }, [router]);
-  useEffect(() => { void Promise.resolve().then(load); }, [load]);
-  const open = async (rescueCase: RescueCase) => { try { const data = await requestJson<{ rescueCase: RescueCase }>(`/api/logistics/rescue-cases/${rescueCase.id}`); setSelected(data.rescueCase); } catch (openError) { setError(openError instanceof Error ? openError.message : 'Unable to load rescue case.'); } };
-  const run = async (operation: () => Promise<void>) => { setSaving(true); setError(''); try { await operation(); } catch (operationError) { setError(operationError instanceof Error ? operationError.message : 'Rescue workflow update failed.'); } finally { setSaving(false); } };
-  const create = () => run(async () => { const data = await requestJson<{ rescueCase: RescueCase }>('/api/logistics/rescue-cases', { method: 'POST', body: JSON.stringify({ shipmentId, disruptionId: disruptionId || undefined, objective }) }); setObjective(''); await load(); await open(data.rescueCase); });
-  const addAction = () => run(async () => { if (!selected) return; await requestJson(`/api/logistics/rescue-cases/${selected.id}/actions`, { method: 'POST', body: JSON.stringify({ actionType, title: actionTitle }) }); setActionTitle(''); await open(selected); });
-  const addDecision = () => run(async () => { if (!selected) return; await requestJson(`/api/logistics/rescue-cases/${selected.id}/decisions`, { method: 'POST', body: JSON.stringify({ actionId: decisionActionId || undefined, decision, rationale }) }); setRationale(''); await open(selected); });
-  const addEvidence = () => run(async () => { if (!selected) return; await requestJson(`/api/logistics/rescue-cases/${selected.id}/evidence`, { method: 'POST', body: JSON.stringify({ evidenceType, title: evidenceTitle, sourceUrl: evidenceUrl }) }); setEvidenceTitle(''); setEvidenceUrl(''); await open(selected); });
-  const setStatus = (caseStatus: string) => run(async () => { if (!selected) return; const data = await requestJson<{ rescueCase: RescueCase }>(`/api/logistics/rescue-cases/${selected.id}`, { method: 'PATCH', body: JSON.stringify({ caseStatus }) }); setSelected(data.rescueCase); await load(); });
-  if (loading) return <main className="grid min-h-screen place-items-center bg-[var(--bg-void)] text-[var(--text-primary)]"><LoaderCircle className="h-5 w-5 animate-spin" /></main>;
-  return <main className="min-h-screen bg-[var(--bg-void)] p-4 font-mono text-[var(--text-primary)] md:p-8"><div className="mx-auto max-w-6xl"><header className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border-secondary)] pb-5"><div><p className="text-[10px] uppercase tracking-[0.18em] text-[var(--cyan-primary)]">Logistics Operations</p><h1 className="mt-1 text-2xl font-semibold">Rescue workflow</h1></div><div className="flex gap-2"><Link href="/logistics" className="border border-[var(--border-secondary)] px-3 py-2 text-xs hover:border-[var(--cyan-primary)]">Shipments</Link><Link href="/logistics/disruptions" className="border border-[var(--border-secondary)] px-3 py-2 text-xs hover:border-[var(--cyan-primary)]">Disruptions</Link><Link href="/logistics/zero-day-roll-call" className="border border-[var(--border-secondary)] px-3 py-2 text-xs hover:border-[var(--cyan-primary)]">CVE Roll Call</Link></div></header>{error && <p className="mt-4 border border-[var(--alert-red)] px-3 py-2 text-xs text-[var(--alert-red)]">{error}</p>}
-    <section className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]"><section className="border border-[var(--border-secondary)]"><div className="border-b border-[var(--border-secondary)] p-4"><h2 className="text-sm">Recovery cases</h2></div><div className="divide-y divide-[var(--border-secondary)]">{cases.length === 0 && <p className="p-4 text-xs text-[var(--text-muted)]">No rescue cases recorded.</p>}{cases.map((item) => <button key={item.id} onClick={() => void open(item)} className="w-full p-4 text-left hover:bg-[var(--hover-accent)]"><div className="flex justify-between gap-3"><div><p className="text-sm">{item.shipmentReference}</p><p className="mt-1 text-[10px] text-[var(--text-muted)]">{item.objective}</p></div><span className="text-[10px] uppercase text-[var(--cyan-primary)]">{item.caseStatus.replace('_', ' ')}</span></div></button>)}</div></section><section className="border border-[var(--border-secondary)] p-4"><h2 className="text-sm">Open recovery case</h2><div className="mt-4 grid gap-3"><Select label="Shipment" value={shipmentId} onChange={setShipmentId} options={shipments.map((item) => ({ value: item.id, label: item.shipmentReference }))} /><Select label="Disruption" value={disruptionId} onChange={setDisruptionId} options={[{ value: '', label: 'No linked disruption' }, ...disruptions.map((item) => ({ value: item.id, label: item.title }))]} /><TextField label="Objective" value={objective} onChange={setObjective} /><button disabled={saving || !shipmentId || !objective.trim()} onClick={create} className="bg-[var(--cyan-primary)] px-3 py-2 text-xs text-black disabled:opacity-50"><FilePlus2 className="mr-1 inline h-3.5 w-3.5" />Open case</button></div></section></section>
-    {selected && <section className="mt-6 border border-[var(--border-secondary)] p-4"><div className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-[10px] uppercase tracking-[0.16em] text-[var(--cyan-primary)]">Case {selected.caseStatus.replace('_', ' ')}</p><h2 className="mt-1 text-lg">{selected.shipmentReference}</h2><p className="mt-2 text-xs text-[var(--text-muted)]">{selected.objective}</p></div><select value={selected.caseStatus} onChange={(event) => setStatus(event.target.value)} className="border border-[var(--border-secondary)] bg-[var(--bg-tertiary)] px-2 py-2 text-xs"><option>open</option><option>assessing</option><option>awaiting_approval</option><option>executing</option><option>recovered</option><option>closed</option></select></div>
-      <div className="mt-5 grid gap-4 lg:grid-cols-3"><Panel title="Actions"><div className="grid gap-2"><Select label="Type" value={actionType} onChange={setActionType} options={['reroute', 'rebook', 'hold', 'carrier_contact', 'port_contact', 'customs', 'customer_update', 'procurement', 'other'].map((value) => ({ value, label: value.replace('_', ' ') }))} /><TextField label="Proposal" value={actionTitle} onChange={setActionTitle} /><button disabled={saving || !actionTitle.trim()} onClick={addAction} className="border border-[var(--cyan-primary)] px-2 py-2 text-xs text-[var(--cyan-primary)]">Add action</button></div>{(selected.actions ?? []).map((action: RescueAction) => <p key={action.id} className="mt-3 border-t border-[var(--border-secondary)] pt-2 text-xs"><span className="text-[var(--cyan-primary)]">{action.actionStatus}</span> {action.title}</p>)}</Panel>
-        <Panel title="Decision log"><div className="grid gap-2"><Select label="Action" value={decisionActionId} onChange={setDecisionActionId} options={[{ value: '', label: 'Case-level decision' }, ...(selected.actions ?? []).map((action) => ({ value: action.id, label: action.title }))]} /><Select label="Decision" value={decision} onChange={setDecision} options={['approved', 'rejected', 'hold', 'note'].map((value) => ({ value, label: value }))} /><TextField label="Rationale" value={rationale} onChange={setRationale} /><button disabled={saving || !rationale.trim()} onClick={addDecision} className="border border-[var(--cyan-primary)] px-2 py-2 text-xs text-[var(--cyan-primary)]"><CheckCircle2 className="mr-1 inline h-3.5 w-3.5" />Record decision</button></div>{(selected.decisions ?? []).map((item: RescueDecisionRecord) => <p key={item.id} className="mt-3 border-t border-[var(--border-secondary)] pt-2 text-xs"><span className="text-[var(--cyan-primary)]">{item.decision}</span> {item.rationale}</p>)}</Panel>
-        <Panel title="Evidence"><div className="grid gap-2"><Select label="Type" value={evidenceType} onChange={setEvidenceType} options={['source', 'carrier_notice', 'customer_notice', 'quote', 'approval', 'document', 'other'].map((value) => ({ value, label: value.replace('_', ' ') }))} /><TextField label="Title" value={evidenceTitle} onChange={setEvidenceTitle} /><TextField label="HTTP(S) URL" value={evidenceUrl} onChange={setEvidenceUrl} /><button disabled={saving || !evidenceTitle.trim() || !evidenceUrl.trim()} onClick={addEvidence} className="border border-[var(--cyan-primary)] px-2 py-2 text-xs text-[var(--cyan-primary)]"><ShieldCheck className="mr-1 inline h-3.5 w-3.5" />Capture evidence</button></div>{(selected.evidence ?? []).map((item: RescueEvidenceRecord) => <a key={item.id} href={item.sourceUrl} target="_blank" rel="noreferrer" className="mt-3 block border-t border-[var(--border-secondary)] pt-2 text-xs text-[var(--cyan-primary)]"><ExternalLink className="mr-1 inline h-3 w-3" />{item.title}</a>)}</Panel></div>
-    </section>}</div></main>;
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const [caseData, shipmentData, disruptionData] = await Promise.all([
+        requestJson<{ cases: RescueCase[] }>("/api/logistics/rescue-cases"),
+        requestJson<{ shipments: ShipmentRecord[] }>(
+          "/api/logistics/shipments",
+        ),
+        requestJson<{ disruptions: DisruptionRecord[] }>(
+          "/api/logistics/disruptions",
+        ),
+      ]);
+      setCases(caseData.cases);
+      setShipments(shipmentData.shipments);
+      setDisruptions(disruptionData.disruptions);
+    } catch (cause) {
+      if (
+        cause instanceof Error &&
+        cause.message === "Authentication is required."
+      )
+        router.replace("/login");
+      else
+        setError(
+          cause instanceof Error
+            ? cause.message
+            : "Unable to load rescue cases.",
+        );
+    } finally {
+      setLoading(false);
+    }
+  }, [router]);
+
+  useEffect(() => {
+    void Promise.resolve().then(load);
+  }, [load]);
+
+  const open = async (rescueCase: RescueCase) => {
+    setSaving(true);
+    setError("");
+    try {
+      const data = await requestJson<{ rescueCase: RescueCase }>(
+        `/api/logistics/rescue-cases/${rescueCase.id}`,
+      );
+      setSelected(data.rescueCase);
+    } catch (cause) {
+      setError(
+        cause instanceof Error ? cause.message : "Unable to open rescue case.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const run = async (operation: () => Promise<void>) => {
+    setSaving(true);
+    setError("");
+    try {
+      await operation();
+    } catch (cause) {
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "Rescue workflow update failed.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+  const reloadSelected = async (id: string) => open({ id } as RescueCase);
+  const create = () =>
+    run(async () => {
+      const data = await requestJson<{ rescueCase: RescueCase }>(
+        "/api/logistics/rescue-cases",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            shipmentId,
+            disruptionId: disruptionId || undefined,
+            objective,
+          }),
+        },
+      );
+      setObjective("");
+      await load();
+      await reloadSelected(data.rescueCase.id);
+    });
+  const addAction = () =>
+    run(async () => {
+      if (!selected) return;
+      await requestJson(`/api/logistics/rescue-cases/${selected.id}/actions`, {
+        method: "POST",
+        body: JSON.stringify({
+          actionType,
+          title: actionTitle,
+          targetAt: targetAt || undefined,
+        }),
+      });
+      setActionTitle("");
+      setTargetAt("");
+      await reloadSelected(selected.id);
+    });
+  const addDecision = () =>
+    run(async () => {
+      if (!selected) return;
+      await requestJson(
+        `/api/logistics/rescue-cases/${selected.id}/decisions`,
+        { method: "POST", body: JSON.stringify({ decision, rationale }) },
+      );
+      setRationale("");
+      await reloadSelected(selected.id);
+    });
+  const addEvidence = () =>
+    run(async () => {
+      if (!selected) return;
+      await requestJson(`/api/logistics/rescue-cases/${selected.id}/evidence`, {
+        method: "POST",
+        body: JSON.stringify({
+          evidenceType,
+          title: evidenceTitle,
+          sourceUrl: evidenceUrl,
+        }),
+      });
+      setEvidenceTitle("");
+      setEvidenceUrl("");
+      await reloadSelected(selected.id);
+    });
+  const setStatus = (caseStatus: string) =>
+    run(async () => {
+      if (!selected) return;
+      const data = await requestJson<{ rescueCase: RescueCase }>(
+        `/api/logistics/rescue-cases/${selected.id}`,
+        { method: "PATCH", body: JSON.stringify({ caseStatus }) },
+      );
+      setSelected(data.rescueCase);
+      await load();
+    });
+
+  const shipment = selected
+    ? shipments.find((item) => item.id === selected.shipmentId)
+    : undefined;
+
+  return (
+    <main className="ops-page">
+      <div className="ops-page__inner">
+        <header className="ops-page-header">
+          <div>
+            <p className="ops-page-header__eyebrow">Operational recovery</p>
+            <h1>Rescue Cases</h1>
+            <p className="ops-page-header__detail">
+              Turn evidence-led alerts into an assigned recovery workflow.
+              Ownership and contact records are shown only where the API exposes
+              them.
+            </p>
+          </div>
+          <button
+            type="button"
+            className="ops-button ops-button--primary"
+            onClick={() =>
+              document
+                .getElementById("open-rescue-case")
+                ?.scrollIntoView({ behavior: "smooth" })
+            }
+          >
+            <Plus aria-hidden="true" size={15} />
+            Open case
+          </button>
+        </header>
+        {error && (
+          <section className="ops-section">
+            <ErrorState message={error} onRetry={() => void load()} />
+          </section>
+        )}
+        <section className="ops-section ops-rescue-layout">
+          <section className="ops-panel">
+            <div className="ops-panel-heading">
+              <div>
+                <h2>Active rescue cases</h2>
+                <p>Open a case to work its actions, decisions, and evidence.</p>
+              </div>
+            </div>
+            <div className="ops-list">
+              {loading ? (
+                <EmptyState
+                  title="Loading rescue cases"
+                  detail="Retrieving rescue workflows."
+                />
+              ) : cases.length === 0 ? (
+                <EmptyState
+                  title="No rescue cases"
+                  detail="No shipment recovery workflow has been recorded."
+                />
+              ) : (
+                cases.map((item) => (
+                  <button
+                    type="button"
+                    key={item.id}
+                    className={`ops-case-row${selected?.id === item.id ? " is-active" : ""}`}
+                    onClick={() => void open(item)}
+                  >
+                    <span>
+                      <strong>{item.shipmentReference}</strong>
+                      <small>{item.objective}</small>
+                    </span>
+                    <RescueStatus status={item.caseStatus} />
+                  </button>
+                ))
+              )}
+            </div>
+          </section>
+          <section className="ops-panel ops-open-case" id="open-rescue-case">
+            <div className="ops-panel-heading">
+              <div>
+                <h2>Open rescue case</h2>
+                <p>Creates a real organization-scoped workflow.</p>
+              </div>
+            </div>
+            <div className="ops-form-stack">
+              <Field label="Shipment">
+                <select
+                  value={shipmentId}
+                  onChange={(event) => setShipmentId(event.target.value)}
+                >
+                  <option value="">Select shipment</option>
+                  {shipments.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.shipmentReference}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Triggering disruption">
+                <select
+                  value={disruptionId}
+                  onChange={(event) => setDisruptionId(event.target.value)}
+                >
+                  <option value="">No linked disruption</option>
+                  {disruptions.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.title}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Objective">
+                <input
+                  value={objective}
+                  onChange={(event) => setObjective(event.target.value)}
+                  placeholder="Protect the next known shipment movement"
+                />
+              </Field>
+              <button
+                type="button"
+                className="ops-button ops-button--primary"
+                disabled={saving || !shipmentId || !objective.trim()}
+                onClick={create}
+              >
+                <FilePlus2 aria-hidden="true" size={15} />
+                Open case
+              </button>
+            </div>
+          </section>
+        </section>
+        {selected && (
+          <section className="ops-section">
+            <header className="ops-rescue-header">
+              <div>
+                <p className="ops-page-header__eyebrow">
+                  {label(selected.caseStatus)}
+                </p>
+                <h2>{selected.shipmentReference}</h2>
+                <p>{selected.objective}</p>
+              </div>
+              <div className="ops-rescue-header__actions">
+                <RescueStatus status={selected.caseStatus} />
+                <select
+                  value={selected.caseStatus}
+                  onChange={(event) => setStatus(event.target.value)}
+                  disabled={saving}
+                  aria-label="Rescue case status"
+                >
+                  {[
+                    "open",
+                    "assessing",
+                    "awaiting_approval",
+                    "executing",
+                    "recovered",
+                    "closed",
+                  ].map((status) => (
+                    <option key={status} value={status}>
+                      {label(status)}
+                    </option>
+                  ))}
+                </select>
+                <Link
+                  href={hrefForMap(selected.shipmentId, selected.disruptionId)}
+                  className="ops-button ops-button--secondary"
+                >
+                  Open on map
+                </Link>
+              </div>
+            </header>
+            <div className="ops-rescue-workspace">
+              <section className="ops-panel ops-work-panel">
+                <div className="ops-panel-heading">
+                  <div>
+                    <h2>Actions and tasks</h2>
+                    <p>Actions are the existing rescue-task records.</p>
+                  </div>
+                </div>
+                <div className="ops-form-inline">
+                  <select
+                    value={actionType}
+                    onChange={(event) => setActionType(event.target.value)}
+                    aria-label="Action type"
+                  >
+                    {[
+                      "reroute",
+                      "rebook",
+                      "hold",
+                      "carrier_contact",
+                      "port_contact",
+                      "customs",
+                      "customer_update",
+                      "procurement",
+                      "other",
+                    ].map((type) => (
+                      <option key={type} value={type}>
+                        {label(type)}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    value={actionTitle}
+                    onChange={(event) => setActionTitle(event.target.value)}
+                    placeholder="Action title"
+                    aria-label="Action title"
+                  />
+                  <input
+                    value={targetAt}
+                    onChange={(event) => setTargetAt(event.target.value)}
+                    type="datetime-local"
+                    aria-label="Known action deadline"
+                  />
+                  <button
+                    type="button"
+                    className="ops-button ops-button--primary"
+                    disabled={saving || !actionTitle.trim()}
+                    onClick={addAction}
+                  >
+                    <Plus aria-hidden="true" size={15} />
+                    Add task
+                  </button>
+                </div>
+                <div className="ops-list">
+                  {(selected.actions ?? []).length === 0 ? (
+                    <EmptyState
+                      title="No rescue actions"
+                      detail="Add a concrete recovery action when it has been assigned."
+                    />
+                  ) : (
+                    selected.actions?.map((action: RescueAction) => (
+                      <article key={action.id} className="ops-action-row">
+                        <div>
+                          <strong>{action.title}</strong>
+                          <small>
+                            {label(action.actionType)} ·{" "}
+                            {label(action.actionStatus)}
+                          </small>
+                        </div>
+                        <ActionWindow
+                          deadline={action.targetAt}
+                          label="Known action deadline"
+                        />
+                      </article>
+                    ))
+                  )}
+                </div>
+              </section>
+              <aside className="ops-rescue-support">
+                <section className="ops-panel ops-work-panel">
+                  <div className="ops-panel-heading">
+                    <div>
+                      <h2>Shipment context</h2>
+                    </div>
+                  </div>
+                  <ShipmentRoute
+                    origin={shipment?.originPortName}
+                    destination={shipment?.destinationPortName}
+                    transshipments={shipment?.transshipmentPorts}
+                  />
+                  <dl className="ops-definition-list">
+                    <Definition
+                      label="Current milestone"
+                      value={shipment?.currentStatus?.replaceAll("_", " ")}
+                    />
+                    <Definition label="Carrier" value={shipment?.carrier} />
+                    <Definition label="Vessel" value={shipment?.vesselName} />
+                    <Definition
+                      label="Disruption"
+                      value={selected.disruptionTitle}
+                    />
+                    <Definition
+                      label="Owner"
+                      value="Not exposed by the rescue API"
+                    />
+                  </dl>
+                  <EvidenceStatus
+                    count={selected.evidence?.length ?? 0}
+                    missing={!selected.evidence?.length}
+                  />
+                </section>
+                <section className="ops-panel ops-work-panel">
+                  <div className="ops-panel-heading">
+                    <div>
+                      <h2>Missing workflow records</h2>
+                    </div>
+                  </div>
+                  <p className="ops-muted">
+                    Contacts, calls, messages, and uploaded binary documents are
+                    not exposed by the existing rescue API. This workspace does
+                    not create placeholder activity.
+                  </p>
+                </section>
+              </aside>
+              <section className="ops-panel ops-work-panel ops-rescue-activity">
+                <div className="ops-panel-heading">
+                  <div>
+                    <h2>Decisions and evidence</h2>
+                    <p>
+                      Recorded decisions and linked source evidence remain
+                      separate.
+                    </p>
+                  </div>
+                </div>
+                <div className="ops-activity-grid">
+                  <div>
+                    <h3>Record decision</h3>
+                    <div className="ops-form-stack">
+                      <select
+                        value={decision}
+                        onChange={(event) => setDecision(event.target.value)}
+                        aria-label="Decision"
+                      >
+                        {["approved", "rejected", "hold", "note"].map(
+                          (option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ),
+                        )}
+                      </select>
+                      <input
+                        value={rationale}
+                        onChange={(event) => setRationale(event.target.value)}
+                        placeholder="Decision rationale"
+                      />
+                      <button
+                        type="button"
+                        className="ops-button ops-button--secondary"
+                        disabled={saving || !rationale.trim()}
+                        onClick={addDecision}
+                      >
+                        <CheckCircle2 aria-hidden="true" size={15} />
+                        Record decision
+                      </button>
+                    </div>
+                    <div className="ops-record-list">
+                      {(selected.decisions ?? []).map(
+                        (item: RescueDecisionRecord) => (
+                          <p key={item.id}>
+                            <strong>{item.decision}</strong> {item.rationale}
+                            <small>{isoDate(item.recordedAt)}</small>
+                          </p>
+                        ),
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <h3>Capture linked evidence</h3>
+                    <div className="ops-form-stack">
+                      <select
+                        value={evidenceType}
+                        onChange={(event) =>
+                          setEvidenceType(event.target.value)
+                        }
+                        aria-label="Evidence type"
+                      >
+                        {[
+                          "source",
+                          "carrier_notice",
+                          "customer_notice",
+                          "quote",
+                          "approval",
+                          "document",
+                          "other",
+                        ].map((option) => (
+                          <option key={option} value={option}>
+                            {label(option)}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        value={evidenceTitle}
+                        onChange={(event) =>
+                          setEvidenceTitle(event.target.value)
+                        }
+                        placeholder="Evidence title"
+                      />
+                      <input
+                        value={evidenceUrl}
+                        onChange={(event) => setEvidenceUrl(event.target.value)}
+                        placeholder="https:// source URL"
+                        type="url"
+                      />
+                      <button
+                        type="button"
+                        className="ops-button ops-button--secondary"
+                        disabled={
+                          saving || !evidenceTitle.trim() || !evidenceUrl.trim()
+                        }
+                        onClick={addEvidence}
+                      >
+                        <ShieldCheck aria-hidden="true" size={15} />
+                        Capture evidence
+                      </button>
+                    </div>
+                    <div className="ops-record-list">
+                      {(selected.evidence ?? []).map(
+                        (item: RescueEvidenceRecord) => (
+                          <a
+                            key={item.id}
+                            href={item.sourceUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            <strong>{item.title}</strong>
+                            <small>
+                              {label(item.evidenceType)} ·{" "}
+                              {isoDate(item.capturedAt)}
+                            </small>
+                          </a>
+                        ),
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </section>
+        )}
+      </div>
+    </main>
+  );
 }
 
-function Panel({ title, children }: { title: string; children: React.ReactNode }) { return <section className="border border-[var(--border-secondary)] p-3"><h3 className="text-xs">{title}</h3><div className="mt-3">{children}</div></section>; }
-function TextField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) { return <label className="text-[10px] text-[var(--text-muted)]">{label}<input value={value} onChange={(event) => onChange(event.target.value)} className="mt-1 w-full border border-[var(--border-secondary)] bg-[var(--bg-tertiary)] p-2 text-xs text-[var(--text-primary)]" /></label>; }
-function Select({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: Array<{ value: string; label: string }> }) { return <label className="text-[10px] text-[var(--text-muted)]">{label}<select value={value} onChange={(event) => onChange(event.target.value)} className="mt-1 w-full border border-[var(--border-secondary)] bg-[var(--bg-tertiary)] p-2 text-xs text-[var(--text-primary)]">{options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>; }
+function Field({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <label>
+      {label}
+      {children}
+    </label>
+  );
+}
+function Definition({ label, value }: { label: string; value?: string }) {
+  return (
+    <>
+      <dt>{label}</dt>
+      <dd>{value || "Unavailable"}</dd>
+    </>
+  );
+}

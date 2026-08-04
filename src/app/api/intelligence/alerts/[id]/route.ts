@@ -1,0 +1,9 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuthenticatedActor } from '@/lib/auth/actor';
+import { OrganizationAccessError } from '@/lib/operations/authorization';
+import { updateIntelligenceAlert } from '@/lib/intelligence/operations';
+
+export async function PATCH(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  try { const { id } = await context.params; return NextResponse.json(await updateIntelligenceAlert(await requireAuthenticatedActor(request, 'intelligence:write'), id, await request.json())); }
+  catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : 'Alert update failed.' }, { status: error instanceof OrganizationAccessError ? 401 : 400 }); }
+}

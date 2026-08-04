@@ -1,23 +1,53 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { FileUp, LoaderCircle, Plus, Save, Upload } from 'lucide-react';
-import { SHIPMENT_IMPORT_FIELDS, type ShipmentColumnMapping, type ShipmentImportField, type ShipmentImportPreview } from '@/lib/logistics/csv-import';
-import type { ShipmentInput } from '@/lib/logistics/types';
-import type { ShipmentRecord } from '@/lib/logistics/shipments';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import {
+  Archive,
+  FileUp,
+  MoreHorizontal,
+  Plus,
+  Save,
+  ShipWheel,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import type { ShipmentInput } from "@/lib/logistics/types";
+import type { ShipmentRecord } from "@/lib/logistics/shipments";
+import { hrefForMap, isoDate, requestJson } from "@/lib/logistics/client";
+import EmptyState from "./logistics/EmptyState";
+import ErrorState from "./logistics/ErrorState";
+import FilterBar from "./logistics/FilterBar";
+import OperationalTimeline, {
+  type TimelineEvent,
+} from "./logistics/OperationalTimeline";
+import ShipmentRoute from "./logistics/ShipmentRoute";
 
-const emptyShipment: ShipmentInput = { shipmentReference: '', operationalTimezone: 'UTC', priority: 3, currentStatus: 'planned' };
-const labels: Record<ShipmentImportField, string> = {
-  shipmentReference: 'Shipment reference', bookingNumber: 'Booking number', containerNumber: 'Container number', billOfLadingReference: 'Bill of lading',
-  carrier: 'Carrier', vesselName: 'Vessel', imoNumber: 'IMO', originPortName: 'Origin port', originPortCode: 'Origin code',
-  destinationPortName: 'Destination port', destinationPortCode: 'Destination code', operationalTimezone: 'Timezone',
-  plannedDepartureAt: 'Planned departure', plannedArrivalAt: 'Planned arrival', actualDepartureAt: 'Actual departure', actualArrivalAt: 'Actual arrival',
-  cargoType: 'Cargo type', priority: 'Priority', currentStatus: 'Status',
+const emptyShipment: ShipmentInput = {
+  shipmentReference: "",
+  operationalTimezone: "UTC",
+  priority: 3,
+  currentStatus: "planned",
+};
+type Filters = {
+  query: string;
+  status: string;
+  carrier: string;
+  vessel: string;
+  origin: string;
+  destination: string;
+  sort: "arrival" | "departure" | "reference";
+};
+const defaultFilters: Filters = {
+  query: "",
+  status: "",
+  carrier: "",
+  vessel: "",
+  origin: "",
+  destination: "",
+  sort: "arrival",
 };
 
-function asForm(shipment: ShipmentRecord): ShipmentInput {
+function formFrom(shipment: ShipmentRecord): ShipmentInput {
   return {
     shipmentReference: shipment.shipmentReference,
     bookingNumber: shipment.bookingNumber,
@@ -26,10 +56,15 @@ function asForm(shipment: ShipmentRecord): ShipmentInput {
     carrier: shipment.carrier,
     vesselName: shipment.vesselName,
     imoNumber: shipment.imoNumber,
+    mmsiNumber: shipment.mmsiNumber,
     originPortName: shipment.originPortName,
     originPortCode: shipment.originPortCode,
     destinationPortName: shipment.destinationPortName,
     destinationPortCode: shipment.destinationPortCode,
+    transshipmentPorts: shipment.transshipmentPorts,
+    customerId: shipment.customerId,
+    customerContact: shipment.customerContact,
+    ownerUserId: shipment.ownerUserId,
     operationalTimezone: shipment.operationalTimezone,
     plannedDepartureAt: shipment.plannedDepartureAt,
     plannedArrivalAt: shipment.plannedArrivalAt,
@@ -41,128 +76,806 @@ function asForm(shipment: ShipmentRecord): ShipmentInput {
   };
 }
 
-async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(url, { ...init, headers: { 'Content-Type': 'application/json', ...init?.headers } });
-  const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(typeof body.error === 'string' ? body.error : 'Request failed.');
-  return body as T;
+function timeline(shipment: ShipmentRecord): TimelineEvent[] {
+  const events: Array<TimelineEvent | undefined> = [
+    shipment.actualDepartureAt
+      ? {
+          id: "actual-departure",
+          label: "Actual departure",
+          at: shipment.actualDepartureAt,
+          state: "completed" as const,
+        }
+      : shipment.plannedDepartureAt
+        ? {
+            id: "planned-departure",
+            label: "Planned departure",
+            at: shipment.plannedDepartureAt,
+            state: "upcoming" as const,
+          }
+        : undefined,
+    shipment.actualArrivalAt
+      ? {
+          id: "actual-arrival",
+          label: "Actual arrival",
+          at: shipment.actualArrivalAt,
+          state: "completed" as const,
+        }
+      : shipment.plannedArrivalAt
+        ? {
+            id: "planned-arrival",
+            label: "Planned arrival",
+            at: shipment.plannedArrivalAt,
+            state: "upcoming" as const,
+          }
+        : undefined,
+  ];
+
+  return events
+    .filter((event): event is TimelineEvent => event !== undefined)
+    .sort((a, b) => (a.at ?? "").localeCompare(b.at ?? ""));
 }
 
-export default function ShipmentWorkspace({ shipmentId }: { shipmentId?: string }) {
+export default function ShipmentWorkspace({
+  shipmentId,
+}: {
+  shipmentId?: string;
+}) {
   const router = useRouter();
   const [shipments, setShipments] = useState<ShipmentRecord[]>([]);
   const [shipment, setShipment] = useState<ShipmentRecord | null>(null);
   const [form, setForm] = useState<ShipmentInput>(emptyShipment);
+  const [filters, setFilters] = useState<Filters>(defaultFilters);
+  const [showCreate, setShowCreate] = useState(false);
+  const [openMenu, setOpenMenu] = useState<string>();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [csv, setCsv] = useState<{ fileName: string; text: string } | null>(null);
-  const [preview, setPreview] = useState<ShipmentImportPreview | null>(null);
-  const [shipmentImportId, setShipmentImportId] = useState<string | null>(null);
-  const [mapping, setMapping] = useState<ShipmentColumnMapping>({});
-  const [importing, setImporting] = useState(false);
+  const [error, setError] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError("");
     try {
-      const actor = await requestJson('/api/auth/me');
-      if (!actor) return;
       if (shipmentId) {
-        const data = await requestJson<{ shipment: ShipmentRecord }>(`/api/logistics/shipments/${shipmentId}`);
+        const data = await requestJson<{ shipment: ShipmentRecord }>(
+          `/api/logistics/shipments/${shipmentId}`,
+        );
         setShipment(data.shipment);
-        setForm(asForm(data.shipment));
+        setForm(formFrom(data.shipment));
       } else {
-        const data = await requestJson<{ shipments: ShipmentRecord[] }>('/api/logistics/shipments');
+        const data = await requestJson<{ shipments: ShipmentRecord[] }>(
+          "/api/logistics/shipments",
+        );
         setShipments(data.shipments);
       }
-    } catch (loadError) {
-      if (loadError instanceof Error && loadError.message === 'Authentication is required.') router.replace('/login');
-      else setError(loadError instanceof Error ? loadError.message : 'Unable to load shipments.');
-    } finally { setLoading(false); }
+    } catch (cause) {
+      if (
+        cause instanceof Error &&
+        cause.message === "Authentication is required."
+      )
+        router.replace("/login");
+      else
+        setError(
+          cause instanceof Error ? cause.message : "Unable to load shipments.",
+        );
+    } finally {
+      setLoading(false);
+    }
   }, [router, shipmentId]);
 
-  useEffect(() => { void Promise.resolve().then(load); }, [load]);
+  useEffect(() => {
+    void Promise.resolve().then(load);
+  }, [load]);
 
-  const updateForm = (field: keyof ShipmentInput, value: string | number) => setForm((current) => ({ ...current, [field]: value }));
+  const filtered = useMemo(() => {
+    const needle = filters.query.trim().toLowerCase();
+    return shipments
+      .filter((item) => {
+        const searchable = [
+          item.shipmentReference,
+          item.containerNumber,
+          item.carrier,
+          item.vesselName,
+          item.originPortName,
+          item.destinationPortName,
+          item.imoNumber,
+          item.mmsiNumber,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        return (
+          (!needle || searchable.includes(needle)) &&
+          (!filters.status || item.currentStatus === filters.status) &&
+          (!filters.carrier || item.carrier === filters.carrier) &&
+          (!filters.vessel || item.vesselName === filters.vessel) &&
+          (!filters.origin || item.originPortName === filters.origin) &&
+          (!filters.destination ||
+            item.destinationPortName === filters.destination)
+        );
+      })
+      .sort((a, b) => {
+        if (filters.sort === "reference")
+          return a.shipmentReference.localeCompare(b.shipmentReference);
+        const field =
+          filters.sort === "departure"
+            ? "plannedDepartureAt"
+            : "plannedArrivalAt";
+        return (a[field] ?? "9999").localeCompare(b[field] ?? "9999");
+      });
+  }, [filters, shipments]);
 
-  const saveShipment = async () => {
-    setSaving(true); setError('');
+  const options = (field: keyof ShipmentRecord) =>
+    Array.from(
+      new Set(
+        shipments
+          .map((item) => item[field])
+          .filter(
+            (value): value is string =>
+              typeof value === "string" && Boolean(value),
+          ),
+      ),
+    ).sort();
+  const update = <K extends keyof ShipmentInput>(
+    field: K,
+    value: ShipmentInput[K],
+  ) => setForm((current) => ({ ...current, [field]: value }));
+
+  const save = async () => {
+    setSaving(true);
+    setError("");
     try {
       if (shipmentId) {
-        const data = await requestJson<{ shipment: ShipmentRecord }>(`/api/logistics/shipments/${shipmentId}`, { method: 'PATCH', body: JSON.stringify(form) });
-        setShipment(data.shipment); setForm(asForm(data.shipment));
+        const data = await requestJson<{ shipment: ShipmentRecord }>(
+          `/api/logistics/shipments/${shipmentId}`,
+          { method: "PATCH", body: JSON.stringify(form) },
+        );
+        setShipment(data.shipment);
+        setForm(formFrom(data.shipment));
       } else {
-        const data = await requestJson<{ shipment: ShipmentRecord }>('/api/logistics/shipments', { method: 'POST', body: JSON.stringify(form) });
+        const data = await requestJson<{ shipment: ShipmentRecord }>(
+          "/api/logistics/shipments",
+          { method: "POST", body: JSON.stringify(form) },
+        );
         router.push(`/logistics/shipments/${data.shipment.id}`);
       }
-    } catch (saveError) { setError(saveError instanceof Error ? saveError.message : 'Unable to save shipment.'); }
-    finally { setSaving(false); }
+    } catch (cause) {
+      setError(
+        cause instanceof Error ? cause.message : "Unable to save shipment.",
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const previewCsv = async (nextMapping = mapping) => {
-    if (!csv) return;
-    setImporting(true); setError('');
+  const archive = async (id: string) => {
+    setSaving(true);
+    setError("");
     try {
-      const data = await requestJson<{ shipmentImport: { id: string }; preview: ShipmentImportPreview }>('/api/logistics/shipments/imports/preview', {
-        method: 'POST', body: JSON.stringify({ fileName: csv.fileName, csv: csv.text, mapping: Object.keys(nextMapping).length ? nextMapping : undefined }),
-      });
-      setPreview(data.preview); setShipmentImportId(data.shipmentImport.id); setMapping(data.preview.mapping);
-    } catch (previewError) { setError(previewError instanceof Error ? previewError.message : 'Unable to preview import.'); }
-    finally { setImporting(false); }
-  };
-
-  const confirmImport = async () => {
-    if (!shipmentImportId) return;
-    setImporting(true); setError('');
-    try {
-      await requestJson(`/api/logistics/shipments/imports/${shipmentImportId}/confirm`, { method: 'POST', body: '{}' });
-      setCsv(null); setPreview(null); setShipmentImportId(null); setMapping({});
+      await requestJson(`/api/logistics/shipments/${id}`, { method: "DELETE" });
+      setOpenMenu(undefined);
       await load();
-    } catch (confirmError) { setError(confirmError instanceof Error ? confirmError.message : 'Unable to confirm import.'); }
-    finally { setImporting(false); }
+    } catch (cause) {
+      setError(
+        cause instanceof Error ? cause.message : "Unable to archive shipment.",
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const isDetail = Boolean(shipmentId);
-  const rowErrors = useMemo(() => preview?.rows.filter((row) => row.status !== 'valid').slice(0, 8) ?? [], [preview]);
+  const saveView = () =>
+    window.localStorage.setItem(
+      "ophanim-logistics-shipment-view",
+      JSON.stringify(filters),
+    );
+  const loadView = () => {
+    try {
+      const saved = window.localStorage.getItem(
+        "ophanim-logistics-shipment-view",
+      );
+      if (saved) setFilters({ ...defaultFilters, ...JSON.parse(saved) });
+    } catch {
+      /* Ignore unavailable browser storage. */
+    }
+  };
 
-  if (loading) return <main className="min-h-screen bg-[var(--bg-void)] text-[var(--text-primary)] grid place-items-center"><LoaderCircle className="w-5 h-5 animate-spin" /></main>;
+  if (shipmentId)
+    return (
+      <ShipmentDetail
+        shipment={shipment}
+        form={form}
+        loading={loading}
+        saving={saving}
+        error={error}
+        onChange={update}
+        onSave={() => void save()}
+        onRetry={() => void load()}
+      />
+    );
 
   return (
-    <main className="min-h-screen bg-[var(--bg-void)] text-[var(--text-primary)] p-4 md:p-8 font-mono">
-      <div className="mx-auto max-w-6xl">
-        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border-secondary)] pb-5">
-          <div><p className="text-[10px] uppercase tracking-[0.18em] text-[var(--cyan-primary)]">Logistics Operations</p><h1 className="mt-1 text-2xl font-semibold">{isDetail ? shipment?.shipmentReference ?? 'Shipment' : 'Shipments'}</h1></div>
-          <div className="flex gap-2"><Link className="border border-[var(--border-secondary)] px-3 py-2 text-xs hover:border-[var(--cyan-primary)]" href="/logistics">Shipment list</Link><Link className="border border-[var(--border-secondary)] px-3 py-2 text-xs hover:border-[var(--cyan-primary)]" href="/logistics/disruptions">Disruptions</Link><Link className="border border-[var(--border-secondary)] px-3 py-2 text-xs hover:border-[var(--cyan-primary)]" href="/logistics/rescue">Rescue</Link><Link className="border border-[var(--border-secondary)] px-3 py-2 text-xs hover:border-[var(--cyan-primary)]" href="/logistics/zero-day-roll-call">CVE Roll Call</Link><Link className="bg-[var(--cyan-primary)] px-3 py-2 text-xs text-black" href="/logistics?new=1"><Plus className="mr-1 inline h-3.5 w-3.5" />New shipment</Link></div>
-        </header>
-        {error && <p className="mt-4 border border-[var(--alert-red)] px-3 py-2 text-xs text-[var(--alert-red)]">{error}</p>}
-
-        {!isDetail && <section className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px]">
-          <div className="border border-[var(--border-secondary)]">
-            <div className="flex items-center justify-between border-b border-[var(--border-secondary)] px-4 py-3"><h2 className="text-sm">Active shipments</h2><span className="text-xs text-[var(--text-muted)]">{shipments.length}</span></div>
-            <div className="overflow-x-auto"><table className="w-full min-w-[720px] text-left text-xs"><thead className="text-[var(--text-muted)]"><tr><th className="p-3">Reference</th><th className="p-3">Carrier</th><th className="p-3">Route</th><th className="p-3">Arrival</th><th className="p-3">Status</th></tr></thead><tbody>{shipments.map((item) => <tr key={item.id} className="border-t border-[var(--border-secondary)] hover:bg-[var(--hover-accent)]"><td className="p-3"><Link className="text-[var(--cyan-primary)]" href={`/logistics/shipments/${item.id}`}>{item.shipmentReference}</Link></td><td className="p-3">{item.carrier ?? '—'}</td><td className="p-3">{[item.originPortName, item.destinationPortName].filter(Boolean).join(' to ') || '—'}</td><td className="p-3">{item.plannedArrivalAt ? new Date(item.plannedArrivalAt).toLocaleString() : '—'}</td><td className="p-3 uppercase">{item.currentStatus}</td></tr>)}</tbody></table></div>
+    <main className="ops-page">
+      <div className="ops-page__inner">
+        <header className="ops-page-header">
+          <div>
+            <p className="ops-page-header__eyebrow">Shipment management</p>
+            <h1>Shipments</h1>
+            <p className="ops-page-header__detail">
+              Organization-scoped transport records. Exposure and rescue filters
+              require a scoped assessment endpoint and are not inferred here.
+            </p>
           </div>
-          <section className="border border-[var(--border-secondary)] p-4"><h2 className="text-sm">Create shipment</h2><ShipmentForm form={form} onChange={updateForm} onSave={saveShipment} saving={saving} /></section>
-        </section>}
-
-        {isDetail && <section className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_330px]"><section className="border border-[var(--border-secondary)] p-4"><h2 className="text-sm">Shipment details</h2><ShipmentForm form={form} onChange={updateForm} onSave={saveShipment} saving={saving} /></section><aside className="border border-[var(--border-secondary)] p-4 text-xs"><p className="text-[var(--text-muted)]">Current status</p><p className="mt-2 uppercase">{shipment?.currentStatus}</p><p className="mt-6 text-[var(--text-muted)]">Shipment ID</p><p className="mt-2 break-all text-[var(--cyan-primary)]">{shipment?.id}</p></aside></section>}
-
-        {!isDetail && <section className="mt-6 border border-[var(--border-secondary)] p-4"><div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-sm">CSV import</h2><p className="mt-1 text-xs text-[var(--text-muted)]">Preview and confirm organization-scoped shipment rows.</p></div><label className="cursor-pointer border border-[var(--border-secondary)] px-3 py-2 text-xs hover:border-[var(--cyan-primary)]"><FileUp className="mr-1 inline h-3.5 w-3.5" />Select CSV<input className="hidden" type="file" accept=".csv,text/csv" onChange={async (event) => { const file = event.target.files?.[0]; if (!file) return; setCsv({ fileName: file.name, text: await file.text() }); setPreview(null); setMapping({}); }} /></label></div>
-          {csv && <div className="mt-4"><p className="text-xs text-[var(--text-secondary)]">{csv.fileName}</p><button className="mt-3 border border-[var(--cyan-primary)] px-3 py-2 text-xs text-[var(--cyan-primary)] disabled:opacity-50" disabled={importing} onClick={() => void previewCsv()}><Upload className="mr-1 inline h-3.5 w-3.5" />{importing ? 'Preparing' : 'Preview import'}</button></div>}
-          {preview && <div className="mt-5 border-t border-[var(--border-secondary)] pt-4"><div className="grid grid-cols-2 gap-2 text-xs md:grid-cols-4"><Metric label="Rows" value={preview.totalRows} /><Metric label="Valid" value={preview.validRows} /><Metric label="Invalid" value={preview.invalidRows} /><Metric label="Duplicates" value={preview.duplicateRows} /></div><div className="mt-5 grid gap-2 md:grid-cols-2">{SHIPMENT_IMPORT_FIELDS.map((field) => <label key={field} className="flex items-center justify-between gap-3 text-xs"><span>{labels[field]}</span><select className="min-w-0 bg-[var(--bg-tertiary)] px-2 py-1" value={mapping[field] ?? ''} onChange={(event) => setMapping((current) => ({ ...current, [field]: event.target.value || undefined }))}><option value="">Not mapped</option>{preview.headers.map((header) => <option key={header} value={header}>{header}</option>)}</select></label>)}</div><button className="mt-4 border border-[var(--border-secondary)] px-3 py-2 text-xs hover:border-[var(--cyan-primary)]" onClick={() => void previewCsv(mapping)}>Refresh preview</button>{rowErrors.length > 0 && <ul className="mt-4 space-y-1 text-xs text-[var(--alert-red)]">{rowErrors.map((row) => <li key={row.rowNumber}>Row {row.rowNumber}: {row.errors.join(' ')}</li>)}</ul>}<button className="mt-4 bg-[var(--cyan-primary)] px-3 py-2 text-xs text-black disabled:opacity-50" disabled={importing || preview.validRows === 0} onClick={() => void confirmImport()}><Save className="mr-1 inline h-3.5 w-3.5" />Confirm valid rows</button></div>}
-        </section>}
+          <div className="ops-page-header__actions">
+            <Link href="/imports" className="ops-button ops-button--secondary">
+              <FileUp aria-hidden="true" size={15} />
+              Import CSV
+            </Link>
+            <button
+              type="button"
+              className="ops-button ops-button--primary"
+              onClick={() => {
+                setForm(emptyShipment);
+                setShowCreate(true);
+              }}
+            >
+              <Plus aria-hidden="true" size={15} />
+              New shipment
+            </button>
+          </div>
+        </header>
+        {error && (
+          <section className="ops-section">
+            <ErrorState message={error} onRetry={() => void load()} />
+          </section>
+        )}
+        <section className="ops-section">
+          <FilterBar onReset={() => setFilters(defaultFilters)}>
+            <input
+              value={filters.query}
+              onChange={(event) =>
+                setFilters((current) => ({
+                  ...current,
+                  query: event.target.value,
+                }))
+              }
+              placeholder="Search reference, container, vessel, port"
+              aria-label="Search shipments"
+            />
+            <Select
+              value={filters.status}
+              onChange={(status) =>
+                setFilters((current) => ({ ...current, status }))
+              }
+              label="All statuses"
+              options={options("currentStatus")}
+            />
+            <Select
+              value={filters.carrier}
+              onChange={(carrier) =>
+                setFilters((current) => ({ ...current, carrier }))
+              }
+              label="All carriers"
+              options={options("carrier")}
+            />
+            <Select
+              value={filters.vessel}
+              onChange={(vessel) =>
+                setFilters((current) => ({ ...current, vessel }))
+              }
+              label="All vessels"
+              options={options("vesselName")}
+            />
+            <Select
+              value={filters.origin}
+              onChange={(origin) =>
+                setFilters((current) => ({ ...current, origin }))
+              }
+              label="All origins"
+              options={options("originPortName")}
+            />
+            <Select
+              value={filters.destination}
+              onChange={(destination) =>
+                setFilters((current) => ({ ...current, destination }))
+              }
+              label="All destinations"
+              options={options("destinationPortName")}
+            />
+            <select
+              aria-label="Sort shipments"
+              value={filters.sort}
+              onChange={(event) =>
+                setFilters((current) => ({
+                  ...current,
+                  sort: event.target.value as Filters["sort"],
+                }))
+              }
+            >
+              <option value="arrival">Sort by ETA</option>
+              <option value="departure">Sort by ETD</option>
+              <option value="reference">Sort by reference</option>
+            </select>
+            <button
+              type="button"
+              className="ops-filter-reset"
+              onClick={saveView}
+            >
+              Save view
+            </button>
+            <button
+              type="button"
+              className="ops-filter-reset"
+              onClick={loadView}
+            >
+              Load view
+            </button>
+          </FilterBar>
+        </section>
+        <section className="ops-section">
+          <div className="ops-section__header">
+            <div>
+              <h2>Shipment list</h2>
+              <p>
+                {filtered.length} of {shipments.length} active shipment
+                {shipments.length === 1 ? "" : "s"}
+              </p>
+            </div>
+          </div>
+          <div className="ops-panel ops-shipment-table">
+            {loading ? (
+              <EmptyState
+                title="Loading shipments"
+                detail="Retrieving current organization-scoped shipment records."
+              />
+            ) : filtered.length === 0 ? (
+              <EmptyState
+                title="No shipments found"
+                detail={
+                  shipments.length
+                    ? "No active shipment matches the selected filters."
+                    : "Upload active shipments to identify which operations may be affected by current disruptions."
+                }
+                action={
+                  !shipments.length ? (
+                    <Link
+                      className="ops-button ops-button--primary"
+                      href="/imports"
+                    >
+                      Import Shipments
+                    </Link>
+                  ) : undefined
+                }
+              />
+            ) : (
+              <table>
+                <thead>
+                  <tr>
+                    <th>Shipment</th>
+                    <th>Route</th>
+                    <th>Vessel</th>
+                    <th>ETD</th>
+                    <th>ETA</th>
+                    <th>Status</th>
+                    <th>
+                      <span className="sr-only">Actions</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((item) => (
+                    <tr key={item.id}>
+                      <td>
+                        <Link
+                          href={`/logistics/shipments/${item.id}`}
+                          className="ops-table-link"
+                        >
+                          {item.shipmentReference}
+                        </Link>
+                        <small>
+                          {item.containerNumber
+                            ? `Container ${item.containerNumber}`
+                            : "Container unavailable"}
+                        </small>
+                      </td>
+                      <td>
+                        <ShipmentRoute
+                          origin={item.originPortName}
+                          destination={item.destinationPortName}
+                          transshipments={item.transshipmentPorts}
+                        />
+                      </td>
+                      <td>
+                        {item.vesselName ?? "Unavailable"}
+                        <small>{item.carrier ?? "Carrier unavailable"}</small>
+                      </td>
+                      <td>{isoDate(item.plannedDepartureAt)}</td>
+                      <td>{isoDate(item.plannedArrivalAt)}</td>
+                      <td>
+                        <span className="ops-status">
+                          {(item.currentStatus ?? "unknown").replaceAll(
+                            "_",
+                            " ",
+                          )}
+                        </span>
+                      </td>
+                      <td className="ops-overflow">
+                        <button
+                          type="button"
+                          className="ops-icon-button"
+                          onClick={() =>
+                            setOpenMenu(
+                              openMenu === item.id ? undefined : item.id,
+                            )
+                          }
+                          aria-label={`Open actions for ${item.shipmentReference}`}
+                        >
+                          <MoreHorizontal aria-hidden="true" size={17} />
+                        </button>
+                        {openMenu === item.id && (
+                          <div className="ops-overflow__menu">
+                            <Link href={`/logistics/shipments/${item.id}`}>
+                              View shipment
+                            </Link>
+                            <Link href={hrefForMap(item.id)}>Open on map</Link>
+                            <Link href="/logistics/rescue">Start rescue</Link>
+                            <button
+                              type="button"
+                              onClick={() => void archive(item.id)}
+                              disabled={saving}
+                            >
+                              <Archive aria-hidden="true" size={14} />
+                              Archive
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </section>
+        {showCreate && (
+          <section className="ops-section" aria-label="Create shipment">
+            <div className="ops-panel ops-editor">
+              <div className="ops-section__header">
+                <div>
+                  <h2>New shipment</h2>
+                  <p>
+                    Only recorded values are saved. Milestone and ownership
+                    fields require their respective API records.
+                  </p>
+                </div>
+                <button
+                  className="ops-button ops-button--secondary"
+                  type="button"
+                  onClick={() => setShowCreate(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+              <ShipmentEditor
+                form={form}
+                onChange={update}
+                onSave={() => void save()}
+                saving={saving}
+              />
+            </div>
+          </section>
+        )}
       </div>
     </main>
   );
 }
 
-function Metric({ label, value }: { label: string; value: number }) {
-  return <div className="border border-[var(--border-secondary)] p-3"><p className="text-[10px] uppercase text-[var(--text-muted)]">{label}</p><p className="mt-1 text-lg">{value}</p></div>;
+function ShipmentDetail({
+  shipment,
+  form,
+  loading,
+  saving,
+  error,
+  onChange,
+  onSave,
+  onRetry,
+}: {
+  shipment: ShipmentRecord | null;
+  form: ShipmentInput;
+  loading: boolean;
+  saving: boolean;
+  error: string;
+  onChange: <K extends keyof ShipmentInput>(
+    field: K,
+    value: ShipmentInput[K],
+  ) => void;
+  onSave: () => void;
+  onRetry: () => void;
+}) {
+  if (loading)
+    return (
+      <main className="ops-page">
+        <div className="ops-page__inner">
+          <div className="ops-panel">
+            <EmptyState
+              title="Loading shipment"
+              detail="Retrieving the selected shipment record."
+            />
+          </div>
+        </div>
+      </main>
+    );
+  if (!shipment)
+    return (
+      <main className="ops-page">
+        <div className="ops-page__inner">
+          <ErrorState
+            message={error || "Shipment was not found."}
+            onRetry={onRetry}
+          />
+        </div>
+      </main>
+    );
+  return (
+    <main className="ops-page">
+      <div className="ops-page__inner">
+        <header className="ops-page-header">
+          <div>
+            <p className="ops-page-header__eyebrow">Shipment details</p>
+            <h1>{shipment.shipmentReference}</h1>
+            <p className="ops-page-header__detail">
+              {shipment.customerId
+                ? `Customer ${shipment.customerId}`
+                : "Customer unavailable"}{" "}
+              · Owner ID {shipment.ownerUserId ?? "not recorded"}
+            </p>
+          </div>
+          <div className="ops-page-header__actions">
+            <Link
+              href="/logistics/rescue"
+              className="ops-button ops-button--primary"
+            >
+              <ShipWheel aria-hidden="true" size={15} />
+              Start Rescue
+            </Link>
+            <Link
+              href={hrefForMap(shipment.id)}
+              className="ops-button ops-button--secondary"
+            >
+              Open on Map
+            </Link>
+          </div>
+        </header>
+        {error && (
+          <section className="ops-section">
+            <ErrorState message={error} onRetry={onRetry} />
+          </section>
+        )}
+        <div className="ops-detail-grid">
+          <section className="ops-panel ops-detail-panel">
+            <h2>Shipment summary</h2>
+            <dl className="ops-definition-list">
+              <Definition label="Container" value={shipment.containerNumber} />
+              <Definition label="Booking" value={shipment.bookingNumber} />
+              <Definition
+                label="Bill of lading"
+                value={shipment.billOfLadingReference}
+              />
+              <Definition label="Carrier" value={shipment.carrier} />
+              <Definition label="Vessel" value={shipment.vesselName} />
+              <Definition label="IMO" value={shipment.imoNumber} />
+              <Definition label="Origin" value={shipment.originPortName} />
+              <Definition
+                label="Destination"
+                value={shipment.destinationPortName}
+              />
+              <Definition
+                label="Transshipment ports"
+                value={shipment.transshipmentPorts?.join(", ")}
+              />
+              <Definition
+                label="ETD"
+                value={isoDate(shipment.plannedDepartureAt)}
+              />
+              <Definition
+                label="ETA"
+                value={isoDate(shipment.plannedArrivalAt)}
+              />
+            </dl>
+          </section>
+          <section className="ops-panel ops-detail-panel">
+            <h2>Operational timeline</h2>
+            <OperationalTimeline events={timeline(shipment)} />
+          </section>
+          <section className="ops-panel ops-detail-panel">
+            <h2>Exposure</h2>
+            <EmptyState
+              title="Exposure data not loaded"
+              detail="The existing API exposes impact assessments by disruption, not by shipment. This page will not infer exposure, confidence, or a disruption match."
+              action={
+                <Link
+                  className="ops-button ops-button--secondary"
+                  href="/logistics/disruptions"
+                >
+                  Review disruptions
+                </Link>
+              }
+            />
+          </section>
+          <section className="ops-panel ops-detail-panel">
+            <h2>Last safe move</h2>
+            <p className="ops-muted">
+              No backend last-safe-move record is available for this shipment
+              route.
+            </p>
+          </section>
+          <section className="ops-panel ops-detail-panel ops-detail-panel--wide">
+            <h2>Activity</h2>
+            <EmptyState
+              title="Activity feed unavailable"
+              detail="Comments, ownership changes, notifications, and uploaded documents are not currently exposed through a shipment activity API."
+            />
+          </section>
+        </div>
+        <section className="ops-section">
+          <div className="ops-panel ops-editor">
+            <div className="ops-section__header">
+              <div>
+                <h2>Edit shipment</h2>
+                <p>
+                  Updates use the existing organization-scoped shipment
+                  endpoint.
+                </p>
+              </div>
+            </div>
+            <ShipmentEditor
+              form={form}
+              onChange={onChange}
+              onSave={onSave}
+              saving={saving}
+            />
+          </div>
+        </section>
+      </div>
+    </main>
+  );
 }
 
-function ShipmentForm({ form, onChange, onSave, saving }: { form: ShipmentInput; onChange: (field: keyof ShipmentInput, value: string | number) => void; onSave: () => void; saving: boolean }) {
-  const fields: Array<{ field: keyof ShipmentInput; label: string; type?: string }> = [
-    { field: 'shipmentReference', label: 'Shipment reference' }, { field: 'carrier', label: 'Carrier' }, { field: 'vesselName', label: 'Vessel' }, { field: 'imoNumber', label: 'IMO' },
-    { field: 'originPortName', label: 'Origin port' }, { field: 'destinationPortName', label: 'Destination port' }, { field: 'plannedDepartureAt', label: 'Planned departure', type: 'datetime-local' }, { field: 'plannedArrivalAt', label: 'Planned arrival', type: 'datetime-local' },
+function ShipmentEditor({
+  form,
+  onChange,
+  onSave,
+  saving,
+}: {
+  form: ShipmentInput;
+  onChange: <K extends keyof ShipmentInput>(
+    field: K,
+    value: ShipmentInput[K],
+  ) => void;
+  onSave: () => void;
+  saving: boolean;
+}) {
+  const fields: Array<{
+    field: keyof ShipmentInput;
+    label: string;
+    type?: string;
+  }> = [
+    { field: "shipmentReference", label: "Shipment reference" },
+    { field: "containerNumber", label: "Container number" },
+    { field: "bookingNumber", label: "Booking number" },
+    { field: "billOfLadingReference", label: "Bill of lading" },
+    { field: "carrier", label: "Carrier" },
+    { field: "vesselName", label: "Vessel" },
+    { field: "imoNumber", label: "IMO" },
+    { field: "mmsiNumber", label: "MMSI" },
+    { field: "originPortName", label: "Origin port" },
+    { field: "destinationPortName", label: "Destination port" },
+    { field: "customerId", label: "Customer ID" },
+    { field: "customerContact", label: "Customer contact" },
+    {
+      field: "plannedDepartureAt",
+      label: "Planned departure",
+      type: "datetime-local",
+    },
+    {
+      field: "plannedArrivalAt",
+      label: "Planned arrival",
+      type: "datetime-local",
+    },
   ];
-  return <div className="mt-4 grid gap-3 md:grid-cols-2">{fields.map(({ field, label, type = 'text' }) => <label key={field} className="text-xs text-[var(--text-muted)]">{label}<input className="mt-1 w-full border border-[var(--border-secondary)] bg-[var(--bg-tertiary)] px-2 py-2 text-[var(--text-primary)]" type={type} value={String(form[field] ?? '')} onChange={(event) => onChange(field, event.target.value)} /></label>)}<label className="text-xs text-[var(--text-muted)]">Priority<select className="mt-1 w-full border border-[var(--border-secondary)] bg-[var(--bg-tertiary)] px-2 py-2 text-[var(--text-primary)]" value={form.priority ?? 3} onChange={(event) => onChange('priority', Number(event.target.value))}>{[1, 2, 3, 4, 5].map((value) => <option key={value} value={value}>{value}</option>)}</select></label><label className="text-xs text-[var(--text-muted)]">Status<select className="mt-1 w-full border border-[var(--border-secondary)] bg-[var(--bg-tertiary)] px-2 py-2 text-[var(--text-primary)]" value={form.currentStatus ?? 'planned'} onChange={(event) => onChange('currentStatus', event.target.value)}>{['planned', 'booked', 'in_transit', 'at_port', 'delivered', 'cancelled'].map((value) => <option key={value} value={value}>{value}</option>)}</select></label><button className="bg-[var(--cyan-primary)] px-3 py-2 text-xs text-black disabled:opacity-50 md:col-span-2" disabled={saving} onClick={onSave}><Save className="mr-1 inline h-3.5 w-3.5" />{saving ? 'Saving' : 'Save shipment'}</button></div>;
+  return (
+    <div className="ops-editor__grid">
+      {fields.map(({ field, label, type = "text" }) => (
+        <label key={field}>
+          {label}
+          <input
+            type={type}
+            value={String(form[field] ?? "")}
+            onChange={(event) => onChange(field, event.target.value)}
+          />
+        </label>
+      ))}
+      <label>
+        Priority
+        <select
+          value={form.priority ?? 3}
+          onChange={(event) => onChange("priority", Number(event.target.value))}
+        >
+          {[1, 2, 3, 4, 5].map((value) => (
+            <option key={value} value={value}>
+              {value}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label>
+        Status
+        <select
+          value={form.currentStatus ?? "planned"}
+          onChange={(event) =>
+            onChange(
+              "currentStatus",
+              event.target.value as ShipmentInput["currentStatus"],
+            )
+          }
+        >
+          {[
+            "planned",
+            "booked",
+            "in_transit",
+            "at_port",
+            "delivered",
+            "cancelled",
+          ].map((value) => (
+            <option key={value} value={value}>
+              {value.replaceAll("_", " ")}
+            </option>
+          ))}
+        </select>
+      </label>
+      <button
+        type="button"
+        className="ops-button ops-button--primary ops-editor__save"
+        onClick={onSave}
+        disabled={saving || !form.shipmentReference.trim()}
+      >
+        <Save aria-hidden="true" size={15} />
+        {saving ? "Saving" : "Save shipment"}
+      </button>
+    </div>
+  );
+}
+
+function Select({
+  value,
+  onChange,
+  label,
+  options,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  label: string;
+  options: string[];
+}) {
+  return (
+    <select
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      aria-label={label}
+    >
+      <option value="">{label}</option>
+      {options.map((option) => (
+        <option key={option} value={option}>
+          {option}
+        </option>
+      ))}
+    </select>
+  );
+}
+function Definition({ label, value }: { label: string; value?: string }) {
+  return (
+    <>
+      <dt>{label}</dt>
+      <dd>{value || "Unavailable"}</dd>
+    </>
+  );
 }

@@ -9,6 +9,8 @@ export interface OrganizationActor {
 }
 
 export type OrganizationPermission =
+  | 'import:read'
+  | 'import:write'
   | 'shipment:read'
   | 'shipment:write'
   | 'shipment:archive'
@@ -18,5 +20,9 @@ export type OrganizationPermission =
   | 'rescue:write'
   | 'vulnerability:read'
   | 'vulnerability:write'
+  | 'cyber:read'
+  | 'cyber:write'
+  | 'intelligence:read'
+  | 'intelligence:write'
   | 'research:run'
   | 'organization:manage';

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuthenticatedActor } from '@/lib/auth/actor';
 import { OrganizationAccessError } from '@/lib/operations/authorization';
-import { getShipment, updateShipment } from '@/lib/logistics/shipments';
+import { archiveShipment, getShipment, updateShipment } from '@/lib/logistics/shipments';
 
 function failure(error: unknown): NextResponse {
   if (error instanceof OrganizationAccessError) return NextResponse.json({ error: error.message }, { status: 401 });
@@ -27,5 +27,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (!isUuid(id)) return NextResponse.json({ error: 'Shipment id is invalid.' }, { status: 400 });
     const shipment = await updateShipment(await requireAuthenticatedActor(request, 'shipment:write'), id, await request.json());
     return shipment ? NextResponse.json({ shipment }) : NextResponse.json({ error: 'Shipment not found.' }, { status: 404 });
+  } catch (error) { return failure(error); }
+}
+
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const actor = await requireAuthenticatedActor(request, 'shipment:archive');
+    const archived = await archiveShipment(actor, (await params).id);
+    return archived ? new NextResponse(null, { status: 204 }) : NextResponse.json({ error: 'Shipment not found.' }, { status: 404 });
   } catch (error) { return failure(error); }
 }

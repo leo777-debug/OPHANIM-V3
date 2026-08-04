@@ -1,0 +1,41 @@
+import { db } from '@/lib/watchlists/db';
+import { requireOrganizationAccess } from '@/lib/operations/authorization';
+import type { OrganizationActor } from '@/lib/operations/types';
+import { assessSourceChain, type MentionDuplicateCandidate } from './deduplication';
+import { findRegisteredEntities } from './entity-registry';
+import { matchMentionEntities } from './entity-matching';
+import { normalizeMention } from './normalize';
+import type { DarkWebRawMention, MentionReviewStatus, NormalizedMention, SourceChainLabel } from './types';
+
+export interface StoredMention extends NormalizedMention { id: string; organizationId: string; matchedEntities: Array<{ entityId: string; matchMethod: string; confidenceContribution: number; requiresReview: boolean }>; }
+interface MentionRow { id: string; organization_id: string; provider_id: string; provider_document_id: string; source_category: NormalizedMention['sourceCategory']; source_name: string; source_reference: string | null; published_at: string | null; first_seen_at: string; last_seen_at: string; original_language: string | null; original_text: string; translated_text: string | null; title: string | null; content_hash: string; source_reliability: number; review_status: MentionReviewStatus; threat_categories: string[]; source_chain_label: SourceChainLabel; independent_source_count: number; }
+function fromRow(row: MentionRow, matches: StoredMention['matchedEntities'] = []): StoredMention { return { id: row.id, organizationId: row.organization_id, providerId: row.provider_id, providerDocumentId: row.provider_document_id, sourceCategory: row.source_category, sourceName: row.source_name, sourceReference: row.source_reference ?? undefined, publishedAt: row.published_at ?? undefined, firstSeenAt: row.first_seen_at, lastSeenAt: row.last_seen_at, originalLanguage: row.original_language ?? undefined, originalText: row.original_text, translatedText: row.translated_text ?? undefined, title: row.title ?? undefined, contentHash: row.content_hash, sourceReliability: row.source_reliability, reviewStatus: row.review_status, threatCategories: row.threat_categories ?? [], sourceChainLabel: row.source_chain_label, independentSourceCount: row.independent_source_count, matchedEntities: matches }; }
+
+async function recentCandidates(actor: OrganizationActor): Promise<MentionDuplicateCandidate[]> { const result = await db().query<MentionDuplicateCandidate>('select id,content_hash as "contentHash",title,original_text as "originalText",source_name as "sourceName",source_reference as "sourceReference",published_at as "publishedAt" from ophanim_dark_web_mentions where organization_id=$1 order by first_seen_at desc limit 200', [actor.organizationId]); return result.rows; }
+
+export async function storeDarkWebMentions(actor: OrganizationActor, providerId: string, rawMentions: DarkWebRawMention[]): Promise<StoredMention[]> {
+  requireOrganizationAccess(actor, actor.organizationId, 'intelligence:write');
+  const entities = await findRegisteredEntities(actor); const candidates = await recentCandidates(actor); const stored: StoredMention[] = [];
+  for (const raw of rawMentions) {
+    const mention = normalizeMention(providerId, raw); const duplicate = assessSourceChain(mention, candidates); const matches = matchMentionEntities(mention, entities);
+    const client = await db().connect();
+    try {
+      await client.query('begin');
+      let duplicateGroupId: string | null = null;
+      if (duplicate.anchorMentionId) { const group = await client.query<{ id: string }>(`insert into ophanim_mention_duplicate_groups(organization_id,anchor_mention_id,relationship_label,rationale) values($1,$2,$3,$4) returning id`, [actor.organizationId,duplicate.anchorMentionId,duplicate.label,JSON.stringify(duplicate.rationale)]); duplicateGroupId = group.rows[0].id; await client.query('update ophanim_dark_web_mentions set duplicate_group_id=coalesce(duplicate_group_id,$2) where id=$1 and organization_id=$3', [duplicate.anchorMentionId,duplicateGroupId,actor.organizationId]); }
+      const result = await client.query<MentionRow>(`insert into ophanim_dark_web_mentions(organization_id,provider_id,provider_document_id,source_category,source_name,source_reference,published_at,first_seen_at,last_seen_at,original_language,original_text,translated_text,title,content_hash,source_reliability,threat_categories,duplicate_group_id,source_chain_label,independent_source_count) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19) on conflict(organization_id,provider_id,provider_document_id) do update set last_seen_at=excluded.last_seen_at,updated_at=now() returning id,organization_id,provider_id,provider_document_id,source_category,source_name,source_reference,published_at,first_seen_at,last_seen_at,original_language,original_text,translated_text,title,content_hash,source_reliability,review_status,threat_categories,source_chain_label,independent_source_count`, [actor.organizationId,providerId,mention.providerDocumentId,mention.sourceCategory,mention.sourceName,mention.sourceReference ?? null,mention.publishedAt ?? null,mention.firstSeenAt,mention.lastSeenAt,mention.originalLanguage ?? null,mention.originalText,mention.translatedText ?? null,mention.title ?? null,mention.contentHash,mention.sourceReliability,JSON.stringify(mention.threatCategories),duplicateGroupId,duplicate.label,duplicate.label === 'independent_source' ? 1 : 0]);
+      const row = result.rows[0];
+      for (const match of matches) await client.query(`insert into ophanim_mention_entity_matches(mention_id,entity_id,match_method,matched_text,identifier,confidence_contribution,ambiguous,requires_review,evidence) values($1,$2,$3,$4,$5,$6,$7,$8,$9) on conflict(mention_id,entity_id,match_method,matched_text) do nothing`, [row.id,match.entityId,match.matchMethod,match.matchedText,match.identifier ?? null,match.confidenceContribution,match.ambiguous,match.requiresReview,JSON.stringify(match.evidence)]);
+      await client.query(`insert into ophanim_audit_events(organization_id,actor_user_id,action,subject_type,subject_id,metadata) values($1,$2,'dark_web.mention_normalized','dark_web_mention',$3,$4)`, [actor.organizationId,actor.userId,row.id,JSON.stringify({ providerId, matchCount:matches.length, sourceChain:duplicate.label })]);
+      await client.query('commit'); stored.push(fromRow(row, matches.map((match) => ({ entityId: match.entityId, matchMethod: match.matchMethod, confidenceContribution: match.confidenceContribution, requiresReview: match.requiresReview })))); candidates.push({ id: row.id, contentHash: mention.contentHash, title: mention.title, originalText: mention.originalText, sourceName: mention.sourceName, sourceReference: mention.sourceReference, publishedAt: mention.publishedAt });
+    } catch (error) { await client.query('rollback'); throw error; } finally { client.release(); }
+  }
+  return stored;
+}
+
+export async function listDarkWebMentions(actor: OrganizationActor, limit = 100): Promise<StoredMention[]> {
+  requireOrganizationAccess(actor, actor.organizationId, 'intelligence:read');
+  const rows = await db().query<MentionRow>('select id,organization_id,provider_id,provider_document_id,source_category,source_name,source_reference,published_at,first_seen_at,last_seen_at,original_language,original_text,translated_text,title,content_hash,source_reliability,review_status,threat_categories,source_chain_label,independent_source_count from ophanim_dark_web_mentions where organization_id=$1 order by first_seen_at desc limit $2', [actor.organizationId,Math.min(Math.max(limit,1),200)]);
+  const matches = await db().query<{ mention_id: string; entity_id: string; match_method: string; confidence_contribution: number; requires_review: boolean }>('select match.mention_id,match.entity_id,match.match_method,match.confidence_contribution,match.requires_review from ophanim_mention_entity_matches match join ophanim_dark_web_mentions mention on mention.id=match.mention_id where mention.organization_id=$1', [actor.organizationId]);
+  return rows.rows.map((row) => fromRow(row,matches.rows.filter((match) => match.mention_id===row.id).map((match) => ({ entityId:match.entity_id,matchMethod:match.match_method,confidenceContribution:match.confidence_contribution,requiresReview:match.requires_review }))));
+}
