@@ -162,6 +162,7 @@ export default function Dashboard() {
   const [showAlerts, setShowAlerts] = useState(false);
   const [showScmPanel, setShowScmPanel] = useState(true);
   const [showIntel, setShowIntel] = useState(false);
+  const [showNews, setShowNews] = useState(false);
   const [showEntityGraph, setShowEntityGraph] = useState(false);
   const [showDesktopSearch, setShowDesktopSearch] = useState(false);
   const [showFusion, setShowFusion] = useState(false);
@@ -1103,18 +1104,24 @@ export default function Dashboard() {
       </motion.div>
 
       {!isMobile && (
-        <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 2.65 }} className="ophanim-command-bar ophanim-header-command absolute top-5 z-[220] flex items-center gap-2 pointer-events-auto">
-          <div className="w-[min(46vw,560px)]"><SearchBar alwaysExpanded onLocate={(lat, lng, zoom) => setFlyToLocation({ lat, lng, zoom, ts: Date.now() })} onAction={(action) => { if (action.type === 'enable_layers') setActiveLayers((previous) => ({ ...previous, ...Object.fromEntries(action.layers.map((layer) => [layer, true])) })); }} /></div>
-          <button onClick={() => { setAiPanelMode('settings'); setShowAiAnalyst(true); setShowFusion(false); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className="ophanim-command-button ophanim-command-button--primary" title="Configure API key or local AI model"><Settings className="w-4 h-4" /><span>SET UP AI</span></button>
-          <button onClick={() => window.dispatchEvent(new Event('ophanim:open-watchlists'))} className="ophanim-command-button" title="Open Watchlists"><Bookmark className="w-4 h-4" /><span>WATCH</span></button>
-          <button onClick={() => setShowProviders((value) => !value)} className="ophanim-command-button" title="View provider and source status"><Database className="w-4 h-4" /><span>SOURCES</span></button>
+        <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 2.65 }} className="ophanim-command-bar ophanim-command-dock ophanim-header-command absolute top-5 z-[220] pointer-events-auto">
+          <div className="ophanim-command-search"><SearchBar alwaysExpanded onLocate={(lat, lng, zoom) => setFlyToLocation({ lat, lng, zoom, ts: Date.now() })} onAction={(action) => { if (action.type === 'enable_layers') setActiveLayers((previous) => ({ ...previous, ...Object.fromEntries(action.layers.map((layer) => [layer, true])) })); }} /></div>
+          <div className="ophanim-command-actions">
+            <button onClick={() => { setShowNews(!showNews); setShowAiAnalyst(false); setShowFusion(false); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className={`ophanim-command-button ${showNews ? 'is-active' : ''}`} title="Open live news intelligence"><Newspaper className="w-4 h-4" /><span>NEWS</span></button>
+            <button onClick={() => { setAiPanelMode('settings'); setShowAiAnalyst(true); setShowNews(false); setShowFusion(false); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className="ophanim-command-button ophanim-command-button--primary" title="Configure API key or local AI model"><Settings className="w-4 h-4" /><span>AI SETUP</span></button>
+            <button onClick={() => window.dispatchEvent(new Event('ophanim:open-watchlists'))} className="ophanim-command-button" title="Open Watchlists"><Bookmark className="w-4 h-4" /><span>WATCH</span></button>
+            <button onClick={() => window.location.assign('/imports')} className="ophanim-command-button" title="Import organization CSV data"><FileUp className="w-4 h-4" /><span>IMPORT</span></button>
+            <button onClick={() => setShowProviders((value) => !value)} className="ophanim-command-button" title="View provider and source status"><Database className="w-4 h-4" /><span>SOURCES</span></button>
+          </div>
         </motion.div>
       )}
 
       {isMobile && (
-        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 2.65 }} className="absolute top-[108px] left-3 right-3 z-[230] grid grid-cols-3 gap-1.5 pointer-events-auto">
+        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 2.65 }} className="absolute top-[108px] left-3 right-3 z-[230] grid grid-cols-5 gap-1.5 pointer-events-auto">
           <button onClick={() => { setAiPanelMode('settings'); setShowAiAnalyst(true); setShowProviders(false); setMobilePanel(null); }} className="ophanim-command-button ophanim-command-button--primary min-w-0 justify-center" title="Configure API key or local AI model"><Settings className="w-3.5 h-3.5 shrink-0" /><span>AI SETUP</span></button>
+          <button onClick={() => { setMobilePanel('intel'); setShowAiAnalyst(false); setShowProviders(false); }} className="ophanim-command-button min-w-0 justify-center" title="Open live news intelligence"><Newspaper className="w-3.5 h-3.5 shrink-0" /><span>NEWS</span></button>
           <button onClick={() => { setMobilePanel(null); window.dispatchEvent(new Event('ophanim:open-watchlists')); }} className="ophanim-command-button min-w-0 justify-center" title="Open Watchlists"><Bookmark className="w-3.5 h-3.5 shrink-0" /><span>WATCH</span></button>
+          <button onClick={() => window.location.assign('/imports')} className="ophanim-command-button min-w-0 justify-center" title="Import organization CSV data"><FileUp className="w-3.5 h-3.5 shrink-0" /><span>IMPORT</span></button>
           <button onClick={() => { setShowProviders((value) => !value); setShowAiAnalyst(false); setMobilePanel(null); }} className="ophanim-command-button min-w-0 justify-center" title="View provider and source status"><Database className="w-3.5 h-3.5 shrink-0" /><span>SOURCES</span></button>
         </motion.div>
       )}
@@ -1169,17 +1176,17 @@ export default function Dashboard() {
 
 
       {/* ── RIGHT TOOL STRIP (desktop only — mobile uses bottom nav) ── */}
-      {!isMobile && <div className="ophanim-context-rail absolute right-4 top-[88px] flex flex-col gap-1 z-[250] pointer-events-auto">
-        <div className="ophanim-context-title">WORKSPACE</div>
+      {!isMobile && <div className="ophanim-context-rail absolute right-4 top-[130px] flex flex-col gap-1 z-[250] pointer-events-auto">
+        <div className="ophanim-context-title">INTELLIGENCE</div>
         <div className="relative group">
-          <button onClick={() => { setAiPanelMode('briefing'); setShowAiAnalyst(!showAiAnalyst); setShowFusion(false); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className={`ophanim-context-button ${showAiAnalyst ? 'is-active' : ''}`} title="AI Analyst">
+          <button onClick={() => { setAiPanelMode('briefing'); setShowAiAnalyst(!showAiAnalyst); setShowNews(false); setShowFusion(false); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className={`ophanim-context-button ${showAiAnalyst ? 'is-active' : ''}`} title="AI Analyst">
             <Brain className={`w-4 h-4 ${showAiAnalyst ? 'text-[var(--cyan-primary)]' : 'text-white/60'}`} />
             <span>Analyst</span>
           </button>
           <AnimatePresence>{showAiAnalyst && <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="absolute right-12 top-1/2 -translate-y-1/2 w-80"><AiAnalyst data={data} mode={aiPanelMode} /></motion.div>}</AnimatePresence>
         </div>
         <div className="relative group">
-          <button onClick={() => { setShowFusion(!showFusion); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className={`ophanim-context-button ${showFusion ? 'is-active is-alert' : ''}`} title="Global Threat Fusion">
+          <button onClick={() => { setShowFusion(!showFusion); setShowNews(false); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className={`ophanim-context-button ${showFusion ? 'is-active is-alert' : ''}`} title="Global Threat Fusion">
             <Activity className={`w-4 h-4 ${showFusion ? 'text-[#FF1744]' : 'text-white/60'}`} />
             <span>Fusion</span>
           </button>
@@ -1194,7 +1201,21 @@ export default function Dashboard() {
         </div>
 
         <div className="relative group">
-          <button onClick={() => { setShowIntel(!showIntel); setShowMarkets(false); setShowAlerts(false); setShowFusion(false); }} className={`ophanim-context-button ${showIntel ? 'is-active' : ''}`} title="Recon tools">
+          <button onClick={() => { setShowNews(!showNews); setShowAiAnalyst(false); setShowFusion(false); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className={`ophanim-context-button ${showNews ? 'is-active' : ''}`} title="Live news intelligence">
+            <Newspaper className={`w-4 h-4 ${showNews ? 'text-[var(--cyan-primary)]' : 'text-white/60'}`} />
+            <span>News</span>
+          </button>
+          <AnimatePresence>
+            {showNews && (
+              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="absolute right-12 top-1/2 -translate-y-1/2 w-80">
+                <IntelFeed data={data} onLocate={(lat, lng) => setFlyToLocation({ lat, lng, ts: Date.now() })} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        <div className="relative group">
+          <button onClick={() => { setShowIntel(!showIntel); setShowNews(false); setShowMarkets(false); setShowAlerts(false); setShowFusion(false); }} className={`ophanim-context-button ${showIntel ? 'is-active' : ''}`} title="Recon tools">
             <Radar className={`w-4 h-4 ${showIntel ? 'text-[var(--cyan-primary)]' : 'text-white/60'}`} />
             <span>Recon</span>
           </button>
@@ -1215,7 +1236,7 @@ export default function Dashboard() {
         </div>
 
         <div className="relative group">
-          <button onClick={() => { setShowMarkets(!showMarkets); setShowIntel(false); setShowAlerts(false); setShowFusion(false); }} className={`ophanim-context-button ${showMarkets ? 'is-active' : ''}`} title="Markets">
+          <button onClick={() => { setShowMarkets(!showMarkets); setShowNews(false); setShowIntel(false); setShowAlerts(false); setShowFusion(false); }} className={`ophanim-context-button ${showMarkets ? 'is-active' : ''}`} title="Markets">
             <BarChart3 className={`w-4 h-4 ${showMarkets ? 'text-[var(--gold-primary)]' : 'text-white/60'}`} />
             <span>Markets</span>
           </button>
@@ -1230,7 +1251,7 @@ export default function Dashboard() {
         </div>
 
         <div className="relative group">
-          <button onClick={() => { setShowAlerts(!showAlerts); setShowIntel(false); setShowMarkets(false); setShowEntityGraph(false); setShowFusion(false); }} className={`ophanim-context-button ${showAlerts ? 'is-active is-alert' : ''}`} title="Live alerts">
+          <button onClick={() => { setShowAlerts(!showAlerts); setShowNews(false); setShowIntel(false); setShowMarkets(false); setShowEntityGraph(false); setShowFusion(false); }} className={`ophanim-context-button ${showAlerts ? 'is-active is-alert' : ''}`} title="Live alerts">
             <AlertTriangle className={`w-4 h-4 ${showAlerts ? 'text-[#FF3D3D]' : 'text-white/60'}`} />
             <span>Alerts</span>
           </button>
@@ -1245,7 +1266,7 @@ export default function Dashboard() {
         </div>
 
         <div className="relative group">
-          <button onClick={() => { setShowEntityGraph(!showEntityGraph); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); }} className={`ophanim-context-button ${showEntityGraph ? 'is-active' : ''}`} title="Entity graph">
+          <button onClick={() => { setShowEntityGraph(!showEntityGraph); setShowNews(false); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); }} className={`ophanim-context-button ${showEntityGraph ? 'is-active' : ''}`} title="Entity graph">
             <Network className={`w-4 h-4 ${showEntityGraph ? 'text-[var(--gold-primary)]' : 'text-white/60'}`} />
             <span>Entities</span>
           </button>
@@ -1259,7 +1280,7 @@ export default function Dashboard() {
         </div>
 
         <div className="relative group">
-          <button onClick={() => { setShowDesktopSearch(!showDesktopSearch); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className={`ophanim-context-button ${showDesktopSearch ? 'is-active' : ''}`} title="Search tools">
+          <button onClick={() => { setShowDesktopSearch(!showDesktopSearch); setShowNews(false); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className={`ophanim-context-button ${showDesktopSearch ? 'is-active' : ''}`} title="Search tools">
             <Search className={`w-4 h-4 ${showDesktopSearch ? 'text-[var(--gold-primary)]' : 'text-white/60'}`} />
             <span>Search</span>
           </button>
