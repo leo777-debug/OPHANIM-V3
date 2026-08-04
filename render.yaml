@@ -20,6 +20,8 @@ services:
         generateValue: true
       - key: IMPORT_CRON_SECRET
         generateValue: true
+      - key: INTELLIGENCE_ALERT_CRON_SECRET
+        generateValue: true
       - key: AI_SANDBOX_RESEARCH_URL
         sync: false
       - key: AI_SANDBOX_RESEARCH_TOKEN
@@ -53,6 +55,16 @@ services:
       - key: APP_URL
         sync: false
       - key: IMPORT_CRON_SECRET
+        sync: false
+  - type: cron
+    name: ophanim-intelligence-alerts
+    runtime: docker
+    schedule: '*/5 * * * *'
+    dockerCommand: 'sh -c "curl -fsS -H \"Authorization: Bearer $INTELLIGENCE_ALERT_CRON_SECRET\" $APP_URL/api/intelligence/cron"'
+    envVars:
+      - key: APP_URL
+        sync: false
+      - key: INTELLIGENCE_ALERT_CRON_SECRET
         sync: false
 databases:
   - name: ophanim-db

@@ -103,6 +103,7 @@ export default function ImportWorkspace() {
         <p className="text-xs font-medium uppercase tracking-[0.18em] text-[var(--cyan-primary)]">Organization data</p>
         <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
           <div><h1 className="text-2xl font-semibold">CSV import</h1><p className="mt-1 max-w-2xl text-sm text-[var(--text-muted)]">Validate, map, and import tenant-scoped operational data without exposing it to another organization.</p></div>
+          <a href="/operations" className="border border-[var(--border-secondary)] px-3 py-2 text-xs hover:border-[var(--cyan-primary)]">Open operations</a>
           {imported && <div className="text-right text-xs"><p className="uppercase text-[var(--text-muted)]">Import status</p><p className="mt-1 font-medium uppercase text-[var(--cyan-primary)]">{statusText(imported.status)}</p></div>}
         </div>
       </header>
