@@ -143,8 +143,8 @@
 }
 
 .ophanim-context-rail {
-  width: 124px;
-  padding: 8px;
+  width: 58px;
+  padding: 7px;
   border: 1px solid rgba(117, 167, 255, 0.18);
   border-left: 2px solid rgba(48, 211, 195, 0.5);
   border-radius: 10px;
@@ -153,11 +153,12 @@
 }
 
 .ophanim-context-title {
-  padding: 4px 6px 8px;
+  padding: 4px 0 8px;
   color: var(--text-muted);
   font-size: 8px;
   font-weight: 700;
   letter-spacing: 0.1em;
+  text-align: center;
 }
 
 .ophanim-context-button {
@@ -165,8 +166,8 @@
   width: 100%;
   min-height: 34px;
   align-items: center;
-  gap: 8px;
-  padding: 0 8px;
+  justify-content: center;
+  padding: 0;
   border: 1px solid transparent;
   border-radius: 5px;
   color: rgba(234, 247, 242, 0.65);
@@ -174,6 +175,8 @@
   font-weight: 600;
   text-align: left;
 }
+
+.ophanim-context-button span { display: none; }
 
 .ophanim-context-button:hover,
 .ophanim-context-button.is-active {
@@ -188,7 +191,14 @@
 }
 
 .ophanim-context-rail .absolute.right-12 {
-  right: 132px;
+  right: 66px;
+}
+
+.ophanim-map-controls__surface {
+  border: 1px solid rgba(117, 167, 255, 0.24);
+  border-radius: 12px;
+  background: rgba(10, 15, 20, 0.92);
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.38);
 }
 
 .status-bar-desktop { top: 90px !important; right: 28px !important; }

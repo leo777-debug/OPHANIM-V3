@@ -1043,10 +1043,10 @@ export default function Dashboard() {
       {/* ── MAP VIEW CONTROLS (3D/2D + SATELLITE TOGGLE) — unified glass control ── */}
       <motion.div
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 3.5 }}
-        className="absolute bottom-[75px] md:bottom-[100px] z-[200] flex items-center pointer-events-none"
-        style={{ left: isMobile ? '12px' : '226px' }}
+        className="ophanim-map-controls absolute bottom-[75px] md:bottom-[100px] z-[200] flex items-center pointer-events-none"
+        style={{ right: isMobile ? '12px' : '28px' }}
       >
-        <div className="glass-panel flex items-center gap-1 p-1 pointer-events-auto">
+        <div className="ophanim-map-controls__surface flex items-center gap-1 p-1 pointer-events-auto">
           {/* 3D/2D Toggle */}
           <button
             onClick={() => setMapProjection(p => p === 'globe' ? 'mercator' : 'globe')}
