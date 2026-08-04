@@ -1,5 +1,5 @@
-import LogisticsCommandWorkspace from '@/components/logistics/LogisticsCommandWorkspace';
+import { redirect } from 'next/navigation';
 
 export default function LogisticsCommandPage() {
-  return <LogisticsCommandWorkspace />;
+  redirect('/');
 }

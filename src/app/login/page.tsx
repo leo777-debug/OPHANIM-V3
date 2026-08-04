@@ -19,7 +19,7 @@ export default function LoginPage() {
       const response = await fetch(setup ? '/api/auth/bootstrap' : '/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(setup ? { token, email, password, organizationName, organizationSlug } : { email, password, organizationSlug }) });
       const body = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(body.error || 'Sign-in failed.');
-      router.push('/logistics/command');
+      router.push('/');
     } catch (submitError) { setError(submitError instanceof Error ? submitError.message : 'Sign-in failed.'); }
     finally { setSaving(false); }
   };

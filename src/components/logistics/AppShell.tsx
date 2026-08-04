@@ -21,7 +21,7 @@ import { useState } from "react";
 import LogisticsTopBar from "./LogisticsTopBar";
 
 const navigation = [
-  { href: "/logistics/command", label: "Command", icon: ShieldAlert },
+  { href: "/", label: "Command", icon: ShieldAlert, exact: true },
   { href: "/logistics", label: "Shipments", icon: PackageSearch, exact: true },
   { href: "/logistics/rescue", label: "Rescue Cases", icon: LifeBuoy },
   {
