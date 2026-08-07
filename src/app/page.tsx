@@ -1085,7 +1085,7 @@ export default function Dashboard() {
       {/* ── MAP VIEW CONTROLS (3D/2D + SATELLITE TOGGLE) — unified glass control ── */}
       <motion.div
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 3.5 }}
-        className="ophanim-map-controls absolute bottom-[75px] md:bottom-[100px] z-[200] flex items-center pointer-events-none"
+        className="ophanim-map-controls absolute bottom-[75px] md:bottom-auto md:top-[460px] z-[200] flex items-center pointer-events-none"
         style={{ right: isMobile ? '12px' : '28px' }}
       >
         <div className="ophanim-map-controls__surface flex items-center gap-1 p-1 pointer-events-auto">
