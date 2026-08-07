@@ -754,8 +754,6 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
           <button onclick="window.openOphanimIntel({ callsign: '${idSafe(cs)}', icao24: '${idSafe(p.icao24||'')}', model: '${idSafe(p.model||'')}', registration: '${idSafe(p.registration||'')}' })" style="width:100%;margin-top:8px;padding:6px 12px;background:rgba(124,255,203,0.15);border:1px solid rgba(124,255,203,0.5);color:#7CFFCB;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:bold;letter-spacing:0.1em;border-radius:4px;cursor:pointer;">[ DEEP DIVE INTEL ]</button>
         </div>`);
       });
-      map.on('mouseenter', layer, () => { map.getCanvas().style.cursor = 'pointer'; });
-      map.on('mouseleave', layer, () => { map.getCanvas().style.cursor = ''; });
     });
 
     // ── CCTV (opens CameraViewer panel) ──
@@ -945,11 +943,8 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
       });
     });
 
-    // ── Generic hover for clickables ──
-    ['conflict-icons','cctv-dots','eq-circles','sat-dots','fires-heat','gdelt-dots','weather-dots','infra-dots','maritime-dots','choke-dots','news-dots','sigint-news-dots','balloon-dots','rad-dots','ship-dots','sweep-device-dots','scan-targets-dots','sdk-sea','sdk-sea-glow','sdk-sea-atmo','sdk-air','sdk-air-glow','sdk-air-atmo','sdk-intel','sdk-intel-glow','sdk-intel-atmo','malware-dots'].forEach(layer => {
-      map.on('mouseenter', layer, () => { map.getCanvas().style.cursor = 'pointer'; });
-      map.on('mouseleave', layer, () => { map.getCanvas().style.cursor = ''; });
-    });
+    // Layer-specific hover listeners query rendered symbols on every mouse move.
+    // Stream updates can invalidate those symbol indexes, so interactions are click-only.
 
     // ── Scan Targets click ──
     map.on('click', 'scan-targets-dots', (e: any) => {
