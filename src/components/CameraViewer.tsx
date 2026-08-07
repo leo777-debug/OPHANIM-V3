@@ -36,6 +36,11 @@ export default function CameraViewer({ camera, onClose, onLocate }: CameraViewer
   const streamType = camera?.stream_type || 'jpg';
   const externalFeedUrl = camera?.external_url || camera?.feed_url;
   const externalOnly = Boolean(camera?.external_url && !camera?.feed_url && !camera?.stream_url);
+  const isLiveVideo = streamType !== 'jpg';
+  const feedLabel = isLiveVideo ? 'LIVE VIDEO' : 'REFRESHED PUBLIC IMAGE';
+  const operationalLabel = camera?.operational_category
+    ? camera.operational_category.replace(/_/g, ' ')
+    : 'public camera';
 
   useEffect(() => {
     if (!camera) return;
@@ -144,7 +149,7 @@ export default function CameraViewer({ camera, onClose, onLocate }: CameraViewer
                 </div>
                 <div className="flex items-center gap-3">
                   <span>{currentTime}</span>
-                  <span className="text-[var(--gold-primary)]">SECURE UPLINK</span>
+                  <span className="text-[var(--gold-primary)]">PUBLIC SOURCE</span>
                 </div>
               </div>
 
@@ -158,6 +163,7 @@ export default function CameraViewer({ camera, onClose, onLocate }: CameraViewer
                   </div>
                   <div className="min-w-0 flex-1">
                     <h3 className="text-[12px] md:text-[13px] font-mono font-bold tracking-widest truncate text-white uppercase" style={{ textShadow: '0 0 10px rgba(255,255,255,0.3)' }}>{camera.name}</h3>
+                    <p className="mt-1 text-[7px] font-mono uppercase tracking-wider text-[var(--text-muted)]">{operationalLabel} {camera.operational_context ? `• ${camera.operational_context}` : ''}</p>
                     <p className="text-[7px] md:text-[8px] font-mono text-[var(--gold-primary)] uppercase tracking-wider opacity-80">{camera.city}, {camera.country} • SOURCE: {camera.source}</p>
                   </div>
                 </div>
@@ -284,7 +290,7 @@ export default function CameraViewer({ camera, onClose, onLocate }: CameraViewer
               <div className="absolute top-3 left-3 flex items-center gap-2 bg-black/80 border border-[var(--gold-primary)]/50 px-2 py-1 shadow-[0_0_10px_rgba(0,0,0,0.8)]">
                 <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_#ef4444]" />
                 <span className="text-[8px] font-mono text-white tracking-[0.2em]">
-                  {streamType === 'jpg' ? 'LIVE SAT-LINK' : 'LIVE FEED'}
+                  {feedLabel}
                 </span>
               </div>
             )}
@@ -308,7 +314,7 @@ export default function CameraViewer({ camera, onClose, onLocate }: CameraViewer
                 </div>
                 <div className="flex flex-col border-l border-white/10 pl-4">
                   <span className="text-[6px] text-[var(--text-muted)] font-mono tracking-widest">STATUS</span>
-                  <span className="text-[8px] text-[var(--alert-green)] font-mono tracking-widest">ACTIVE / RECORDING</span>
+                  <span className="text-[8px] text-[var(--alert-green)] font-mono tracking-widest">UPSTREAM PUBLISHED</span>
                 </div>
               </div>
               <div className="flex gap-3">

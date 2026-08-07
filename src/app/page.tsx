@@ -227,6 +227,8 @@ export default function Dashboard() {
     sat_science: false,
     balloons: false,
     cctv: false,
+    camera_logistics: false,
+    camera_transport: false,
     live_news: false,
     news_intel: false,
     earthquakes: true,
@@ -527,7 +529,7 @@ export default function Dashboard() {
       layerFetchedRef.current.add('fires');
     }
     // CCTV
-    if (activeLayers.cctv && !layerFetchedRef.current.has('cctv')) {
+    if ((activeLayers.cctv || activeLayers.camera_logistics || activeLayers.camera_transport) && !layerFetchedRef.current.has('cctv')) {
       fetchEndpoint(`/api/cctv?region=all&_t=${Date.now()}`);
       layerFetchedRef.current.add('cctv');
       // Backfill once ~35s later: right after a deploy the server cache is cold,
@@ -727,7 +729,9 @@ export default function Dashboard() {
       { key: 'satellites', label: 'Satellites', hint: 'Orbital tracking' },
       { key: 'sat_military', label: 'Military Satellites', hint: 'Intel constellations' },
       { key: 'balloons', label: 'High-Altitude Balloons', hint: 'Stratospheric' },
-      { key: 'cctv', label: 'CCTV Cameras', hint: 'Public traffic cams' },
+      { key: 'cctv', label: 'All Public Cameras', hint: 'Public traffic cams and published operators' },
+      { key: 'camera_logistics', label: 'Logistics Cameras', hint: 'Official port, airport, border, and freight context' },
+      { key: 'camera_transport', label: 'Official Transport Cameras', hint: 'Official public road and transport cameras' },
       { key: 'live_news', label: 'Live News Feeds', hint: '24/7 broadcasters' },
       { key: 'news_intel', label: 'SIGINT News', hint: 'Geoparsed RSS' },
       { key: 'earthquakes', label: 'Earthquakes', hint: 'USGS M2.5+' },
@@ -747,7 +751,7 @@ export default function Dashboard() {
       const map: Record<string, string> = {
         flights: 'commercial_flights', private: 'private_flights', jets: 'private_jets', military: 'military_flights',
         maritime: 'maritime_ships', satellites: 'satellites', earthquakes: 'earthquakes', fires: 'fires',
-        cctv: 'cameras', live_news: 'live_feeds', global_incidents: 'gdelt', malware: 'malware_threats',
+        cctv: 'cameras', camera_logistics: 'cameras', camera_transport: 'cameras', live_news: 'live_feeds', global_incidents: 'gdelt', malware: 'malware_threats',
       };
       const dk = map[k];
       const arr = dk ? (data as Record<string, unknown>)[dk] : undefined;

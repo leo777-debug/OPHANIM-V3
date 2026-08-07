@@ -68,7 +68,9 @@ const LAYER_GROUPS = [
     fullLabel: 'SURVEILLANCE',
     icon: Camera,
     layers: [
-      { key: 'cctv', label: 'CCTV Cameras', dataKey: 'cameras' },
+      { key: 'cctv', label: 'All Public Cameras', dataKey: 'cameras' },
+      { key: 'camera_logistics', label: 'Logistics Cameras', dataKey: 'cameras', cameraScope: 'logistics' },
+      { key: 'camera_transport', label: 'Official Transport Cameras', dataKey: 'cameras', cameraScope: 'transport' },
       { key: 'live_news', label: 'Live News Feeds', dataKey: 'live_feeds' },
       { key: 'news_intel', label: 'SIGINT News', dataKey: 'sigint_news' },
     ],
@@ -149,8 +151,13 @@ function LayerPanel({ data, activeLayers, setActiveLayers, isMobile, theme = 'co
 
   const toggle = (key: string) => setActiveLayers((prev: any) => ({ ...prev, [key]: !prev[key] }));
 
-  const getCount = (dk: string, catKey?: string): number | null => {
+  const getCount = (dk: string, catKey?: string, cameraScope?: 'logistics' | 'transport'): number | null => {
     if (!dk) return null;
+    if (cameraScope && dk === 'cameras' && Array.isArray(data.cameras)) {
+      return data.cameras.filter((camera: any) => cameraScope === 'logistics'
+        ? camera.operational_scope === 'logistics'
+        : camera.official_public_source).length;
+    }
     if (catKey && data.category_counts) {
       return data.category_counts[catKey] || 0;
     }
@@ -177,7 +184,11 @@ function LayerPanel({ data, activeLayers, setActiveLayers, isMobile, theme = 'co
             <div className="flex flex-col gap-1">
               {group.layers.map((layer) => {
                 const isLayerActive = activeLayers[layer.key];
-                const count = getCount(layer.dataKey, layer.catKey);
+                const count = getCount(
+                  layer.dataKey,
+                  'catKey' in layer ? layer.catKey : undefined,
+                  'cameraScope' in layer ? layer.cameraScope as 'logistics' | 'transport' : undefined,
+                );
                 return (
                   <div key={layer.key} className="flex items-center gap-3 px-1 py-1.5">
                     <ToggleSwitch
@@ -304,7 +315,11 @@ function LayerPanel({ data, activeLayers, setActiveLayers, isMobile, theme = 'co
                     <div className="flex flex-col gap-0.5">
                       {group.layers.map((layer) => {
                         const isLayerActive = activeLayers[layer.key];
-                        const count = getCount(layer.dataKey, layer.catKey);
+                        const count = getCount(
+                          layer.dataKey,
+                          'catKey' in layer ? layer.catKey : undefined,
+                          'cameraScope' in layer ? layer.cameraScope as 'logistics' | 'transport' : undefined,
+                        );
 
                         return (
                           <div
