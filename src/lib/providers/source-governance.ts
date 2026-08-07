@@ -171,6 +171,11 @@ const PRODUCTION_SOURCES: ProductionSourceRecord[] = [
     purpose: 'Add licensed vessel coverage through the official MarineTraffic API when configured.',
   },
   {
+    id: 'public-logistics-cameras', name: 'Public logistics camera context', scope: ['logistics', 'cybersecurity'], mode: 'supporting', evidenceTier: 'direct_operator', refresh: '5 seconds to 5 minutes',
+    attribution: 'Each camera retains its public road, transport, or operator source attribution.', licensing: 'Use only source-published public feeds approved for the deployment; do not archive, scrape around access controls, or treat imagery as security surveillance.',
+    purpose: 'Provide public transport context around ports, airports, border corridors, freight routes, and canals without exposing sensitive facilities.',
+  },
+  {
     id: 'map-visual-extras', name: 'Visual-only map sources', scope: ['logistics', 'cybersecurity'], mode: 'disabled_by_default', evidenceTier: 'unverified', refresh: 'On demand',
     attribution: 'Optional cameras, satellites, broadcast video, and SDK demo layers.', licensing: 'Each source needs its own approved commercial-use review.',
     purpose: 'Available only when relevant to a specific customer workflow or investigation.',

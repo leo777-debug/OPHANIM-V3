@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { stealthFetch } from '@/lib/stealthFetch';
+import { classifyOperationalCamera, filterCamerasByFocus, type CameraFocus } from './operational-context';
+import type { CctvCamera } from './types';
 
 export const maxDuration = 60;
 import { fetchAsfinagCameras } from './asfinag';
@@ -573,6 +575,10 @@ export async function GET(request: Request) {
     const lat = parseFloat(searchParams.get('lat') || '0');
     const lng = parseFloat(searchParams.get('lng') || '0');
     const radius = parseFloat(searchParams.get('radius') || '10');
+    const requestedFocus = searchParams.get('focus');
+    const focus: CameraFocus = requestedFocus === 'logistics' || requestedFocus === 'transport'
+      ? requestedFocus
+      : 'all';
 
     let regionsToFetch: string[];
 
@@ -591,25 +597,34 @@ export async function GET(request: Request) {
     // and silently drop slow regions (Caltrans/LA/San Diego, Canada, Europe).
     const perRegion = await fetchRegionsPooled(regionsToFetch, 6);
 
-    const allCameras: any[] = [];
+    const allCameras: CctvCamera[] = [];
     const sources: Record<string, number> = {};
 
     for (const cams of perRegion) {
       for (const cam of (cams || [])) {
-        allCameras.push(cam);
+        allCameras.push(classifyOperationalCamera(cam));
         sources[cam.source] = (sources[cam.source] || 0) + 1;
       }
     }
 
-    const cacheControl = allCameras.length < 50 
-      ? 'no-store, max-age=0' 
+    const cameras = filterCamerasByFocus(allCameras, focus);
+    const operationalCounts = allCameras.reduce<Record<string, number>>((counts, camera) => {
+      const category = camera.operational_category || 'general_traffic';
+      counts[category] = (counts[category] || 0) + 1;
+      return counts;
+    }, {});
+
+    const cacheControl = cameras.length < 50
+      ? 'no-store, max-age=0'
       : 'public, s-maxage=300, stale-while-revalidate=600';
 
     return NextResponse.json({
-      cameras: allCameras,
-      total: allCameras.length,
+      cameras,
+      total: cameras.length,
       sources,
       regions: regionsToFetch,
+      focus,
+      operationalCounts,
       timestamp: new Date().toISOString(),
     }, {
       headers: { 'Cache-Control': cacheControl },

@@ -193,6 +193,14 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
       const phantomPurple = '#B388FF';
       const phantomDark = '#1A0040';
       const cameraColor = isGhost ? '#B388FF' : '#00E676';
+      const cameraCategoryColor = ['match', ['get', 'operational_category'],
+        'port_approach', '#00D4FF',
+        'airport_access', '#7C9CFF',
+        'border_crossing', '#FFB74D',
+        'freight_corridor', '#66BB6A',
+        'canal_lock', '#40E0D0',
+        cameraColor,
+      ] as any;
       const flightCom = isGhost ? phantomPurple : '#5BB6FF';
       const flightPriv = isGhost ? phantomPurple : '#FFD700';
       const flightGov = isGhost ? phantomPurple : '#FF9500';
@@ -279,7 +287,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
       // CCTV — main dot
       map.addLayer({ id: 'cctv-dots', type: 'circle', source: 'cctv', paint: {
         'circle-radius': ['interpolate',['linear'],['zoom'], 1,3, 5,5, 10,8, 14,12],
-        'circle-color': cameraColor, 'circle-opacity': 0.9,
+        'circle-color': cameraCategoryColor, 'circle-opacity': 0.9,
         'circle-stroke-width': 2.5, 'circle-stroke-color': '#000000', 'circle-stroke-opacity': 0.9,
       }});
       // CCTV — labels at zoom 10+
@@ -744,6 +752,10 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
         stream_url: p.stream_url,
         stream_type: p.stream_type,
         external_url: p.external_url,
+        operational_category: p.operational_category,
+        operational_scope: p.operational_scope,
+        operational_context: p.operational_context,
+        official_public_source: p.official_public_source === 'true' || p.official_public_source === true,
         lat: coords[1],
         lng: coords[0],
       });
@@ -1338,8 +1350,14 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
 
   useEffect(() => {
     if (!mapReady) return;
-    setGeo('cctv', activeLayers.cctv && data.cameras ? data.cameras.map((c: any) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [c.lng, c.lat] }, properties: { id: c.id, name: c.name, city: c.city, country: c.country, source: c.source, feed_url: c.feed_url, stream_url: c.stream_url, stream_type: c.stream_type, external_url: c.external_url } })) : []);
-  }, [mapReady, data.cameras, activeLayers.cctv, setGeo]);
+    const showAll = activeLayers.cctv;
+    const showLogistics = activeLayers.camera_logistics;
+    const showTransport = activeLayers.camera_transport;
+    const cameras = data.cameras?.filter((camera: any) => showAll
+      || (showLogistics && camera.operational_scope === 'logistics')
+      || (showTransport && camera.official_public_source));
+    setGeo('cctv', cameras ? cameras.map((c: any) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [c.lng, c.lat] }, properties: { id: c.id, name: c.name, city: c.city, country: c.country, source: c.source, feed_url: c.feed_url, stream_url: c.stream_url, stream_type: c.stream_type, external_url: c.external_url, operational_category: c.operational_category, operational_scope: c.operational_scope, operational_context: c.operational_context, official_public_source: c.official_public_source } })) : []);
+  }, [mapReady, data.cameras, activeLayers.cctv, activeLayers.camera_logistics, activeLayers.camera_transport, setGeo]);
 
   useEffect(() => {
     if (!mapReady) return;

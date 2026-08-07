@@ -1,4 +1,14 @@
-export type CctvStreamType = 'jpg' | 'hls' | 'iframe' | 'mjpeg';
+export type CctvStreamType = 'jpg' | 'hls' | 'iframe' | 'mjpeg' | 'mp4';
+
+export type OperationalCameraCategory =
+  | 'port_approach'
+  | 'airport_access'
+  | 'border_crossing'
+  | 'freight_corridor'
+  | 'canal_lock'
+  | 'general_traffic';
+
+export type OperationalCameraScope = 'logistics' | 'transport' | 'general';
 
 export interface CctvCamera {
   id: string;
@@ -14,6 +24,11 @@ export interface CctvCamera {
   stream_type?: CctvStreamType;
   external_url?: string;
   source: string;
+  /** Added by Ophanim after source collection; never asserted by the upstream provider. */
+  operational_category?: OperationalCameraCategory;
+  operational_scope?: OperationalCameraScope;
+  operational_context?: string;
+  official_public_source?: boolean;
 }
 
 export function normalizeFeedUrl(url: string): string {
