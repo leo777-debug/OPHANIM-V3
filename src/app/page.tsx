@@ -219,25 +219,25 @@ export default function Dashboard() {
     sat_earth: false,
     sat_science: false,
     balloons: false,
-    cctv: true,
-    live_news: true,
-    news_intel: true,
+    cctv: false,
+    live_news: false,
+    news_intel: false,
     earthquakes: true,
-    fires: false,
-    weather: false,
+    fires: true,
+    weather: true,
     radiation: false,
     infrastructure: false,
     global_incidents: true,
     war_alerts: false,
     gps_jamming: false,
-    day_night: true,
-    cables: true,
+    day_night: false,
+    cables: false,
     war_sanctions: true,
-    sdk_sea: true,
-    sdk_air: true,
-    sdk_naval: true,
+    sdk_sea: false,
+    sdk_air: false,
+    sdk_naval: false,
     terrain_3d: false,
-    malware: false,
+    malware: true,
   });
 
   useEffect(() => {
@@ -464,36 +464,32 @@ export default function Dashboard() {
   // ── PROGRESSIVE DATA LOADING (request-optimized) ──
   useEffect(() => {
     // Priority 1: Core feeds (always needed for panels)
-    const eqUrl = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson';
-    const eqTransform = (data: any) => ({ earthquakes: (data.features || []).map((f: any) => ({ id: f.id, lat: f.geometry?.coordinates?.[1] || 0, lng: f.geometry?.coordinates?.[0] || 0, depth: f.geometry?.coordinates?.[2] || 0, magnitude: f.properties?.mag, place: f.properties?.place, time: f.properties?.time, url: f.properties?.url, tsunami: f.properties?.tsunami, type: f.properties?.type, felt: f.properties?.felt, alert: f.properties?.alert })) });
-    fetchEndpoint(eqUrl, eqTransform);
+    const eqTransform = (response: any) => ({ earthquakes: response.earthquakes || [] });
+    fetchEndpoint('/api/earthquakes', eqTransform);
     fetchEndpoint('/api/news');
     fetchEndpoint('/api/cyber-threats', (response) => ({ cyberThreats: response.threats || [] }));
-    const marketTimer = setTimeout(() => fetchEndpoint('/api/markets', d => ({ markets: d })), 800);
-
-    // Priority 2: Space Weather (needed for MarketsPanel)
-    const spaceTimer = setTimeout(async () => {
-      try {
-        const r = await fetch('/api/space-weather');
-        if (r.ok) setSpaceWeather(await r.json());
-      } catch (e) { console.warn('[OPHANIM] Suppressed error:', e instanceof Error ? e.message : e); }
-    }, 5000);
 
     // Polling — OPTIMIZED intervals to minimize edge requests
     const intervals = [
-      setInterval(() => fetchEndpoint(eqUrl, eqTransform), 900000),  // 15 min (was 5)
+      setInterval(() => fetchEndpoint('/api/earthquakes', eqTransform), 900000),  // 15 min
       setInterval(() => fetchEndpoint('/api/news'), 1800000),        // 30 min (was 10)
       setInterval(() => fetchEndpoint('/api/cyber-threats', (response) => ({ cyberThreats: response.threats || [] })), 1800000),
-      setInterval(() => fetchEndpoint('/api/markets', d => ({ markets: d })), 900000), // 15 min (was 5)
     ];
     return () => {
-      clearTimeout(marketTimer);
-      clearTimeout(spaceTimer);
       intervals.forEach(clearInterval);
     };
   }, [fetchEndpoint]);
 
   // ── LAYER-AWARE DATA LOADING — only fetch when layer is toggled ON ──
+  useEffect(() => {
+    if (!showMarkets) return;
+    fetchEndpoint('/api/markets', (response) => ({ markets: response }));
+    void fetch('/api/space-weather')
+      .then((response) => response.ok ? response.json() : null)
+      .then((response) => { if (response) setSpaceWeather(response); })
+      .catch(() => undefined);
+  }, [showMarkets, fetchEndpoint]);
+
   const layerFetchedRef = useRef<Set<string>>(new Set());
   useEffect(() => {
 
