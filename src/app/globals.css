@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 /*
@@ -55,8 +55,8 @@
   --scrollbar-thumb-hover: rgba(var(--gold-rgb), 0.42);
   --hover-accent: rgba(var(--gold-rgb), 0.08);
 
-  --font-hud: 'Sora', sans-serif;
-  --font-body: 'Figtree', -apple-system, sans-serif;
+  --font-hud: 'Space Grotesk', sans-serif;
+  --font-body: 'Manrope', -apple-system, sans-serif;
 
   --panel-gap: 12px;
   --edge-pad: 20px;
@@ -385,6 +385,158 @@
 
 @media (max-width: 1240px) {
   .status-bar-desktop { display: none; }
+}
+
+/* Main-map layout: a dedicated command header, visible map modes, and an intel desk. */
+.ophanim-app-shell { font-family: var(--font-body); }
+
+.ophanim-launch-legacy { display: none; }
+.ophanim-launch-screen {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  padding: clamp(24px, 4vw, 64px);
+  color: var(--text-heading);
+  background-color: #07100f;
+  box-shadow: inset 0 0 0 1px rgba(48, 211, 195, 0.08);
+}
+.ophanim-launch-screen::before,
+.ophanim-launch-screen::after { display: none; }
+.ophanim-launch-screen__topline,
+.ophanim-launch-screen__footline {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+.ophanim-launch-screen__core {
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 0.45fr) minmax(0, 1fr);
+  width: min(1060px, 100%);
+  padding: 0 clamp(8px, 3vw, 36px);
+}
+.ophanim-launch-screen__brand { gap: 18px; }
+.ophanim-launch-screen__brand span { font-size: clamp(28px, 4vw, 52px); letter-spacing: 0.06em; }
+.ophanim-launch-screen__brand strong { color: var(--logo-secondary); }
+.ophanim-launch-screen__route { gap: 7px; }
+.ophanim-launch-screen__route::before,
+.ophanim-launch-screen__route::after { background: rgba(117, 167, 255, 0.42); }
+.ophanim-launch-screen__route i { height: 5px; border-radius: 0; background: var(--logo-secondary); }
+.ophanim-launch-screen__route i:nth-child(2n) { background: var(--logo-core); }
+.ophanim-launch-screen__stages { padding-left: clamp(12px, 2vw, 28px); border-left: 1px solid rgba(117, 167, 255, 0.28); }
+.ophanim-launch-screen__stages b { color: var(--logo-secondary); }
+
+.ophanim-brand-block {
+  top: 18px !important;
+  left: 22px !important;
+  right: auto !important;
+  width: 290px;
+  padding: 9px 12px 10px;
+  border-left: 2px solid var(--cyan-primary);
+  background: rgba(7, 13, 16, 0.86);
+  box-shadow: 12px 14px 30px rgba(0, 0, 0, 0.22);
+}
+.ophanim-brand-block h1 { font-family: var(--font-hud); font-size: 22px; letter-spacing: 0.04em; }
+.ophanim-brand-block > div:last-child { padding-left: 0; }
+
+.ophanim-command-bar {
+  border-color: rgba(117, 167, 255, 0.3);
+  border-radius: 8px;
+  background: rgba(10, 17, 21, 0.96);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
+}
+.ophanim-command-dock { min-height: 58px; padding: 7px; gap: 7px; }
+.ophanim-header-command {
+  top: 18px !important;
+  left: 336px !important;
+  right: 102px !important;
+}
+.ophanim-command-search { min-width: 260px; }
+.ophanim-search-surface { min-height: 44px; border-radius: 5px; background: rgba(255, 255, 255, 0.045); }
+.ophanim-command-actions { gap: 4px; }
+.ophanim-command-button { min-height: 44px; padding: 0 12px; border-radius: 5px; font-family: var(--font-body); font-size: 10px; letter-spacing: 0.04em; }
+.ophanim-command-button--primary { background: var(--logo-secondary); border-color: var(--logo-secondary); color: #07101f; }
+.ophanim-command-button--primary:hover { background: #9cbbff; border-color: #9cbbff; color: #07101f; }
+
+.ophanim-context-rail {
+  top: 164px !important;
+  right: 22px !important;
+  width: 56px;
+  padding: 6px;
+  border-color: rgba(117, 167, 255, 0.2);
+  border-left: 0;
+  border-radius: 8px;
+  background: rgba(7, 13, 16, 0.92);
+}
+.ophanim-context-title { padding: 5px 0 8px; color: var(--logo-secondary); font-size: 7px; }
+.ophanim-context-button { min-height: 38px; border-radius: 4px; }
+
+.ophanim-map-controls { right: 22px !important; }
+.ophanim-map-controls__surface {
+  border-color: rgba(117, 167, 255, 0.3);
+  border-radius: 8px;
+  background: rgba(7, 13, 16, 0.94);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.3);
+}
+.ophanim-map-style-switch { gap: 3px; }
+.ophanim-map-style-switch button { height: 38px; border-radius: 4px; color: var(--text-secondary); }
+.ophanim-map-style-switch button.is-active { border-color: rgba(117, 167, 255, 0.48); background: rgba(117, 167, 255, 0.15); }
+
+.ophanim-workbench {
+  position: fixed;
+  z-index: 330;
+  right: 94px;
+  bottom: 60px;
+  left: clamp(360px, 24vw, 430px);
+  display: flex;
+  min-height: 340px;
+  max-height: min(650px, 66dvh);
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(117, 167, 255, 0.38);
+  border-bottom: 3px solid var(--cyan-primary);
+  border-radius: 8px 8px 0 0;
+  background: rgba(8, 15, 18, 0.98);
+  box-shadow: 0 -24px 64px rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(20px);
+}
+.ophanim-workbench__header {
+  min-height: 58px;
+  padding: 0 14px 0 18px;
+  border-bottom-color: rgba(117, 167, 255, 0.18);
+  background: rgba(117, 167, 255, 0.055);
+}
+.ophanim-workbench__title { color: var(--logo-secondary); font-family: var(--font-body); }
+.ophanim-workbench__tabs { gap: 6px; }
+.ophanim-workbench__tab,
+.ophanim-workbench__target-tab,
+.ophanim-workbench__new-tab { min-height: 34px; margin: 8px 0; border-radius: 4px; }
+.ophanim-workbench__tab.is-active,
+.ophanim-workbench__target-tab.is-active { border-color: rgba(117, 167, 255, 0.46); background: rgba(117, 167, 255, 0.13); }
+.ophanim-workbench__new-tab { color: var(--cyan-primary); border-color: rgba(48, 211, 195, 0.3); }
+.ophanim-workbench__close { border-radius: 4px; }
+.ophanim-workbench__create { padding: 12px 18px; border-bottom-color: rgba(117, 167, 255, 0.18); background: rgba(48, 211, 195, 0.05); }
+.ophanim-workbench__body { padding: 16px 18px 20px; }
+.ophanim-workbench__views { gap: 8px; margin-bottom: 14px; }
+.ophanim-workbench__views button { min-height: 36px; padding: 0 13px; }
+.ophanim-workbench__views button.is-active { border-color: var(--logo-secondary); color: var(--text-heading); }
+.ophanim-intel-feed--workbench__items { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.ophanim-intel-feed--workbench__items > div,
+.ophanim-signal-grid__item,
+.ophanim-target-monitor__identity,
+.ophanim-target-monitor__evidence { border-radius: 5px; border-color: rgba(117, 167, 255, 0.18); background: rgba(255, 255, 255, 0.025); }
+
+@media (max-width: 1240px) {
+  .ophanim-brand-block { width: 246px; }
+  .ophanim-header-command { left: 282px !important; right: 88px !important; }
+  .ophanim-workbench { left: 24px; right: 88px; }
+}
+
+@media (max-width: 900px) {
+  .ophanim-brand-block { width: 220px; padding: 7px 10px; }
+  .ophanim-brand-block h1 { font-size: 18px; }
+  .ophanim-brand-block > div:last-child { display: none; }
+  .ophanim-header-command { left: 252px !important; right: 80px !important; }
+  .ophanim-workbench { right: 18px; left: 18px; bottom: 56px; max-height: 64dvh; }
+  .ophanim-intel-feed--workbench__items { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 .ophanim-status-strip {

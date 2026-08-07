@@ -835,7 +835,7 @@ export default function Dashboard() {
 
 
   return (
-    <main className="fixed inset-0 w-full h-full bg-[var(--bg-void)] overflow-hidden">
+    <main className="ophanim-app-shell fixed inset-0 w-full h-full bg-[var(--bg-void)] overflow-hidden">
 
       {/* ── SPLASH ── */}
       <AnimatePresence>
@@ -849,31 +849,32 @@ export default function Dashboard() {
           >
             <div className="ophanim-launch-screen absolute inset-0 z-[20]" aria-label="Loading Ophanim">
               <div className="ophanim-launch-screen__topline">
-                <span>OPHANIM / SIGNAL BOOT</span>
-                <span>NETWORK SESSION INITIALIZING</span>
+                <span>OPHANIM / ATLAS STARTUP</span>
+                <span>SECURE WORKSPACE</span>
               </div>
               <div className="ophanim-launch-screen__core">
                 <div className="ophanim-launch-screen__brand">
-                  <OphanimMark className="h-14 w-14" />
+                  <OphanimMark className="h-16 w-16" animated />
                   <div>
                     <span>OPHANIM</span>
-                    <strong>INTELLIGENCE WORKSPACE</strong>
+                    <strong>GLOBAL INTELLIGENCE ATLAS</strong>
                   </div>
                 </div>
                 <div className="ophanim-launch-screen__route" aria-hidden="true">
                   <i /><i /><i /><i /><i /><i />
                 </div>
                 <div className="ophanim-launch-screen__stages">
-                  <span><b>01</b> MAP ENGINE READY</span>
-                  <span><b>02</b> EVIDENCE CHANNELS READY</span>
-                  <span><b>03</b> WORKSPACE ONLINE</span>
+                  <span><b>01</b> INITIALIZING MAP</span>
+                  <span><b>02</b> LOADING LIVE SOURCES</span>
+                  <span><b>03</b> PREPARING INTEL DESK</span>
                 </div>
               </div>
               <div className="ophanim-launch-screen__footline">
-                <span>LIVE DATA IS ATTRIBUTED AT THE SOURCE</span>
-                <span>VERSION 4.2</span>
+                <span>LIVE DATA REMAINS ATTRIBUTED TO ITS SOURCE</span>
+                <span>OPHANIM V4.2</span>
               </div>
             </div>
+            <div className="ophanim-launch-legacy" aria-hidden="true">
             {/* ── Scanline CRT overlay ── */}
             <div className="absolute inset-0 pointer-events-none z-[1]" style={{
               backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(124,255,203,0.018) 2px, rgba(124,255,203,0.018) 4px)',
@@ -1053,6 +1054,7 @@ export default function Dashboard() {
 
 
             {/* ── Inline keyframe for scanline drift ── */}
+            </div>
 
           </motion.div>
         )}
@@ -1085,7 +1087,7 @@ export default function Dashboard() {
       {/* ── MAP VIEW CONTROLS (3D/2D + SATELLITE TOGGLE) — unified glass control ── */}
       <motion.div
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 3.5 }}
-        className="ophanim-map-controls absolute bottom-[75px] md:bottom-auto md:top-[460px] z-[200] flex items-center pointer-events-none"
+        className="ophanim-map-controls absolute bottom-[64px] md:bottom-[76px] md:top-auto z-[300] flex items-center pointer-events-none"
         style={{ right: isMobile ? '12px' : '28px' }}
       >
         <div className="ophanim-map-controls__surface flex items-center gap-1 p-1 pointer-events-auto">
@@ -1132,12 +1134,12 @@ export default function Dashboard() {
           <OphanimMark className="w-9 h-9 md:w-11 md:h-11 shrink-0 drop-shadow-[0_0_16px_rgba(124,255,203,0.32)]" />
           <div className="flex flex-col items-start gap-0.5">
             <h1 className="text-lg md:text-xl font-extrabold tracking-[0.06em] text-[var(--text-heading)]">OPHANIM</h1>
-            <span className="text-[8px] md:text-[9px] font-semibold tracking-[0.08em] opacity-80 uppercase text-[var(--cyan-primary)]">Global intelligence workspace</span>
+            <span className="text-[8px] md:text-[9px] font-semibold tracking-[0.08em] opacity-80 uppercase text-[var(--cyan-primary)]">Live intelligence atlas</span>
           </div>
         </div>
         <div className="flex items-center gap-3 mt-1.5 pl-[44px] min-w-0 pr-4">
           <span className="text-[8px] text-[var(--text-muted)] font-medium tracking-[0.03em] opacity-70 truncate">
-            Search, observe, and investigate live signals
+            Observe, investigate, and monitor live signals
           </span>
         </div>
       </motion.div>
@@ -1146,7 +1148,7 @@ export default function Dashboard() {
         <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 2.65 }} className="ophanim-command-bar ophanim-command-dock ophanim-header-command absolute top-5 z-[220] pointer-events-auto">
           <div className="ophanim-command-search"><SearchBar alwaysExpanded onLocate={(lat, lng, zoom) => setFlyToLocation({ lat, lng, zoom, ts: Date.now() })} onAction={(action) => { if (action.type === 'enable_layers') setActiveLayers((previous) => ({ ...previous, ...Object.fromEntries(action.layers.map((layer) => [layer, true])) })); }} /></div>
           <div className="ophanim-command-actions">
-            <button onClick={() => { setWorkbenchView('news'); setShowNews(!showNews); setShowAiAnalyst(false); setShowFusion(false); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className={`ophanim-command-button ${showNews ? 'is-active' : ''}`} title="Open intelligence workbench"><Newspaper className="w-4 h-4" /><span>NEWS</span></button>
+            <button onClick={() => { setWorkbenchView('news'); setShowNews(!showNews); setShowAiAnalyst(false); setShowFusion(false); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className={`ophanim-command-button ${showNews ? 'is-active' : ''}`} title="Open intelligence desk"><Newspaper className="w-4 h-4" /><span>INTEL DESK</span></button>
             <button onClick={() => { setAiPanelMode('settings'); setShowAiAnalyst(true); setShowNews(false); setShowFusion(false); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className="ophanim-command-button ophanim-command-button--primary" title="Configure API key or local AI model"><Settings className="w-4 h-4" /><span>AI SETUP</span></button>
             <button onClick={() => window.dispatchEvent(new Event('ophanim:open-watchlists'))} className="ophanim-command-button" title="Open Watchlists"><Bookmark className="w-4 h-4" /><span>WATCH</span></button>
             <button onClick={() => window.location.assign('/imports')} className="ophanim-command-button" title="Import organization CSV data"><FileUp className="w-4 h-4" /><span>IMPORT</span></button>
@@ -1248,13 +1250,6 @@ export default function Dashboard() {
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
-
-        <div className="relative group">
-          <button onClick={() => { setWorkbenchView('news'); setShowNews(!showNews); setShowAiAnalyst(false); setShowFusion(false); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className={`ophanim-context-button ${showNews ? 'is-active' : ''}`} title="Open intelligence workbench">
-            <Newspaper className={`w-4 h-4 ${showNews ? 'text-[var(--cyan-primary)]' : 'text-white/60'}`} />
-            <span>News</span>
-          </button>
         </div>
 
         <div className="relative group">
