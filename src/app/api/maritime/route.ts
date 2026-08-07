@@ -250,6 +250,79 @@ async function fetchCustomerAis(): Promise<any[]> {
   return customerAisInflight;
 }
 
+let marineTrafficCache: any[] = [];
+let marineTrafficCacheAt = 0;
+let marineTrafficInflight: Promise<any[]> | null = null;
+const MARINE_TRAFFIC_TTL = 60000;
+
+function marineTrafficCategory(value: unknown): string {
+  const type = String(value ?? '').toLowerCase();
+  if (type.includes('tanker') || type === '8') return 'tanker';
+  if (type.includes('cargo') || type === '7') return 'cargo';
+  if (type.includes('passenger') || type === '6') return 'passenger';
+  if (type.includes('fishing')) return 'fishing';
+  if (type.includes('military') || type.includes('naval')) return 'military';
+  return 'other';
+}
+
+function normalizeMarineTrafficVessel(value: any): any | null {
+  const lat = Number(value?.LAT ?? value?.lat ?? value?.latitude ?? value?.POSITION?.LAT);
+  const lng = Number(value?.LON ?? value?.lng ?? value?.lon ?? value?.longitude ?? value?.POSITION?.LON);
+  const mmsi = String(value?.MMSI ?? value?.mmsi ?? value?.SHIP_ID ?? value?.shipId ?? '').trim();
+  if (!mmsi || !Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+
+  return {
+    id: mmsi,
+    mmsi,
+    lat,
+    lng,
+    speed: Number(value?.SPEED ?? value?.speed ?? value?.SOG ?? value?.sog ?? 0) || 0,
+    heading: Number(value?.HEADING ?? value?.heading ?? value?.COURSE ?? value?.course ?? 0) || 0,
+    name: String(value?.SHIPNAME ?? value?.shipName ?? value?.name ?? `MMSI ${mmsi}`).trim(),
+    destination: String(value?.DESTINATION ?? value?.destination ?? '').trim(),
+    type: marineTrafficCategory(value?.TYPE_NAME ?? value?.shipType ?? value?.SHIPTYPE ?? value?.type),
+    source: 'marinetraffic',
+    timestamp: Date.now(),
+  };
+}
+
+async function fetchMarineTrafficOfficial(): Promise<any[]> {
+  const endpoint = process.env.MARINETRAFFIC_AIS_API_URL;
+  const apiKey = process.env.MARINETRAFFIC_API_KEY;
+  if (!endpoint || !apiKey) return [];
+  if (Date.now() - marineTrafficCacheAt < MARINE_TRAFFIC_TTL) return marineTrafficCache;
+  if (marineTrafficInflight) return marineTrafficInflight;
+
+  marineTrafficInflight = (async () => {
+    try {
+      const url = endpoint.includes('{api_key}')
+        ? endpoint.replace('{api_key}', encodeURIComponent(apiKey))
+        : (() => {
+          const configured = new URL(endpoint);
+          configured.searchParams.set('api_key', apiKey);
+          return configured.toString();
+        })();
+      const response = await fetch(url, { signal: AbortSignal.timeout(12000), cache: 'no-store' });
+      if (!response.ok) return marineTrafficCache;
+      const payload = await response.json();
+      const rows = Array.isArray(payload) ? payload : payload?.data ?? payload?.ships ?? payload?.vessels ?? [];
+      if (!Array.isArray(rows)) return marineTrafficCache;
+      const vessels = rows.map(normalizeMarineTrafficVessel).filter(Boolean);
+      if (vessels.length > 0) {
+        marineTrafficCache = vessels;
+        marineTrafficCacheAt = Date.now();
+      }
+      return marineTrafficCache;
+    } catch {
+      return marineTrafficCache;
+    } finally {
+      marineTrafficInflight = null;
+    }
+  })();
+
+  return marineTrafficInflight;
+}
+
 // ── GLOBAL keyless ship source: MarineTraffic's public map tiles ──
 // The marinetraffic.com map itself pulls vessels from these tile endpoints with
 // no API key. We fetch the 16 zoom-2 tiles that cover the whole planet (paced to
@@ -493,7 +566,11 @@ export async function GET() {
 
   // Production ingestion uses structured AIS responses only. Public map tiles
   // are deliberately not used as a data source.
-  const [dtShips, customerShips] = await Promise.all([fetchDigitraffic(), fetchCustomerAis()]);
+  const [dtShips, customerShips, marineTrafficShips] = await Promise.all([
+    fetchDigitraffic(),
+    fetchCustomerAis(),
+    fetchMarineTrafficOfficial(),
+  ]);
 
   // Clean up stale aisstream ships (older than 10 minutes)
   const now = Date.now();
@@ -515,6 +592,7 @@ export async function GET() {
   */
   for (const s of dtShips) byId.set(`dt-${s.mmsi}`, s);
   for (const s of customerShips) byId.set(`customer-${s.mmsi}`, s);
+  for (const s of marineTrafficShips) byId.set(`marinetraffic-${s.mmsi}`, s);
   for (const s of shipsCache.values()) byId.set(`ais-${s.mmsi}`, s); // aisstream (if keyed)
   let ships = Array.from(byId.values());
   if (ships.length > SHIP_CAP) ships = ships.slice(0, SHIP_CAP);
@@ -589,8 +667,11 @@ export async function GET() {
     total_ships: ships.length,
     sources: ['Digitraffic marine AIS']
       .concat(process.env.AIS_API_KEY ? ['AISStream'] : [])
-      .concat(process.env.CUSTOMER_AIS_API_URL ? ['Customer AIS provider'] : []),
-    coverage: process.env.AIS_API_KEY || process.env.CUSTOMER_AIS_API_URL ? 'configured global or customer coverage' : 'regional Digitraffic coverage',
+      .concat(process.env.CUSTOMER_AIS_API_URL ? ['Customer AIS provider'] : [])
+      .concat(process.env.MARINETRAFFIC_AIS_API_URL && process.env.MARINETRAFFIC_API_KEY ? ['MarineTraffic AIS API'] : []),
+    coverage: process.env.AIS_API_KEY || process.env.CUSTOMER_AIS_API_URL || (process.env.MARINETRAFFIC_AIS_API_URL && process.env.MARINETRAFFIC_API_KEY)
+      ? 'configured global or customer coverage'
+      : 'regional Digitraffic coverage',
     timestamp: new Date().toISOString(),
   };
   respCache = payload;

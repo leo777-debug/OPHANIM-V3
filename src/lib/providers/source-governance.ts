@@ -151,16 +151,37 @@ const PRODUCTION_SOURCES: ProductionSourceRecord[] = [
     purpose: 'Investigate approved customer, vendor, and domain mentions with analyst verification.',
   },
   {
+    id: 'aviation-adsb', name: 'Aviation ADS-B sources', scope: ['logistics'], mode: 'supporting', evidenceTier: 'original_source', refresh: '5 minutes',
+    attribution: 'Configured public ADS-B receivers and compatible aviation sources.', licensing: 'Confirm upstream service terms and redistribution rights before commercial use.',
+    purpose: 'Provide aircraft activity context around routes, hubs, and incidents.',
+  },
+  {
+    id: 'submarine-cables', name: 'Submarine cable reference layer', scope: ['logistics', 'cybersecurity'], mode: 'supporting', evidenceTier: 'original_source', refresh: 'Packaged reference data',
+    attribution: 'Ophanim packaged cable reference dataset with retained provenance.', licensing: 'Review source attribution and update cadence before commercial redistribution.',
+    purpose: 'Provide cable-route context for maritime, outage, and infrastructure investigations.',
+  },
+  {
+    id: 'markets-space-weather', name: 'Markets and space weather', scope: ['logistics', 'cybersecurity'], mode: 'supporting', evidenceTier: 'original_source', refresh: '30 minutes',
+    attribution: 'Configured market data providers and NOAA space-weather data.', licensing: 'Respect each financial-data provider license and rate limit.',
+    purpose: 'Provide operational market context and solar-weather conditions alongside primary evidence.',
+  },
+  {
+    id: 'marinetraffic-ais', name: 'MarineTraffic AIS API', scope: ['logistics'], mode: 'optional', evidenceTier: 'direct_operator', refresh: '60 seconds', configuration: 'MARINETRAFFIC_AIS_API_URL, MARINETRAFFIC_API_KEY',
+    attribution: 'MarineTraffic AIS API, Kpler.', licensing: 'Requires an active MarineTraffic API service; browser map tiles are not an approved ingestion method.',
+    purpose: 'Add licensed vessel coverage through the official MarineTraffic API when configured.',
+  },
+  {
     id: 'map-visual-extras', name: 'Visual-only map sources', scope: ['logistics', 'cybersecurity'], mode: 'disabled_by_default', evidenceTier: 'unverified', refresh: 'On demand',
-    attribution: 'Optional aircraft, cameras, satellite, video, market, space-weather, and cable layers.', licensing: 'Each source needs its own approved commercial-use review.',
+    attribution: 'Optional cameras, satellites, broadcast video, and SDK demo layers.', licensing: 'Each source needs its own approved commercial-use review.',
     purpose: 'Available only when relevant to a specific customer workflow or investigation.',
   },
 ];
 
-const CONFIGURATION_VARIABLES: Record<string, string> = {
+const CONFIGURATION_VARIABLES: Record<string, string | string[]> = {
   'ecmwf-forecast': 'ECMWF_FORECAST_URL',
   aisstream: 'AIS_API_KEY',
   'customer-ais': 'CUSTOMER_AIS_API_URL',
+  'marinetraffic-ais': ['MARINETRAFFIC_AIS_API_URL', 'MARINETRAFFIC_API_KEY'],
   'official-sanctions': 'OFFICIAL_SANCTIONS_FEED_URL',
   ioda: 'IODA_API_URL',
   'ripe-ris-live': 'RIPE_RIS_FILTERS',
@@ -168,10 +189,17 @@ const CONFIGURATION_VARIABLES: Record<string, string> = {
   voidaccess: 'VOIDACCESS_API_URL',
 };
 
+function isSourceConfigured(sourceId: string): boolean {
+  const requirement = CONFIGURATION_VARIABLES[sourceId];
+  if (!requirement) return true;
+  const variables = Array.isArray(requirement) ? requirement : [requirement];
+  return variables.every((name) => Boolean(process.env[name]));
+}
+
 export function getProductionSourceCatalog() {
   return PRODUCTION_SOURCES.map((source) => ({
     ...source,
-    configured: !CONFIGURATION_VARIABLES[source.id] || Boolean(process.env[CONFIGURATION_VARIABLES[source.id]]),
+    configured: isSourceConfigured(source.id),
     enabledByDefault: source.mode === 'core' || source.mode === 'supporting',
   }));
 }
