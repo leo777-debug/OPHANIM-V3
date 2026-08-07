@@ -12,6 +12,7 @@ type WatchlistItem = {
 };
 
 const entityTypes = ['ip', 'domain', 'ship', 'port', 'company', 'threat_actor', 'region', 'country'];
+type WatchTargetDetail = { type?: string; value?: string };
 
 async function errorMessage(response: Response, fallback: string) {
   const body = await response.json().catch(() => null);
@@ -56,6 +57,18 @@ export default function WatchlistPanel() {
   useEffect(() => {
     window.addEventListener('ophanim:open-watchlists', openWatchlists);
     return () => window.removeEventListener('ophanim:open-watchlists', openWatchlists);
+  }, [openWatchlists]);
+
+  useEffect(() => {
+    const openTarget = (event: Event) => {
+      const detail = (event as CustomEvent<WatchTargetDetail>).detail;
+      if (detail?.type && entityTypes.includes(detail.type)) setEntityType(detail.type);
+      if (detail?.value) setEntityValue(detail.value);
+      openWatchlists();
+    };
+
+    window.addEventListener('ophanim:watch-target', openTarget);
+    return () => window.removeEventListener('ophanim:watch-target', openTarget);
   }, [openWatchlists]);
 
   const addWatchlist = async () => {

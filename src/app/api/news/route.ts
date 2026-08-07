@@ -7,11 +7,11 @@ import crypto from 'crypto';
  * to traditional intelligence sources if Telegram blocks the IP.
  */
 
-const TELEGRAM_CHANNELS = [
-  'OSINTtechnical',
-  'Faytuks',
-  'Liveuamap',
-  'CyberKnow'
+const REVIEWED_TELEGRAM_SOURCES = [
+  { channel: 'OSINTtechnical', purpose: 'Conflict and infrastructure discovery', reviewOwner: 'operations', reliability: 'osint' },
+  { channel: 'Faytuks', purpose: 'Breaking-event discovery', reviewOwner: 'operations', reliability: 'osint' },
+  { channel: 'Liveuamap', purpose: 'Regional incident discovery', reviewOwner: 'operations', reliability: 'osint' },
+  { channel: 'CyberKnow', purpose: 'Cyber incident discovery', reviewOwner: 'security', reliability: 'osint' },
 ];
 
 const FALLBACK_FEEDS = {
@@ -101,15 +101,15 @@ function parseRSSItems(xml: string, sourceName: string): any[] {
 
 export async function GET() {
   try {
-    const feedPromises = TELEGRAM_CHANNELS.map(async (channel) => {
+    const feedPromises = REVIEWED_TELEGRAM_SOURCES.map(async (source) => {
       try {
-        const res = await fetch(`https://t.me/s/${channel}`, { 
+        const res = await fetch(`https://t.me/s/${source.channel}`, {
           signal: AbortSignal.timeout(8000), 
           headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' } 
         });
         if (!res.ok) return [];
         const html = await res.text();
-        return parseTelegramHTML(html, channel).slice(-8);
+        return parseTelegramHTML(html, source.channel).slice(-8).map((item) => ({ ...item, sourcePolicy: source }));
       } catch { return []; }
     });
 
@@ -148,10 +148,13 @@ export async function GET() {
         link: article.link,
         published: article.pubDate,
         source: article.source,
+        evidence_tier: article.sourcePolicy?.reliability ?? 'trusted_news',
+        operational_decision_eligible: false,
+        verification_required: true,
+        source_purpose: article.sourcePolicy?.purpose ?? 'Supporting incident discovery',
         risk_score: riskScore,
         coords: coords ? [coords[0], coords[1]] : null,
         coords_default: !coords,
-        machine_assessment: riskScore >= 8 ? "AI Analysis indicates elevated tactical priority based on OSINT stream patterns." : null,
       };
     });
 

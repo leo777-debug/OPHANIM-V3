@@ -54,7 +54,7 @@ export default function GlobalStatusBar({ onThreatClick }: { onThreatClick?: () 
   useEffect(() => {
     const load = async () => {
       try {
-        const r = await fetch('/api/fusion', { signal: AbortSignal.timeout(30000) });
+        const r = await fetch('/api/fusion', { cache: 'no-store' });
         if (r.ok) setThreat(await r.json());
       } catch { /* keep last */ }
     };
@@ -67,8 +67,8 @@ export default function GlobalStatusBar({ onThreatClick }: { onThreatClick?: () 
     const fetchData = async () => {
       try {
         const [cryptoRes, quakeRes] = await Promise.allSettled([
-          fetch('/api/crypto', { signal: AbortSignal.timeout(15000) }).then((response) => response.ok ? response.json() : Promise.reject(new Error('Crypto unavailable'))),
-          fetch('/api/earthquakes', { signal: AbortSignal.timeout(15000) }).then((response) => response.ok ? response.json() : Promise.reject(new Error('Earthquakes unavailable'))),
+          fetch('/api/crypto', { cache: 'no-store' }).then((response) => response.ok ? response.json() : Promise.reject(new Error('Crypto unavailable'))),
+          fetch('/api/earthquakes', { cache: 'no-store' }).then((response) => response.ok ? response.json() : Promise.reject(new Error('Earthquakes unavailable'))),
         ]);
 
         if (cryptoRes.status === 'fulfilled') {

@@ -15,7 +15,7 @@ interface OphanimMapProps {
   onViewStateChange?: (vs: { zoom: number; latitude: number }) => void;
   flyToLocation?: { lat: number; lng: number; zoom?: number; ts: number } | null;
   projection?: 'mercator' | 'globe';
-  mapStyle?: string;
+  mapStyle?: 'dark' | 'earth' | 'satellite';
   sweepData?: any;
   scanTargets?: any[];
   demoMode?: boolean;
@@ -50,7 +50,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
   const mapRef = useRef<maplibregl.Map | null>(null);
   const popupRef = useRef<maplibregl.Popup | null>(null);
   const [mapReady, setMapReady] = useState(false);
-  const prevStyleRef = useRef(mapStyle);
+  const prevStyleRef = useRef<'dark' | 'earth' | 'satellite'>('dark');
 
   // Create aircraft icon on canvas (for WebGL symbol layer)
   const createIcon = useCallback((map: maplibregl.Map, id: string, color: string, size: number) => {
@@ -631,6 +631,19 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
         'text-field': ['get','name'], 'text-size': 10, 'text-font': ['Open Sans Regular'],
         'text-offset': [0, 1.5], 'text-allow-overlap': false, 'text-optional': true,
       }, paint: { 'text-color': '#CFD8DC', 'text-halo-color': '#00121a', 'text-halo-width': 1.2 }});
+
+      if (mapStyle !== 'dark') {
+        const tiles = mapStyle === 'earth'
+          ? ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}']
+          : ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'];
+        map.addSource('satellite-tiles', { type: 'raster', tiles, tileSize: 256, maxzoom: 18 });
+        map.addLayer({
+          id: 'satellite-layer',
+          type: 'raster',
+          source: 'satellite-tiles',
+          paint: { 'raster-opacity': mapStyle === 'earth' ? 0.93 : 0.85 },
+        }, 'day-night-fill');
+      }
 
       setMapReady(true);
     });
@@ -1734,32 +1747,39 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     }
   }, [mapReady, activeLayers.terrain_3d]);
 
-  // Satellite / Dark style switching
+  // Basemap overlay switching without resetting the map's live sources and layers.
   useEffect(() => {
     if (!mapReady || !mapRef.current) return;
-    if (mapStyle === prevStyleRef.current) return;
-    prevStyleRef.current = mapStyle;
     const map = mapRef.current;
+    if (mapStyle === prevStyleRef.current && (mapStyle === 'dark' || map.getLayer('satellite-layer'))) return;
 
     try {
       if (mapStyle !== 'dark') {
-        // Add satellite raster tiles
+        const tiles = mapStyle === 'earth'
+          ? ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}']
+          : ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'];
+        const opacity = mapStyle === 'earth' ? 0.93 : 0.85;
+
         if (!map.getSource('satellite-tiles')) {
           map.addSource('satellite-tiles', {
             type: 'raster',
-            tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+            tiles,
             tileSize: 256,
             maxzoom: 18,
           });
-          map.addLayer({ id: 'satellite-layer', type: 'raster', source: 'satellite-tiles', paint: { 'raster-opacity': 0.85 } }, 'day-night-fill');
+          map.addLayer({ id: 'satellite-layer', type: 'raster', source: 'satellite-tiles', paint: { 'raster-opacity': opacity } }, 'day-night-fill');
         } else {
+          const source = map.getSource('satellite-tiles') as maplibregl.RasterTileSource;
+          source.setTiles(tiles);
           map.setLayoutProperty('satellite-layer', 'visibility', 'visible');
+          map.setPaintProperty('satellite-layer', 'raster-opacity', opacity);
         }
       } else {
         if (map.getLayer('satellite-layer')) {
           map.setLayoutProperty('satellite-layer', 'visibility', 'none');
         }
       }
+      prevStyleRef.current = mapStyle;
     } catch (e) {
       console.warn('Style switch failed:', e);
     }

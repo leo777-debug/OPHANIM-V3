@@ -17,6 +17,16 @@ type ProviderRecord = {
 
 type ProviderResponse = {
   providers: ProviderRecord[];
+  productionSources: Array<{
+    id: string;
+    name: string;
+    scope: string[];
+    mode: 'core' | 'supporting' | 'optional' | 'disabled_by_default';
+    evidenceTier: string;
+    refresh: string;
+    configured: boolean;
+    purpose: string;
+  }>;
   available: number;
   total: number;
   timestamp: string;
@@ -73,6 +83,30 @@ export default function ProviderStatusPanel() {
 
       <div className="max-h-[420px] overflow-y-auto">
         {!loading && !state && <div className="px-4 py-7 text-center text-xs text-white/45">Source status is temporarily unavailable.</div>}
+        {state?.productionSources.map((source) => {
+          const label = source.mode === 'core' ? 'CORE' : source.mode === 'supporting' ? 'SUPPORTING' : source.mode === 'optional' ? 'OPTIONAL' : 'OFF BY DEFAULT';
+          const color = source.mode === 'core' ? 'text-emerald-300' : source.mode === 'supporting' ? 'text-cyan-200' : source.mode === 'optional' ? 'text-amber-200' : 'text-white/35';
+          return (
+            <div key={source.id} className="border-b border-white/[0.07] px-4 py-3 last:border-b-0">
+              <div className="flex items-start gap-2">
+                {source.configured ? <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-400" /> : <XCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-300" />}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="truncate text-[11px] font-medium text-white/90">{source.name}</span>
+                    <span className={`shrink-0 text-[9px] ${color}`}>{label}</span>
+                  </div>
+                  <p className="mt-1 text-[10px] leading-4 text-white/45">{source.purpose}</p>
+                  <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[9px] text-white/40">
+                    <span>{source.scope.join(' + ')}</span>
+                    <span>{source.evidenceTier.replaceAll('_', ' ')}</span>
+                    <span>{source.refresh}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        {state?.productionSources.length ? <div className="border-b border-white/10 bg-white/[0.025] px-4 py-2 text-[9px] font-medium uppercase tracking-[0.16em] text-white/35">Registered providers</div> : null}
         {state?.providers.map((provider) => {
           const ready = provider.enabled && provider.configured;
           const healthLabel = provider.health.status === 'circuit_open' ? 'PAUSED' : provider.health.status === 'degraded' ? 'DEGRADED' : ready ? 'READY' : provider.enabled ? 'SETUP' : 'OFF';

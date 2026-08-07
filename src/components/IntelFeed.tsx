@@ -12,6 +12,7 @@ import { Newspaper, ChevronDown, ChevronUp, ExternalLink, MapPin, Zap } from 'lu
 interface IntelFeedProps {
   data: any;
   onLocate?: (lat: number, lng: number) => void;
+  variant?: 'panel' | 'workbench';
 }
 
 function getRiskClass(score: number): string {
@@ -42,7 +43,7 @@ function timeAgo(dateStr: string): string {
   }
 }
 
-export default function IntelFeed({ data, onLocate }: IntelFeedProps) {
+export default function IntelFeed({ data, onLocate, variant = 'panel' }: IntelFeedProps) {
   const [expanded, setExpanded] = useState(true);
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const news = data.news || [];
@@ -52,7 +53,7 @@ export default function IntelFeed({ data, onLocate }: IntelFeedProps) {
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 0.6, duration: 0.6 }}
-      className="glass-panel flex flex-col overflow-hidden pointer-events-auto"
+      className={`${variant === 'workbench' ? 'ophanim-intel-feed--workbench' : 'glass-panel'} flex flex-col overflow-hidden pointer-events-auto`}
     >
       {/* Header */}
       <button
@@ -82,7 +83,7 @@ export default function IntelFeed({ data, onLocate }: IntelFeedProps) {
             exit={{ height: 0 }}
             className="overflow-hidden"
           >
-            <div className="max-h-[400px] overflow-y-auto styled-scrollbar divide-y divide-[var(--border-secondary)]">
+            <div className={`${variant === 'workbench' ? 'ophanim-intel-feed--workbench__items' : 'max-h-[400px] divide-y'} overflow-y-auto styled-scrollbar divide-[var(--border-secondary)]`}>
               {news.length === 0 ? (
                 <div className="px-4 py-6 text-center">
                   <span className="text-[11px] font-mono text-[var(--text-muted)] tracking-widest">

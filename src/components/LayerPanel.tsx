@@ -225,17 +225,17 @@ function LayerPanel({ data, activeLayers, setActiveLayers, isMobile, theme = 'co
       initial={{ x: -60, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ type: 'spring', damping: 30, stiffness: 200, delay: 2.8 }}
-      className="ophanim-layer-dock absolute top-[88px] left-4 bottom-10 w-[218px] flex flex-col items-stretch px-2 pt-3 pb-3 z-50 pointer-events-auto rounded-lg"
+      className="ophanim-layer-dock absolute top-[132px] left-5 bottom-[74px] w-[60px] flex flex-col items-center px-1.5 pt-2 pb-2 z-50 pointer-events-auto"
       style={{
-        background: 'rgba(12, 18, 22, 0.96)',
-        backdropFilter: 'blur(14px)',
-        WebkitBackdropFilter: 'blur(14px)',
-        border: '1px solid rgba(255,255,255,0.1)',
-        boxShadow: '0 16px 42px rgba(0,0,0,0.34)',
+        background: 'rgba(10, 15, 20, 0.9)',
+        backdropFilter: 'blur(18px)',
+        WebkitBackdropFilter: 'blur(18px)',
+        border: '1px solid rgba(117,167,255,0.18)',
+        boxShadow: '0 18px 44px rgba(0,0,0,0.38)',
       }}
     >
-      <div className="mb-3 px-2 text-[9px] font-semibold tracking-[0.12em] text-white/45">MAP LAYERS</div>
-      <div className="flex-1 flex flex-col gap-1">
+      <div className="mb-2 text-[7px] font-semibold tracking-[0.12em] text-white/45">MAP</div>
+      <div className="flex-1 flex flex-col items-center gap-1">
         {LAYER_GROUPS.map((group) => {
           const groupActive = group.layers.some(l => activeLayers[l.key]);
           const isHovered = hoveredGroup === group.label;
@@ -248,9 +248,11 @@ function LayerPanel({ data, activeLayers, setActiveLayers, isMobile, theme = 'co
               onMouseEnter={() => setHoveredGroup(group.label)}
               onMouseLeave={() => setHoveredGroup(null)}
             >
-              {/* Icon Button */}
-              <div
-                className="h-10 w-full flex items-center gap-3 px-3 cursor-pointer rounded-lg transition-all duration-300"
+              <button
+                type="button"
+                aria-label={`${group.fullLabel} layers`}
+                title={`${group.fullLabel} layers`}
+                className="h-10 w-10 flex items-center justify-center cursor-pointer rounded-lg transition-all duration-300"
                 style={{
                   background: groupActive
                     ? 'rgba(48,211,195,0.14)'
@@ -273,11 +275,11 @@ function LayerPanel({ data, activeLayers, setActiveLayers, isMobile, theme = 'co
                     filter: groupActive ? 'drop-shadow(0 0 8px rgba(124,255,203,0.35))' : 'none',
                   }}
                 />
-                <span className={`text-[10px] font-medium tracking-[0.04em] ${groupActive ? 'text-white/90' : 'text-white/45'}`}>{group.label}</span>
+                <span className="sr-only">{group.label}</span>
                 {groupActive && (
-                  <span className="absolute left-0 w-[2px] h-5 rounded-full bg-[var(--cyan-primary)] shadow-[0_0_10px_rgba(48,211,195,0.7)]" />
+                  <span className="absolute left-0 w-[2px] h-5 bg-[var(--cyan-primary)] shadow-[0_0_10px_rgba(48,211,195,0.7)]" />
                 )}
-              </div>
+              </button>
 
               {/* Flyout (LEFT side) */}
               <AnimatePresence>
@@ -287,7 +289,7 @@ function LayerPanel({ data, activeLayers, setActiveLayers, isMobile, theme = 'co
                     animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
                     exit={{ opacity: 0, x: -4, filter: 'blur(2px)' }}
                     transition={{ duration: 0.18, ease: 'easeOut' }}
-                    className="absolute left-[226px] top-1/2 -translate-y-1/2 min-w-[250px] rounded-lg p-3 z-[100] pointer-events-auto"
+                    className="absolute left-[58px] top-1/2 -translate-y-1/2 min-w-[250px] rounded-lg p-3 z-[100] pointer-events-auto"
                     style={{
                       background: 'rgba(12,18,22,0.98)',
                       backdropFilter: 'blur(16px)',
@@ -332,13 +334,13 @@ function LayerPanel({ data, activeLayers, setActiveLayers, isMobile, theme = 'co
       </div>
 
       {/* Subtle separator */}
-      <div className="w-5 h-px bg-white/[0.06] my-2" />
+      <div className="w-5 h-px bg-white/[0.08] my-2" />
 
       {/* Eclipse Mode Toggle */}
       {setTheme && (
         <button
           onClick={() => setTheme(theme === 'core' ? 'ghost' : 'core')}
-          className="w-full h-10 flex items-center gap-3 px-3 rounded-md transition-all duration-500 cursor-pointer"
+          className="w-10 h-10 flex items-center justify-center rounded-md transition-all duration-500 cursor-pointer"
           style={{
             background: theme === 'ghost' ? 'rgba(170, 112, 255, 0.14)' : 'rgba(124,255,203,0.06)',
           }}
@@ -353,7 +355,7 @@ function LayerPanel({ data, activeLayers, setActiveLayers, isMobile, theme = 'co
               filter: theme === 'ghost' ? 'drop-shadow(0 0 8px rgba(170, 112, 255, 0.5))' : 'drop-shadow(0 0 6px rgba(124,255,203,0.2))',
             }}
           />
-          <span className="text-[10px] font-medium text-white/50">Appearance</span>
+          <span className="sr-only">Appearance</span>
         </button>
       )}
     </motion.div>

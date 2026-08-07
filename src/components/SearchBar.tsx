@@ -50,9 +50,11 @@ export default function SearchBar({ onLocate, onAction, alwaysExpanded = false }
   const [value, setValue] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
   const [selectedIdx, setSelectedIdx] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const requestRef = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Focus input when opened
@@ -97,17 +99,32 @@ export default function SearchBar({ onLocate, onAction, alwaysExpanded = false }
     setSelectedIdx(-1);
 
     if (timerRef.current) clearTimeout(timerRef.current);
-    if (q.trim().length < 2) { setResults([]); return; }
+    if (q.trim().length < 2) { setResults([]); setMessage(''); return; }
 
     timerRef.current = setTimeout(async () => {
+      const request = ++requestRef.current;
       setLoading(true);
+      setMessage('');
       try {
         const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&limit=8`);
-        const data = await res.json();
-        setResults(res.ok && Array.isArray(data.results) ? data.results : []);
-      } catch { setResults([]); }
-      setLoading(false);
+        const data = await res.json() as { results?: SearchResult[]; error?: string };
+        if (!res.ok) throw new Error(data.error || 'Search is temporarily unavailable.');
+        if (request !== requestRef.current) return;
+        const nextResults = Array.isArray(data.results) ? data.results : [];
+        setResults(nextResults);
+        if (!nextResults.length) setMessage('No matches found. Try a city, country, port, domain, vessel, or coordinates.');
+      } catch (error) {
+        if (request !== requestRef.current) return;
+        setResults([]);
+        setMessage(error instanceof Error ? error.message : 'Search is temporarily unavailable.');
+      } finally {
+        if (request === requestRef.current) setLoading(false);
+      }
     }, 300);
+  }, []);
+
+  useEffect(() => () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
   }, []);
 
   const handleSelect = (r: SearchResult) => {
@@ -120,6 +137,7 @@ export default function SearchBar({ onLocate, onAction, alwaysExpanded = false }
     if (!alwaysExpanded) setOpen(false);
     setValue('');
     setResults([]);
+    setMessage('');
     setSelectedIdx(-1);
   };
 
@@ -172,6 +190,7 @@ export default function SearchBar({ onLocate, onAction, alwaysExpanded = false }
         <Search className="w-3.5 h-3.5 text-[var(--gold-primary)] flex-shrink-0" />
         <input
           ref={inputRef}
+          data-testid="global-search-input"
           value={value}
           onChange={(e) => handleSearch(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -186,6 +205,7 @@ export default function SearchBar({ onLocate, onAction, alwaysExpanded = false }
           <button onClick={() => {
             if (alwaysExpanded) { setValue(''); setResults([]); }
             else { setOpen(false); setValue(''); setResults([]); }
+            setMessage('');
           }} className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
             <X className="w-3 h-3" />
           </button>
@@ -194,6 +214,7 @@ export default function SearchBar({ onLocate, onAction, alwaysExpanded = false }
 
       {results.length > 0 && (
         <div
+          data-testid="global-search-results"
           className="absolute top-full left-0 right-0 mt-1 glass-panel overflow-hidden max-h-[320px] overflow-y-auto styled-scrollbar z-[9999]"
           style={{ boxShadow: '0 12px 40px rgba(0,0,0,0.6), 0 0 1px rgba(124,255,203,0.2)' }}
         >
@@ -226,6 +247,11 @@ export default function SearchBar({ onLocate, onAction, alwaysExpanded = false }
               </button>
             );
           })}
+        </div>
+      )}
+      {message && !loading && (
+        <div data-testid="global-search-message" className="absolute top-full left-0 right-0 mt-1 border border-[var(--border-secondary)] bg-[var(--bg-panel-solid)] px-3 py-2.5 text-[10px] text-[var(--text-secondary)] shadow-xl z-[9999]" role="status">
+          {message}
         </div>
       )}
     </div>

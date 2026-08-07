@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Layers, BarChart3, Newspaper, Search, X, Globe, MapPinned, Radar, Satellite, Moon, ExternalLink, AlertTriangle, Activity, Database, Wifi, Play, Network, Crosshair, Brain, Bookmark, Settings, FileUp } from 'lucide-react';
 import IntelFeed from '@/components/IntelFeed';
+import IntelligenceWorkbench, { type IntelligenceWorkbenchView } from '@/components/IntelligenceWorkbench';
 import MarketsPanel from '@/components/MarketsPanel';
 import ScmPanel from '@/components/ScmPanel';
 import SearchBar from '@/components/SearchBar';
@@ -162,6 +163,8 @@ export default function Dashboard() {
   const [showAlerts, setShowAlerts] = useState(false);
   const [showScmPanel, setShowScmPanel] = useState(true);
   const [showIntel, setShowIntel] = useState(false);
+  const [showNews, setShowNews] = useState(false);
+  const [workbenchView, setWorkbenchView] = useState<IntelligenceWorkbenchView>('news');
   const [showEntityGraph, setShowEntityGraph] = useState(false);
   const [showDesktopSearch, setShowDesktopSearch] = useState(false);
   const [showFusion, setShowFusion] = useState(false);
@@ -171,7 +174,7 @@ export default function Dashboard() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [mobilePanel, setMobilePanel] = useState<'layers'|'markets'|'intel'|'search'|'recon'|null>(null);
   const [mapProjection, setMapProjection] = useState<'globe'|'mercator'>('globe');
-  const [mapStyle, setMapStyle] = useState<'dark'|'satellite'>('dark');
+  const [mapStyle, setMapStyle] = useState<'dark'|'earth'|'satellite'>('dark');
   const [sweepData, setSweepData] = useState<any>(null);
   const [scanTargets, setScanTargets] = useState<any[]>([]);
   const [entityGraphTarget, setEntityGraphTarget] = useState<{ type: string; id: string; label?: string; properties?: Record<string, any> } | null>(null);
@@ -194,6 +197,11 @@ export default function Dashboard() {
     document.body.className = ophanimTheme === 'core' ? '' : `theme-${ophanimTheme}`;
   }, [ophanimTheme]);
 
+  useEffect(() => {
+    const timer = setTimeout(() => setMapStyle('earth'), 300);
+    return () => clearTimeout(timer);
+  }, []);
+
   const isMobile = useIsMobile();
   const geocodeCache = useRef<Map<string, string>>(new Map());
   const geocodeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -201,7 +209,7 @@ export default function Dashboard() {
 
   // ── DEFAULT: Most layers OFF — fast initial load ──
   const [activeLayers, setActiveLayers] = useState({
-    flights: false,
+    flights: true,
     private: false,
     jets: false,
     military: false,
@@ -218,25 +226,25 @@ export default function Dashboard() {
     sat_earth: false,
     sat_science: false,
     balloons: false,
-    cctv: true,
-    live_news: true,
-    news_intel: true,
+    cctv: false,
+    live_news: false,
+    news_intel: false,
     earthquakes: true,
-    fires: false,
-    weather: false,
+    fires: true,
+    weather: true,
     radiation: false,
     infrastructure: false,
     global_incidents: true,
     war_alerts: false,
     gps_jamming: false,
-    day_night: true,
+    day_night: false,
     cables: true,
     war_sanctions: true,
-    sdk_sea: true,
-    sdk_air: true,
-    sdk_naval: true,
+    sdk_sea: false,
+    sdk_air: false,
+    sdk_naval: false,
     terrain_3d: false,
-    malware: false,
+    malware: true,
   });
 
   useEffect(() => {
@@ -257,7 +265,6 @@ export default function Dashboard() {
       try {
         const response = await fetch(`/api/map/layers?providers=${providers.join(',')}`, {
           cache: 'no-store',
-          signal: AbortSignal.timeout(15_000),
         });
         if (!response.ok) return;
 
@@ -293,9 +300,12 @@ export default function Dashboard() {
     const layers = p.get('layers');
     if (layers) {
       const active = layers.split(',');
+      const restoredOperationalDefaults = new Set(['flights', 'cables']);
       setActiveLayers(prev => {
         const next = { ...prev };
-        Object.keys(next).forEach(k => { (next as any)[k] = active.includes(k); });
+        Object.keys(next).forEach(k => {
+          (next as any)[k] = active.includes(k) || restoredOperationalDefaults.has(k);
+        });
         return next;
       });
     }
@@ -464,36 +474,37 @@ export default function Dashboard() {
   // ── PROGRESSIVE DATA LOADING (request-optimized) ──
   useEffect(() => {
     // Priority 1: Core feeds (always needed for panels)
-    const eqUrl = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson';
-    const eqTransform = (data: any) => ({ earthquakes: (data.features || []).map((f: any) => ({ id: f.id, lat: f.geometry?.coordinates?.[1] || 0, lng: f.geometry?.coordinates?.[0] || 0, depth: f.geometry?.coordinates?.[2] || 0, magnitude: f.properties?.mag, place: f.properties?.place, time: f.properties?.time, url: f.properties?.url, tsunami: f.properties?.tsunami, type: f.properties?.type, felt: f.properties?.felt, alert: f.properties?.alert })) });
-    fetchEndpoint(eqUrl, eqTransform);
+    const eqTransform = (response: any) => ({ earthquakes: response.earthquakes || [] });
+    fetchEndpoint('/api/earthquakes', eqTransform);
     fetchEndpoint('/api/news');
     fetchEndpoint('/api/cyber-threats', (response) => ({ cyberThreats: response.threats || [] }));
-    const marketTimer = setTimeout(() => fetchEndpoint('/api/markets', d => ({ markets: d })), 800);
-
-    // Priority 2: Space Weather (needed for MarketsPanel)
-    const spaceTimer = setTimeout(async () => {
-      try {
-        const r = await fetch('/api/space-weather');
-        if (r.ok) setSpaceWeather(await r.json());
-      } catch (e) { console.warn('[OPHANIM] Suppressed error:', e instanceof Error ? e.message : e); }
-    }, 5000);
 
     // Polling — OPTIMIZED intervals to minimize edge requests
     const intervals = [
-      setInterval(() => fetchEndpoint(eqUrl, eqTransform), 900000),  // 15 min (was 5)
+      setInterval(() => fetchEndpoint('/api/earthquakes', eqTransform), 900000),  // 15 min
       setInterval(() => fetchEndpoint('/api/news'), 1800000),        // 30 min (was 10)
       setInterval(() => fetchEndpoint('/api/cyber-threats', (response) => ({ cyberThreats: response.threats || [] })), 1800000),
-      setInterval(() => fetchEndpoint('/api/markets', d => ({ markets: d })), 900000), // 15 min (was 5)
     ];
     return () => {
-      clearTimeout(marketTimer);
-      clearTimeout(spaceTimer);
       intervals.forEach(clearInterval);
     };
   }, [fetchEndpoint]);
 
   // ── LAYER-AWARE DATA LOADING — only fetch when layer is toggled ON ──
+  useEffect(() => {
+    const loadSupportingContext = () => {
+      fetchEndpoint('/api/markets', (response) => ({ markets: response }));
+      void fetch('/api/space-weather')
+        .then((response) => response.ok ? response.json() : null)
+        .then((response) => { if (response) setSpaceWeather(response); })
+        .catch(() => undefined);
+    };
+
+    loadSupportingContext();
+    const interval = setInterval(loadSupportingContext, 30 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [fetchEndpoint]);
+
   const layerFetchedRef = useRef<Set<string>>(new Set());
   useEffect(() => {
 
@@ -810,7 +821,7 @@ export default function Dashboard() {
     // Display
     cmds.push(
       { id: 'disp:proj', group: 'DISPLAY', title: mapProjection === 'globe' ? 'Switch to 2D Map' : 'Switch to 3D Globe', subtitle: 'Map projection', keywords: 'globe mercator 2d 3d projection', icon: <Globe className="w-4 h-4" />, badge: mapProjection === 'globe' ? 'GLOBE' : 'FLAT', active: mapProjection === 'globe', keepOpen: true, run: () => setMapProjection(p => p === 'globe' ? 'mercator' : 'globe') },
-      { id: 'disp:style', group: 'DISPLAY', title: mapStyle === 'dark' ? 'Satellite Imagery' : 'Night / Dark Basemap', subtitle: 'Basemap style', keywords: 'satellite imagery dark night basemap style', icon: <Satellite className="w-4 h-4" />, badge: mapStyle === 'satellite' ? 'SAT' : 'DARK', active: mapStyle === 'satellite', keepOpen: true, run: () => setMapStyle(s => s === 'dark' ? 'satellite' : 'dark') },
+      { id: 'disp:style', group: 'DISPLAY', title: mapStyle === 'dark' ? 'Earth Basemap' : mapStyle === 'earth' ? 'Satellite Imagery' : 'Night / Dark Basemap', subtitle: 'Basemap style', keywords: 'earth satellite imagery dark night basemap style', icon: <Satellite className="w-4 h-4" />, badge: mapStyle.toUpperCase(), active: mapStyle !== 'dark', keepOpen: true, run: () => setMapStyle((style) => style === 'dark' ? 'earth' : style === 'earth' ? 'satellite' : 'dark') },
       { id: 'disp:theme', group: 'DISPLAY', title: ophanimTheme === 'ghost' ? 'Switch to Lattice Mode' : 'Switch to Eclipse Mode', subtitle: 'Interface theme', keywords: 'theme lattice eclipse teal violet colour', icon: <Moon className="w-4 h-4" />, badge: ophanimTheme === 'ghost' ? 'ECLIPSE' : 'LATTICE', active: ophanimTheme === 'ghost', keepOpen: true, run: () => setOphanimTheme(t => t === 'core' ? 'ghost' : 'core') },
       { id: 'disp:fs', group: 'DISPLAY', title: 'Toggle Fullscreen', subtitle: 'Immersive mode', keywords: 'fullscreen immersive', icon: <MapPinned className="w-4 h-4" />, run: toggleFullscreen },
     );
@@ -832,6 +843,33 @@ export default function Dashboard() {
             className="absolute inset-0 z-[999] flex flex-col items-center justify-center overflow-hidden"
             style={{ background: 'radial-gradient(ellipse at center, rgba(124,255,203,0.12) 0%, rgba(8,12,24,0.8) 42%, var(--bg-void) 72%)' }}
           >
+            <div className="ophanim-launch-screen absolute inset-0 z-[20]" aria-label="Loading Ophanim">
+              <div className="ophanim-launch-screen__topline">
+                <span>OPHANIM / SIGNAL BOOT</span>
+                <span>NETWORK SESSION INITIALIZING</span>
+              </div>
+              <div className="ophanim-launch-screen__core">
+                <div className="ophanim-launch-screen__brand">
+                  <OphanimMark className="h-14 w-14" />
+                  <div>
+                    <span>OPHANIM</span>
+                    <strong>INTELLIGENCE WORKSPACE</strong>
+                  </div>
+                </div>
+                <div className="ophanim-launch-screen__route" aria-hidden="true">
+                  <i /><i /><i /><i /><i /><i />
+                </div>
+                <div className="ophanim-launch-screen__stages">
+                  <span><b>01</b> MAP ENGINE READY</span>
+                  <span><b>02</b> EVIDENCE CHANNELS READY</span>
+                  <span><b>03</b> WORKSPACE ONLINE</span>
+                </div>
+              </div>
+              <div className="ophanim-launch-screen__footline">
+                <span>LIVE DATA IS ATTRIBUTED AT THE SOURCE</span>
+                <span>VERSION 4.2</span>
+              </div>
+            </div>
             {/* ── Scanline CRT overlay ── */}
             <div className="absolute inset-0 pointer-events-none z-[1]" style={{
               backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(124,255,203,0.018) 2px, rgba(124,255,203,0.018) 4px)',
@@ -1025,7 +1063,7 @@ export default function Dashboard() {
           data={data}
           activeLayers={activeLayers}
           projection={mapProjection}
-          mapStyle={mapStyle === 'satellite' ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}' : 'dark'}
+          mapStyle={mapStyle}
           onEntityClick={handleEntityClick}
           onMouseCoords={handleMouseCoords}
           onRightClick={handleRightClick}
@@ -1043,10 +1081,10 @@ export default function Dashboard() {
       {/* ── MAP VIEW CONTROLS (3D/2D + SATELLITE TOGGLE) — unified glass control ── */}
       <motion.div
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 3.5 }}
-        className="absolute bottom-[75px] md:bottom-[100px] z-[200] flex items-center pointer-events-none"
-        style={{ left: isMobile ? '12px' : '226px' }}
+        className="ophanim-map-controls absolute bottom-[75px] md:bottom-[100px] z-[200] flex items-center pointer-events-none"
+        style={{ right: isMobile ? '12px' : '28px' }}
       >
-        <div className="glass-panel flex items-center gap-1 p-1 pointer-events-auto">
+        <div className="ophanim-map-controls__surface flex items-center gap-1 p-1 pointer-events-auto">
           {/* 3D/2D Toggle */}
           <button
             onClick={() => setMapProjection(p => p === 'globe' ? 'mercator' : 'globe')}
@@ -1067,23 +1105,20 @@ export default function Dashboard() {
 
           <div className="w-px h-6 bg-white/10" />
 
-          {/* Map Style Toggle */}
-          <button
-            onClick={() => setMapStyle(s => s === 'dark' ? 'satellite' : 'dark')}
-            className="group relative flex items-center justify-center w-10 h-10 rounded-[10px] transition-colors"
-            style={{
-              background: mapStyle === 'satellite' ? 'rgba(0,230,118,0.12)' : 'transparent',
-              boxShadow: mapStyle === 'satellite' ? 'inset 0 0 0 1px rgba(0,230,118,0.35)' : 'none',
-            }}
-            title={mapStyle === 'dark' ? 'Switch to Satellite' : 'Switch to Night'}
-          >
-            {mapStyle === 'satellite'
-              ? <Satellite className="w-[18px] h-[18px] text-[var(--alert-green)] group-hover:scale-110 transition-transform" />
-              : <Moon className="w-[18px] h-[18px] text-[var(--text-secondary)] group-hover:text-[var(--cyan-primary)] group-hover:scale-110 transition-all" />}
-            <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 text-[8px] font-mono tracking-widest text-[var(--text-secondary)] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity glass-panel px-2 py-1 z-[300]">
-              {mapStyle === 'satellite' ? 'SATELLITE' : 'NIGHT'}
-            </span>
-          </button>
+          <div className="ophanim-map-style-switch" role="group" aria-label="Basemap style">
+            <button type="button" onClick={() => setMapStyle('dark')} className={mapStyle === 'dark' ? 'is-active' : ''} title="Night basemap">
+              <Moon className="w-3.5 h-3.5" />
+              <span>NIGHT</span>
+            </button>
+            <button type="button" onClick={() => setMapStyle('earth')} className={mapStyle === 'earth' ? 'is-active' : ''} title="Earth colored basemap">
+              <Globe className="w-3.5 h-3.5" />
+              <span>EARTH</span>
+            </button>
+            <button type="button" onClick={() => setMapStyle('satellite')} className={mapStyle === 'satellite' ? 'is-active' : ''} title="Satellite imagery">
+              <Satellite className="w-3.5 h-3.5" />
+              <span>SAT</span>
+            </button>
+          </div>
         </div>
       </motion.div>
 
@@ -1104,18 +1139,24 @@ export default function Dashboard() {
       </motion.div>
 
       {!isMobile && (
-        <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 2.65 }} className="ophanim-command-bar ophanim-header-command absolute top-5 z-[220] flex items-center gap-2 pointer-events-auto">
-          <div className="w-[min(46vw,560px)]"><SearchBar alwaysExpanded onLocate={(lat, lng, zoom) => setFlyToLocation({ lat, lng, zoom, ts: Date.now() })} onAction={(action) => { if (action.type === 'enable_layers') setActiveLayers((previous) => ({ ...previous, ...Object.fromEntries(action.layers.map((layer) => [layer, true])) })); }} /></div>
-          <button onClick={() => { setAiPanelMode('settings'); setShowAiAnalyst(true); setShowFusion(false); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className="ophanim-command-button ophanim-command-button--primary" title="Configure API key or local AI model"><Settings className="w-4 h-4" /><span>SET UP AI</span></button>
-          <button onClick={() => window.dispatchEvent(new Event('ophanim:open-watchlists'))} className="ophanim-command-button" title="Open Watchlists"><Bookmark className="w-4 h-4" /><span>WATCH</span></button>
-          <button onClick={() => setShowProviders((value) => !value)} className="ophanim-command-button" title="View provider and source status"><Database className="w-4 h-4" /><span>SOURCES</span></button>
+        <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 2.65 }} className="ophanim-command-bar ophanim-command-dock ophanim-header-command absolute top-5 z-[220] pointer-events-auto">
+          <div className="ophanim-command-search"><SearchBar alwaysExpanded onLocate={(lat, lng, zoom) => setFlyToLocation({ lat, lng, zoom, ts: Date.now() })} onAction={(action) => { if (action.type === 'enable_layers') setActiveLayers((previous) => ({ ...previous, ...Object.fromEntries(action.layers.map((layer) => [layer, true])) })); }} /></div>
+          <div className="ophanim-command-actions">
+            <button onClick={() => { setWorkbenchView('news'); setShowNews(!showNews); setShowAiAnalyst(false); setShowFusion(false); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className={`ophanim-command-button ${showNews ? 'is-active' : ''}`} title="Open intelligence workbench"><Newspaper className="w-4 h-4" /><span>NEWS</span></button>
+            <button onClick={() => { setAiPanelMode('settings'); setShowAiAnalyst(true); setShowNews(false); setShowFusion(false); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className="ophanim-command-button ophanim-command-button--primary" title="Configure API key or local AI model"><Settings className="w-4 h-4" /><span>AI SETUP</span></button>
+            <button onClick={() => window.dispatchEvent(new Event('ophanim:open-watchlists'))} className="ophanim-command-button" title="Open Watchlists"><Bookmark className="w-4 h-4" /><span>WATCH</span></button>
+            <button onClick={() => window.location.assign('/imports')} className="ophanim-command-button" title="Import organization CSV data"><FileUp className="w-4 h-4" /><span>IMPORT</span></button>
+            <button onClick={() => setShowProviders((value) => !value)} className="ophanim-command-button" title="View provider and source status"><Database className="w-4 h-4" /><span>SOURCES</span></button>
+          </div>
         </motion.div>
       )}
 
       {isMobile && (
-        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 2.65 }} className="absolute top-[108px] left-3 right-3 z-[230] grid grid-cols-3 gap-1.5 pointer-events-auto">
+        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 2.65 }} className="absolute top-[108px] left-3 right-3 z-[230] grid grid-cols-5 gap-1.5 pointer-events-auto">
           <button onClick={() => { setAiPanelMode('settings'); setShowAiAnalyst(true); setShowProviders(false); setMobilePanel(null); }} className="ophanim-command-button ophanim-command-button--primary min-w-0 justify-center" title="Configure API key or local AI model"><Settings className="w-3.5 h-3.5 shrink-0" /><span>AI SETUP</span></button>
+          <button onClick={() => { setMobilePanel('intel'); setShowAiAnalyst(false); setShowProviders(false); }} className="ophanim-command-button min-w-0 justify-center" title="Open live news intelligence"><Newspaper className="w-3.5 h-3.5 shrink-0" /><span>NEWS</span></button>
           <button onClick={() => { setMobilePanel(null); window.dispatchEvent(new Event('ophanim:open-watchlists')); }} className="ophanim-command-button min-w-0 justify-center" title="Open Watchlists"><Bookmark className="w-3.5 h-3.5 shrink-0" /><span>WATCH</span></button>
+          <button onClick={() => window.location.assign('/imports')} className="ophanim-command-button min-w-0 justify-center" title="Import organization CSV data"><FileUp className="w-3.5 h-3.5 shrink-0" /><span>IMPORT</span></button>
           <button onClick={() => { setShowProviders((value) => !value); setShowAiAnalyst(false); setMobilePanel(null); }} className="ophanim-command-button min-w-0 justify-center" title="View provider and source status"><Database className="w-3.5 h-3.5 shrink-0" /><span>SOURCES</span></button>
         </motion.div>
       )}
@@ -1158,6 +1199,17 @@ export default function Dashboard() {
       {/* ── NEW SIDEBAR (Root Level) ── */}
       {showLayers && !isMobile && <LayerPanel data={data} activeLayers={activeLayers} setActiveLayers={setActiveLayers} theme={ophanimTheme} setTheme={setOphanimTheme} />}
       <WatchlistPanel />
+      {!isMobile && (
+        <IntelligenceWorkbench
+          data={data}
+          open={showNews}
+          view={workbenchView}
+          onViewChange={setWorkbenchView}
+          onClose={() => setShowNews(false)}
+          onLocate={(lat, lng) => setFlyToLocation({ lat, lng, ts: Date.now() })}
+          onWatchTarget={({ type, value }) => window.dispatchEvent(new CustomEvent('ophanim:watch-target', { detail: { type, value } }))}
+        />
+      )}
       {isMobile && showAiAnalyst && <AiAnalyst data={data} mode={aiPanelMode} />}
       <AnimatePresence>
         {showProviders && (
@@ -1170,17 +1222,17 @@ export default function Dashboard() {
 
 
       {/* ── RIGHT TOOL STRIP (desktop only — mobile uses bottom nav) ── */}
-      {!isMobile && <div className="ophanim-context-rail absolute right-4 top-[88px] flex flex-col gap-1 z-[250] pointer-events-auto">
-        <div className="ophanim-context-title">WORKSPACE</div>
+      {!isMobile && <div className="ophanim-context-rail absolute right-4 top-[130px] flex flex-col gap-1 z-[250] pointer-events-auto">
+        <div className="ophanim-context-title">INTELLIGENCE</div>
         <div className="relative group">
-          <button onClick={() => { setAiPanelMode('briefing'); setShowAiAnalyst(!showAiAnalyst); setShowFusion(false); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className={`ophanim-context-button ${showAiAnalyst ? 'is-active' : ''}`} title="AI Analyst">
+          <button onClick={() => { setAiPanelMode('briefing'); setShowAiAnalyst(!showAiAnalyst); setShowNews(false); setShowFusion(false); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className={`ophanim-context-button ${showAiAnalyst ? 'is-active' : ''}`} title="AI Analyst">
             <Brain className={`w-4 h-4 ${showAiAnalyst ? 'text-[var(--cyan-primary)]' : 'text-white/60'}`} />
             <span>Analyst</span>
           </button>
           <AnimatePresence>{showAiAnalyst && <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="absolute right-12 top-1/2 -translate-y-1/2 w-80"><AiAnalyst data={data} mode={aiPanelMode} /></motion.div>}</AnimatePresence>
         </div>
         <div className="relative group">
-          <button onClick={() => { setShowFusion(!showFusion); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className={`ophanim-context-button ${showFusion ? 'is-active is-alert' : ''}`} title="Global Threat Fusion">
+          <button onClick={() => { setShowFusion(!showFusion); setShowNews(false); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className={`ophanim-context-button ${showFusion ? 'is-active is-alert' : ''}`} title="Global Threat Fusion">
             <Activity className={`w-4 h-4 ${showFusion ? 'text-[#FF1744]' : 'text-white/60'}`} />
             <span>Fusion</span>
           </button>
@@ -1195,7 +1247,14 @@ export default function Dashboard() {
         </div>
 
         <div className="relative group">
-          <button onClick={() => { setShowIntel(!showIntel); setShowMarkets(false); setShowAlerts(false); setShowFusion(false); }} className={`ophanim-context-button ${showIntel ? 'is-active' : ''}`} title="Recon tools">
+          <button onClick={() => { setWorkbenchView('news'); setShowNews(!showNews); setShowAiAnalyst(false); setShowFusion(false); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className={`ophanim-context-button ${showNews ? 'is-active' : ''}`} title="Open intelligence workbench">
+            <Newspaper className={`w-4 h-4 ${showNews ? 'text-[var(--cyan-primary)]' : 'text-white/60'}`} />
+            <span>News</span>
+          </button>
+        </div>
+
+        <div className="relative group">
+          <button onClick={() => { setShowIntel(!showIntel); setShowNews(false); setShowMarkets(false); setShowAlerts(false); setShowFusion(false); }} className={`ophanim-context-button ${showIntel ? 'is-active' : ''}`} title="Recon tools">
             <Radar className={`w-4 h-4 ${showIntel ? 'text-[var(--cyan-primary)]' : 'text-white/60'}`} />
             <span>Recon</span>
           </button>
@@ -1216,7 +1275,7 @@ export default function Dashboard() {
         </div>
 
         <div className="relative group">
-          <button onClick={() => { setShowMarkets(!showMarkets); setShowIntel(false); setShowAlerts(false); setShowFusion(false); }} className={`ophanim-context-button ${showMarkets ? 'is-active' : ''}`} title="Markets">
+          <button onClick={() => { setShowMarkets(!showMarkets); setShowNews(false); setShowIntel(false); setShowAlerts(false); setShowFusion(false); }} className={`ophanim-context-button ${showMarkets ? 'is-active' : ''}`} title="Markets">
             <BarChart3 className={`w-4 h-4 ${showMarkets ? 'text-[var(--gold-primary)]' : 'text-white/60'}`} />
             <span>Markets</span>
           </button>
@@ -1231,7 +1290,7 @@ export default function Dashboard() {
         </div>
 
         <div className="relative group">
-          <button onClick={() => { setShowAlerts(!showAlerts); setShowIntel(false); setShowMarkets(false); setShowEntityGraph(false); setShowFusion(false); }} className={`ophanim-context-button ${showAlerts ? 'is-active is-alert' : ''}`} title="Live alerts">
+          <button onClick={() => { setShowAlerts(!showAlerts); setShowNews(false); setShowIntel(false); setShowMarkets(false); setShowEntityGraph(false); setShowFusion(false); }} className={`ophanim-context-button ${showAlerts ? 'is-active is-alert' : ''}`} title="Live alerts">
             <AlertTriangle className={`w-4 h-4 ${showAlerts ? 'text-[#FF3D3D]' : 'text-white/60'}`} />
             <span>Alerts</span>
           </button>
@@ -1246,7 +1305,7 @@ export default function Dashboard() {
         </div>
 
         <div className="relative group">
-          <button onClick={() => { setShowEntityGraph(!showEntityGraph); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); }} className={`ophanim-context-button ${showEntityGraph ? 'is-active' : ''}`} title="Entity graph">
+          <button onClick={() => { setShowEntityGraph(!showEntityGraph); setShowNews(false); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); }} className={`ophanim-context-button ${showEntityGraph ? 'is-active' : ''}`} title="Entity graph">
             <Network className={`w-4 h-4 ${showEntityGraph ? 'text-[var(--gold-primary)]' : 'text-white/60'}`} />
             <span>Entities</span>
           </button>
@@ -1260,7 +1319,7 @@ export default function Dashboard() {
         </div>
 
         <div className="relative group">
-          <button onClick={() => { setShowDesktopSearch(!showDesktopSearch); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className={`ophanim-context-button ${showDesktopSearch ? 'is-active' : ''}`} title="Search tools">
+          <button onClick={() => { setShowDesktopSearch(!showDesktopSearch); setShowNews(false); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); setShowEntityGraph(false); }} className={`ophanim-context-button ${showDesktopSearch ? 'is-active' : ''}`} title="Search tools">
             <Search className={`w-4 h-4 ${showDesktopSearch ? 'text-[var(--gold-primary)]' : 'text-white/60'}`} />
             <span>Search</span>
           </button>
