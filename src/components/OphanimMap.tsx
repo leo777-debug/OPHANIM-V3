@@ -185,6 +185,13 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
       transformRequest: (url: string) => ({ url }),
     });
 
+    map.on('error', (event) => {
+      // Switching a raster layer can cancel an obsolete tile request. MapLibre
+      // reports that expected cancellation as an error event in development.
+      if ((event.error as DOMException | undefined)?.name === 'AbortError') return;
+      console.warn('MapLibre error:', event.error);
+    });
+
     map.on('load', () => {
       mapRef.current = map;
 
@@ -244,6 +251,35 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
       createWarningIcon('warn-icon', '#D32F2F');
       createWarningIcon('warn-orange', '#E65100');
       createWarningIcon('warn-yellow', '#F9A825');
+
+      // Keep each basemap in its own source. Visibility changes do not abort an
+      // in-flight source request the way RasterTileSource#setTiles does.
+      map.addSource('earth-tiles', {
+        type: 'raster',
+        tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}'],
+        tileSize: 256,
+        maxzoom: 18,
+      });
+      map.addSource('satellite-tiles', {
+        type: 'raster',
+        tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+        tileSize: 256,
+        maxzoom: 18,
+      });
+      map.addLayer({
+        id: 'earth-basemap',
+        type: 'raster',
+        source: 'earth-tiles',
+        layout: { visibility: 'none' },
+        paint: { 'raster-opacity': 0.93 },
+      });
+      map.addLayer({
+        id: 'satellite-basemap',
+        type: 'raster',
+        source: 'satellite-tiles',
+        layout: { visibility: 'none' },
+        paint: { 'raster-opacity': 0.85 },
+      });
 
       map.addLayer({ id: 'conflict-icons', type: 'symbol', source: 'conflict-zones', layout: {
         'icon-image': ['match', ['get','severity'], 'war','warn-icon', 'high','warn-orange', 'warn-yellow'],
@@ -640,19 +676,6 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
         'text-offset': [0, 1.5], 'text-allow-overlap': false, 'text-optional': true,
       }, paint: { 'text-color': '#CFD8DC', 'text-halo-color': '#00121a', 'text-halo-width': 1.2 }});
 
-      if (mapStyle !== 'dark') {
-        const tiles = mapStyle === 'earth'
-          ? ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}']
-          : ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'];
-        map.addSource('satellite-tiles', { type: 'raster', tiles, tileSize: 256, maxzoom: 18 });
-        map.addLayer({
-          id: 'satellite-layer',
-          type: 'raster',
-          source: 'satellite-tiles',
-          paint: { 'raster-opacity': mapStyle === 'earth' ? 0.93 : 0.85 },
-        }, 'day-night-fill');
-      }
-
       setMapReady(true);
     });
 
@@ -731,8 +754,6 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
           <button onclick="window.openOphanimIntel({ callsign: '${idSafe(cs)}', icao24: '${idSafe(p.icao24||'')}', model: '${idSafe(p.model||'')}', registration: '${idSafe(p.registration||'')}' })" style="width:100%;margin-top:8px;padding:6px 12px;background:rgba(124,255,203,0.15);border:1px solid rgba(124,255,203,0.5);color:#7CFFCB;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:bold;letter-spacing:0.1em;border-radius:4px;cursor:pointer;">[ DEEP DIVE INTEL ]</button>
         </div>`);
       });
-      map.on('mouseenter', layer, () => { map.getCanvas().style.cursor = 'pointer'; });
-      map.on('mouseleave', layer, () => { map.getCanvas().style.cursor = ''; });
     });
 
     // ── CCTV (opens CameraViewer panel) ──
@@ -922,11 +943,8 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
       });
     });
 
-    // ── Generic hover for clickables ──
-    ['conflict-icons','cctv-dots','eq-circles','sat-dots','fires-heat','gdelt-dots','weather-dots','infra-dots','maritime-dots','choke-dots','news-dots','sigint-news-dots','balloon-dots','rad-dots','ship-dots','sweep-device-dots','scan-targets-dots','sdk-sea','sdk-sea-glow','sdk-sea-atmo','sdk-air','sdk-air-glow','sdk-air-atmo','sdk-intel','sdk-intel-glow','sdk-intel-atmo','malware-dots'].forEach(layer => {
-      map.on('mouseenter', layer, () => { map.getCanvas().style.cursor = 'pointer'; });
-      map.on('mouseleave', layer, () => { map.getCanvas().style.cursor = ''; });
-    });
+    // Layer-specific hover listeners query rendered symbols on every mouse move.
+    // Stream updates can invalidate those symbol indexes, so interactions are click-only.
 
     // ── Scan Targets click ──
     map.on('click', 'scan-targets-dots', (e: any) => {
@@ -1769,34 +1787,11 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
   useEffect(() => {
     if (!mapReady || !mapRef.current) return;
     const map = mapRef.current;
-    if (mapStyle === prevStyleRef.current && (mapStyle === 'dark' || map.getLayer('satellite-layer'))) return;
+    if (mapStyle === prevStyleRef.current) return;
 
     try {
-      if (mapStyle !== 'dark') {
-        const tiles = mapStyle === 'earth'
-          ? ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}']
-          : ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'];
-        const opacity = mapStyle === 'earth' ? 0.93 : 0.85;
-
-        if (!map.getSource('satellite-tiles')) {
-          map.addSource('satellite-tiles', {
-            type: 'raster',
-            tiles,
-            tileSize: 256,
-            maxzoom: 18,
-          });
-          map.addLayer({ id: 'satellite-layer', type: 'raster', source: 'satellite-tiles', paint: { 'raster-opacity': opacity } }, 'day-night-fill');
-        } else {
-          const source = map.getSource('satellite-tiles') as maplibregl.RasterTileSource;
-          source.setTiles(tiles);
-          map.setLayoutProperty('satellite-layer', 'visibility', 'visible');
-          map.setPaintProperty('satellite-layer', 'raster-opacity', opacity);
-        }
-      } else {
-        if (map.getLayer('satellite-layer')) {
-          map.setLayoutProperty('satellite-layer', 'visibility', 'none');
-        }
-      }
+      map.setLayoutProperty('earth-basemap', 'visibility', mapStyle === 'earth' ? 'visible' : 'none');
+      map.setLayoutProperty('satellite-basemap', 'visibility', mapStyle === 'satellite' ? 'visible' : 'none');
       prevStyleRef.current = mapStyle;
     } catch (e) {
       console.warn('Style switch failed:', e);

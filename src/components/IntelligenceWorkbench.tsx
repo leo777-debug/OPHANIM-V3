@@ -93,13 +93,13 @@ export default function IntelligenceWorkbench({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 36 }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          aria-label="Intelligence workbench"
-          className="ophanim-workbench fixed inset-x-3 bottom-[62px] z-[330] mx-auto flex max-h-[min(590px,58dvh)] w-[min(1180px,calc(100vw-24px))] flex-col overflow-hidden md:bottom-[62px]"
+          aria-label="Intelligence desk"
+          className="ophanim-workbench"
         >
           <header className="ophanim-workbench__header">
             <div className="ophanim-workbench__title">
               <Radio className="h-4 w-4 text-[var(--cyan-primary)]" />
-              <span>INTELLIGENCE WORKBENCH</span>
+              <span>INTEL DESK</span>
             </div>
 
             <div className="ophanim-workbench__tabs" role="tablist" aria-label="Workspace tabs">
@@ -111,7 +111,7 @@ export default function IntelligenceWorkbench({
                 className={`ophanim-workbench__tab ${activeTab === 'map' ? 'is-active' : ''}`}
               >
                 <MapPinned className="h-3.5 w-3.5" />
-                MAP
+                OVERVIEW
               </button>
               {tabs.map((tab) => (
                 <div key={tab.id} className={`ophanim-workbench__target-tab ${activeTab === tab.id ? 'is-active' : ''}`}>
