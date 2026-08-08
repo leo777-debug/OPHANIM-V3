@@ -149,7 +149,7 @@ async function executeGhostTrack(query: ProviderQuery, signal: AbortSignal): Pro
 
 export const ghostTrackProvider: Provider = {
   metadata: {
-    name: 'ghosttrack',
+    id: 'ghosttrack', name: 'ghosttrack', category: 'network',
     description: 'Backend-only GhostTrack enrichment for IP, domain, and username lookups.',
     supportedEntityTypes: ['ip', 'domain', 'username'],
     supportedIntents: ['ip_lookup', 'domain_lookup', 'username_lookup'],

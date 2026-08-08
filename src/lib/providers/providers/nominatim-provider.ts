@@ -67,7 +67,7 @@ function normalizeRecord(record: NominatimRecord): NormalizedSearchResult | null
 
 export const nominatimProvider: Provider = {
   metadata: {
-    name: 'nominatim',
+    id: 'nominatim', name: 'nominatim', category: 'geospatial',
     description: 'OpenStreetMap geocoding and reverse-geocoding service.',
     supportedEntityTypes: ['location', 'port', 'country', 'region'],
     supportedIntents: ['forward_geocode', 'reverse_geocode', 'port_lookup', 'country_lookup', 'region_lookup'],

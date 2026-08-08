@@ -2,6 +2,7 @@ import type { NormalizedSearchResult, Provider, ProviderQuery } from './types';
 
 export function normalizeResults(provider: Provider, raw: unknown, query: ProviderQuery): NormalizedSearchResult[] {
   const seen = new Set<string>();
+  if (!provider.normalize) return [];
 
   return provider.normalize(raw, query).filter((result) => {
     const hasCoordinates = result.lat !== undefined || result.lng !== undefined;

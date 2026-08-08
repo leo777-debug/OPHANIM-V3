@@ -36,7 +36,7 @@ function toLayer(id: string, name: string, color: string, vessels: WarSanctionsV
 
 export const warSanctionsProvider: Provider = {
   metadata: {
-    name: 'war-sanctions', description: 'GUR War & Sanctions public vessel and Shadow Fleet catalogue.',
+    id: 'war-sanctions', name: 'war-sanctions', description: 'GUR War & Sanctions public vessel and Shadow Fleet catalogue.', category: 'sanctions',
     supportedEntityTypes: ['vessel', 'imo', 'mmsi', 'company', 'organization', 'person', 'command'],
     supportedIntents: ['vessel_lookup', 'imo_lookup', 'mmsi_lookup', 'company_lookup', 'organization_lookup', 'person_lookup', 'map_command'],
     supportsMapLayers: true, requiresCredentials: false, timeoutMs: 30000, enabled: true, priority: 8,

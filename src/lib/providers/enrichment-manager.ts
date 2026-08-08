@@ -1,8 +1,22 @@
 import { normalizeResults } from './normalize-results';
 import { providerHealth } from './provider-health';
-import type { EnrichmentResponse, Provider, ProviderDiagnostic, ProviderExecutionContext, ProviderQuery } from './types';
+import { providerId, type EnrichmentResponse, type Provider, type ProviderDiagnostic, type ProviderExecutionContext, type ProviderQuery } from './types';
+import { providerMetrics } from './provider-metrics';
 
 class ProviderTimeoutError extends Error {}
+
+function retryable(error: unknown): boolean {
+  if (error instanceof ProviderTimeoutError) return true;
+  const message = error instanceof Error ? error.message : '';
+  return /\b(408|425|429|500|502|503|504)\b|network|temporar|rate.?limit/i.test(message);
+}
+
+async function executeProvider(provider: Provider, query: ProviderQuery, context: ProviderExecutionContext): Promise<unknown> {
+  if (provider.search) return provider.search(query, context);
+  if (provider.fetch) return provider.fetch(query, context);
+  if (provider.execute) return provider.execute(query, context);
+  throw new Error('Provider does not support search execution');
+}
 
 async function executeWithTimeout(provider: Provider, query: ProviderQuery, context: Omit<ProviderExecutionContext, 'signal'>): Promise<unknown> {
   const controller = new AbortController();
@@ -16,7 +30,7 @@ async function executeWithTimeout(provider: Provider, query: ProviderQuery, cont
 
   try {
     return await Promise.race([
-      provider.execute(query, { ...context, signal: controller.signal }),
+      executeProvider(provider, query, { ...context, signal: controller.signal }),
       timeoutResult,
     ]);
   } finally {
@@ -27,29 +41,31 @@ async function executeWithTimeout(provider: Provider, query: ProviderQuery, cont
 export class EnrichmentManager {
   async enrich(query: ProviderQuery, providers: Provider[], context: Omit<ProviderExecutionContext, 'signal'> = { locale: 'en' }): Promise<EnrichmentResponse> {
     const settled = await Promise.all(providers.map(async (provider) => {
-      if (!providerHealth.canExecute(provider.metadata.name)) {
-        const diagnostic: ProviderDiagnostic = { provider: provider.metadata.name, status: 'circuit_open', resultCount: 0 };
+      const id = providerId(provider.metadata);
+      if (!providerHealth.canExecute(id)) {
+        const diagnostic: ProviderDiagnostic = { provider: id, status: 'circuit_open', resultCount: 0 };
         return { results: [], diagnostic };
       }
-      try {
-        const raw = await executeWithTimeout(provider, query, context);
-        const results = normalizeResults(provider, raw, query);
-        providerHealth.recordSuccess(provider.metadata.name);
-        const diagnostic: ProviderDiagnostic = {
-          provider: provider.metadata.name,
-          status: 'success',
-          resultCount: results.length,
-        };
-        return { results, diagnostic };
-      } catch (error) {
-        providerHealth.recordFailure(provider.metadata.name);
-        const diagnostic: ProviderDiagnostic = {
-          provider: provider.metadata.name,
-          status: error instanceof ProviderTimeoutError ? 'timeout' : 'error',
-          resultCount: 0,
-        };
-        return { results: [], diagnostic };
+      let error: unknown;
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        const startedAt = performance.now();
+        providerMetrics.recordAttempt(id, attempt > 0);
+        try {
+          const raw = await executeWithTimeout(provider, query, context);
+          const results = normalizeResults(provider, raw, query);
+          providerHealth.recordSuccess(id);
+          providerMetrics.recordSuccess(id, performance.now() - startedAt);
+          const diagnostic: ProviderDiagnostic = { provider: id, status: 'success', resultCount: results.length };
+          return { results, diagnostic };
+        } catch (caught) {
+          error = caught;
+          providerMetrics.recordFailure(id, caught instanceof ProviderTimeoutError);
+          if (attempt === 0 && retryable(caught)) continue;
+        }
       }
+      providerHealth.recordFailure(id);
+      const diagnostic: ProviderDiagnostic = { provider: id, status: error instanceof ProviderTimeoutError ? 'timeout' : 'error', resultCount: 0 };
+      return { results: [], diagnostic };
     }));
 
     return {

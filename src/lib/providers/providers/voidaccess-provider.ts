@@ -20,6 +20,11 @@ function settings() {
   };
 }
 
+function configured() {
+  const { apiUrl, token, email, password } = settings();
+  return Boolean(apiUrl && (token || (email && password)));
+}
+
 async function getToken(signal: AbortSignal) {
   const { apiUrl, token, email, password } = settings();
   if (token) return token;
@@ -59,7 +64,7 @@ async function pause(ms: number, signal: AbortSignal) {
 
 export const voidAccessProvider: Provider = {
   metadata: {
-    name: 'voidaccess',
+    id: 'voidaccess', name: 'voidaccess', category: 'dark_web',
     description: 'Backend-only dark-web threat-intelligence investigations through VoidAccess.',
     supportedEntityTypes: ['command'],
     supportedIntents: ['dark_web_lookup'],
@@ -70,14 +75,13 @@ export const voidAccessProvider: Provider = {
     priority: 20,
   },
   isConfigured() {
-    const { apiUrl, token, email, password } = settings();
-    return Boolean(apiUrl && (token || (email && password)));
+    return configured();
   },
   async createMapLayers() { return []; },
   async execute(query, context): Promise<VoidAccessRaw> {
     const { apiUrl } = settings();
     const subject = query.query ?? '';
-    if (!apiUrl || !this.isConfigured()) return { status: 'unavailable', query: subject, message: 'Dark-web intelligence is not configured on this server.' };
+    if (!apiUrl || !configured()) return { status: 'unavailable', query: subject, message: 'Dark-web intelligence is not configured on this server.' };
 
     try {
       const token = await getToken(context.signal);

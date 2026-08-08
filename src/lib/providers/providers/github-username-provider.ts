@@ -2,7 +2,7 @@ import type { Provider } from '../types';
 
 export const githubUsernameProvider: Provider = {
   metadata: {
-    name: 'github-username', description: 'Public GitHub username profile lookup.',
+    id: 'github-username', name: 'github-username', description: 'Public GitHub username profile lookup.', category: 'identity',
     supportedEntityTypes: ['username'], supportedIntents: ['username_lookup'], supportsMapLayers: false,
     requiresCredentials: false, timeoutMs: 8000, enabled: true, priority: 10,
   },

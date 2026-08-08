@@ -4,9 +4,9 @@ import { isRateLimited, getClientIp } from '@/lib/ssrf-guard';
 export const dynamic = 'force-dynamic';
 
 /**
- * Thin proxy to the OSIRIS Intelligence Layer (osiris-intel).
+ * Thin proxy to the Ophanim intelligence service (ophanim-intel).
  *
- * In Docker: fetches from http://osiris-intel:4000/resolve
+ * In Docker: fetches from http://ophanim-intel:4000/resolve
  * In dev:    fetches from http://localhost:4000/resolve
  *
  * All intelligence logic lives in the intel container — this route
@@ -15,7 +15,7 @@ export const dynamic = 'force-dynamic';
 
 const INTEL_URL = process.env.INTEL_URL || (
   process.env.NODE_ENV === 'production'
-    ? 'http://osiris-intel:4000'
+    ? 'http://ophanim-intel:4000'
     : 'http://localhost:4000'
 );
 

@@ -1,19 +1,18 @@
 <div align="center">
 
-# ⬡ OSIRIS
+# OPHANIM
 
-### Open Source Intelligence & Reconnaissance Integrated System
+### Configurable Live Intelligence Platform
 
-[![Live Demo](https://img.shields.io/badge/osirisai.live-00E5FF?style=for-the-badge&logo=vercel&logoColor=white)](https://osirislive.app)
-[![Support OSIRIS](https://img.shields.io/badge/Support_Project-Patreon-FF424D?style=for-the-badge&logo=patreon&logoColor=white)](https://www.patreon.com/posts/159077425)
+[![Ophanim](https://img.shields.io/badge/Ophanim-Intelligence_Platform-2FD5CA?style=for-the-badge)](https://github.com/leo777-debug/OPHANIM-V3)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org)
 [![MapLibre](https://img.shields.io/badge/MapLibre_GL-GPU_Rendered-396CB2?style=for-the-badge)](https://maplibre.org)
 [![License](https://img.shields.io/badge/License-MIT-D4AF37?style=for-the-badge)](LICENSE)
 
-**A real-time global intelligence dashboard that aggregates live flight tracking, CCTV networks, earthquake monitoring, conflict zone mapping, and 24/7 news feeds into a single GPU-accelerated interface.**
+**A configurable intelligence platform that combines live map layers and feeds with providers, generic entities, events, evidence, workflows, watchlists, AI summaries, and notifications.**
 
-[Live Demo](https://osirisai.live) · [Report Bug](https://github.com/simplifaisoul/osiris/issues) · [Request Feature](https://github.com/simplifaisoul/osiris/issues) · [Join Discord](https://discord.gg/umBykEpb98)
+[Repository](https://github.com/leo777-debug/OPHANIM-V3) · [Platform architecture](docs/PLATFORM.md) · [Deployment](docs/DEPLOYMENT.md)
 
 </div>
 
@@ -21,7 +20,7 @@
 
 ## Overview
 
-Osiris is a production-grade OSINT platform that provides situational awareness across multiple intelligence domains. Built with Next.js 16 and MapLibre GL, every data point is rendered via WebGL for 60fps performance even with thousands of concurrent entities on-screen.
+Ophanim is a configurable intelligence platform that preserves the existing MapLibre live-feed experience while adding organization-scoped providers, entities, events, evidence, workflows, imports, and administration. Built with Next.js 16 and MapLibre GL, it supports both map-led exploration and structured operational work.
 
 ### Key Capabilities
 

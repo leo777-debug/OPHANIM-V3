@@ -27,4 +27,15 @@ describe('ProviderRegistry', () => {
     expect(registry.findProviders({ intent: 'forward_geocode', entityType: 'location', query: 'Paris', limit: 8 }))
       .toEqual([first, later]);
   });
+
+  it('does not require map methods from a search-only provider', () => {
+    const searchOnly: Provider = {
+      metadata: { ...locationProvider.metadata, id: 'search-only', name: 'search-only' },
+      async search() { return []; },
+      normalize() { return []; },
+    };
+    const registry = new ProviderRegistry([searchOnly]);
+    expect(registry.findProviders({ intent: 'forward_geocode', entityType: 'location', query: 'Paris', limit: 8 })).toEqual([searchOnly]);
+    expect(registry.findMapLayerProviders()).toEqual([]);
+  });
 });

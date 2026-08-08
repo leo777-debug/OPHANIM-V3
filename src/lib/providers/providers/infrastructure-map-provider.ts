@@ -2,7 +2,7 @@ import type { Provider, ProviderMapLayer } from '../types';
 
 export const infrastructureMapProvider: Provider = {
   metadata: {
-    name: 'infrastructure-map', description: 'Critical infrastructure map layers.', supportedEntityTypes: [], supportedIntents: [],
+    id: 'infrastructure-map', name: 'infrastructure-map', description: 'Critical infrastructure map layers.', category: 'infrastructure', supportedEntityTypes: [], supportedIntents: [],
     supportsMapLayers: true, requiresCredentials: false, timeoutMs: 10000, enabled: true, priority: 40,
   },
   async execute() { return []; },

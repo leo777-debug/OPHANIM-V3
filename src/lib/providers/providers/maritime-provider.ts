@@ -5,7 +5,7 @@ interface MaritimeLocation { properties?: { mmsi?: number; sog?: number; cog?: n
 
 export const maritimeProvider: Provider = {
   metadata: {
-    name: 'maritime-ais', description: 'Live vessel lookup from public AIS data.',
+    id: 'maritime-ais', name: 'maritime-ais', description: 'Live vessel lookup from public AIS data.', category: 'maritime',
     supportedEntityTypes: ['vessel', 'imo', 'mmsi'], supportedIntents: ['vessel_lookup', 'imo_lookup', 'mmsi_lookup'], supportsMapLayers: true,
     requiresCredentials: false, timeoutMs: 12000, enabled: true, priority: 10,
   },

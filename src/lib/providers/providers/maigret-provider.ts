@@ -65,7 +65,7 @@ async function runMaigret(username: string, signal: AbortSignal): Promise<Maigre
 
 export const maigretProvider: Provider = {
   metadata: {
-    name: 'maigret',
+    id: 'maigret', name: 'maigret', category: 'identity',
     description: 'Backend-only public username discovery using Maigret.',
     supportedEntityTypes: ['username'],
     supportedIntents: ['username_lookup'],

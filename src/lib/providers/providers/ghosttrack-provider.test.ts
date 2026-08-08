@@ -18,11 +18,11 @@ describe('parseGhostTrackOutput', () => {
     process.env.GHOSTTRACK_DIR = 'C:/definitely-missing-ghosttrack';
     process.env.GHOSTTRACK_ENABLED = 'true';
     try {
-      const raw = await ghostTrackProvider.execute(
+      const raw = await ghostTrackProvider.execute!(
         { intent: 'ip_lookup', entityType: 'ip', query: '8.8.8.8', limit: 1 },
         { signal: new AbortController().signal, locale: 'en' },
       );
-      const result = ghostTrackProvider.normalize(raw, { intent: 'ip_lookup', entityType: 'ip', query: '8.8.8.8', limit: 1 });
+      const result = ghostTrackProvider.normalize!(raw, { intent: 'ip_lookup', entityType: 'ip', query: '8.8.8.8', limit: 1 });
       expect(result[0]).toMatchObject({ label: 'GhostTrack unavailable', provider: 'ghosttrack' });
     } finally {
       if (previousDirectory === undefined) delete process.env.GHOSTTRACK_DIR;

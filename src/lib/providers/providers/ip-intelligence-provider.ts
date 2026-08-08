@@ -2,7 +2,7 @@ import type { NormalizedSearchResult, Provider } from '../types';
 
 export const ipIntelligenceProvider: Provider = {
   metadata: {
-    name: 'ip-intelligence', description: 'IP geolocation and network ownership lookup.',
+    id: 'ip-intelligence', name: 'ip-intelligence', description: 'IP geolocation and network ownership lookup.', category: 'network',
     supportedEntityTypes: ['ip'], supportedIntents: ['ip_lookup'], supportsMapLayers: false,
     requiresCredentials: false, timeoutMs: 5000, enabled: true, priority: 10,
   },
