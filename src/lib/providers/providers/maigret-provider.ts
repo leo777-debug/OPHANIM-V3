@@ -31,7 +31,7 @@ async function runMaigret(username: string, signal: AbortSignal): Promise<Maigre
   const { command, maxSites } = config();
   try {
     await new Promise<void>((resolve, reject) => {
-      const child = spawn(command, [
+      const child = spawn(/* turbopackIgnore: true */ command, [
         username, '--json', 'simple', '--folderoutput', outputDirectory,
         '--top-sites', String(maxSites), '--timeout', '5', '--no-autoupdate',
         '--no-recursion', '--no-extracting', '--no-progressbar', '--no-color',
@@ -65,7 +65,7 @@ async function runMaigret(username: string, signal: AbortSignal): Promise<Maigre
 
 export const maigretProvider: Provider = {
   metadata: {
-    name: 'maigret',
+    id: 'maigret', name: 'maigret', category: 'identity',
     description: 'Backend-only public username discovery using Maigret.',
     supportedEntityTypes: ['username'],
     supportedIntents: ['username_lookup'],

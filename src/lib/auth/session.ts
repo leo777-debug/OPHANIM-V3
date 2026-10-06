@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/watchlists/db';
 
 export const SESSION_COOKIE = 'ophanim_session';
+export const ORGANIZATION_COOKIE = 'ophanim_organization';
 
 function sessionDays(): number {
   const configured = Number(process.env.OPHANIM_SESSION_DAYS ?? 30);
@@ -35,8 +36,20 @@ export function setSessionCookie<T>(response: NextResponse<T>, token: string): N
   return response;
 }
 
+export function setOrganizationCookie<T>(response: NextResponse<T>, organizationId: string): NextResponse<T> {
+  response.cookies.set(ORGANIZATION_COOKIE, organizationId, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: sessionDays() * 24 * 60 * 60,
+  });
+  return response;
+}
+
 export function clearSessionCookie<T>(response: NextResponse<T>): NextResponse<T> {
   response.cookies.set(SESSION_COOKIE, '', { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', path: '/', maxAge: 0 });
+  response.cookies.set(ORGANIZATION_COOKIE, '', { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', path: '/', maxAge: 0 });
   return response;
 }
 

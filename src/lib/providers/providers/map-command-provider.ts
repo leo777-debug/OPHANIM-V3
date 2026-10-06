@@ -25,7 +25,7 @@ const actions: Record<string, { label: string; summary: string; action: SearchAc
 
 export const mapCommandProvider: Provider = {
   metadata: {
-    name: 'map-command', description: 'Deterministic map-layer command handler.',
+    id: 'map-command', name: 'map-command', description: 'Deterministic map-layer command handler.', category: 'command',
     supportedEntityTypes: ['command'], supportedIntents: ['map_command', 'natural_language'], supportsMapLayers: true,
     requiresCredentials: false, timeoutMs: 100, enabled: true, priority: 10,
   },

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ophanim</title>
+    <link rel="stylesheet" href="sidepanel.css">
+  </head>
+  <body>
+    <main class="panel">
+      <header class="masthead">
+        <div>
+          <span class="status-dot" aria-hidden="true"></span>
+          <strong>OPHANIM</strong>
+        </div>
+        <button class="icon-button" id="refresh" type="button" aria-label="Refresh page context">↻</button>
+      </header>
+
+      <section class="state" id="loading" aria-live="polite">
+        <span class="loader" aria-hidden="true"></span>
+        <p>Checking this page…</p>
+      </section>
+
+      <section class="state hidden" id="signed-out">
+        <span class="kicker">ACCOUNT REQUIRED</span>
+        <h1>Sign in to use your Ophanim context.</h1>
+        <p>The extension uses the same account and company data as the main platform.</p>
+        <button class="primary" id="sign-in" type="button">Open Ophanim sign in <span>↗</span></button>
+      </section>
+
+      <section class="state hidden" id="empty">
+        <span class="kicker">PAGE CONTEXT</span>
+        <h1>No logistics entity detected.</h1>
+        <p>Open a shipment email, tracking page, vessel page or select text and choose <strong>Ask Ophanim</strong>.</p>
+      </section>
+
+      <section class="result hidden" id="result">
+        <div class="context-label"><span id="adapter">PAGE</span><small id="page-title"></small></div>
+        <div class="shipment">
+          <span class="kicker" id="entity-label">DETECTED CONTEXT</span>
+          <h1 id="shipment-reference"></h1>
+          <p id="shipment-route"></p>
+          <div class="shipment-meta" id="shipment-meta"></div>
+        </div>
+        <div class="signals" id="signals"></div>
+        <div class="summary">
+          <span id="development-count">0</span>
+          <p id="summary-message"></p>
+        </div>
+        <div class="entities" id="entities"></div>
+        <button class="primary" id="open-ophanim" type="button">Open in Ophanim <span>↗</span></button>
+      </section>
+
+      <section class="state hidden" id="error" aria-live="assertive">
+        <span class="kicker">CONNECTION ISSUE</span>
+        <h1>Ophanim could not check this page.</h1>
+        <p id="error-message"></p>
+        <button class="secondary" id="try-again" type="button">Try again</button>
+      </section>
+
+      <footer>
+        <span>Context stays structured</span>
+        <span>Page content is not uploaded</span>
+      </footer>
+    </main>
+    <script type="module" src="sidepanel.js"></script>
+  </body>
+</html>

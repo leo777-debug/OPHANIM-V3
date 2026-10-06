@@ -47,10 +47,10 @@ export default function LogisticsTopBar() {
 
   const organization = actor?.organizationId
     ? `Organization ${actor.organizationId.slice(0, 8)}`
-    : "Ophanim Logistics";
+    : "Organization workspace";
   const health = providers
-    ? `${providers.available}/${providers.total} sources available`
-    : "Checking data health";
+    ? `${providers.available} of ${providers.total} sources online`
+    : "Checking source health";
 
   return (
     <header className="ops-topbar">

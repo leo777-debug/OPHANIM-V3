@@ -4,7 +4,7 @@ interface DomainRaw { domain: string; addresses: string[]; registrar?: string; c
 
 export const domainIntelligenceProvider: Provider = {
   metadata: {
-    name: 'domain-intelligence', description: 'DNS and RDAP domain intelligence lookup.',
+    id: 'domain-intelligence', name: 'domain-intelligence', description: 'DNS and RDAP domain intelligence lookup.', category: 'network',
     supportedEntityTypes: ['domain'], supportedIntents: ['domain_lookup'], supportsMapLayers: false,
     requiresCredentials: false, timeoutMs: 8000, enabled: true, priority: 10,
   },

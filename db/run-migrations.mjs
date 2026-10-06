@@ -4,8 +4,26 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import pg from 'pg';
 
-const migrationDirectory = path.join(path.dirname(fileURLToPath(import.meta.url)), 'migrations');
+const repositoryRoot = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+const migrationDirectories = [
+  path.join(repositoryRoot, 'db', 'migrations'),
+  path.join(repositoryRoot, 'supabase', 'migrations'),
+];
 const { Pool } = pg;
+
+async function migrationFiles() {
+  const files = [];
+  for (const directory of migrationDirectories) {
+    try {
+      for (const name of await readdir(directory)) {
+        if (/^(?:\d+_.+|\d{14}_.+)\.sql$/.test(name)) files.push({ directory, name });
+      }
+    } catch (error) {
+      if (error?.code !== 'ENOENT') throw error;
+    }
+  }
+  return files.sort((left, right) => left.name.localeCompare(right.name));
+}
 
 if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required to run database migrations.');
 
@@ -23,9 +41,8 @@ try {
       checksum text not null,
       applied_at timestamptz not null default now()
     )`);
-    const files = (await readdir(migrationDirectory)).filter((file) => /^\d+_.+\.sql$/.test(file)).sort();
-    for (const name of files) {
-      const sql = await readFile(path.join(migrationDirectory, name), 'utf8');
+    for (const { directory, name } of await migrationFiles()) {
+      const sql = await readFile(path.join(directory, name), 'utf8');
       const checksum = createHash('sha256').update(sql).digest('hex');
       const applied = await client.query('select checksum from ophanim_schema_migrations where name = $1', [name]);
       if (applied.rowCount) {

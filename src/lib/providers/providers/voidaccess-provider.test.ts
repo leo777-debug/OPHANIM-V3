@@ -13,12 +13,12 @@ describe('voidAccessProvider', () => {
     delete process.env.VOIDACCESS_API_TOKEN;
     process.env.VOIDACCESS_API_EMAIL = 'provider@example.com';
     process.env.VOIDACCESS_API_PASSWORD = 'secret';
-    expect(voidAccessProvider.isConfigured()).toBe(true);
+    expect(voidAccessProvider.isConfigured!()).toBe(true);
     Object.assign(process.env, previous);
   });
 
   it('normalizes queued investigations without exposing the remote provider URL', () => {
-    const result = voidAccessProvider.normalize({ status: 'queued', query: 'MSC IRINA', runId: 'run-1', message: 'Dark-web investigation queued.' }, {
+    const result = voidAccessProvider.normalize!({ status: 'queued', query: 'MSC IRINA', runId: 'run-1', message: 'Dark-web investigation queued.' }, {
       intent: 'dark_web_lookup', entityType: 'command', query: 'MSC IRINA', limit: 8,
     });
     expect(result[0]).toMatchObject({ label: 'Dark-web investigation queued', provider: 'voidaccess' });

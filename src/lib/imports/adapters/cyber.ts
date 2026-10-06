@@ -1,6 +1,6 @@
 import { createCyberAsset, createCyberClient, createVendorDependency } from '@/lib/cyber/inventory';
 import { validateCyberAssetInput, validateCyberClientInput, validateVendorDependencyInput } from '@/lib/cyber/validation';
-import type { CyberAssetInput, VendorDependencyInput } from '@/lib/cyber/types';
+import type { CyberAssetInput, CyberClientInput, VendorDependencyInput } from '@/lib/cyber/types';
 import { db } from '@/lib/watchlists/db';
 import type { ImportAdapter } from './types';
 
@@ -20,7 +20,7 @@ async function customerIdFor(organizationId: string, reference: string): Promise
   return id;
 }
 
-export const cyberClientImportAdapter: ImportAdapter = {
+export const cyberClientImportAdapter: ImportAdapter<CyberClientInput> = {
   type: 'cyber_client', label: 'Cyber client', description: 'Managed cybersecurity clients scoped to the active organization.', available: true,
   columns: [
     { key: 'name', label: 'Client name', required: true, aliases: ['client name', 'customer name', 'name'] },

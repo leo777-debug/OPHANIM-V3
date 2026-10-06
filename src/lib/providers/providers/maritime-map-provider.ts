@@ -18,7 +18,7 @@ function pointLayer(id: string, name: string, color: string, items: any[], prope
 
 export const maritimeMapProvider: Provider = {
   metadata: {
-    name: 'maritime-map', description: 'Live vessel and port map layers.', supportedEntityTypes: [], supportedIntents: [],
+    id: 'maritime-map', name: 'maritime-map', description: 'Live vessel and port map layers.', category: 'maritime', supportedEntityTypes: [], supportedIntents: [],
     supportsMapLayers: true, requiresCredentials: false, timeoutMs: 15000, enabled: true, priority: 30,
   },
   async execute() { return emptyResults; },

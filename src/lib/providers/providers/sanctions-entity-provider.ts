@@ -5,7 +5,7 @@ const schemas: Record<string, Schema> = { company: 'Company', organization: 'Org
 
 export const sanctionsEntityProvider: Provider = {
   metadata: {
-    name: 'sanctions-entity', description: 'OpenSanctions OFAC company and organization lookup.',
+    id: 'sanctions-entity', name: 'sanctions-entity', description: 'OpenSanctions OFAC company and organization lookup.', category: 'sanctions',
     supportedEntityTypes: ['company', 'organization'], supportedIntents: ['company_lookup', 'organization_lookup'], supportsMapLayers: false,
     requiresCredentials: false, timeoutMs: 30000, enabled: true, priority: 10,
   },

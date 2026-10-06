@@ -21,6 +21,7 @@ import type { ProviderExecutionContext, ProviderQuery } from './types';
 
 export { classifySearch } from './query-classifier';
 export * from './types';
+export { providerMetrics } from './provider-metrics';
 
 const registry = new ProviderRegistry([
   ipIntelligenceProvider,
@@ -65,7 +66,9 @@ export async function searchProviders(input: SearchInput, context: Omit<Provider
     };
   }
 
-  return enrichmentManager.enrich(query, registry.findProviders(query), context);
+  const allowed = context.allowedProviderIds?.length ? new Set(context.allowedProviderIds) : null;
+  const providers = registry.findProviders(query).filter((provider) => !allowed || allowed.has(provider.metadata.id ?? provider.metadata.name));
+  return enrichmentManager.enrich(query, providers, context);
 }
 
 export async function getProviderMapLayers(

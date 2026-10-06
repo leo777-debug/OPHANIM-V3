@@ -4,7 +4,7 @@ import type { Provider, ProviderQuery } from './types';
 
 const query: ProviderQuery = { intent: 'forward_geocode', entityType: 'location', query: 'Paris', limit: 8 };
 
-function provider(name: string, execute: Provider['execute']): Provider {
+function provider(name: string, execute: NonNullable<Provider['execute']>): Provider {
   return {
     metadata: {
       name, description: 'test', supportedEntityTypes: ['location'], supportedIntents: ['forward_geocode'],

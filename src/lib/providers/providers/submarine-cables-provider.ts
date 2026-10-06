@@ -4,7 +4,7 @@ import type { Provider, ProviderMapLayer } from '../types';
 
 export const submarineCablesProvider: Provider = {
   metadata: {
-    name: 'submarine-cables', description: 'Submarine cable network map layer.', supportedEntityTypes: [], supportedIntents: [],
+    id: 'submarine-cables', name: 'submarine-cables', description: 'Submarine cable network map layer.', category: 'infrastructure', supportedEntityTypes: [], supportedIntents: [],
     supportsMapLayers: true, requiresCredentials: false, timeoutMs: 3000, enabled: true, priority: 50,
   },
   async execute() { return []; },

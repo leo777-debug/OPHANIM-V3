@@ -3,43 +3,34 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import "./globals.css";
 
 const SITE_URL = "https://ophanim.live";
-const SITE_NAME = "OPHANIM";
-const SITE_TITLE = "OPHANIM - Live Intelligence Atlas | Flights, CCTV, OSINT Tools & Global Risk";
+const SITE_NAME = "Ophanim";
+const SITE_TITLE = "Ophanim — Operational intelligence for logistics teams";
 const SITE_DESCRIPTION =
-  "A modern open-source intelligence atlas for live flight tracking, satellites, maritime activity, public CCTV, severe weather, cyber threats, financial signals, and browser-based OSINT tools.";
+  "Ophanim connects your shipments, email and documents with maritime, cyber, environmental and open-source intelligence—then surfaces only what matters.";
 
 export const viewport: Viewport = {
-  themeColor: "#7CFFCB",
+  themeColor: "#f4f2ec",
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
-  colorScheme: "dark",
+  colorScheme: "light dark",
 };
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default: SITE_TITLE,
-    template: "%s | OPHANIM Intelligence",
+    template: "%s | Ophanim Intelligence",
   },
   description: SITE_DESCRIPTION,
   keywords: [
-    "OSINT tools",
-    "open source intelligence",
-    "intelligence atlas",
-    "geospatial intelligence",
-    "real-time tracking",
-    "flight tracker",
-    "satellite tracking",
-    "CCTV cameras live",
-    "earthquake monitor",
-    "wildfire tracker",
-    "cyber threats dashboard",
-    "weather alerts",
-    "DNS lookup",
-    "WHOIS lookup",
-    "BGP routing lookup",
-    "IP geolocation",
+    "operational intelligence",
+    "logistics intelligence",
+    "maritime intelligence",
+    "shipment risk monitoring",
+    "supply chain intelligence",
+    "OSINT for logistics",
+    "cyber threat intelligence",
     "threat intelligence",
     "ophanim",
     "ophanim intelligence",
@@ -77,10 +68,10 @@ export const metadata: Metadata = {
     url: SITE_URL,
     images: [
       {
-        url: `${SITE_URL}/og-image.png`,
+        url: `${SITE_URL}/og.png`,
         width: 1200,
         height: 630,
-        alt: "OPHANIM live intelligence atlas with map layers and OSINT tools",
+        alt: "Ophanim operational intelligence for logistics teams",
         type: "image/png",
       },
     ],
@@ -89,7 +80,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
-    images: [`${SITE_URL}/og-image.png`],
+    images: [`${SITE_URL}/og.png`],
   },
   category: "technology",
   classification: "Intelligence & Security",
@@ -106,26 +97,20 @@ export const metadata: Metadata = {
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  name: "OPHANIM - OSINT Toolkit & Live Intelligence Atlas",
-  alternateName: ["OPHANIM", "Ophanim Intelligence", "Ophanim Atlas"],
+  name: "Ophanim — Operational intelligence for logistics teams",
+  alternateName: ["Ophanim", "Ophanim Intelligence", "Ophanim Atlas"],
   url: SITE_URL,
   description: SITE_DESCRIPTION,
-  applicationCategory: "SecurityApplication",
+  applicationCategory: "BusinessApplication",
   operatingSystem: "Web",
   browserRequirements: "Requires a modern web browser",
-  offers: {
-    "@type": "Offer",
-    price: "0",
-    priceCurrency: "USD",
-    availability: "https://schema.org/InStock",
-  },
   featureList: [
-    "Browser-based OSINT toolkit",
-    "DNS, WHOIS, BGP, certificate, CVE, and IP intelligence lookups",
-    "Real-time flight, maritime, satellite, CCTV, hazard, market, and cyber layers",
-    "Interactive 3D globe with day/night cycle and regional dossiers",
+    "Outside-world intelligence correlated to real logistics operations",
+    "Maritime, environmental, cyber, threat, and open-source intelligence packs",
+    "Evidence-backed ACT NOW and WATCH findings",
+    "Operational search across company context and installed intelligence sources",
   ],
-  screenshot: `${SITE_URL}/og-image.png`,
+  screenshot: `${SITE_URL}/og.png`,
   author: {
     "@type": "Organization",
     name: "Ophanim Project",
@@ -133,15 +118,26 @@ const jsonLd = {
   },
 };
 
-const transientTimeoutGuard = `window.addEventListener('unhandledrejection', function (event) {
-  var reason = event && event.reason;
-  if (!reason || typeof reason !== 'object') return;
-  var name = reason.name;
-  var message = reason.message;
-  if ((name === 'TimeoutError' || name === 'AbortError') && typeof message === 'string' && /signal timed out|request was aborted/i.test(message)) {
-    event.preventDefault();
+const transientTimeoutGuard = `(function () {
+  function isExpectedMapTileAbort(reason) {
+    if (!reason || typeof reason !== 'object') return false;
+    var name = reason.name;
+    var message = reason.message;
+    return (name === 'TimeoutError' || name === 'AbortError')
+      && typeof message === 'string'
+      && /signal timed out|request was aborted|signal is aborted without reason/i.test(message);
   }
-}, true);`;
+
+  function suppressExpectedMapTileAbort(event) {
+    var reason = event && (event.reason || event.error);
+    if (!isExpectedMapTileAbort(reason)) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }
+
+  window.addEventListener('unhandledrejection', suppressExpectedMapTileAbort, true);
+  window.addEventListener('error', suppressExpectedMapTileAbort, true);
+})();`;
 
 export default function RootLayout({
   children,
@@ -162,7 +158,7 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased" suppressHydrationWarning>
-        <ErrorBoundary name="OPHANIM Core">{children}</ErrorBoundary>
+        <ErrorBoundary name="Ophanim Core">{children}</ErrorBoundary>
       </body>
     </html>
   );

@@ -2,7 +2,7 @@ import type { Provider } from '../types';
 
 export const emailBreachProvider: Provider = {
   metadata: {
-    name: 'email-breach', description: 'Public breach exposure lookup for an email address.',
+    id: 'email-breach', name: 'email-breach', description: 'Public breach exposure lookup for an email address.', category: 'identity',
     supportedEntityTypes: ['email'], supportedIntents: ['email_lookup'], supportsMapLayers: false,
     requiresCredentials: false, timeoutMs: 8000, enabled: true, priority: 10,
   },

@@ -156,7 +156,10 @@ export async function confirmImport(actor: OrganizationActor, importId: string):
       [importId, shouldQueue ? 'queued' : 'running'],
     );
     if (shouldQueue) {
-      await client.query(`insert into ophanim_import_jobs (import_id) values ($1) on conflict (import_id) do nothing`, [importId]);
+      await client.query(
+        `insert into ophanim_import_jobs (organization_id, import_id) values ($1, $2) on conflict (import_id) do nothing`,
+        [actor.organizationId, importId],
+      );
     }
     await client.query(
       `insert into ophanim_audit_events (organization_id, actor_user_id, action, subject_type, subject_id, metadata)

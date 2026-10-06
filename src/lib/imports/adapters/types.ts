@@ -3,7 +3,7 @@ import type { ImportColumnDefinition, ImportType } from '../types';
 import { shipmentImportAdapter } from './shipment';
 import { cyberAssetImportAdapter, cyberClientImportAdapter, vendorDependencyImportAdapter } from './cyber';
 
-export interface ImportAdapter<T extends object = Record<string, unknown>> {
+export interface ImportAdapter<T extends object = object> {
   type: ImportType;
   label: string;
   description: string;
@@ -18,7 +18,7 @@ export interface ImportAdapter<T extends object = Record<string, unknown>> {
 
 export const importAdapters: Record<ImportType, ImportAdapter> = {
   shipment: shipmentImportAdapter as unknown as ImportAdapter,
-  cyber_client: cyberClientImportAdapter,
+  cyber_client: cyberClientImportAdapter as unknown as ImportAdapter,
   cyber_asset: cyberAssetImportAdapter as unknown as ImportAdapter,
   vendor_dependency: vendorDependencyImportAdapter as unknown as ImportAdapter,
 };

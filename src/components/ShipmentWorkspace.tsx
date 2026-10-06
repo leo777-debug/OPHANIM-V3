@@ -308,7 +308,7 @@ export default function ShipmentWorkspace({
           <div className="ops-page-header__actions">
             <Link href="/imports" className="ops-button ops-button--secondary">
               <FileUp aria-hidden="true" size={15} />
-              Import CSV
+              Import file
             </Link>
             <button
               type="button"

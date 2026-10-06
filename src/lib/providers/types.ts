@@ -4,6 +4,17 @@ export const PROVIDER_ENTITY_TYPES = [
 ] as const;
 export type ProviderEntityType = (typeof PROVIDER_ENTITY_TYPES)[number];
 
+export type ProviderCategory = 'geospatial' | 'maritime' | 'aviation' | 'infrastructure' | 'sanctions' | 'network' | 'identity' | 'dark_web' | 'command' | 'other';
+
+export interface ProviderCapabilities {
+  search: boolean;
+  fetch: boolean;
+  map: boolean;
+  stream: boolean;
+  historical: boolean;
+  monitoring: boolean;
+}
+
 export const SEARCH_INTENTS = [
   'forward_geocode', 'reverse_geocode', 'coordinate_lookup', 'ip_lookup', 'domain_lookup',
   'email_lookup', 'username_lookup', 'company_lookup', 'organization_lookup', 'person_lookup', 'vessel_lookup',
@@ -25,15 +36,26 @@ export interface Coordinates {
 }
 
 export interface ProviderMetadata {
+  /** Stable machine identifier. Existing providers fall back to their name during migration. */
+  id?: string;
   name: string;
   description: string;
+  category?: ProviderCategory;
   supportedEntityTypes: ProviderEntityType[];
   supportedIntents: SearchIntent[];
+  supportedEventTypes?: string[];
+  capabilities?: Partial<ProviderCapabilities>;
   supportsMapLayers: boolean;
   requiresCredentials: boolean;
+  requiredEnvironmentVariables?: string[];
   timeoutMs: number;
+  rateLimitPerMinute?: number;
   enabled: boolean;
   priority: number;
+  geographicCoverage?: string;
+  freshness?: string;
+  license?: string;
+  commercialUse?: 'allowed' | 'review_required' | 'restricted' | 'unknown';
 }
 
 export interface ProviderQuery {
@@ -68,6 +90,7 @@ export interface ProviderExecutionContext {
   signal: AbortSignal;
   locale: string;
   origin?: string;
+  allowedProviderIds?: string[];
 }
 
 export type ProviderMapGeometry = 'point' | 'line' | 'polygon';
@@ -107,9 +130,14 @@ export interface ProviderMapLayerContext {
 export interface Provider {
   metadata: ProviderMetadata;
   isConfigured?(): boolean;
-  execute(query: ProviderQuery, context: ProviderExecutionContext): Promise<unknown>;
-  normalize(raw: unknown, query: ProviderQuery): NormalizedSearchResult[];
-  createMapLayers(context: ProviderMapLayerContext): Promise<ProviderMapLayer[]>;
+  supports?(query: ProviderQuery): boolean;
+  execute?(query: ProviderQuery, context: ProviderExecutionContext): Promise<unknown>;
+  search?(query: ProviderQuery, context: ProviderExecutionContext): Promise<unknown>;
+  fetch?(query: ProviderQuery, context: ProviderExecutionContext): Promise<unknown>;
+  normalize?(raw: unknown, query: ProviderQuery): NormalizedSearchResult[];
+  createMapLayers?(context: ProviderMapLayerContext): Promise<ProviderMapLayer[]>;
+  health?(): Promise<{ status: 'healthy' | 'degraded' | 'unhealthy'; message?: string }>;
+  validateConfiguration?(): { valid: boolean; message?: string };
 }
 
 export interface ProviderDiagnostic {
@@ -121,4 +149,27 @@ export interface ProviderDiagnostic {
 export interface EnrichmentResponse {
   results: NormalizedSearchResult[];
   diagnostics: ProviderDiagnostic[];
+}
+
+const DEFAULT_CAPABILITIES: ProviderCapabilities = {
+  search: true,
+  fetch: true,
+  map: false,
+  stream: false,
+  historical: false,
+  monitoring: false,
+};
+
+export function providerId(metadata: Pick<ProviderMetadata, 'id' | 'name'>): string {
+  return metadata.id ?? metadata.name;
+}
+
+export function providerCapabilities(metadata: ProviderMetadata): ProviderCapabilities {
+  return {
+    ...DEFAULT_CAPABILITIES,
+    search: Boolean(metadata.capabilities?.search ?? (metadata.supportedIntents.length > 0)),
+    fetch: Boolean(metadata.capabilities?.fetch ?? (metadata.supportedIntents.length > 0)),
+    map: Boolean(metadata.capabilities?.map ?? metadata.supportsMapLayers),
+    ...metadata.capabilities,
+  };
 }

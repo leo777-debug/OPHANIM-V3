@@ -6,6 +6,7 @@ export type ImportStatus = (typeof IMPORT_STATUSES)[number];
 
 export const IMPORT_ROW_STATUSES = ['valid', 'invalid', 'duplicate_in_file', 'duplicate_existing', 'imported', 'failed'] as const;
 export type ImportRowStatus = (typeof IMPORT_ROW_STATUSES)[number];
+export type ImportFileEncoding = 'utf-8' | 'xlsx';
 
 export interface ImportColumnDefinition {
   key: string;
@@ -27,7 +28,8 @@ export interface ImportPreviewRow<T = Record<string, unknown>> {
 export interface ImportPreview<T = Record<string, unknown>> {
   checksum: string;
   bytes: number;
-  encoding: 'utf-8';
+  encoding: ImportFileEncoding;
+  sourceSheet?: string;
   headers: string[];
   suggestedMapping: ImportColumnMapping;
   mapping: ImportColumnMapping;

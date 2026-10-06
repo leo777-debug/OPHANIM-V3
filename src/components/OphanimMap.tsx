@@ -5,6 +5,7 @@ import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import DynamicProviderLayers from './DynamicProviderLayers';
 import type { ProviderMapLayer } from '@/lib/providers';
+import type { MapViewport } from '@/lib/map-workspaces';
 
 interface OphanimMapProps {
   data: any;
@@ -12,7 +13,8 @@ interface OphanimMapProps {
   onEntityClick?: (entity: any) => void;
   onMouseCoords?: (coords: { lat: number; lng: number }) => void;
   onRightClick?: (coords: { lat: number; lng: number }) => void;
-  onViewStateChange?: (vs: { zoom: number; latitude: number }) => void;
+  onViewStateChange?: (vs: MapViewport) => void;
+  initialView?: MapViewport;
   flyToLocation?: { lat: number; lng: number; zoom?: number; ts: number } | null;
   projection?: 'mercator' | 'globe';
   mapStyle?: 'dark' | 'earth' | 'satellite';
@@ -45,7 +47,15 @@ function computeSolarTerminator(): [number, number][] {
 
 const EMPTY_FC = { type: 'FeatureCollection' as const, features: [] };
 
-function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightClick, onViewStateChange, flyToLocation, projection = 'globe', mapStyle = 'dark', sweepData, scanTargets = [], demoMode = false, theme = 'core', providerLayers = [] }: OphanimMapProps) {
+function isExpectedMapTileAbort(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const { name, message } = error as { name?: unknown; message?: unknown };
+  return (name === 'AbortError' || name === 'TimeoutError')
+    && typeof message === 'string'
+    && /signal timed out|request was aborted|signal is aborted without reason/i.test(message);
+}
+
+function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightClick, onViewStateChange, initialView, flyToLocation, projection = 'globe', mapStyle = 'dark', sweepData, scanTargets = [], demoMode = false, theme = 'core', providerLayers = [] }: OphanimMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const popupRef = useRef<maplibregl.Popup | null>(null);
@@ -172,7 +182,10 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     const map = new maplibregl.Map({
       container: containerRef.current,
       style: styleUrl,
-      center: [25.48, 42.70], zoom: 6.5, minZoom: 1.5, maxZoom: 18,
+      center: [initialView?.longitude ?? 25.48, initialView?.latitude ?? 42.70],
+      zoom: initialView?.zoom ?? 6.5,
+      minZoom: 1.5,
+      maxZoom: 18,
       attributionControl: false,
       maxPitch: 85,
       // Load CARTO basemap tiles DIRECTLY in the browser. Previously every tile
@@ -188,7 +201,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     map.on('error', (event) => {
       // Switching a raster layer can cancel an obsolete tile request. MapLibre
       // reports that expected cancellation as an error event in development.
-      if ((event.error as DOMException | undefined)?.name === 'AbortError') return;
+      if (isExpectedMapTileAbort(event.error)) return;
       console.warn('MapLibre error:', event.error);
     });
 
@@ -689,7 +702,10 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
       }
     });
     map.on('contextmenu', e => { e.preventDefault(); onRightClick?.({ lat: e.lngLat.lat, lng: e.lngLat.lng }); });
-    map.on('moveend', () => { const c = map.getCenter(); onViewStateChange?.({ zoom: map.getZoom(), latitude: c.lat }); });
+    map.on('moveend', () => {
+      const c = map.getCenter();
+      onViewStateChange?.({ zoom: map.getZoom(), latitude: c.lat, longitude: c.lng });
+    });
 
     // ── POPUP HELPER ──
     const popup = (coords: any, html: string) => {

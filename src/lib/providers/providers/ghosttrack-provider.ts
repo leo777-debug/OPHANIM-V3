@@ -86,7 +86,7 @@ async function runGhostTrack(mode: GhostTrackMode, target: string, signal: Abort
 
   const input = mode === 'ip' ? `1\n${target}\n\n0\n` : `4\n${target}\n\n0\n`;
   return new Promise((resolve, reject) => {
-    const child = spawn(python, [script], {
+    const child = spawn(/* turbopackIgnore: true */ python, [script], {
       cwd: directory,
       env: { ...process.env, PYTHONUNBUFFERED: '1' },
       stdio: ['pipe', 'pipe', 'pipe'],
@@ -149,7 +149,7 @@ async function executeGhostTrack(query: ProviderQuery, signal: AbortSignal): Pro
 
 export const ghostTrackProvider: Provider = {
   metadata: {
-    name: 'ghosttrack',
+    id: 'ghosttrack', name: 'ghosttrack', category: 'network',
     description: 'Backend-only GhostTrack enrichment for IP, domain, and username lookups.',
     supportedEntityTypes: ['ip', 'domain', 'username'],
     supportedIntents: ['ip_lookup', 'domain_lookup', 'username_lookup'],
