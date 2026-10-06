@@ -1,4 +1,4 @@
 import EvidencePanel from '@/components/platform/EvidencePanel';
-import PlatformShell from '@/components/platform/PlatformShell';
+import AppShell from '@/components/logistics/AppShell';
 
-export default function EvidencePage() { return <PlatformShell title="Evidence"><EvidencePanel /></PlatformShell>; }
+export default function EvidencePage() { return <AppShell><EvidencePanel /></AppShell>; }

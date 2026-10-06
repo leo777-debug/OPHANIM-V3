@@ -1,4 +1,4 @@
 import CaseWorkspace from '@/components/platform/CaseWorkspace';
-import PlatformShell from '@/components/platform/PlatformShell';
+import AppShell from '@/components/logistics/AppShell';
 
-export default function CasesPage() { return <PlatformShell title="Cases"><CaseWorkspace /></PlatformShell>; }
+export default function CasesPage() { return <AppShell><CaseWorkspace /></AppShell>; }

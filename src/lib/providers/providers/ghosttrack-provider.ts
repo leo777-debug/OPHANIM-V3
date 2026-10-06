@@ -86,7 +86,7 @@ async function runGhostTrack(mode: GhostTrackMode, target: string, signal: Abort
 
   const input = mode === 'ip' ? `1\n${target}\n\n0\n` : `4\n${target}\n\n0\n`;
   return new Promise((resolve, reject) => {
-    const child = spawn(python, [script], {
+    const child = spawn(/* turbopackIgnore: true */ python, [script], {
       cwd: directory,
       env: { ...process.env, PYTHONUNBUFFERED: '1' },
       stdio: ['pipe', 'pipe', 'pipe'],

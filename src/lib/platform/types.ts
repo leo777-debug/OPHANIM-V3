@@ -1,5 +1,5 @@
 export type JsonObject = Record<string, unknown>;
-export type EntityVisibility = 'global' | 'organization_private';
+export type EntityVisibility = "global" | "organization_private";
 
 export interface EntityIdentifierInput {
   namespace: string;
@@ -43,7 +43,7 @@ export interface EventInput {
   category?: string;
   title: string;
   description?: string;
-  status?: 'active' | 'monitoring' | 'resolved' | 'cancelled' | 'unknown';
+  status?: "active" | "monitoring" | "resolved" | "cancelled" | "unknown";
   occurredAt?: string;
   latitude?: number;
   longitude?: number;
@@ -63,8 +63,10 @@ export interface PlatformEvent {
   category: string;
   title: string;
   description: string | null;
+  summary: string;
   status: string;
   occurredAt: string | null;
+  expectedEndAt: string | null;
   firstSeenAt: string;
   updatedAt: string;
   resolvedAt: string | null;
@@ -73,13 +75,25 @@ export interface PlatformEvent {
   geometry: JsonObject | null;
   severity: number | null;
   confidence: number | null;
+  verificationState: "confirmed" | "likely" | "unverified" | "conflicting";
+  primaryProviderId: string | null;
+  sourceCount: number;
+  normalizedEntities: Array<Record<string, unknown>>;
+  rawEvidenceRefs: Array<Record<string, unknown>>;
   attributes: JsonObject;
   metadata: JsonObject;
 }
 
 export interface EvidenceInput {
   evidenceType: string;
-  verificationState?: 'source_record' | 'externally_reported' | 'user_submitted' | 'calculated' | 'ai_generated' | 'analyst_verified' | 'disputed';
+  verificationState?:
+    | "source_record"
+    | "externally_reported"
+    | "user_submitted"
+    | "calculated"
+    | "ai_generated"
+    | "analyst_verified"
+    | "disputed";
   title: string;
   description?: string;
   sourceId?: string;
@@ -88,14 +102,17 @@ export interface EvidenceInput {
   attachmentUrl?: string;
   originalTimestamp?: string;
   metadata?: JsonObject;
-  links?: Array<{ resourceType: 'entity' | 'event' | 'case' | 'task' | 'assessment'; resourceId: string }>;
+  links?: Array<{
+    resourceType: "entity" | "event" | "case" | "task" | "assessment";
+    resourceId: string;
+  }>;
 }
 
 export interface CaseInput {
   title: string;
   description?: string;
   workflowTemplateId?: string;
-  priority?: 'low' | 'normal' | 'high' | 'critical';
+  priority?: "low" | "normal" | "high" | "critical";
   deadlineAt?: string;
   entityIds?: string[];
   eventIds?: string[];
@@ -104,7 +121,7 @@ export interface CaseInput {
 export interface CaseTaskInput {
   title: string;
   description?: string;
-  priority?: 'low' | 'normal' | 'high' | 'critical';
+  priority?: "low" | "normal" | "high" | "critical";
   dueAt?: string;
   assigneeUserId?: string;
 }
@@ -113,7 +130,12 @@ export interface OrganizationConfiguration {
   vertical: string;
   capabilities: Record<string, boolean>;
   enabledProviderIds: string[];
-  navigation: Array<{ id: string; label: string; href: string; capability?: string }>;
+  navigation: Array<{
+    id: string;
+    label: string;
+    href: string;
+    capability?: string;
+  }>;
   terminology: Record<string, string>;
   dashboard: JsonObject;
   analyticsEnabled: boolean;

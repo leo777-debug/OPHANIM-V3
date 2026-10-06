@@ -31,7 +31,7 @@ async function runMaigret(username: string, signal: AbortSignal): Promise<Maigre
   const { command, maxSites } = config();
   try {
     await new Promise<void>((resolve, reject) => {
-      const child = spawn(command, [
+      const child = spawn(/* turbopackIgnore: true */ command, [
         username, '--json', 'simple', '--folderoutput', outputDirectory,
         '--top-sites', String(maxSites), '--timeout', '5', '--no-autoupdate',
         '--no-recursion', '--no-extracting', '--no-progressbar', '--no-color',

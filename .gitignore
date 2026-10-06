@@ -9,7 +9,12 @@
 
 # Next.js
 /.next/
+/.next-*/
 /.next-verify/
+/.next-local/
+/.next-workspace-verify/
+/.next-landing/
+/.next-landing-build/
 /out/
 
 # Production
@@ -57,3 +62,14 @@ scanner_backend_backup.js
 
 # Security - Prevent accidental manual leaks
 *Manual*.md
+
+# Local recordings, reports, and temporary files
+/output/
+/outputs/
+/tmp/
+/test-artifacts/*.log
+/test-artifacts/*.mp4
+/test-artifacts/*.webm
+/test-artifacts/*.png
+/test-artifacts/full-walkthrough-raw/
+/supabase/.temp/

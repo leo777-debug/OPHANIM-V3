@@ -1,4 +1,6 @@
 import EventWorkspace from '@/components/platform/EventWorkspace';
-import PlatformShell from '@/components/platform/PlatformShell';
+import AppShell from '@/components/logistics/AppShell';
 
-export default function EventsPage() { return <PlatformShell title="Events"><EventWorkspace /></PlatformShell>; }
+export default function EventsPage() {
+  return <AppShell><EventWorkspace /></AppShell>;
+}

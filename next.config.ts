@@ -1,9 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Lets a local recovery server run independently from a stale development process.
+  distDir: process.env.NEXT_DEV_DIST_DIR || '.next',
   output: 'standalone',
   serverExternalPackages: ['ws'],
   transpilePackages: ['react-map-gl', 'mapbox-gl', 'maplibre-gl'],
+  experimental: {
+    // OneDrive can drop Turbopack's persistent cache while files are syncing.
+    turbopackFileSystemCacheForDev: false,
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: '**' },

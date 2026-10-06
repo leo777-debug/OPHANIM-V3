@@ -14,6 +14,8 @@ export type OrganizationPermission =
   | 'shipment:read'
   | 'shipment:write'
   | 'shipment:archive'
+  | 'route:read'
+  | 'route:write'
   | 'disruption:read'
   | 'disruption:write'
   | 'rescue:read'

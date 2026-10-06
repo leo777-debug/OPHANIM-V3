@@ -6,7 +6,7 @@ import { object, text } from './validation';
 
 const DEFAULT_CONFIGURATION: OrganizationConfiguration = {
   vertical: 'general',
-  capabilities: { map: true, search: true, workflows: true, entities: true, events: true, evidence: true, watchlists: true },
+  capabilities: { map: true, search: true, workflows: true, entities: true, events: true, evidence: true, watchlists: true, route_intelligence: true },
   enabledProviderIds: [],
   navigation: [
     { id: 'command', label: 'Command', href: '/command', capability: 'workflows' },

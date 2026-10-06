@@ -49,9 +49,9 @@ export async function persistImportPreview<T extends object>(
     const imported = inserted.rows[0];
     for (const row of preview.rows) {
       await client.query(
-        `insert into ophanim_import_rows (import_id, row_number, raw_data, normalized_data, row_status, errors)
-         values ($1, $2, $3, $4, $5, $6)`,
-        [imported.id, row.rowNumber, JSON.stringify(row.raw), row.normalized ? JSON.stringify(row.normalized) : null, row.status, JSON.stringify(row.errors)],
+        `insert into ophanim_import_rows (organization_id, import_id, row_number, raw_data, normalized_data, row_status, errors)
+         values ($1, $2, $3, $4, $5, $6, $7)`,
+        [actor.organizationId, imported.id, row.rowNumber, JSON.stringify(row.raw), row.normalized ? JSON.stringify(row.normalized) : null, row.status, JSON.stringify(row.errors)],
       );
     }
     await client.query(

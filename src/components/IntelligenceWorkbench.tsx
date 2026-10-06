@@ -33,6 +33,7 @@ type IntelligenceWorkbenchProps = {
   onClose: () => void;
   onLocate: (lat: number, lng: number) => void;
   onWatchTarget: (target: { type: string; value: string }) => void;
+  onOpenMapWorkspace: (target: { type: string; value: string }) => void;
 };
 
 const monitorEntityTypes = ['ip', 'domain', 'ship', 'port', 'company', 'threat_actor', 'region', 'country'];
@@ -54,6 +55,7 @@ export default function IntelligenceWorkbench({
   onClose,
   onLocate,
   onWatchTarget,
+  onOpenMapWorkspace,
 }: IntelligenceWorkbenchProps) {
   const [tabs, setTabs] = useState<MonitorTab[]>([]);
   const [activeTab, setActiveTab] = useState('map');
@@ -76,6 +78,7 @@ export default function IntelligenceWorkbench({
       setTabs((current) => [...current, { id, entityType, value }]);
     }
     setActiveTab(id);
+    onOpenMapWorkspace({ type: entityType, value });
     setEntityValue('');
     setShowCreate(false);
   };
@@ -144,7 +147,7 @@ export default function IntelligenceWorkbench({
                 placeholder="Target to monitor"
                 aria-label="Target to monitor"
               />
-              <button type="button" onClick={createMonitor}>OPEN TAB</button>
+              <button type="button" onClick={createMonitor}>OPEN MAP TAB</button>
             </div>
           )}
 

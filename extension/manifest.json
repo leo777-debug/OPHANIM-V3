@@ -1,0 +1,39 @@
+{
+  "manifest_version": 3,
+  "name": "Ophanim Context",
+  "version": "0.1.0",
+  "description": "See the Ophanim intelligence relevant to the logistics page you are viewing.",
+  "minimum_chrome_version": "116",
+  "permissions": ["contextMenus", "sidePanel", "storage"],
+  "host_permissions": [
+    "http://localhost:3000/*",
+    "https://ophanim.live/*"
+  ],
+  "background": {
+    "service_worker": "service-worker.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Open Ophanim"
+  },
+  "side_panel": {
+    "default_path": "sidepanel/sidepanel.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": [
+        "content/registry.js",
+        "content/entity-detector.js",
+        "content/adapters/generic.js",
+        "content/adapters/gmail.js",
+        "content/adapters/ophanim.js",
+        "content/bootstrap.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'; base-uri 'none'"
+  }
+}

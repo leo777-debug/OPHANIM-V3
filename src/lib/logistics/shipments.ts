@@ -109,13 +109,13 @@ async function assertShipmentReferences(actor: OrganizationActor, shipment: Ship
   }
 }
 
-async function replaceMilestones(client: PoolClient, shipmentId: string, milestones: ShipmentMilestoneInput[]): Promise<void> {
+async function replaceMilestones(client: PoolClient, organizationId: string, shipmentId: string, milestones: ShipmentMilestoneInput[]): Promise<void> {
   await client.query('delete from ophanim_shipment_milestones where shipment_id = $1 and source_type in (\'manual\', \'import\')', [shipmentId]);
   for (const milestone of milestones) {
     await client.query(
-      `insert into ophanim_shipment_milestones (shipment_id, milestone_type, deadline_at, source_type)
-       values ($1, $2, $3, 'manual')`,
-      [shipmentId, milestone.milestoneType, milestone.deadlineAt],
+      `insert into ophanim_shipment_milestones (organization_id, shipment_id, milestone_type, deadline_at, source_type)
+       values ($1, $2, $3, $4, 'manual')`,
+      [organizationId, shipmentId, milestone.milestoneType, milestone.deadlineAt],
     );
   }
 }
@@ -157,7 +157,7 @@ export async function createShipment(actor: OrganizationActor, input: unknown): 
       values(actor, shipment),
     );
     const record = toRecord(created.rows[0]);
-    if (shipment.milestones) await replaceMilestones(client, record.id, shipment.milestones);
+    if (shipment.milestones) await replaceMilestones(client, actor.organizationId, record.id, shipment.milestones);
     await client.query(
       `insert into ophanim_audit_events (organization_id, actor_user_id, action, subject_type, subject_id, metadata)
        values ($1, $2, 'shipment.created', 'shipment', $3, $4)`,
@@ -197,7 +197,7 @@ export async function updateShipment(actor: OrganizationActor, shipmentId: strin
       return null;
     }
     const record = toRecord(updated.rows[0]);
-    if (patch && typeof patch === 'object' && Object.prototype.hasOwnProperty.call(patch, 'milestones')) await replaceMilestones(client, record.id, shipment.milestones ?? []);
+    if (patch && typeof patch === 'object' && Object.prototype.hasOwnProperty.call(patch, 'milestones')) await replaceMilestones(client, actor.organizationId, record.id, shipment.milestones ?? []);
     await client.query(
       `insert into ophanim_audit_events (organization_id, actor_user_id, action, subject_type, subject_id, metadata)
        values ($1, $2, 'shipment.updated', 'shipment', $3, $4)`,
