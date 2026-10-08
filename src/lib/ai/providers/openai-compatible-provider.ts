@@ -12,6 +12,7 @@ function endpoint(baseUrl: string): URL {
 }
 
 function isAllowedLocal(url: URL): boolean {
+  if (process.env.NODE_ENV === 'development' && ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname) && ['11434', '1234'].includes(url.port)) return true;
   const allowed = (process.env.AI_LOCAL_BASE_URLS ?? '').split(',').map((value) => value.trim().replace(/\/$/, '')).filter(Boolean);
   return allowed.includes(url.origin);
 }
@@ -29,8 +30,8 @@ export const openAiCompatibleProvider: AiProvider = {
     const url = endpoint(config.baseUrl);
     await validateAiBaseUrl(config.baseUrl);
     const response = await fetch(url, {
-      method: 'POST', redirect: 'error', signal: AbortSignal.timeout(45_000),
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.apiKey}` },
+      method: 'POST', redirect: 'error', signal: AbortSignal.timeout(120_000),
+      headers: { 'Content-Type': 'application/json', ...(config.apiKey ? { Authorization: `Bearer ${config.apiKey}` } : {}) },
       body: JSON.stringify({ model: config.model, messages: buildAiMessages(request), temperature: 0.2 }),
     });
     if (!response.ok) throw new Error(`AI provider returned ${response.status}`);

@@ -4,7 +4,6 @@ import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Layers, BarChart3, Newspaper, Search, X, Globe, MapPinned, Radar, Satellite, Moon, ExternalLink, AlertTriangle, Activity, Database, Wifi, Play, Network, Crosshair, Brain, Bookmark, Settings, FileUp } from 'lucide-react';
-import IntelFeed from '@/components/IntelFeed';
 import IntelligenceWorkbench, { type IntelligenceWorkbenchView } from '@/components/IntelligenceWorkbench';
 import MarketsPanel from '@/components/MarketsPanel';
 import ScmPanel from '@/components/ScmPanel';
@@ -605,7 +604,7 @@ export default function Dashboard() {
     // Polling — OPTIMIZED intervals to minimize edge requests
     const intervals = [
       setInterval(() => fetchEndpoint('/api/earthquakes', eqTransform), 900000),  // 15 min
-      setInterval(() => fetchEndpoint('/api/news'), 1800000),        // 30 min (was 10)
+      setInterval(() => fetchEndpoint('/api/news'), 300000),        // 5 min, aligned with source cache
       setInterval(() => fetchEndpoint('/api/cyber-threats', (response) => ({ cyberThreats: response.threats || [] })), 1800000),
     ];
     return () => {
@@ -1336,18 +1335,19 @@ export default function Dashboard() {
       {/* ── NEW SIDEBAR (Root Level) ── */}
       {showLayers && !isMobile && <LayerPanel data={data} activeLayers={activeLayers} setActiveLayers={setActiveLayers} theme={ophanimTheme} setTheme={setOphanimTheme} />}
       <WatchlistPanel />
-      {!isMobile && (
+      {(!isMobile || mobilePanel === 'intel') && (
         <IntelligenceWorkbench
           data={data}
-          open={showNews}
+          open={isMobile ? mobilePanel === 'intel' : showNews}
           view={workbenchView}
           onViewChange={setWorkbenchView}
-          onClose={() => setShowNews(false)}
-          onLocate={(lat, lng) => setFlyToLocation({ lat, lng, ts: Date.now() })}
+          onClose={() => { setShowNews(false); if (isMobile) setMobilePanel(null); }}
+          onLocate={(lat, lng) => { setFlyToLocation({ lat, lng, ts: Date.now() }); if (isMobile) setMobilePanel(null); }}
           onWatchTarget={({ type, value }) => window.dispatchEvent(new CustomEvent('ophanim:watch-target', { detail: { type, value } }))}
           onOpenMapWorkspace={(target) => {
             openMapWorkspace(target);
             setShowNews(false);
+            if (isMobile) setMobilePanel(null);
           }}
         />
       )}
@@ -1594,7 +1594,7 @@ export default function Dashboard() {
 
           {/* Mobile Drawer */}
           <AnimatePresence>
-            {mobilePanel && (
+            {mobilePanel && mobilePanel !== 'intel' && (
               <motion.div
                 initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
                 transition={{ type: 'spring', damping: 30, stiffness: 300 }}
@@ -1605,7 +1605,7 @@ export default function Dashboard() {
                 <div className="px-3 pb-3">
                   <div className="flex items-center justify-between mb-2">
                     <span className="hud-text text-[9px] text-[var(--text-primary)]">
-                      {mobilePanel === 'layers' ? 'LAYERS & STATS' : mobilePanel === 'markets' ? 'MARKETS & INTEL' : mobilePanel === 'intel' ? 'INTEL FEED' : mobilePanel === 'recon' ? 'OPHANIM RECON' : 'SEARCH'}
+                      {mobilePanel === 'layers' ? 'LAYERS & STATS' : mobilePanel === 'markets' ? 'MARKETS & INTEL' : mobilePanel === 'recon' ? 'OPHANIM RECON' : 'SEARCH'}
                     </span>
                     <button onClick={() => setMobilePanel(null)} className="text-[var(--text-muted)] p-1"><X className="w-4 h-4" /></button>
                   </div>
@@ -1627,7 +1627,6 @@ export default function Dashboard() {
                     </>
                   )}
                   {mobilePanel === 'markets' && <MarketsPanel data={data} spaceWeather={spaceWeather} />}
-                  {mobilePanel === 'intel' && <IntelFeed data={data} onLocate={(lat, lng) => { setFlyToLocation({ lat, lng, ts: Date.now() }); setMobilePanel(null); }} />}
                   {mobilePanel === 'search' && (
                     <div className="space-y-2">
                       <SearchBar

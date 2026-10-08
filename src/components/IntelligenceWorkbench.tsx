@@ -13,11 +13,16 @@ import {
   Radio,
   Target,
   X,
+  Clock,
+  Globe,
+  ListChecks,
+  History,
 } from 'lucide-react';
 import IntelFeed from '@/components/IntelFeed';
 import LiveAlerts from '@/components/LiveAlerts';
+import IntelligenceExplorer, { type ExplorerData } from '@/components/intelligence/IntelligenceExplorer';
 
-export type IntelligenceWorkbenchView = 'news' | 'alerts' | 'signals';
+export type IntelligenceWorkbenchView = 'news' | 'alerts' | 'signals' | 'timeline' | 'regions' | 'sources' | 'clocks';
 
 type MonitorTab = {
   id: string;
@@ -25,8 +30,9 @@ type MonitorTab = {
   value: string;
 };
 
+type WorkbenchData = ExplorerData & { gdelt?: unknown[]; maritime_ships?: unknown[]; cyberThreats?: unknown[] };
 type IntelligenceWorkbenchProps = {
-  data: any;
+  data: WorkbenchData;
   open: boolean;
   view: IntelligenceWorkbenchView;
   onViewChange: (view: IntelligenceWorkbenchView) => void;
@@ -38,7 +44,7 @@ type IntelligenceWorkbenchProps = {
 
 const monitorEntityTypes = ['ip', 'domain', 'ship', 'port', 'company', 'threat_actor', 'region', 'country'];
 
-function signalsFor(data: any) {
+function signalsFor(data: WorkbenchData) {
   return [
     { label: 'News items', value: Array.isArray(data.news) ? data.news.length : 0, tone: 'cyan' },
     { label: 'Active incidents', value: Array.isArray(data.gdelt) ? data.gdelt.length : 0, tone: 'rose' },
@@ -67,7 +73,7 @@ export default function IntelligenceWorkbench({
   const relatedNews = useMemo(() => {
     if (!activeTarget || !Array.isArray(data.news)) return [];
     const needle = activeTarget.value.toLowerCase();
-    return data.news.filter((item: any) => `${item.title ?? ''} ${item.summary ?? ''}`.toLowerCase().includes(needle)).slice(0, 4);
+    return data.news.filter((item) => `${item.title ?? ''} ${item.description ?? item.summary ?? ''}`.toLowerCase().includes(needle)).slice(0, 4);
   }, [activeTarget, data.news]);
 
   const createMonitor = () => {
@@ -167,7 +173,7 @@ export default function IntelligenceWorkbench({
                   <div className="ophanim-workbench__section-label">RELATED INTELLIGENCE</div>
                   {relatedNews.length === 0 ? (
                     <p className="ophanim-workbench__empty">No matching news is loaded yet. The target remains ready for watchlist monitoring.</p>
-                  ) : relatedNews.map((item: any, index: number) => (
+                  ) : relatedNews.map((item, index: number) => (
                     <a key={`${item.link ?? item.title}-${index}`} href={item.link} target="_blank" rel="noopener noreferrer" className="ophanim-target-monitor__news">
                       <span>{item.source ?? 'SOURCE'}</span>
                       <strong>{item.title}</strong>
@@ -177,13 +183,18 @@ export default function IntelligenceWorkbench({
               </section>
             ) : (
               <>
-                <div className="ophanim-workbench__views" role="tablist" aria-label="Workbench views">
+                <div className="ophanim-workbench__views" role="tablist" aria-label="Workbench views" style={{ overflowX: 'auto', flexShrink: 0 }}>
                   <button type="button" role="tab" aria-selected={view === 'news'} onClick={() => onViewChange('news')} className={view === 'news' ? 'is-active' : ''}><Newspaper className="h-3.5 w-3.5" /> NEWS</button>
                   <button type="button" role="tab" aria-selected={view === 'alerts'} onClick={() => onViewChange('alerts')} className={view === 'alerts' ? 'is-active' : ''}><Bell className="h-3.5 w-3.5" /> ALERTS</button>
                   <button type="button" role="tab" aria-selected={view === 'signals'} onClick={() => onViewChange('signals')} className={view === 'signals' ? 'is-active' : ''}><Activity className="h-3.5 w-3.5" /> SIGNALS</button>
+                  <button type="button" role="tab" aria-selected={view === 'timeline'} onClick={() => onViewChange('timeline')} className={view === 'timeline' ? 'is-active' : ''}><History className="h-3.5 w-3.5" /> TIMELINE</button>
+                  <button type="button" role="tab" aria-selected={view === 'regions'} onClick={() => onViewChange('regions')} className={view === 'regions' ? 'is-active' : ''}><Globe className="h-3.5 w-3.5" /> REGIONS</button>
+                  <button type="button" role="tab" aria-selected={view === 'sources'} onClick={() => onViewChange('sources')} className={view === 'sources' ? 'is-active' : ''}><ListChecks className="h-3.5 w-3.5" /> SOURCES</button>
+                  <button type="button" role="tab" aria-selected={view === 'clocks'} onClick={() => onViewChange('clocks')} className={view === 'clocks' ? 'is-active' : ''}><Clock className="h-3.5 w-3.5" /> CLOCKS</button>
                 </div>
                 {view === 'news' && <IntelFeed data={data} onLocate={onLocate} variant="workbench" />}
                 {view === 'alerts' && <LiveAlerts data={data} onLocate={onLocate} />}
+                {(view === 'timeline' || view === 'regions' || view === 'sources' || view === 'clocks') && <IntelligenceExplorer view={view} data={data} onLocate={onLocate} />}
                 {view === 'signals' && (
                   <section className="ophanim-signal-grid" aria-label="Live signal overview">
                     {signals.map((signal) => (

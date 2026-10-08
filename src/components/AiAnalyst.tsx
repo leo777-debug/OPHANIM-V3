@@ -205,6 +205,9 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
   const [modelInput, setModelInput] = useState('');
   const [enabledTasks, setEnabledTasks] = useState<AiTask[]>([...AI_TASKS]);
   const [keySaved, setKeySaved] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState('');
+  const [testingConnection, setTestingConnection] = useState(false);
+  const [monitorMinutes, setMonitorMinutes] = useState(0);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -353,6 +356,28 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
     }
   }, [isLoading, data, getHeaders]);
 
+  const briefingRef = useRef(handleBriefing);
+  useEffect(() => { briefingRef.current = handleBriefing; }, [handleBriefing]);
+  useEffect(() => {
+    if (!monitorMinutes || !keySaved || !enabledTasks.includes('summarize')) return;
+    const timer = setInterval(() => { void briefingRef.current(); }, monitorMinutes * 60_000);
+    return () => clearInterval(timer);
+  }, [monitorMinutes, keySaved, enabledTasks]);
+
+  const testConnection = async () => {
+    setTestingConnection(true);
+    setConnectionStatus('Testing model...');
+    try {
+      const response = await fetch('/api/ai/connection', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apiKey: apiKeyInput, baseUrl: baseUrlInput, model: modelInput, enabledTasks }),
+      });
+      const result = await response.json();
+      setConnectionStatus(response.ok ? `Connected to ${result.model}` : result.error);
+    } catch { setConnectionStatus('Unable to contact Ophanim. Check that the app is running.'); }
+    finally { setTestingConnection(false); }
+  };
+
   const handleSandboxResearch = useCallback(async () => {
     const subject = inputText.trim();
     if (!subject || isLoading) return;
@@ -417,7 +442,7 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
     const key = apiKeyInput.trim();
     const baseUrl = baseUrlInput.trim();
     const model = modelInput.trim();
-    if (key && baseUrl && model) {
+    if (baseUrl && model) {
       writeClientAiConfig({ apiKey: key, baseUrl, model, enabledTasks });
       setKeySaved(true);
       setTimeout(() => setShowSettings(false), 600);
@@ -431,6 +456,8 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
     setModelInput('');
     setEnabledTasks([...AI_TASKS]);
     setKeySaved(false);
+    setMonitorMinutes(0);
+    setConnectionStatus('');
   }, []);
 
   const clearMessages = useCallback(() => {
@@ -585,6 +612,17 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
                         </span>
                       </div>
                       <div className="grid grid-cols-1 gap-2">
+                        <label className="text-xs text-[var(--text-primary)]">Provider
+                          <select aria-label="AI provider preset" defaultValue="custom" onChange={(e) => {
+                            const preset = e.target.value;
+                            if (preset !== 'custom') { setBaseUrlInput(preset === 'ollama' ? 'http://localhost:11434/v1' : 'http://localhost:1234/v1'); setApiKeyInput(''); }
+                            setKeySaved(false); setConnectionStatus('');
+                          }} className="mt-1 w-full bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded-lg px-3 py-2">
+                            <option value="custom">Custom OpenAI-compatible server</option>
+                            <option value="ollama">Local model - Ollama</option>
+                            <option value="lmstudio">Local model - LM Studio</option>
+                          </select>
+                        </label>
                         <input
                           type="password"
                           value={apiKeyInput}
@@ -592,7 +630,8 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
                             setApiKeyInput(e.target.value);
                             setKeySaved(false);
                           }}
-                          placeholder="API key"
+                          aria-label="API key (optional)"
+                          placeholder="API key (optional for local servers)"
                           className="flex-1 bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded-lg px-3 py-2 text-[11px] font-mono text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--gold-dim)] transition-colors"
                         />
                         <input value={baseUrlInput} onChange={(e) => { setBaseUrlInput(e.target.value); setKeySaved(false); }} placeholder="Base URL, e.g. https://api.openai.com/v1" className="bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded-lg px-3 py-2 text-[11px] font-mono text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--gold-dim)] transition-colors" />
@@ -600,7 +639,15 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
                         <div className="flex flex-wrap gap-2">
                           {AI_TASKS.map((task) => <label key={task} className="flex items-center gap-1 text-[8px] font-mono text-[var(--text-muted)]"><input type="checkbox" checked={enabledTasks.includes(task)} onChange={() => { setEnabledTasks((current) => current.includes(task) ? current.filter((value) => value !== task) : [...current, task]); setKeySaved(false); }} />{task.replace(/_/g, ' ')}</label>)}
                         </div>
-                        {apiKeyInput.trim() && baseUrlInput.trim() && modelInput.trim() && (
+                        <button disabled={testingConnection || !baseUrlInput.trim() || !modelInput.trim()} onClick={() => void testConnection()} className="px-3 py-2 border border-[var(--border-secondary)] rounded-lg text-xs disabled:opacity-50">{testingConnection ? 'Testing...' : 'Test connection'}</button>
+                        {connectionStatus && <p role="status" className="text-xs text-[var(--text-primary)]">{connectionStatus}</p>}
+                        <label className="text-xs text-[var(--text-primary)]">Automatic monitoring summaries
+                          <select aria-label="Monitoring summary interval" value={monitorMinutes} disabled={!keySaved || !enabledTasks.includes('summarize')} onChange={(e) => setMonitorMinutes(Number(e.target.value))} className="mt-1 w-full bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded-lg px-3 py-2">
+                            <option value={0}>Off</option><option value={5}>Every 5 minutes</option><option value={15}>Every 15 minutes</option><option value={30}>Every 30 minutes</option><option value={60}>Every hour</option>
+                          </select>
+                        </label>
+                        <p className="text-xs text-[var(--text-muted)]">Monitoring summaries run while this analyst workspace is open. Localhost connects to the machine hosting Ophanim.</p>
+                        {baseUrlInput.trim() && modelInput.trim() && (
                           <>
                             <button
                               onClick={saveApiKey}

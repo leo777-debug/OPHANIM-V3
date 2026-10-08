@@ -7,9 +7,9 @@ function tasks(value: unknown): AiProviderConfig['enabledTasks'] {
 export function parseAiConfig(value: unknown): AiProviderConfig | null {
   if (!value || typeof value !== 'object') return null;
   const raw = value as Partial<AiProviderConfig>;
-  if (typeof raw.apiKey !== 'string' || typeof raw.baseUrl !== 'string' || typeof raw.model !== 'string') return null;
-  const config = { apiKey: raw.apiKey.trim(), baseUrl: raw.baseUrl.trim(), model: raw.model.trim(), enabledTasks: tasks(raw.enabledTasks) };
-  return config.apiKey && config.baseUrl && config.model ? config : null;
+  if ((raw.apiKey !== undefined && typeof raw.apiKey !== 'string') || typeof raw.baseUrl !== 'string' || typeof raw.model !== 'string') return null;
+  const config = { apiKey: raw.apiKey?.trim() ?? '', baseUrl: raw.baseUrl.trim(), model: raw.model.trim(), enabledTasks: tasks(raw.enabledTasks) };
+  return config.baseUrl && config.model ? config : null;
 }
 
 export function getServerAiConfig(): AiProviderConfig | null {
