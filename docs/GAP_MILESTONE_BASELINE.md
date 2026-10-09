@@ -1,4 +1,4 @@
-# Logistics Gap Milestones: Baseline and Blocker
+# Logistics Gap Milestones: Baseline
 
 Recorded 9 October 2026 (Asia/Dubai).
 Starting revision: `6f8523b`.
@@ -12,7 +12,8 @@ organization-owned shipments, routes, ports or airports. Verify is the explicit
 general-purpose exception. Decisions remain deterministic with AI off.
 
 World Monitor source code was not opened or copied for this request. No World
-Monitor APIs or embeds were queried. No new data providers were added or enabled.
+Monitor APIs or embeds were queried. At the original preflight checkpoint, no new
+data providers were added or enabled. Subsequent additions are in the new report.
 
 ## Baseline Checks
 
@@ -49,7 +50,14 @@ Vitest emits an existing configuration-loader warning; it did not fail the tests
   writes and cross-tenant parent/child integrity. They require the Supabase auth
   schema, applied migrations and pgTAP in a development/test database.
 
-## Blocking Condition
+## Database Baseline
+
+RLS baseline: not available
+
+The founder explicitly authorized continuing Milestone 0 without a database/RLS
+baseline. New tables still require additive migrations, RLS policies and tests
+that execute with `DATABASE_URL` and skip otherwise. The previous stop condition
+below is retained as context, not a current blocker.
 
 The local environment has no `DATABASE_URL`. The connected Supabase project named
 OPHANIM reports `INACTIVE`. Docker is installed, but the Docker Desktop Linux
@@ -61,21 +69,29 @@ passwords were requested or printed, and no migrations were applied. Existing
 tenant-isolation acceptance tests cannot currently be executed. Text assertions
 are not a substitute for those tests.
 
-Following the instruction to stop and report when blocked, implementation stops
-at this preflight checkpoint. Milestone 0 and Milestones A-E are not completed or
-claimed as implemented. No acceptance screenshots or after-change feature checks
-exist yet.
+Implementation continued following the founder's override. See
+`VERIFY_MILESTONE_REPORT.md` for Milestone 0 changes, checks and limitations.
+Milestones A-E are not included in this implementation.
 
-## Required Next Decision
+## Later Database Verification
 
 Provide a non-production Supabase-compatible development/test database, either
 by authorizing restoration/configuration of the existing OPHANIM project or by
 starting a local Supabase development stack. Its connection string belongs in an
 uncommitted environment file, not chat or version control. Apply/verify the
-existing application and security migrations, then execute both existing RLS
-scripts before implementing organization-owned Verify history and share records.
+existing application and security migrations, then execute the existing RLS
+scripts and the new conditional Verify integration test before production use.
 
 ## Changes In This Checkpoint
 
-Only `docs/GAP_MILESTONE_BASELINE.md` was added. No application files, migrations,
-provider defaults, data-source permissions or tests were modified.
+At the original preflight commit only `docs/GAP_MILESTONE_BASELINE.md` was added.
+The new report records subsequent implementation files separately.
+
+## Repeated Baseline After Override
+
+- `npx tsc --noEmit`: passed.
+- `npm test`: 50 files, 153 tests passed, 1 skipped.
+- `npm run build`: the default `.next` directory failed with Windows `EPERM`
+  during unlink. Repeated with `NEXT_DEV_DIST_DIR=.next-verify-build`: passed,
+  96 static pages. No existing cache or source files were deleted.
+- RLS baseline: not available.

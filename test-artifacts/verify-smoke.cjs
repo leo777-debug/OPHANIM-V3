@@ -1,0 +1,57 @@
+const assert = require('node:assert/strict');
+const path = require('node:path');
+const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
+
+(async () => {
+  const browser = await chromium.launch({ headless: true, channel: 'chrome' });
+  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  const page = await context.newPage(); const errors = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  const base = process.env.VERIFY_TEST_URL || 'http://localhost:3000';
+  const screenshot = (name) => page.screenshot({ path: path.join(process.env.TEMP, `ophanim-verify-${name}.png`), fullPage: true });
+  try {
+    await page.goto(`${base}/verify`, { waitUntil: 'networkidle', timeout: 60000 });
+    await page.getByRole('heading', { name: 'Is this true?' }).waitFor(); await screenshot('input');
+    await page.getByRole('button', { name: 'Dubai airport fog', exact: true }).click();
+    await page.getByText('PARTLY TRUE', { exact: true }).waitFor({ timeout: 60000 });
+    await page.getByText('12 recorded departures', { exact: false }).waitFor();
+    await page.getByRole('button', { name: 'Create share link', exact: true }).scrollIntoViewIfNeeded();
+    assert.ok(await page.evaluate(() => window.scrollY > 0), 'Evidence/share controls must be scrollable, not clipped by atlas body styles');
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await screenshot('partly-true');
+    await page.getByLabel('This claim contains no private or organization data.', { exact: false }).check();
+    await page.getByRole('button', { name: 'Create share link', exact: true }).click();
+    const link = page.getByRole('link', { name: 'Open shared result' }); await link.waitFor(); const sharePath = await link.getAttribute('href');
+    const shared = await context.newPage(); shared.on('pageerror', (error) => errors.push(error.message));
+    await shared.goto(`${base}${sharePath}`, { waitUntil: 'networkidle' });
+    await shared.getByText('PARTLY TRUE', { exact: true }).waitFor();
+    await shared.screenshot({ path: path.join(process.env.TEMP, 'ophanim-verify-shared.png'), fullPage: true });
+    const imageUrl = await shared.getByRole('link', { name: 'Download image' }).getAttribute('href');
+    const png = await context.request.get(`${base}${imageUrl}`); assert.equal(png.status(), 200); assert.equal(png.headers()['content-type'], 'image/png'); assert.ok((await png.body()).length > 1000);
+    const privateSerialized = await shared.locator('body').innerText(); assert.ok(!privateSerialized.includes('organization_id'));
+    await page.getByRole('button', { name: 'Revoke link', exact: true }).click(); await link.waitFor({ state: 'detached' });
+    assert.equal((await context.request.get(`${base}${sharePath}`)).status(), 404);
+    await page.getByRole('button', { name: 'Check again', exact: true }).click();
+    await page.getByRole('heading', { name: 'Earlier checks in this session' }).waitFor();
+    await screenshot('history-session');
+    await page.getByRole('button', { name: 'Tokyo earthquake', exact: true }).click();
+    await page.getByText('CONFIRMED', { exact: true }).first().waitFor();
+    await page.getByRole('button', { name: 'Opinion', exact: true }).click();
+    await page.getByText('NOT CHECKABLE', { exact: true }).waitFor();
+    await page.getByLabel('Claim', { exact: true }).fill('Magnitude 5.6 earthquake hit Tokyo');
+    await page.getByRole('button', { name: 'Review claim', exact: true }).click();
+    await page.getByRole('heading', { name: 'Review parsed claim' }).waitFor();
+    assert.equal(await page.getByLabel('Latitude', { exact: true }).inputValue(), '35.6762');
+    const entities = page.getByLabel('Entities (comma-separated)', { exact: true });
+    await entities.fill('ENTITY ONE, ENTITY TWO'); await entities.press('Tab');
+    assert.equal(await entities.inputValue(), 'ENTITY ONE, ENTITY TWO');
+    const negative = await context.request.post(`${base}/api/verify/check`, { data: { claim: {} } }); assert.equal(negative.status(), 400);
+    await context.close();
+    const mobile = await browser.newContext({ viewport: { width: 390, height: 844 } }); const phone = await mobile.newPage();
+    await phone.goto(`${base}/verify`, { waitUntil: 'networkidle' }); await phone.getByRole('button', { name: 'Dubai airport fog', exact: true }).click(); await phone.getByText('PARTLY TRUE', { exact: true }).waitFor();
+    const overflow = await phone.evaluate(() => document.documentElement.scrollWidth > window.innerWidth); assert.equal(overflow, false);
+    await phone.screenshot({ path: path.join(process.env.TEMP, 'ophanim-verify-mobile.png'), fullPage: true }); await mobile.close();
+    assert.deepEqual(errors, []);
+    console.log(JSON.stringify({ passed: true, flow: 'replay -> evidence -> share -> PNG -> revoke -> recheck -> parsed input -> mobile', pageErrors: errors }));
+  } finally { await browser.close(); }
+})().catch((error) => { console.error(error); process.exitCode = 1; });

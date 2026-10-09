@@ -19,6 +19,27 @@ Osiris deployment is not required.
 
 ## Features
 
+### Ophanim Verify (Milestone 0)
+
+Open `/verify` or use the atlas **Verify** link to review a public-event claim,
+correct its place/time/entities and run deterministic evidence checks. Optional
+configured AI assists with parsing and an **INFERENCE** summary, never verdicts
+or provider selection. Text/URL inputs, source timestamps, coverage limitations,
+re-checks, revocable shares and PNG downloads are included.
+
+Five **synthetic replay** cases are explicitly labelled, never presented as live.
+USGS and NASA EONET reuse the existing registry; airport movement, maritime,
+sanctions and trusted-news checks need suitable reviewed observations. New METAR
+and observations providers remain off until commercial-use rights are configured.
+
+Signed-in history and durable shares require the database and both additive
+migrations. Without a database, checks use a 30-minute temporary session; public
+shares use the server's temporary filesystem and do not work across instances.
+Live RLS tests skip when `DATABASE_URL` is absent, not silently pass.
+
+[Verdict rules, source configuration and safety](docs/VERIFY_RULES.md) |
+[Milestone 0 verification report](docs/VERIFY_MILESTONE_REPORT.md)
+
 ### Atlas and Map Workspaces
 
 - MapLibre globe with night, earth-colored and satellite basemaps.
