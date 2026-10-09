@@ -1,244 +1,206 @@
-<div align="center">
-
 # OPHANIM
 
-### Configurable Live Intelligence Platform
+## Configurable Live Intelligence Platform
 
-[![Ophanim](https://img.shields.io/badge/Ophanim-Intelligence_Platform-2FD5CA?style=for-the-badge)](https://github.com/leo777-debug/OPHANIM-V3)
-[![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)](https://nextjs.org)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org)
-[![MapLibre](https://img.shields.io/badge/MapLibre_GL-GPU_Rendered-396CB2?style=for-the-badge)](https://maplibre.org)
-[![License](https://img.shields.io/badge/License-MIT-D4AF37?style=for-the-badge)](LICENSE)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)](https://typescriptlang.org)
+[![MapLibre](https://img.shields.io/badge/MapLibre-WebGL-396CB2)](https://maplibre.org)
+[![License](https://img.shields.io/badge/License-MIT-2FD5CA)](LICENSE)
 
-**A configurable intelligence platform that combines live map layers and feeds with providers, generic entities, events, evidence, workflows, watchlists, AI summaries, and notifications.**
+Ophanim combines a live intelligence globe with provider-based search, entity
+tracking, watchlists, news, operational workflows, imports, AI summaries and
+notifications. It builds directly on the existing Osiris source code; a second
+Osiris deployment is not required.
 
-[Repository](https://github.com/leo777-debug/OPHANIM-V3) · [Platform architecture](docs/PLATFORM.md) · [Deployment](docs/DEPLOYMENT.md)
-
-</div>
-
----
-
-## Overview
-
-Ophanim is a configurable intelligence platform that preserves the existing MapLibre live-feed experience while adding organization-scoped providers, entities, events, evidence, workflows, imports, and administration. Built with Next.js 16 and MapLibre GL, it supports both map-led exploration and structured operational work.
-
-### Key Capabilities
-
-| Domain | Data Points | Sources |
-|--------|------------|---------|
-| **Aviation** | Commercial, Private, Military, Jets | OpenSky Network |
-| **Maritime** | 39 Global Ports, 10 Chokepoints | Static Naval Intel |
-| **CCTV** | 2,000+ Cameras | TfL, WSDOT, Caltrans, NYC DOT, VicRoads + more |
-| **Seismic** | Real-time M2.5+ | USGS Earthquake API |
-| **Fires** | Active Hotspots | NASA FIRMS |
-| **News** | 24/7 Live Streams | 25+ Global Broadcasters |
-| **Weather** | Severe Events | NASA EONET |
-| **Space** | Solar Weather, Satellites | NOAA SWPC, N2YO |
-| **Cyber** | CVE Threats, Vulnerability Scanning | NVD, Custom Scanner |
-| **Conflict** | 13 Active Zones | Static OSINT Intel |
-| **Crypto** | BTC + ETH Wallet Tracing, OFAC SDN Match | blockstream.info, Blockscout, OpenSanctions |
-| **Sanctions** | Person / Org / Vessel SDN Search | OpenSanctions (US OFAC SDN mirror) |
-| **Telegram OSINT** | Geoparsed Posts from Public Channels | `t.me/s/<channel>` web preview |
-
----
-
-## Architecture
-
-```
-┌─────────────────────────────────────────────────┐
-│                  OSIRIS CLIENT                   │
-│  ┌──────────┐  ┌──────────┐  ┌───────────────┐ │
-│  │ MapLibre  │  │  HUD     │  │  RECON Toolkit│ │
-│  │  GL (GPU) │  │ Panels   │  │  Port Scan    │ │
-│  │  WebGL    │  │ Layers   │  │  DNS / WHOIS  │ │
-│  │  Render   │  │ Controls │  │  Vuln Scanner │ │
-│  └──────────┘  └──────────┘  └───────────────┘ │
-├─────────────────────────────────────────────────┤
-│               NEXT.JS API ROUTES                 │
-│  /api/flights         /api/earthquakes          │
-│  /api/cctv            /api/news                 │
-│  /api/fires           /api/maritime             │
-│  /api/gdelt           /api/satellites           │
-│  /api/weather         /api/scanner              │
-│  /api/sentinel        /api/telegram-feed        │
-│  /api/osint/*  (whois, dns, ip, cve, sanctions, │
-│                 crypto, sweep, threats, …)      │
-├─────────────────────────────────────────────────┤
-│              EXTERNAL DATA SOURCES               │
-│  OpenSky · USGS · NASA · NOAA · TfL · NVD      │
-│  GDACS · EONET · FIRMS · N2YO · RSS Feeds      │
-│  blockstream.info · Blockscout · OpenSanctions  │
-│  t.me public previews                            │
-└─────────────────────────────────────────────────┘
-```
-
----
+[Platform architecture](docs/PLATFORM.md) |
+[Deployment](docs/DEPLOYMENT.md) |
+[Operations](docs/OPERATIONS.md) |
+[World Monitor comparison and remaining gaps](docs/WORLD_MONITOR_COMPARISON.md)
 
 ## Features
 
-### Intelligence Layers
-- **16 toggleable data layers** with real-time entity counts
-- **GPU-accelerated rendering** — all map data rendered via WebGL, not DOM
-- **Progressive loading** — data fetched on-demand when layers are activated
-- **Viewport-aware** — only loads relevant data for the visible region
+### Atlas and Map Workspaces
 
-### RECON Toolkit
-- **Port Scanner** — TCP connect scan with service fingerprinting
-- **DNS Lookup** — Full record resolution (A, AAAA, MX, NS, TXT, CNAME)
-- **WHOIS** — Domain/IP registration data (auto-cross-checked against OFAC SDN)
-- **SSL/TLS Inspector** — Certificate chain analysis
-- **IP Intelligence** — Geolocation, ASN, threat reputation (auto-cross-checked against OFAC SDN)
-- **Vulnerability Scanner** — CVE lookup against NVD database
-- **Crypto Wallet Trace** — BTC + ETH lookup (balance, tx history, OFAC SDN sanctions flag)
-- **OFAC Sanctions Search** — query persons, organizations, vessels and aircraft against the US OFAC SDN list
+- MapLibre globe with night, earth-colored and satellite basemaps.
+- Independent globe workspace tabs and target-monitoring entry points.
+- Existing aviation, maritime, infrastructure, cable, camera, hazard, conflict,
+  markets and space-weather experiences retained.
+- Provider-generated map layers, entity details and map-location navigation.
+- Desktop and mobile controls for exploration and investigation.
 
-### Live Broadcast Network
-- **25+ live 24/7 news streams** from global broadcasters
-- Click any news dot on the map to open the live stream
-- Feeds from NBC, CBS, ABC, Sky News, Al Jazeera, France 24, NHK, WION, and more
+Data coverage depends on the source and credentials. Static infrastructure and
+reference layers are not live telemetry. Provider catalog entries and public
+embeds are not proof of a working native data connector.
 
-### Telegram OSINT Layer
-- **Public-channel feed** scraped from the unauthenticated `t.me/s/<channel>` web preview — no Bot API token, no MTProto
-- Default curated set of 5 channels (EN + RU/UA war reporting), overridable via `OSIRIS_TELEGRAM_CHANNELS`
-- Posts are geoparsed against a multilingual place dictionary (EN + Cyrillic + Arabic) and plotted on the map
-- Click any cyan dot to read the post and jump to the original on Telegram
+### Intelligence Desk
 
-### Crypto Wallet Intelligence
-- **BTC** lookups via [blockstream.info](https://blockstream.info) (Esplora API, keyless)
-- **ETH** lookups via [Blockscout](https://github.com/blockscout/blockscout)'s public ETH instance (`eth.blockscout.com`, keyless)
-- Every lookup is cross-checked against the OFAC SDN sanctioned-address list (mirrored from [`0xB10C/ofac-sanctioned-digital-currency-addresses`](https://github.com/0xB10C/ofac-sanctioned-digital-currency-addresses))
-- Sanctioned wallets surface a red **SANCTIONED — OFAC SDN** badge in the RECON panel
+Open **INTEL DESK** in the atlas; on mobile use **NEWS** or **INTEL**.
 
-### OFAC SDN Cross-Check
-- Standalone `SANCTIONS` tab in the RECON toolkit — full-text search across persons, organisations, vessels and aircraft
-- WHOIS and IP-intel routes auto-cross-check registrant / ASN-owner names against the SDN list and surface an inline alert
-- Data sourced from [OpenSanctions](https://www.opensanctions.org) (CC-BY 4.0) — keyless, ~7 MB cached in-memory for 24h
+- **News:** text search, publisher filters, keyword-score filters and time windows
+  of 1, 6, 24 or 48 hours, seven days, or all loaded news.
+- **Read activity:** persistent per-browser read tracking, unread filtering and
+  bulk marking of matching stories.
+- **Exports:** filtered CSV and JSON downloads; CSV strings are escaped to reduce
+  spreadsheet formula-injection risk.
+- **Timeline:** dated news and USGS earthquakes in one chronological view, with
+  event-type filters, original source links and map navigation.
+- **Regions:** report counts and distinct publisher counts for recognized region
+  mentions, with approximate map locations.
+- **Sources:** independent feed availability, item counts, checked times and most
+  recent publication dates.
+- **Clocks:** UTC, New York, London, Dubai, Singapore and Tokyo, using DST-aware
+  time zones.
+- Existing alerts, loaded-signal counts and target-monitoring controls retained.
 
-### Conflict Zone Monitoring
-- **13 active conflict/tension zones** with severity-coded warning markers
-- Active Wars: Ukraine, Gaza, Sudan, Myanmar, DRC, Yemen
-- High Tension: Syria, Lebanon, Sahel, Somalia, Red Sea
-- Elevated: Taiwan Strait, Korean DMZ
+The news route polls nine sources: **BBC, Al Jazeera, GDACS, NASA, CISA,
+OSINTtechnical, Faytuks, Liveuamap and CyberKnow**. RSS and Telegram are loaded
+together, and one failed source does not stop the others. The atlas refreshes news
+every five minutes. Publisher limits mean time filters cover loaded stories, not
+a complete historical archive.
 
-### Performance Optimized
-- **75% reduction in edge requests** vs initial release
-- Aggressive polling relaxation (15-30 min intervals for stable data)
-- Static data served from memory (zero external API calls for news feeds)
-- `layerFetchedRef` prevents duplicate API requests
+Reachable feeds can contain old publications. Undated news is not assigned a
+fabricated publication date. Keyword scores and regional mentions are discovery
+aids, not validated threat assessments or evidence of correlated incidents.
+Keyword-derived coordinates are approximate, not vessel or aircraft positions.
 
----
+### Search and Providers
+
+- Query classification and deterministic provider selection.
+- Shared provider registry, enrichment and result-normalization contracts.
+- Backend-only wrappers for configured external services and CLI tools.
+- Generic entities, events, evidence and organization-scoped operational data.
+- Existing RECON tools for DNS, WHOIS, IP, certificates, CVEs, sanctions and other
+  configured intelligence sources.
+
+Installing an optional tool or configuring a provider is still necessary where
+required. A wrapper does not install the external tool or grant access to its
+data. Use active scanning only for targets you own or are authorized to assess.
+
+### Watchlists, Notifications and Operations
+
+- Persisted watchlists, entity pages and provider checks.
+- Resend integration for configured email notifications, delivery records and
+  scheduled processing.
+- Shipment imports, disruptions, rescue workflows and operational workspaces.
+- Organization-scoped entities, events, cases, evidence and administration.
+
+These workflows require the relevant authentication, database, provider and cron
+configuration. They are not enabled simply by loading the public globe.
+
+### AI and Local Models
+
+Open **AI SETUP** in the atlas to enter a base URL, model name, optional API key
+and enabled tasks. Use **Test connection**, then save the configuration.
+
+| Provider preset | Default base URL |
+| --- | --- |
+| Ollama | `http://localhost:11434/v1` |
+| LM Studio | `http://localhost:1234/v1` |
+| Custom OpenAI-compatible server | Your compatible server URL |
+
+Start the local model server and load a model first. Keyless servers can leave
+the API key blank. Custom configurations must expose compatible chat completions;
+this is not native support for every vendor's API format.
+
+AI summarizes supplied context, explains it, suggests follow-up searches and
+writes email summaries. It does not select search providers. Automatic briefing
+intervals are off, 5, 15, 30 or 60 minutes and run only while the analyst component
+is mounted, a configuration is saved and summarization is enabled. These are not
+server-side background jobs.
+
+**Localhost means the machine running Ophanim's backend**, not the visitor's
+laptop. A Render deployment cannot reach your laptop's model through `localhost`.
+Use a securely reachable model service when hosting remotely. Development permits
+loopback model servers on ports 11434 and 1234; production private/local origins
+must be explicitly allowed with `AI_LOCAL_BASE_URLS`, using origins without `/v1`.
+Keep this allowlist narrowly scoped and keep model services authenticated when
+exposed beyond your machine.
+
+Optional isolated research has a separate deployment/configuration boundary; see
+[sandbox research](docs/SANDBOX_RESEARCH.md). It is not enabled by selecting a
+local model.
+
+## Data Sources and Availability
+
+| Area | Existing source integrations / configuration |
+| --- | --- |
+| Aircraft | OpenSky and ADS-B sources; coverage and rate limits vary |
+| Ships | Regional Digitraffic AIS; optional AISStream, customer AIS and configured MarineTraffic access |
+| Earthquakes | USGS |
+| Fires and weather | NASA FIRMS and EONET integrations |
+| News and advisories | Nine news sources listed above; existing broadcaster embeds |
+| Cameras | Existing transport and public-camera integrations; upstream availability varies |
+| Space weather | NOAA SWPC and existing satellite integrations |
+| Cyber intelligence | Existing cyber-threat, malware, CVE and configured OSINT providers |
+| Sanctions | Existing OpenSanctions and War & Sanctions integrations |
+| Markets | Existing market and crypto APIs/panels |
+
+The route named `/api/gdelt` currently reads GDACS, not a GDELT protest feed.
+Conflict/reference markers and heuristic country-risk scores must not be
+advertised as independently verified live intelligence. Third-party source terms,
+attribution and access restrictions apply separately from this repository's
+software license.
 
 ## Quick Start
 
 ```bash
-git clone https://github.com/simplifaisoul/osiris.git
-cd osiris
+git clone https://github.com/leo777-debug/OPHANIM-V3.git
+cd OPHANIM-V3
 npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
+Open the globe at [http://localhost:3000/atlas](http://localhost:3000/atlas).
+Configure database/authentication before using protected operational workflows.
+Keep secrets in uncommitted environment files, never in browser-exposed variables.
 
-### Docker / Self-Hosting
+### Deployment
+
+Ophanim runs as one Next.js application with PostgreSQL for persisted workflows.
+The Render blueprint in [`render.yaml`](render.yaml) defines the web service,
+database and cron workers. Review its plan selections before provisioning;
+deploying the blueprint can create billable services.
+
+See [deployment instructions](docs/DEPLOYMENT.md) for `DATABASE_URL`, `APP_URL`,
+migrations and worker configuration. Other configured features can require:
+
+- Resend: `RESEND_API_KEY`, `RESEND_FROM`.
+- AI server defaults: `AI_BASE_URL`, `AI_MODEL`, optional `AI_API_KEY`, and
+  `AI_ENABLED_TASKS`.
+- Private/local AI access: `AI_LOCAL_BASE_URLS`.
+- AISStream: `AIS_API_KEY`; other AIS sources have their own endpoint/credential
+  settings.
+- Worker bearer secrets: `WATCHLIST_CRON_SECRET`, `IMPORT_CRON_SECRET`,
+  `DISRUPTION_SYNC_CRON_SECRET`, `INTELLIGENCE_ALERT_CRON_SECRET`.
+
+Cron secrets are backend-only and must match the corresponding worker settings.
+For standalone container deployment, this repository includes `Dockerfile` and
+`docker-compose.yml`; build from this repository rather than pulling an unrelated
+Osiris image. PostgreSQL and required environment values must still be configured.
+
+## Verification
 
 ```bash
-git clone https://github.com/simplifaisoul/osiris.git
-cd osiris
-cp .env.template .env     # optional — configure keys / port
-docker compose up -d
+npm test
+npx tsc --noEmit
+npm run build
 ```
 
-Open [http://localhost:3000](http://localhost:3000). The image is a multi-stage
-`node:22-alpine` standalone build (~220 MB, non-root). The compose file also
-carries CasaOS app metadata (`x-casaos:`) for one-click install on
-[CasaOS](https://casaos.io). See **[DOCKER.md](DOCKER.md)** for the full Docker,
-CasaOS and API-key guide.
+For the intelligence desk, open `/atlas`, select **INTEL DESK**, filter news,
+download CSV/JSON, mark matching stories read and check **Unread** after reloading.
+Then test **TIMELINE**, **REGIONS**, **SOURCES** and **CLOCKS**, including a mobile
+viewport. The [comparison document](docs/WORLD_MONITOR_COMPARISON.md#testing)
+contains detailed checks and the remaining capability gaps. Full World Monitor
+parity is not claimed.
 
-**Prebuilt image (GHCR)** — skip the build and pull it directly:
+## Technology
 
-```bash
-docker pull ghcr.io/aiacos/osiris:latest
-docker run -d -p 3000:3000 --env-file .env ghcr.io/aiacos/osiris:latest
-```
+Next.js 16 App Router, React 19, TypeScript, MapLibre GL, Framer Motion, Lucide,
+PostgreSQL, Resend and Vitest. See [`package.json`](package.json) for dependency
+versions and scripts.
 
-**Custom port** — the container always listens on `3000`; set `OSIRIS_PORT` in
-`.env` to change the published host port (e.g. `OSIRIS_PORT=3005`) without
-editing the compose file.
+## License and Attribution
 
-### Environment Variables
-
-OSIRIS works **partially without any API keys** — all core feeds use public,
-keyless sources. Copy [`.env.template`](.env.template) to `.env` and set only
-what you need:
-
-```env
-# Published host port (container always listens on 3000). Default: 3000
-OSIRIS_PORT=3000
-
-# RECON scanner backend (the only vars the current code reads).
-# SCANNER_KEY must match the backend's OSIRIS_KEY — generate with: openssl rand -hex 32
-SCANNER_URL=
-SCANNER_KEY=
-
-# Optional, for higher rate limits / future sources (see DOCKER.md for signup links)
-FIRMS_API_KEY=                # NASA FIRMS  — firms.modaps.eosdis.nasa.gov/api/map_key/
-OPENSKY_CLIENT_ID=            # OpenSky OAuth2 (since Mar 2025) — opensky-network.org
-OPENSKY_CLIENT_SECRET=
-N2YO_API_KEY=                 # N2YO satellites — n2yo.com (Profile → API key)
-AIS_API_KEY=                 # aisstream.io maritime
-```
-
-> Without `SCANNER_URL`/`SCANNER_KEY` the RECON toolkit returns `503`; every
-> other layer works out of the box. `.env` is gitignored — only the template is committed.
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Framework | Next.js 16 (App Router, Turbopack) |
-| Language | TypeScript 5 |
-| Map Engine | MapLibre GL JS (WebGL) |
-| Animations | Framer Motion |
-| Icons | Lucide React |
-| Styling | Custom CSS Design System |
-| Deployment | Vercel Edge Network |
-
----
-
-## Keyboard Shortcuts
-
-| Key | Action |
-|-----|--------|
-| `F` | Toggle flight layers |
-| `E` | Toggle earthquakes |
-| `S` | Toggle satellites |
-| `D` | Toggle day/night cycle |
-| `Escape` | Close panels |
-
----
-
-## License
-
-MIT — see [LICENSE](LICENSE) for details.
-
----
-
-<div align="center">
-
-**🛠️ SUPPORT THE OSIRIS PROJECT**
-The OSIRIS Global Intelligence Grid is entirely open-source, but running the backend scanners and data firehoses isn't cheap.
-
-If you want to help keep the servers alive, and support us to get access to better tools  unlock the **Special OSIRIS Console**, Currently Just a Cool UI. a you can officially support the project here : 
-
-🔗 [Support OSIRIS on Patreon](https://www.patreon.com/posts/159077425)
-
-*Supporters receive the `🔴 RedTeam Console` role and access to encrypted developer comms.*
-
-
-**Built by [simplifaisoul](https://github.com/simplifaisoul)**
-
-[Join our Discord to be a part of this movement!](https://discord.gg/umBykEpb98)
-
-</div>
+MIT; see [LICENSE](LICENSE). Ophanim builds on the original Osiris work by
+[simplifaisoul](https://github.com/simplifaisoul). Existing copyright and license
+notices are preserved. External tools, datasets and media retain their own terms.
