@@ -42,7 +42,7 @@ def schema_for(target, task):
     return infer(target)
 
 
-def example(split, mode, task, i, language, rng):
+def example(split, mode, task, i, language, rng, cohort=None):
     # Split-specific identifiers and dates; no shared source documents across splits.
     offset={'train':0,'validation':100000,'test':200000}[split]
     serial=offset+i
@@ -73,7 +73,7 @@ def example(split, mode, task, i, language, rng):
         target={'document_type':kind,'confidence':1.0}
     elif task=='grounded_qa':
         context=[chunk]
-        unanswerable=i%4==0  # >=25% in each QA cohort
+        unanswerable=(i if cohort is None else cohort)%4==0  # >=25% of each QA task cohort
         text=(f'ما تاريخ انتهاء الوقت المجاني للشحنة {ref}؟' if arabic else f'When does free time end for shipment {ref}?') if unanswerable else (f'كم صندوقاً في الشحنة {ref}؟' if arabic else f'How many boxes are in shipment {ref}?')
         target={'statements':[{'label':'NOT FOUND','text':"I couldn't find this in your documents or Ophanim's knowledge",'citations':[]}]} if unanswerable else {'statements':[{'label':'FACT','text':quote,'quote':quote,'citations':[ref]}]}
     elif task=='explain_mistake':
@@ -118,12 +118,15 @@ def generate(output, per_mode):
                     task=tasks[i%len(tasks)]
                     # Avoid modulo correlation starving QA unanswerables/languages.
                     language=['en','ar','mixed'][(i//len(tasks))%3]
-                    row=example(split,mode,task,i*7+(i//len(tasks)),language,rng)
+                    row=example(split,mode,task,i*7+(i//len(tasks)),language,rng,cohort=i//len(tasks))
                     digest=hashlib.sha256(json.dumps(row['messages'][:2],sort_keys=True,ensure_ascii=False).encode()).hexdigest()
                     if digest in seen:raise RuntimeError('Duplicate / split leakage detected')
                     seen.add(digest);counts[(split,mode,task,language)]+=1
                     stream.write(json.dumps(row,ensure_ascii=False)+'\n')
     summary={'seed':42,'counts':[dict(split=s,mode=m,task=t,language=l,count=n) for (s,m,t,l),n in sorted(counts.items())],'total':sum(counts.values()),'source':'synthetic templates only; MIT; no teacher/customer data'}
+    for split in ('train','validation','test'):
+        qa=[json.loads(l) for l in (output/f'{split}.jsonl').read_text(encoding='utf-8').splitlines() if json.loads(l)['task']=='grounded_qa']
+        if not qa or sum(r['unanswerable'] for r in qa)/len(qa)<0.2:raise RuntimeError('At least 20% QA unanswerables required in every split')
     (output/'summary.json').write_text(json.dumps(summary,indent=2),encoding='utf-8')
     return summary
 
