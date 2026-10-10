@@ -47,7 +47,7 @@ scanner/
 threatfox.json
 
 # Dev scripts (one-time migration helpers)
-scripts/
+/scripts/
 
 # AI agent config files
 CLAUDE.md
