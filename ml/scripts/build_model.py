@@ -4,6 +4,8 @@ import json
 import os
 import subprocess
 import sys
+import re
+from pathlib import Path
 from model_store import root,inside,manifest,verify,register
 
 if __name__=='__main__':
@@ -14,6 +16,15 @@ if __name__=='__main__':
     adapter=inside(store,f'adapters/{args.version}');base=inside(store,args.base);merged=inside(store,f'merged/{args.version}')
     metrics=json.loads((adapter/'run_metrics.json').read_text())
     if metrics.get('smoke_only') or metrics.get('full_training_completed') is not True:raise RuntimeError('Smoke or incomplete adapters cannot be deployed')
+    if Path(args.evaluation).resolve() != (adapter/'comparison.json').resolve():raise RuntimeError('Use this adapter version\'s registered held-out comparison.json')
+    provenance=json.loads((adapter/'base_revision.json').read_text())
+    if evaluation.get('adapter_version')!=args.version or evaluation.get('base_revision')!=provenance:raise RuntimeError('Evaluation belongs to a different adapter or base revision')
+    if not re.fullmatch('[a-f0-9]{64}',evaluation.get('dataset_sha256','')):raise RuntimeError('Held-out dataset hash missing')
+    sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'eval'))
+    from compare import gate
+    scores=evaluation.get('models',{})
+    adapted='continued-pretrained' if provenance.get('method')=='continued_pretraining' else 'fine-tuned'
+    if not gate(scores.get('base',{}),scores.get(adapted,{})):raise RuntimeError('Reported metrics do not satisfy the release gate')
     entries=manifest(store)['files']
     for folder in (adapter,base):
         files=[f for f in entries if inside(store,f['path']).is_relative_to(folder)]

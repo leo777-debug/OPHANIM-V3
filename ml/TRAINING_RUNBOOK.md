@@ -1,7 +1,10 @@
 # Founder runbook
 
 The competition on **17 October 2026** uses a base model + RAG + prompts. Run full
-training afterwards. No fine-tuned model is released until held-out gates pass.
+training afterwards. The founder selected **continued pretraining of an existing
+model**: unlabelled domain text, next-token prediction, QLoRA to fit 16 GB. This
+differs from the original supervised task training plan. No trained model is
+released until held-out gates pass. The original SFT scripts remain optional.
 
 1. Connect Leonard External Drive (D:), ideally USB 3. Existing files are preserved.
    Loading over USB is slower at startup; generation uses RAM after loading.
@@ -17,7 +20,7 @@ $env:OLLAMA_MODELS=Join-Path $env:OPHANIM_MODELS_DIR 'ollama'
 python -m venv D:\models\tools\ophanim-venv
 $env:OPHANIM_PYTHON='D:\models\tools\ophanim-venv\Scripts\python.exe'
 $env:PIP_CACHE_DIR='D:\models\tools\pip-cache'
-& $env:OPHANIM_PYTHON -m pip install -r ml/requirements.txt
+& $env:OPHANIM_PYTHON -m pip install -r ml/requirements-cpu.txt
 & $env:OPHANIM_PYTHON ml/scripts/download_base_models.py
 ```
 
@@ -26,24 +29,37 @@ setting only. No missing-drive fallback or model download to C: is allowed.
 Use Python 3.11/3.12 for the full Kaggle stack. Windows CPU smoke can use a
 supported CPU PyTorch wheel (the development run used Python 3.14 / torch 2.9.1).
 
-3. Generate synthetic templates and the Kaggle input bundle:
+3. Generate the unlabelled corpus and private CPT input bundle. The separate
+   task dataset measures extraction/QA regression; it is NOT used for CPT loss:
 
 ```powershell
 & $env:OPHANIM_PYTHON ml/scripts/generate_dataset.py --version v3-2026-10-10
-& $env:OPHANIM_PYTHON ml/scripts/prepare_kaggle.py --dataset D:\models\datasets\v3-2026-10-10 --version v3-2026-10-10
+& $env:OPHANIM_PYTHON ml/scripts/generate_pretraining_corpus.py --version cpt-v1-2026-10-10
+& $env:OPHANIM_PYTHON ml/scripts/prepare_pretraining.py --corpus D:\models\corpora\cpt-v1-2026-10-10 --dataset D:\models\datasets\v3-2026-10-10 --version NEW_BUNDLE_VERSION
 ```
 
 Choose a NEW dataset version if one already exists; never overwrite a held-out
 test. The generator excludes customer uploads. Verify DATA_CARD.md and the
 synthetic-only bundle before uploading. All generated data is ignored by Git.
+The prepared final bundle is
+`D:\models\kaggle-downloads\ophanim-cpt-cpt-v3-20261011\ophanim-cpt-input.zip`;
+import `ml/kaggle/ophanim_continued_pretraining.ipynb`. The corpus has only 1,440
+passages from a few procedural templates. It validates the pipeline; useful
+production pretraining requires a more diverse licence-cleared corpus and the
+held-out gates, not merely completing an epoch of this small bundle.
 
 4. Create a Kaggle account, verify phone eligibility if requested, inspect current
    accelerator quota. Official [specifications](https://www.kaggle.com/docs/notebooks)
    describe P100 or dual T4 offerings, 12-hour CPU/GPU sessions and 20 GB saved
    output. Free availability and weekly quota vary by account; do not assume a
    fixed 30 hours or a larger GPU. This config uses ONE 16 GB GPU and fp16.
+   Pinned [bitsandbytes 0.48.1](https://huggingface.co/docs/bitsandbytes/v0.48.1/en/installation)
+   supports P100 NF4 with CUDA 11.8–12.6; the notebook installs torch's CUDA 12.4
+   wheel. CUDA 12.8+ wheels omit Pascal, so do not substitute a newer CUDA build
+   without checking compatibility. Base and adapter checksums are verified before
+   loading; training and evaluation use registered local weights only.
 5. Upload the input zip as a **private Kaggle Dataset**. No customer files, personal
-   data, consent proofs or production secrets. Import ml/kaggle/ophanim_qlora.ipynb,
+   data, consent proofs or production secrets. Import ml/kaggle/ophanim_continued_pretraining.ipynb,
    attach that dataset, select GPU in Settings → Accelerator, turn Internet on
    for downloads. Optional HF_TOKEN goes in Kaggle Secrets. Qwen is ungated.
 6. Run setup cells. Dependencies are pinned; CUDA 12.4 is intentional for P100.
@@ -64,6 +80,11 @@ synthetic-only bundle before uploading. All generated data is ignored by Git.
    /kaggle/working/ophanim-output.zip. Larger configured model evaluation runs
    separately using ml/eval/compare.py. Human review of summary/forecast meaning,
    citations, relevance and Arabic is required; exact match is only a proxy.
+   The comparison names the adapted model `continued-pretrained`. Lower corpus
+   loss/perplexity alone does not satisfy the task acceptance gate. This starter
+   corpus is small and repetitive; a short successful run does not establish
+   useful domain learning. Diversify licence-cleared procedural text and compare
+   results before scaling. Live rules, schedules and disruptions stay in RAG.
 10. Download the zip from Output onto D:\models\kaggle-downloads, or install the
     official `kaggle` Python package and use download_from_kaggle.py owner/notebook
     --version VERSION. Official credentials stay in ~/.kaggle/kaggle.json or Kaggle
@@ -103,3 +124,31 @@ model volume. Planning estimate 3–6 GPU hours is unverified. At an illustrativ
 $0.50/hour, that is $1.50–$3 plus storage/network; this is a budget formula,
 not a current provider quote. Set a spending/session cap and verify a live rate
 before renting. No paid GPU was rented during development.
+
+For a bounded local test on the **real 4B weights**, after the complete base
+download and checksum registration:
+
+```powershell
+& $env:OPHANIM_PYTHON ml/scripts/pretrain.py --corpus D:\models\corpora\cpt-v1-2026-10-10 --version cpt-cpu-smoke-NEWVERSION --cpu-smoke --steps 2
+```
+
+This produces a real adapter under D:\models\adapters and records the base
+revision, corpus hashes, loss, perplexity and measured adapter parameter change.
+It is explicitly `smoke_only`, cannot pass the export release gate, and is not a
+production model. The earlier `train.py --smoke` uses a random toy fixture;
+do not confuse that older test with continued pretraining of Qwen.
+The completed real-base test is `cpt-cpu-smoke-20261011-real4b`: two steps,
+64 tokens, 104.88 seconds. See its external-drive `run_metrics.json` and FINAL_REPORT.md.
+
+Local CPU embeddings can run without Ollama or Docker:
+
+```powershell
+& $env:OPHANIM_PYTHON ml/scripts/embedding_server.py
+```
+
+Set EMBEDDING_BASE_URL=http://127.0.0.1:18081/v1,
+EMBEDDING_MODEL=Qwen/Qwen3-Embedding-0.6B, and allow the origin
+http://127.0.0.1:18081 in AI_LOCAL_BASE_URLS. It loads only verified weights from
+the external disk, never downloads at startup, and returns 1024-dimensional
+vectors. Non-loopback hosting requires EMBEDDING_API_KEY. It is a single-request
+CPU server; size production capacity separately.

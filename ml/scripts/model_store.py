@@ -5,8 +5,13 @@ import os
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
+from filelock import FileLock
 
-FOLDERS = ('base', 'embeddings', 'hf-cache', 'adapters', 'merged', 'gguf', 'ollama', 'kaggle-downloads', 'eval', 'tools')
+FOLDERS = ('base', 'embeddings', 'hf-cache', 'adapters', 'merged', 'gguf', 'ollama', 'kaggle-downloads', 'eval', 'tools', 'corpora')
+
+
+def manifest_lock(store):
+    return FileLock(str(store / 'manifest.json.lock'), timeout=60, is_singleton=True)
 
 
 def root(required_bytes=0):
@@ -57,9 +62,10 @@ def manifest(store):
 
 
 def save_manifest(store, data):
-    temp = store / 'manifest.json.tmp'
-    temp.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding='utf-8')
-    temp.replace(store / 'manifest.json')
+    with manifest_lock(store):
+        temp = store / 'manifest.json.tmp'
+        temp.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding='utf-8')
+        temp.replace(store / 'manifest.json')
 
 
 def register(store, file, name, version, base_model, licence, eval_scores=None, expected_sha256=None):
@@ -67,12 +73,13 @@ def register(store, file, name, version, base_model, licence, eval_scores=None, 
     actual = checksum(file)
     if expected_sha256 and actual != expected_sha256:
         raise RuntimeError(f'Checksum mismatch: {file.name}')
-    data = manifest(store)
-    relative = file.relative_to(store).as_posix()
-    data['files'] = [f for f in data['files'] if f['path'] != relative]
-    data['files'].append(dict(path=relative, name=name, version=version, base_model=base_model, licence=licence,
-                              sha256=actual, size=file.stat().st_size, date=datetime.now(timezone.utc).isoformat(), eval_scores=eval_scores or {}))
-    save_manifest(store, data)
+    with manifest_lock(store):
+        data = manifest(store)
+        relative = file.relative_to(store).as_posix()
+        data['files'] = [f for f in data['files'] if f['path'] != relative]
+        data['files'].append(dict(path=relative, name=name, version=version, base_model=base_model, licence=licence,
+                                  sha256=actual, size=file.stat().st_size, date=datetime.now(timezone.utc).isoformat(), eval_scores=eval_scores or {}))
+        save_manifest(store, data)
 
 
 def verify(store, relative):

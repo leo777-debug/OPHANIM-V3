@@ -97,8 +97,16 @@ def gate(base,tuned):
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('--dataset',required=True);p.add_argument('--base',nargs=2,metavar=('URL','MODEL'));p.add_argument('--fine-tuned',nargs=2);p.add_argument('--larger',nargs=2);p.add_argument('--sample',type=int);p.add_argument('--concurrency',type=int,default=1);p.add_argument('--compact-prompts',action='store_true');p.add_argument('--rescore-base',help='Existing raw predictions; only recomputes metrics, never generates or claims a new run');p.add_argument('--report',default=str(Path(__file__).with_name('REPORT.md')));args=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('--dataset',required=True);p.add_argument('--base',nargs=2,metavar=('URL','MODEL'));p.add_argument('--fine-tuned',nargs=2);p.add_argument('--continued-pretrained',nargs=2);p.add_argument('--larger',nargs=2);p.add_argument('--run-id');p.add_argument('--sample',type=int);p.add_argument('--concurrency',type=int,default=1);p.add_argument('--compact-prompts',action='store_true');p.add_argument('--rescore-base',help='Existing raw predictions; only recomputes metrics, never generates or claims a new run');p.add_argument('--report',default=str(Path(__file__).with_name('REPORT.md')));args=p.parse_args()
     store=root(100*1024**2)
+    if args.fine_tuned and args.continued_pretrained:raise RuntimeError('Choose the adapted model method for this comparison')
+    from datetime import datetime,timezone
+    from model_store import inside
+    output_dir=inside(store,f'eval/runs/{args.run_id or datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")}')
+    if output_dir.exists():raise RuntimeError('Evaluation run exists; choose a new run id to preserve previous results')
+    output_dir.mkdir(parents=True)
+    adapted_label='continued-pretrained' if args.continued_pretrained else 'fine-tuned'
+    adapted_endpoint=args.continued_pretrained or args.fine_tuned
     rows=[json.loads(line) for line in Path(args.dataset).read_text(encoding='utf-8').splitlines()]
     if args.sample:
         # A balanced development sample, not the held-out test, for model selection.
@@ -113,7 +121,7 @@ if __name__=='__main__':
     reports={};lines=['# Model evaluation report','',f'Evaluation rows: {len(rows)}. No missing model is assigned a score. Compact task prompts: {args.compact_prompts}. Request concurrency: {args.concurrency}; latency includes queue/prefill/generation, not standalone generation speed.','']
     replay={r['id']:r for r in json.loads(Path(args.rescore_base).read_text(encoding='utf-8'))} if args.rescore_base else None
     if replay:lines.extend(['Raw base predictions were generated from v2 compact prompts, which omitted nested array descriptors. Metrics below are rescored against corrected v3 schemas. This is not a new model run; improved prompts still require evaluation.',''])
-    for name,endpoint in [('base',args.base),('fine-tuned',args.fine_tuned),('larger',args.larger)]:
+    for name,endpoint in [('base',args.base),(adapted_label,adapted_endpoint),('larger',args.larger)]:
         if not endpoint:lines.extend([f'## {name}','Not available / not run.','']);continue
         # Connection/availability failures are not model-quality measurements.
         try:
@@ -140,7 +148,7 @@ if __name__=='__main__':
         with ThreadPoolExecutor(max_workers=max(1,min(4,args.concurrency))) as pool:
           for i,result in enumerate(pool.map(evaluate,rows)):
             results.append(result)
-            (store/'eval'/f'{name}-partial.json').write_text(json.dumps(results,ensure_ascii=False,indent=2),encoding='utf-8')
+            (output_dir/f'{name}-partial.json').write_text(json.dumps(results,ensure_ascii=False,indent=2),encoding='utf-8')
             row=rows[i]
             print(f'{name} {i+1}/{len(rows)} {row["mode"]}/{row["task"]}/{row["language"]}',flush=True)
         if any(r['error'] for r in results):
@@ -157,8 +165,8 @@ if __name__=='__main__':
             metrics['extraction_field_exact']=aggregate(extraction).get('field_exact') if extraction else None
             reports[name][group]=metrics
             lines.extend([f'### {group} ({len(values)} rows)','', '```json',json.dumps(metrics,indent=2),'```',''])
-        (store/'eval'/f'{name}-predictions{"-rescored" if replay else ""}.json').write_text(json.dumps(results,ensure_ascii=False,indent=2),encoding='utf-8')
-    accepted=bool(args.fine_tuned and args.base and not args.sample and gate(reports.get('base',{}),reports.get('fine-tuned',{})))
-    lines.extend(['## Acceptance',f'Fine-tuned adapter accepted: {accepted}. Full held-out results and human citation/summary review are required.','', 'Exact structured matching is intentionally conservative. Free-form summary/forecast/mistake correctness requires human review; exact-match is not a semantic quality score. CPU/GPU hardware must be recorded separately.'])
+        (output_dir/f'{name}-predictions{"-rescored" if replay else ""}.json').write_text(json.dumps(results,ensure_ascii=False,indent=2),encoding='utf-8')
+    accepted=bool(adapted_endpoint and args.base and not args.sample and gate(reports.get('base',{}),reports.get(adapted_label,{})))
+    lines.extend(['## Acceptance',f'{adapted_label} adapter accepted: {accepted}. Full held-out results and human citation/summary review are required.','', 'Exact structured matching is intentionally conservative. Free-form summary/forecast/mistake correctness requires human review; exact-match is not a semantic quality score. CPU/GPU hardware must be recorded separately.',f'Raw outputs: {output_dir}'])
     Path(args.report).write_text('\n'.join(lines)+'\n',encoding='utf-8')
-    (store/'eval'/'comparison.json').write_text(json.dumps({'models':reports,'accepted':accepted},indent=2),encoding='utf-8')
+    (output_dir/'comparison.json').write_text(json.dumps({'models':reports,'accepted':accepted},indent=2),encoding='utf-8')

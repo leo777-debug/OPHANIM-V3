@@ -11,9 +11,63 @@ from generate_dataset import generate,container_number
 from model_store import root,inside,register,verify,reserve_destination
 from compare import score
 from import_knowledge import normalise,nearest,archive,utc
+from generate_pretraining_corpus import generate as generate_corpus
+from pretrain import load_corpus,pack,verified_base
 
 
 class PipelineTests(unittest.TestCase):
+    def test_model_loading_rejects_unregistered_inputs_and_mixed_revisions(self):
+        import os
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory(dir=root()/'eval') as directory:
+            with patch.dict(os.environ,{'OPHANIM_MODELS_DIR':directory}):
+                store=root();folder=store/'base'/'synthetic-fixture';folder.mkdir()
+                weight=folder/'fixture.safetensors';weight.write_bytes(b'synthetic checksum fixture; not model weights')
+                register(store,weight,'synthetic-fixture','v1','none','MIT')
+                self.assertEqual(verified_base(store,'base/synthetic-fixture','synthetic-fixture'),(folder,'v1'))
+                config=folder/'config.json';config.write_text('{}')
+                with self.assertRaises(RuntimeError):verified_base(store,'base/synthetic-fixture','synthetic-fixture')
+                register(store,config,'different-model','v1','none','MIT')
+                with self.assertRaisesRegex(RuntimeError,'provenance'):verified_base(store,'base/synthetic-fixture','synthetic-fixture')
+                register(store,config,'synthetic-fixture','v2','none','MIT')
+                with self.assertRaisesRegex(RuntimeError,'Mixed base revisions'):verified_base(store,'base/synthetic-fixture','synthetic-fixture')
+
+    def test_cpu_frozen_linear_preserves_input_gradients_and_adapter_training(self):
+        import torch
+        from cpu_training import optimise_frozen_linears
+        torch.manual_seed(42)
+        layer=torch.nn.Linear(8,12).half()
+        for p in layer.parameters():p.requires_grad_(False)
+        adapter=torch.nn.Linear(12,2)
+        x=torch.randn(3,8,dtype=torch.float16,requires_grad=True)
+        gold=x.detach().clone().requires_grad_(True)
+        target=torch.nn.functional.linear(gold.float(),layer.weight.float(),layer.bias.float()).half()
+        target.sum().backward()
+        self.assertEqual(optimise_frozen_linears(layer),1)
+        actual=layer(x);actual.sum().backward()
+        self.assertTrue(torch.equal(actual,target));self.assertTrue(torch.equal(x.grad,gold.grad))
+        self.assertEqual(optimise_frozen_linears(adapter),0)
+        adapter(actual.detach().float()).sum().backward()
+        self.assertIsNotNone(adapter.weight.grad)
+
+    def test_pretraining_uses_unlabelled_text_and_rejects_leakage_or_customer_data(self):
+        with tempfile.TemporaryDirectory(dir=root()/'eval') as directory:
+            folder=Path(directory);summary=generate_corpus(folder,2,1)
+            self.assertEqual(summary['splits']['train']['documents'],12)
+            corpus=load_corpus(folder)
+            self.assertTrue(all('messages' not in r and 'target' not in r for r in corpus['train']))
+            class Tokenizer:
+                eos_token_id=999
+                def __call__(self,text,**kwargs):return {'input_ids':[ord(c) for c in text]}
+            blocks=pack([{'text':'abcd'},{'text':'ef'}],Tokenizer(),4)
+            self.assertEqual(blocks,[{'input_ids':[97,98,99,100]},{'input_ids':[999,101,102,999]}])
+            file=folder/'train.jsonl';rows=corpus['train'];rows[0]['customer_data']=True
+            file.write_text('\n'.join(json.dumps(r) for r in rows),encoding='utf-8')
+            with self.assertRaisesRegex(RuntimeError,'customer uploads'):load_corpus(folder)
+            rows[0]['customer_data']=False;rows.append(dict(corpus['validation'][0],split='train'))
+            file.write_text('\n'.join(json.dumps(r) for r in rows),encoding='utf-8')
+            with self.assertRaises(RuntimeError):load_corpus(folder)
+
     def test_shared_normalisation_and_nearest_reference_points(self):
         source={'features':[{'id':'fixture','geometry':{'coordinates':[55.3,25.2,10]},'properties':{'place':'Synthetic fixture','time':1609459200000,'mag':4.2,'url':'https://example.test/event'}}]}
         record=list(normalise('usgs',source))[0]
@@ -60,6 +114,14 @@ class PipelineTests(unittest.TestCase):
         csv=extract('cargo.csv',b'kind,pieces\nboxes,48\n');self.assertEqual(csv[0]['reference']['rowStart'],2)
         email=extract('alert.eml',b'Subject: Delay\nContent-Type: text/plain; charset=utf-8\n\nShipment delayed.');self.assertIn('delayed',email[-1]['text'])
         with self.assertRaises(ValueError):extract('unsafe.msg',b'unknown')
+
+    def test_extractor_cli_uses_utf8_even_with_windows_cp1252_environment(self):
+        import base64,os,subprocess
+        request={'file_name':'الشحنة.txt','content_base64':base64.b64encode('الشحنة تحتوي على ٤٨ صندوقاً'.encode()).decode()}
+        result=subprocess.run([sys.executable,str(Path(__file__).resolve().parents[1]/'scripts'/'extract_document.py')],
+                              input=json.dumps(request,ensure_ascii=False).encode(),capture_output=True,
+                              env={**os.environ,'PYTHONIOENCODING':'cp1252','PYTHONUTF8':'0'},check=True)
+        self.assertIn('٤٨',json.loads(result.stdout.decode('utf-8'))['blocks'][0]['text'])
 
     def test_docx_table_and_xlsx_sheet_references(self):
         from docx import Document

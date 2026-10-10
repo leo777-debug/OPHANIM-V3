@@ -1,9 +1,19 @@
 # Ophanim Logistics model card
 
-Status: development, base model + prompts. No fine-tuned release. A three-step
+Status: development, base model + prompts. No accepted trained release. The
+founder selected continued pretraining (unlabelled next-token loss) rather than
+supervised task training. `pretrain.py` uses the existing 4B weights with a QLoRA
+adapter on GPU. The real-base CPU test completed two optimizer steps on 64 tokens
+on 11 October 2026, saving a 23.6 MB adapter at
+`D:\models\adapters\cpt-cpu-smoke-20261011-real4b`. It has 5,898,240 trainable
+parameters, elapsed 104.88 seconds, training loss 5.4368, tiny validation loss
+5.4578 → 5.4547, and adapter update L2 0.0217449. This proves the training path,
+not useful task improvement; `smoke_only: true` prevents release. An older three-step
 CPU LoRA smoke run used a tiny random test fixture, not the 4B base model. Real
 measurements are in FINAL_REPORT.md and eval/REPORT.md. The provisional 4B model
-fails the founder's 8 tokens/second CPU gate and the initial grounded-QA evaluation.
+fails the founder's 8 tokens/second CPU gate and the initial 50-case grounded-QA
+evaluation. Three subsequent live RAG cases passed with valid evidence/refusal;
+broader held-out evaluation and full GPU training have not run.
 
 Base: Qwen/Qwen3-4B-Instruct-2507, [Apache-2.0 licence](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507/blob/main/LICENSE).
 Commercial use and modification are allowed; preserve licence, notices and
@@ -12,7 +22,8 @@ uses [MIT](https://huggingface.co/microsoft/Phi-4-mini-instruct/blob/main/LICENS
 Embedding Qwen3-Embedding-0.6B uses
 [Apache-2.0](https://huggingface.co/Qwen/Qwen3-Embedding-0.6B).
 
-One adapter covers `[mode: logistics]` and `[mode: general]` task tags. Intended
+One adapter covers both modes. CPT passages carry mode/domain tags; supervised
+task prompts retain `[mode: logistics]` and `[mode: general]` task tags. Intended
 use: document extraction, email understanding, classification, grounded QA,
 public claim parsing, mistake explanations, incident summaries, cautious
 forecasts and watch parsing for logistics/business risk. Rules decide; AI reads

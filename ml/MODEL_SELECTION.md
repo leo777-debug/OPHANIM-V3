@@ -2,7 +2,8 @@
 
 Provisional main: **Qwen/Qwen3-4B-Instruct-2507**. Backup:
 **microsoft/Phi-4-mini-instruct**. Optional helper: Qwen/Qwen3-1.7B,
-non-thinking mode. No adapter has been accepted or trained yet.
+non-thinking mode. No production adapter has been accepted. Continued pretraining
+is now the founder's selected objective; CPU smoke artifacts are pipeline tests.
 
 Skills are trained; facts come from retrieved sources. Selection is provisional
 until the 16 GB GPU memory/time trial and outstanding quality/hardware gates pass.
@@ -16,12 +17,17 @@ deliberately not fabricated scores; only Qwen3 was run locally.
 | [Phi-4-mini-instruct](https://huggingface.co/microsoft/Phi-4-mini-instruct) | MIT; retain copyright/licence | Multilingual including Arabic; unmeasured locally | 131,072 | Function-calling training; unmeasured | Unmeasured | Unmeasured |
 | [Llama-3.2-3B-Instruct](https://huggingface.co/meta-llama/Llama-3.2-3B-Instruct) | Llama 3.2 Community Licence + AUP; attribution, naming, large-user restrictions | English supported; Arabic outside eight officially supported languages | 131,072 | Unmeasured | Unmeasured | Unmeasured |
 | [Gemma-3-4b-it](https://huggingface.co/google/gemma-3-4b-it) | Gemma terms + prohibited use policy; redistribution duties, gated | 140+ languages advertised; Arabic unmeasured | 131,072 | Unmeasured | Unmeasured | Unmeasured |
+| [Gemma 4 E4B](https://ai.google.dev/gemma/docs/core/model_card_4) | Apache-2.0; newer permissive generation | Multilingual advertised; unmeasured locally | 131,072 | Unmeasured | Unmeasured | Excluded: 4.5B effective, **8B total** including embeddings |
 
 Qwen3.5 is newer, but its hybrid multimodal architecture adds training and export
 compatibility work. The text-only Qwen3 main has a straightforward QLoRA / GGUF
 path and permissive terms. Phi provides a different architecture under MIT if
 Qwen fails. No model is claimed to meet the speed or training constraints yet.
-Main training starts at 1,024 tokens, rank 8, batch 1, accumulation 16, fp16,
+Gemma 4 was checked on 11 October: E4B is not a 4B-total model; E2B likewise has
+5.1B total parameters. Both exceed this request's total-parameter cap despite
+their effective-compute names. They were not downloaded or selected.
+Main continued pretraining starts at 512 tokens (optional SFT at 1,024), rank 8,
+batch 1, accumulation 16, fp16,
 NF4 double quantisation and checkpointing; serving context is independently 8k.
 
 The actual founder CPU is i5-8350U: **4 physical cores / 8 logical threads**,

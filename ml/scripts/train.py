@@ -103,7 +103,7 @@ def run(args):
     if not args.smoke:metrics['peak_cuda_gib']=torch.cuda.max_memory_allocated()/1024**3
     (output/'run_metrics.json').write_text(json.dumps(metrics,indent=2))
     trainer.state.save_to_json(str(output/'training_log.json'))
-    for file in output.iterdir():
+    for file in output.rglob('*'):
         if file.is_file():register(store,file,'ophanim-smoke' if args.smoke else 'ophanim-logistics',args.version,config['model_id'],'Apache-2.0',metrics)
     print(json.dumps(metrics,indent=2))
 

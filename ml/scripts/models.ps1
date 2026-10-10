@@ -1,5 +1,5 @@
 param(
-  [Parameter(Mandatory=$true)][ValidateSet('download_base_models','download_from_kaggle','build_model','list_models','remove_model','verify_models','smoke','benchmark')][string]$Action,
+  [Parameter(Mandatory=$true)][ValidateSet('download_base_models','download_from_kaggle','build_model','list_models','remove_model','verify_models','smoke','pretrain','benchmark')][string]$Action,
   [Parameter(ValueFromRemainingArguments=$true)][string[]]$ToolArgs
 )
 $ErrorActionPreference = 'Stop'
@@ -29,6 +29,7 @@ $taskScript = switch ($Action) {
   'remove_model' { $ToolArgs = @('remove') + $ToolArgs; 'manage_models.py' }
   'verify_models' { $ToolArgs = @('verify') + $ToolArgs; 'manage_models.py' }
   'smoke' { $ToolArgs = @('--smoke','--version',('smoke-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))) + $ToolArgs; 'train.py' }
+  'pretrain' { 'pretrain.py' }
   'benchmark' { 'benchmark.py' }
 }
 & $taskPython (Join-Path $PSScriptRoot $taskScript) @ToolArgs
