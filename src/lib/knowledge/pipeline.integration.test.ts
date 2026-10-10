@@ -21,6 +21,7 @@ const enabled=process.env.OPHANIM_TEST_PGLITE==='1' && Boolean(process.env.EMBED
 describe.skipIf(!enabled)('knowledge real local pipeline — explicit isolated DB and embedding server',()=>{
   let client:Awaited<ReturnType<typeof createIsolatedClient>>;
   let storage:string;
+  let storageRoot:string;
   const a:OrganizationActor={organizationId:randomUUID(),userId:randomUUID(),role:'owner'};
   const b:OrganizationActor={organizationId:randomUUID(),userId:randomUUID(),role:'owner'};
   const report:{[key:string]:unknown}={environment:'PostgreSQL WASM, real pgvector, real Python extraction, real CPU Qwen embeddings',customer_data:false};
@@ -28,6 +29,7 @@ describe.skipIf(!enabled)('knowledge real local pipeline — explicit isolated D
     client=await createIsolatedClient();
     state.client=client as unknown as Pick<PoolClient,'query'>;
     const root=process.env.OPHANIM_MODELS_DIR ?? 'D:\\models';
+    storageRoot=path.resolve(root,'eval');
     await mkdir(path.join(root,'eval'),{recursive:true});
     storage=await mkdtemp(path.join(root,'eval','knowledge-private-'));
     vi.stubEnv('KNOWLEDGE_STORAGE_DIR',storage);
@@ -39,7 +41,11 @@ describe.skipIf(!enabled)('knowledge real local pipeline — explicit isolated D
   },30000);
   afterAll(async()=>{
     if(client)await client.end();
-    if(storage)await rm(storage,{recursive:true,force:true}); // Exact mkdtemp directory, owned by this test.
+    if(storage){
+      const target=path.resolve(storage);
+      if(path.dirname(target)!==storageRoot || !path.basename(target).startsWith('knowledge-private-'))throw new Error('Refusing cleanup outside the test directory');
+      await rm(target,{recursive:true,force:true}); // Verified, exact mkdtemp directory owned by this test.
+    }
     vi.unstubAllEnvs();
     const folder=path.join(process.env.OPHANIM_MODELS_DIR ?? 'D:\\models','eval');
     await writeFile(path.join(folder,'rag-pipeline-report.json'),JSON.stringify(report,null,2));
