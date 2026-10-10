@@ -204,6 +204,9 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
   const [baseUrlInput, setBaseUrlInput] = useState('');
   const [modelInput, setModelInput] = useState('');
   const [enabledTasks, setEnabledTasks] = useState<AiTask[]>([...AI_TASKS]);
+  const [taskModels, setTaskModels] = useState<Partial<Record<AiTask,string>>>({});
+  const [localModelInfo,setLocalModelInfo]=useState('');
+  const [embeddingInfo,setEmbeddingInfo]=useState('');
   const [keySaved, setKeySaved] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('');
   const [testingConnection, setTestingConnection] = useState(false);
@@ -220,6 +223,7 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
       setBaseUrlInput(saved.baseUrl);
       setModelInput(saved.model);
       setEnabledTasks(saved.enabledTasks);
+      setTaskModels(saved.taskModels ?? {});
       setKeySaved(true);
     }
   }, []);
@@ -443,11 +447,11 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
     const baseUrl = baseUrlInput.trim();
     const model = modelInput.trim();
     if (baseUrl && model) {
-      writeClientAiConfig({ apiKey: key, baseUrl, model, enabledTasks });
+      writeClientAiConfig({ apiKey: key, baseUrl, model, enabledTasks, taskModels });
       setKeySaved(true);
       setTimeout(() => setShowSettings(false), 600);
     }
-  }, [apiKeyInput, baseUrlInput, modelInput, enabledTasks]);
+  }, [apiKeyInput, baseUrlInput, modelInput, enabledTasks, taskModels]);
 
   const clearApiKey = useCallback(() => {
     sessionStorage.removeItem('ophanim-ai-provider-config');
@@ -615,11 +619,13 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
                         <label className="text-xs text-[var(--text-primary)]">Provider
                           <select aria-label="AI provider preset" defaultValue="custom" onChange={(e) => {
                             const preset = e.target.value;
-                            if (preset !== 'custom') { setBaseUrlInput(preset === 'ollama' ? 'http://localhost:11434/v1' : 'http://localhost:1234/v1'); setApiKeyInput(''); }
+                            if (preset !== 'custom') { setBaseUrlInput(preset === 'lmstudio' ? 'http://localhost:1234/v1' : 'http://localhost:11434/v1'); setApiKeyInput(''); }
+                            if (preset === 'ophanim') setModelInput('ophanim-logistics:base');
                             setKeySaved(false); setConnectionStatus('');
                           }} className="mt-1 w-full bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded-lg px-3 py-2">
                             <option value="custom">Custom OpenAI-compatible server</option>
                             <option value="ollama">Local model - Ollama</option>
+                            <option value="ophanim">Ophanim Logistics (local)</option>
                             <option value="lmstudio">Local model - LM Studio</option>
                           </select>
                         </label>
@@ -639,6 +645,10 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
                         <div className="flex flex-wrap gap-2">
                           {AI_TASKS.map((task) => <label key={task} className="flex items-center gap-1 text-[8px] font-mono text-[var(--text-muted)]"><input type="checkbox" checked={enabledTasks.includes(task)} onChange={() => { setEnabledTasks((current) => current.includes(task) ? current.filter((value) => value !== task) : [...current, task]); setKeySaved(false); }} />{task.replace(/_/g, ' ')}</label>)}
                         </div>
+                        <details><summary className="text-xs">Models per task</summary><p className="text-xs">Leave blank to use Ophanim locally when available, then the configured fallback. Overrides use the configured server.</p>{AI_TASKS.filter(task=>!['summarize','explain','suggest_follow_up_searches','write_email_summary'].includes(task)).map(task=><label key={task} className="block text-xs">{task.replace(/_/g,' ')}<input aria-label={`${task} model override`} value={taskModels[task] ?? ''} placeholder="Default routing" onChange={e=>{setTaskModels(current=>({...current,[task]:e.target.value}));setKeySaved(false);}} className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded px-2 py-1" /></label>)}</details>
+                        <button type="button" onClick={()=>void fetch('/api/ai/local-status').then(async r=>{const b=await r.json();if(!r.ok)throw new Error(b.error);setLocalModelInfo(`${b.message} Version: ${b.version ?? 'not loaded'} · ${b.path}`);setEmbeddingInfo(`${b.embedding?.model ?? 'Not configured'} · ${b.embedding?.baseUrl ?? ''} · 1024 dimensions`);}).catch(e=>setLocalModelInfo(e.message))} className="text-xs">Check local model drive and embeddings</button>
+                        {localModelInfo && <p role="status" className="text-xs">{localModelInfo}</p>}
+                        {embeddingInfo && <p className="text-xs">Embeddings: {embeddingInfo}. Configure EMBEDDING_BASE_URL and EMBEDDING_MODEL in the server environment; then restart the worker.</p>}
                         <button disabled={testingConnection || !baseUrlInput.trim() || !modelInput.trim()} onClick={() => void testConnection()} className="px-3 py-2 border border-[var(--border-secondary)] rounded-lg text-xs disabled:opacity-50">{testingConnection ? 'Testing...' : 'Test connection'}</button>
                         {connectionStatus && <p role="status" className="text-xs text-[var(--text-primary)]">{connectionStatus}</p>}
                         <label className="text-xs text-[var(--text-primary)]">Automatic monitoring summaries

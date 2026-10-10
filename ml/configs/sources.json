@@ -1,0 +1,17 @@
+{
+  "reviewed_at": "2026-10-10",
+  "sources": {
+    "usgs": {"licence":"US government public domain", "commercial_use":true, "licence_url":"https://www.usgs.gov/faqs/are-usgs-reportspublications-copyrighted", "attribution":"U.S. Geological Survey", "url":"https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime={start}&endtime={end}&minmagnitude=4&limit=1000"},
+    "ibtracs": {"licence":"unknown — aggregate third-party agency terms need review", "commercial_use":false, "licence_url":"https://www.ncei.noaa.gov/products/international-best-track-archive", "attribution":"NOAA NCEI, Knapp et al. 2010 and Gahtan et al. dataset DOI", "url":"https://www.ncei.noaa.gov/data/international-best-track-archive-for-climate-stewardship-ibtracs/v04r01/access/csv/ibtracs.ALL.list.v04r01.csv"},
+    "eonet": {"licence":"unknown — EONET includes third-party source metadata", "commercial_use":false, "licence_url":"https://eonet.gsfc.nasa.gov/what-is-eonet", "attribution":"NASA EONET and original event sources", "url":"https://eonet.gsfc.nasa.gov/api/v3/events?status=all&start={start}&end={end}&limit=1000"},
+    "gdacs": {"licence":"unknown — terms require review", "commercial_use":false, "licence_url":"https://data.gdacs.org/Documents/2025/GDACS_API_quickstart_v1.pdf", "attribution":"GDACS", "url":"https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH?fromDate={start}&toDate={end}"},
+    "reliefweb": {"licence":"unknown — per-report publisher rights", "commercial_use":false, "licence_url":"https://reliefweb.int/terms-conditions", "attribution":"ReliefWeb and individual publishers", "url":"https://api.reliefweb.int/v2/reports?appname=ophanim&limit=100&fields[include][]=title&fields[include][]=url&fields[include][]=date&fields[include][]=source&fields[include][]=country"},
+    "ucdp": {"licence":"unknown — dataset/version codebook requires verification", "commercial_use":false, "licence_url":"https://ucdp.uu.se/downloads/", "attribution":"UCDP and version-specific dataset authors", "url":null},
+    "emdat": {"licence":"commercial licence required", "commercial_use":false, "licence_url":"https://www.emdat.be/", "attribution":"EM-DAT / CRED", "url":null},
+    "acled": {"licence":"commercial licence required", "commercial_use":false, "licence_url":"https://acleddata.com/terms-of-use", "attribution":"ACLED", "url":null},
+    "gdelt": {"licence":"GDELT unrestricted use with attribution", "commercial_use":true, "licence_url":"https://gdeltproject.org/about.html#termsofuse", "attribution":"GDELT Project https://www.gdeltproject.org/", "url":"https://api.gdeltproject.org/api/v2/doc/doc?query=shipping%20disruption&mode=artlist&format=json&maxrecords=100&startdatetime={start_compact}000000&enddatetime={end_compact}235959"},
+    "wikidata": {"licence":"CC0-1.0 structured facts only", "commercial_use":true, "licence_url":"https://www.wikidata.org/wiki/Wikidata:Licensing", "attribution":"Wikidata structured data; linked Wikipedia text is not copied", "url":null},
+    "wikipedia": {"licence":"CC-BY-SA-4.0; text ingestion disabled pending share-alike review", "commercial_use":false, "licence_url":"https://foundation.wikimedia.org/wiki/Policy:Terms_of_Use", "attribution":"Wikipedia article/version authors", "url":null},
+    "ophanim": {"licence":"unknown — provider snapshot rights must be inherited", "commercial_use":false, "licence_url":"https://github.com/leo777-debug/OPHANIM-V3", "attribution":"Ophanim and original provider", "url":null}
+  }
+}

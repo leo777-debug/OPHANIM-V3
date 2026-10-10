@@ -19,9 +19,10 @@ export default function PlatformShell({ title, children }: { title: string; chil
       .catch(() => setConfiguration(null));
   }, []);
 
-  const navigation = configuration?.navigation ?? [
+  const baseNavigation = configuration?.navigation ?? [
     { id: 'command', label: 'Command', href: '/command' }, { id: 'map', label: 'Map', href: '/' }, { id: 'entities', label: 'Entities', href: '/entities' }, { id: 'cases', label: 'Cases', href: '/cases' }, { id: 'evidence', label: 'Evidence', href: '/evidence' },
   ];
+  const navigation = baseNavigation.some(item=>item.href==='/knowledge') ? baseNavigation : [...baseNavigation,{id:'knowledge',label:'Knowledge',href:'/knowledge'}];
 
   return <main className="platform-shell">
     <aside className="platform-nav" aria-label="Platform navigation">
