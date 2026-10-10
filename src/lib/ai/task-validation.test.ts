@@ -14,4 +14,9 @@ describe('dual-mode strict task output',()=>{
     const general=buildAiMessages({task:'forecast'})[0].content;expect(general).toContain('[mode: general][task: forecast]');expect(general).toContain('FORECAST');expect(general).toContain('untrusted data');
     expect(buildAiMessages({task:'grounded_qa',mode:'general'})[0].content).toContain('[mode: general][task: grounded_qa]');
   });
+  it('rejects malformed nested general-mode records',()=>{
+    expect(()=>validateTaskOutput('parse_claim',JSON.stringify({claim_type:'closure',place:'Dubai',time_window:[],entities:[]}))).toThrow();
+    expect(()=>validateTaskOutput('parse_watch',JSON.stringify({places:[],dates:[],routes:['DXB-COK'],topics:[]}))).toThrow();
+    expect(()=>validateTaskOutput('parse_watch',JSON.stringify({places:['Dubai'],dates:[],routes:[{origin:'DXB',destination:'COK'}],topics:['delays']}))).not.toThrow();
+  });
 });

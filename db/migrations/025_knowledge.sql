@@ -1,4 +1,6 @@
 -- Additive RAG schema. pgvector must be available on the PostgreSQL host.
+-- Supabase may already have vector installed in extensions rather than public.
+set local search_path = public, extensions;
 create extension if not exists vector;
 
 create table public.ophanim_knowledge_documents (
@@ -24,7 +26,7 @@ create table public.ophanim_knowledge_documents (
   check (valid_to is null or valid_from is null or valid_to >= valid_from),
   check (organization_id is null or storage_path like organization_id::text || '/%'),
   check (organization_id is not null or (
-    metadata->>'commercial_use' = 'true' and metadata->>'customer_data' = 'false'
+    coalesce(metadata->>'commercial_use' = 'true',false) and coalesce(metadata->>'customer_data' = 'false',false)
     and nullif(metadata->>'licence','') is not null and lower(metadata->>'licence') <> 'unknown'
     and nullif(metadata->>'licence_url','') is not null and nullif(metadata->>'source_url','') is not null
   )),

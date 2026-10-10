@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuthenticatedActor } from '@/lib/auth/actor';
-import { addDocument, listDocuments } from '@/lib/knowledge/documents';
+import { addDocument, listDocuments,type PrivateDocumentMetadata } from '@/lib/knowledge/documents';
 import { assertSameOrigin, knowledgeError } from '@/lib/knowledge/http';
 
 export const runtime='nodejs';
@@ -13,10 +13,12 @@ export async function POST(request: NextRequest) {
     assertSameOrigin(request); const actor=await requireAuthenticatedActor(request,'import:write');
     const form=await request.formData(); const files=form.getAll('files');
     if (!files.length || files.length>10) throw new Error('Upload 1–10 files per batch.');
+    const rawMetadata=form.get('metadata');const metadata:PrivateDocumentMetadata=rawMetadata ? JSON.parse(String(rawMetadata)):{};
+    if(!metadata || typeof metadata!=='object' || Array.isArray(metadata))throw new Error('Invalid document metadata.');
     const results=[];
     for (const file of files) {
       if (!(file instanceof File)) continue;
-      try { results.push({ file:file.name,...await addDocument(actor,file) }); }
+      try { results.push({ file:file.name,...await addDocument(actor,file,metadata) }); }
       catch(error) { results.push({file:file.name,error:error instanceof Error ? error.message:'Upload failed.'}); }
     }
     return NextResponse.json({results},{status:202});

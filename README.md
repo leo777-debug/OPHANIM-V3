@@ -216,6 +216,12 @@ parity is not claimed.
 
 ## Technology
 
+The Knowledge page adds private organization documents, shared sources, hybrid
+retrieval and cited answers. Setup: [Knowledge operations](docs/KNOWLEDGE.md).
+Local model/Kaggle tooling lives in ml/; see the [implementation and evaluation
+report](ml/FINAL_REPORT.md) and [founder runbook](ml/TRAINING_RUNBOOK.md). The custom
+model is optional and remains behind hardware/quality acceptance gates.
+
 Next.js 16 App Router, React 19, TypeScript, MapLibre GL, Framer Motion, Lucide,
 PostgreSQL, Resend and Vitest. See [`package.json`](package.json) for dependency
 versions and scripts.

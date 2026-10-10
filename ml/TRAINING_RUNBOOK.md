@@ -29,8 +29,8 @@ supported CPU PyTorch wheel (the development run used Python 3.14 / torch 2.9.1)
 3. Generate synthetic templates and the Kaggle input bundle:
 
 ```powershell
-& $env:OPHANIM_PYTHON ml/scripts/generate_dataset.py --version v2-2026-10-10
-& $env:OPHANIM_PYTHON ml/scripts/prepare_kaggle.py --dataset D:\models\datasets\v2-2026-10-10
+& $env:OPHANIM_PYTHON ml/scripts/generate_dataset.py --version v3-2026-10-10
+& $env:OPHANIM_PYTHON ml/scripts/prepare_kaggle.py --dataset D:\models\datasets\v3-2026-10-10 --version v3-2026-10-10
 ```
 
 Choose a NEW dataset version if one already exists; never overwrite a held-out
@@ -73,6 +73,9 @@ synthetic-only bundle before uploading. All generated data is ignored by Git.
     improve without higher hallucination, separately by mode and English/Arabic.
     Full training and held-out checks must complete. Otherwise keep base + RAG.
 12. Merge/export on this 40 GB RAM CPU machine, with >=40 GiB free external disk:
+    First download the exact base_revision.json revision with
+    download_base_models.py --base-revision REVISION into a fresh model store if
+    the installed base revision differs; existing registered files are never replaced.
     build_model.py --version VERSION --llama-cpp D:\models\tools\llama.cpp
     --quantizer D:\models\tools\llama.cpp\build\bin\Release\llama-quantize.exe
     --evaluation D:\models\adapters\VERSION\comparison.json.

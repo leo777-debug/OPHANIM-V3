@@ -1,10 +1,20 @@
 import { spawn } from 'node:child_process';
 import path from 'node:path';
 import type { ExtractedBlock } from './types';
+import { validateAiBaseUrl } from '@/lib/ai/providers/openai-compatible-provider';
 
-export function extractDocument(fileName: string, bytes: Buffer): Promise<ExtractedBlock[]> {
+export async function extractDocument(fileName: string, bytes: Buffer): Promise<ExtractedBlock[]> {
+  if (process.env.KNOWLEDGE_EXTRACTOR_URL) {
+    const base=process.env.KNOWLEDGE_EXTRACTOR_URL;
+    await validateAiBaseUrl(base);
+    const response=await fetch(`${base.replace(/\/$/,'')}/extract`,{method:'POST',redirect:'error',signal:AbortSignal.timeout(180_000),headers:{'Content-Type':'application/json',Authorization:`Bearer ${process.env.KNOWLEDGE_CRON_SECRET}`},body:JSON.stringify({file_name:fileName,content_base64:bytes.toString('base64')})});
+    if(!response.ok)throw new Error(`Extraction service returned ${response.status}`);
+    const body=await response.json() as {blocks:ExtractedBlock[]};
+    if(!Array.isArray(body.blocks))throw new Error('Extractor returned invalid output.');
+    return body.blocks;
+  }
   return new Promise((resolve, reject) => {
-    const child = spawn(process.env.KNOWLEDGE_PYTHON ?? 'python', [path.resolve('ml/scripts/extract_document.py')], { windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
+    const child = spawn(/* turbopackIgnore: true */ process.env.KNOWLEDGE_PYTHON ?? 'python', [path.resolve('ml/scripts/extract_document.py')], { windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
     let output = ''; let error = ''; let settled = false;
     const fail = (message: string) => { if (!settled) { settled = true; child.kill(); clearTimeout(timer); reject(new Error(message)); } };
     const timer = setTimeout(() => fail('Document extraction timed out after 3 minutes.'), 180_000);

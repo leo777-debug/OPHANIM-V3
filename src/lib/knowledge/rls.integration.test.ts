@@ -9,6 +9,7 @@ describe('knowledge additive schema',()=>{
     const sql=readFileSync('db/migrations/025_knowledge.sql','utf8');
     for(const table of tables){expect(sql).toContain(`alter table public.${table} enable row level security`);expect(sql).toContain(`alter table public.${table} force row level security`);}
     expect(sql).toContain('foreign key (document_id, scope_key)');expect(sql).toContain('foreign key (chunk_id, scope_key)');
+    const settings=readFileSync('db/migrations/026_knowledge_settings.sql','utf8');expect(settings).toContain('organization_id uuid primary key');expect(settings).toContain('enable row level security');expect(settings).toContain('force row level security');
   });
 });
 describe.skipIf(!process.env.DATABASE_URL)('knowledge live RLS — requires migrated DATABASE_URL',()=>{
@@ -23,6 +24,7 @@ describe.skipIf(!process.env.DATABASE_URL)('knowledge live RLS — requires migr
       await c.query('insert into ophanim_organizations(id,name,slug) values($1,\'Knowledge A\',$2),($3,\'Knowledge B\',$4)',[a,`k-${a}`,b,`k-${b}`]);
       await c.query('insert into ophanim_users(id,auth_user_id,email) values($1,$2,$3),($4,$5,$6)',[ua,authA,`${ua}@example.test`,ub,authB,`${ub}@example.test`]);
       await c.query('insert into ophanim_organization_memberships(organization_id,user_id,role) values($1,$2,\'analyst\'),($3,$4,\'viewer\')',[a,ua,b,ub]);
+      await c.query("insert into ophanim_knowledge_settings(organization_id,embedding_base_url,embedding_model) values($1,'http://localhost:11434/v1','test-a'),($2,'http://localhost:11434/v1','test-b')",[a,b]);
       await c.query('set local role ophanim_knowledge_worker');
       for(let i=0;i<3;i++){
         const org=[a,b,null][i]; const metadata=i===2 ? {commercial_use:true,customer_data:false,licence:'CC0',licence_url:'https://example.test/licence',source_url:'https://example.test/source'}:{};
@@ -32,16 +34,22 @@ describe.skipIf(!process.env.DATABASE_URL)('knowledge live RLS — requires migr
         await c.query('insert into ophanim_knowledge_jobs(organization_id,document_id) values($1,$2)',[org,docs[i]]);
       }
       await c.query('reset role');await c.query("select set_config('ophanim.user_id',$1,true),set_config('ophanim.organization_id',$2,true)",[ua,a]);await c.query('set local role ophanim_knowledge_app');
-      for(const table of tables){const result=await c.query(`select organization_id from ${table}`);expect(result.rows).toHaveLength(2);expect(result.rows.some(r=>r.organization_id===b)).toBe(false);}
+      for(const table of tables){
+        const column=table==='ophanim_knowledge_embeddings' ? 'chunk_id' : table==='ophanim_knowledge_jobs' ? 'document_id' : 'id';
+        const ids=table==='ophanim_knowledge_chunks' || table==='ophanim_knowledge_embeddings' ? chunks : docs;
+        const result=await c.query(`select organization_id from ${table} where ${column}=any($1::uuid[])`,[ids]);
+        expect(result.rows).toHaveLength(2);expect(result.rows.some(r=>r.organization_id===b)).toBe(false);
+      }
+      expect((await c.query('select organization_id from ophanim_knowledge_settings where organization_id=any($1::uuid[])',[[a,b]])).rows.map(r=>r.organization_id)).toEqual([a]);
       expect((await c.query('select id from ophanim_knowledge_chunks where id=$1',[chunks[1]])).rows).toHaveLength(0);
-      expect((await c.query("select id from ophanim_knowledge_chunks where search_vector @@ websearch_to_tsquery('simple','tenant secret')")).rows.map(r=>r.id).sort()).toEqual([chunks[0],chunks[2]].sort());
-      expect((await c.query('select chunk_id from ophanim_knowledge_embeddings order by embedding <=> $1::vector',[vector])).rows.map(r=>r.chunk_id).sort()).toEqual([chunks[0],chunks[2]].sort());
+      expect((await c.query("select id from ophanim_knowledge_chunks where id=any($1::uuid[]) and search_vector @@ websearch_to_tsquery('simple','tenant secret')",[chunks])).rows.map(r=>r.id).sort()).toEqual([chunks[0],chunks[2]].sort());
+      expect((await c.query('select chunk_id from ophanim_knowledge_embeddings where chunk_id=any($2::uuid[]) order by embedding <=> $1::vector',[vector,chunks])).rows.map(r=>r.chunk_id).sort()).toEqual([chunks[0],chunks[2]].sort());
       await c.query('savepoint denied');await expect(c.query('update ophanim_knowledge_documents set organization_id=$1 where id=$2',[b,docs[0]])).rejects.toThrow();await c.query('rollback to savepoint denied');
       await c.query('reset role');await c.query("select set_config('ophanim.user_id',$1,true),set_config('ophanim.organization_id',$2,true)",[ub,b]);await c.query('set local role ophanim_knowledge_app');
       expect((await c.query('select id from ophanim_knowledge_chunks where id=$1',[chunks[0]])).rows).toHaveLength(0);
       expect((await c.query('update ophanim_knowledge_documents set status=\'deleting\' where id=$1 returning id',[docs[1]])).rows).toHaveLength(0);
       await c.query('reset role');await c.query("select set_config('request.jwt.claim.sub',$1,true)",[authA]);await c.query('set local role authenticated');
-      expect((await c.query('select id from ophanim_knowledge_chunks')).rows.map(r=>r.id).sort()).toEqual([chunks[0],chunks[2]].sort());
+      expect((await c.query('select id from ophanim_knowledge_chunks where id=any($1::uuid[])',[chunks])).rows.map(r=>r.id).sort()).toEqual([chunks[0],chunks[2]].sort());
       await c.query('reset role');await c.query('set local role ophanim_knowledge_worker');await c.query('savepoint bad_fk');
       await expect(c.query("insert into ophanim_knowledge_chunks(organization_id,document_id,ordinal,content,content_hash,source_file,document_type,language) values($1,$2,2,'x','x','x','other','en')",[a,docs[1]])).rejects.toThrow();await c.query('rollback to savepoint bad_fk');
       await c.query('delete from ophanim_knowledge_documents where id=$1',[docs[0]]);

@@ -9,13 +9,13 @@ export const DOCUMENT_FIELDS: Record<string,string[]> = {
 };
 export const TASK_SCHEMAS: Record<string,unknown> = {
   ...Object.fromEntries(Object.entries(DOCUMENT_FIELDS).map(([task,fields])=>[task,Object.fromEntries(fields.map(f=>[f,'value or null']))])),
-  understand_email: { references:[],milestones:[],deadlines:[],requested_actions:[] },
+  understand_email: { references:['reference'],milestones:[{type:'milestone type',date:'date or null'}],deadlines:['date'],requested_actions:['action'] },
   classify_document: { document_type:'string',confidence:'number 0..1' },
   grounded_qa: { statements:[{label:'FACT or NOT FOUND',text:'verbatim evidence quote or not-found message',quote:'same evidence quote',citations:['chunk id']}] },
   parse_claim: { claim_type:'string',place:'string or null',time_window:{start:null,end:null},entities:[] },
   explain_mistake: { explanation:'one or two plain-language sentences in requested language' },
   flag_incident: { is_incident:'boolean',type:'string or null',severity:'low|moderate|high|unknown',place:null,time:null,entities:[],confidence:'number 0..1' },
-  summarise_event: { summary:'neutral text with citation ids',confirmed:[],reported:[],unknown:[],timeline:[] },
-  forecast: { label:'FORECAST',question:'string',time_horizon:'string',outcomes:[],uncertainty:'string',evidence:[],would_change_outlook:[] },
-  parse_watch: { places:[],dates:[],routes:[],topics:[] },
+  summarise_event: { summary:'neutral text with citation ids',confirmed:[{text:'confirmed fact',citations:['source id']}],reported:[{text:'reported claim',citations:['source id']}],unknown:['unknown detail'],timeline:[{time:'source timestamp',event:'event',citations:['source id']}] },
+  forecast: { label:'FORECAST',question:'string',time_horizon:'string',outcomes:[{outcome:'possible outcome',uncertainty:'uncertainty'}],uncertainty:'string',evidence:['source id'],would_change_outlook:['new evidence'] },
+  parse_watch: { places:['place'],dates:['date'],routes:[{origin:'place or airport',destination:'place or airport'}],topics:['topic'] },
 };

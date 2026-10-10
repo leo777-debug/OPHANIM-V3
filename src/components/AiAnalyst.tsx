@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { readClientAiConfig, writeClientAiConfig } from '@/lib/ai/client-config';
 import { AI_TASKS, type AiTask } from '@/lib/ai/providers/types';
+import EmbeddingSetup from '@/components/knowledge/EmbeddingSetup';
 import {
   Brain,
   Send,
@@ -648,7 +649,8 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
                         <details><summary className="text-xs">Models per task</summary><p className="text-xs">Leave blank to use Ophanim locally when available, then the configured fallback. Overrides use the configured server.</p>{AI_TASKS.filter(task=>!['summarize','explain','suggest_follow_up_searches','write_email_summary'].includes(task)).map(task=><label key={task} className="block text-xs">{task.replace(/_/g,' ')}<input aria-label={`${task} model override`} value={taskModels[task] ?? ''} placeholder="Default routing" onChange={e=>{setTaskModels(current=>({...current,[task]:e.target.value}));setKeySaved(false);}} className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded px-2 py-1" /></label>)}</details>
                         <button type="button" onClick={()=>void fetch('/api/ai/local-status').then(async r=>{const b=await r.json();if(!r.ok)throw new Error(b.error);setLocalModelInfo(`${b.message} Version: ${b.version ?? 'not loaded'} · ${b.path}`);setEmbeddingInfo(`${b.embedding?.model ?? 'Not configured'} · ${b.embedding?.baseUrl ?? ''} · 1024 dimensions`);}).catch(e=>setLocalModelInfo(e.message))} className="text-xs">Check local model drive and embeddings</button>
                         {localModelInfo && <p role="status" className="text-xs">{localModelInfo}</p>}
-                        {embeddingInfo && <p className="text-xs">Embeddings: {embeddingInfo}. Configure EMBEDDING_BASE_URL and EMBEDDING_MODEL in the server environment; then restart the worker.</p>}
+                        {embeddingInfo && <p className="text-xs">Server embedding defaults: {embeddingInfo}.</p>}
+                        <EmbeddingSetup />
                         <button disabled={testingConnection || !baseUrlInput.trim() || !modelInput.trim()} onClick={() => void testConnection()} className="px-3 py-2 border border-[var(--border-secondary)] rounded-lg text-xs disabled:opacity-50">{testingConnection ? 'Testing...' : 'Test connection'}</button>
                         {connectionStatus && <p role="status" className="text-xs text-[var(--text-primary)]">{connectionStatus}</p>}
                         <label className="text-xs text-[var(--text-primary)]">Automatic monitoring summaries

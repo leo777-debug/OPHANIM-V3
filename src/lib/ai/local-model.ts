@@ -11,13 +11,15 @@ const checksums = new Map<string,{mtime:number;size:number;hash:string}>();
 export async function localModelStatus() {
   const root=process.env.OPHANIM_MODELS_DIR ?? 'D:\\models';
   const model=process.env.OPHANIM_LOCAL_MODEL ?? 'ophanim-logistics:base';
-  try { await stat(root); } catch { return {available:false,path:root,model,version:null,message:`Model drive not found at ${root}`}; }
+  try { await stat(/* turbopackIgnore: true */ root); } catch { return {available:false,path:root,model,version:null,message:`Model drive not found at ${root}`}; }
   try {
     const manifest=JSON.parse(await readFile(path.join(root,'manifest.json'),'utf8')) as {files:Array<{path:string;sha256:string;version:string}>};
     const relative=process.env.OPHANIM_MODEL_FILE ?? 'gguf/unsloth--Qwen3-4B-Instruct-2507-GGUF/Qwen3-4B-Instruct-2507-Q4_K_M.gguf';
     const entry=manifest.files.find(f=>f.path===relative);
     if (!entry) throw new Error('Local model is not registered in manifest.json.');
-    const resolvedRoot=await realpath(root); const file=await realpath(path.resolve(root,relative));
+    // Model artifacts are mounted at runtime and must never enter the Next bundle.
+    const resolvedRoot=await realpath(/* turbopackIgnore: true */ root);
+    const file=await realpath(/* turbopackIgnore: true */ path.resolve(root,relative));
     if (!file.startsWith(resolvedRoot+path.sep)) throw new Error('Model path escapes the model drive.');
     const info=await stat(file); let cached=checksums.get(file);
     if (!cached || cached.mtime!==info.mtimeMs || cached.size!==info.size) {

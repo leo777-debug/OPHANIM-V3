@@ -9,9 +9,10 @@ EMBED = 'Qwen/Qwen3-Embedding-0.6B'
 GGUF = 'unsloth/Qwen3-4B-Instruct-2507-GGUF'
 
 
-def download(repo, folder, selected=None):
+def download(repo, folder, selected=None, revision=None):
     store = root(12 * 1024**3)
-    info = json.load(urllib.request.urlopen(f'https://huggingface.co/api/models/{repo}?blobs=true', timeout=60))
+    revision_path=f'/revision/{revision}' if revision else ''
+    info = json.load(urllib.request.urlopen(f'https://huggingface.co/api/models/{repo}{revision_path}?blobs=true', timeout=60))
     revision = info['sha']
     from huggingface_hub import hf_hub_download
     for item in info['siblings']:
@@ -40,11 +41,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--gguf-only', action='store_true')
     parser.add_argument('--helper', action='store_true')
+    parser.add_argument('--base-revision',help='Exact training revision from base_revision.json for reproducible merge inputs')
     args = parser.parse_args()
     if args.gguf_only:
         download(GGUF, 'gguf', ['Qwen3-4B-Instruct-2507-Q4_K_M.gguf', 'README.md'])
     else:
-        download(MAIN, 'base')
+        download(MAIN, 'base',revision=args.base_revision)
         download(EMBED, 'embeddings')
         if args.helper:
             download('Qwen/Qwen3-1.7B', 'base')

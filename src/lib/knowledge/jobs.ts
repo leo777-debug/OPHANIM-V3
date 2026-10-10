@@ -2,7 +2,8 @@ import { randomUUID } from 'node:crypto';
 import { knowledgeTransaction } from './database';
 import { deletePrivateFile, readPrivateFile } from './storage';
 import { extractDocument } from './extract';
-import { embedTexts, embeddingConfig, vectorLiteral } from './embeddings';
+import { embedTexts, vectorLiteral } from './embeddings';
+import { getEmbeddingSettings } from './settings';
 import { hashContent, splitBlocks, validateSharedMetadata } from './safety';
 
 interface Job { id: string; document_id: string; attempts: number; kind: string }
@@ -10,6 +11,20 @@ interface Document { organization_id: string | null; file_name: string; storage_
 
 export async function runKnowledgeJobs(limit = 3) {
   const summary = { processed: 0, completed: 0, failed: 0 };
+  await knowledgeTransaction(null,async(c)=>{
+    await c.query(`update ophanim_knowledge_documents
+      set metadata=jsonb_set(metadata,'{knowledge_period}','"past"'::jsonb)
+      where organization_id is null and metadata->>'knowledge_period'='present'
+        and published_at<now()-interval '30 days'`);
+    // A crash during the last attempt must become visible instead of remaining
+    // in processing forever after the lease expires.
+    await c.query(`with exhausted as (
+      update ophanim_knowledge_jobs set status='failed',last_error='Worker lease expired after three attempts'
+      where status='running' and attempts>=3 and locked_at<now()-interval '20 minutes'
+      returning document_id
+    ) update ophanim_knowledge_documents set status='failed',error='Worker lease expired after three attempts'
+      where id in (select document_id from exhausted) and status<>'deleting'`);
+  });
   for (let i=0; i<limit; i++) {
     const job = await knowledgeTransaction(null, async (client) => {
       const result = await client.query<Job>(`with candidate as (
@@ -44,8 +59,9 @@ export async function runKnowledgeJobs(limit = 3) {
       // Compute outside a database transaction; insert everything atomically only
       // once all embeddings have succeeded, so retries cannot leave partial data.
       const vectors: number[][] = [];
+      const settings=await getEmbeddingSettings(document.organization_id);
       for (let offset=0; offset<chunks.length; offset+=8) {
-        vectors.push(...await embedTexts(chunks.slice(offset,offset+8).map(c=>c.text)));
+        vectors.push(...await embedTexts(chunks.slice(offset,offset+8).map(c=>c.text),settings));
         await knowledgeTransaction(null,(c)=>c.query("update ophanim_knowledge_documents set progress=$2 where id=$1 and status<>'deleting'",[job.document_id,Math.floor(20+70*vectors.length/chunks.length)]));
         await knowledgeTransaction(null,(c)=>c.query('update ophanim_knowledge_jobs set locked_at=now() where id=$1',[job.id]));
       }
@@ -59,7 +75,7 @@ export async function runKnowledgeJobs(limit = 3) {
             (id,organization_id,document_id,ordinal,content,content_hash,source_file,reference,document_type,language,published_at,valid_from,valid_to)
             values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
             [id,document.organization_id,job.document_id,index,chunk.text,hashContent(chunk.text),document.file_name,JSON.stringify(chunk.reference),document.document_type,language,document.published_at,document.valid_from,document.valid_to]);
-          await c.query('insert into ophanim_knowledge_embeddings (chunk_id,organization_id,model,embedding) values ($1,$2,$3,$4::vector)',[id,document.organization_id,embeddingConfig().model,vectorLiteral(vectors[index])]);
+          await c.query('insert into ophanim_knowledge_embeddings (chunk_id,organization_id,model,embedding) values ($1,$2,$3,$4::vector)',[id,document.organization_id,settings.model,vectorLiteral(vectors[index])]);
         }
         await c.query("update ophanim_knowledge_documents set status='ready',progress=100,ingested_at=now(),language=$2 where id=$1",[job.document_id,language]);
         await c.query("update ophanim_knowledge_jobs set status='completed' where id=$1",[job.id]);

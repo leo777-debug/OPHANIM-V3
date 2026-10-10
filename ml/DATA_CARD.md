@@ -1,4 +1,4 @@
-# Synthetic dataset v2 — 10 October 2026
+# Synthetic dataset v3 — 10 October 2026
 
 Source: this repository's synthetic templates, MIT. No teacher API/model was
 used. No customer documents, personal data or shared-source text was used. All
@@ -15,7 +15,10 @@ external dataset's summary.json and the table generated in FINAL_REPORT.md.
 QA unanswerables are checked to be >=20% in every split. Split-specific references
 and dates and content-hash deduplication prevent identical prompts leaking across
 splits. The v1 generator had an unanswerable sampling correlation; v2 corrects
-this and is the training candidate. v1 remains on the external disk for provenance,
+this. v3 adds strict nested-array schemas and a single QA schema independent of
+answerability. v3 is the training candidate; v1/v2 remain for provenance.
+The historical 50-case base run used v2 prompts and is rescored against v3 schemas;
+corrected prompts still need a fresh development evaluation. v1 remains on disk,
 is not used for training, and has no accepted model. Never overwrite held-out data.
 
 The 50-case model-selection sample comes from validation, not held-out test. It

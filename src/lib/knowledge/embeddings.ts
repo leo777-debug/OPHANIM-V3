@@ -1,10 +1,11 @@
 import { validateAiBaseUrl } from '@/lib/ai/providers/openai-compatible-provider';
+import type { EmbeddingSettings } from './settings';
 
 export function embeddingConfig() {
   return { baseUrl: process.env.EMBEDDING_BASE_URL, model: process.env.EMBEDDING_MODEL, apiKey: process.env.EMBEDDING_API_KEY };
 }
-export async function embedTexts(texts: string[]): Promise<number[][]> {
-  const config = embeddingConfig();
+export async function embedTexts(texts: string[], settings?:EmbeddingSettings): Promise<number[][]> {
+  const config = settings ?? embeddingConfig();
   if (!config.baseUrl || !config.model) throw new Error('Configure the embedding server in AI SETUP or EMBEDDING_BASE_URL / EMBEDDING_MODEL.');
   await validateAiBaseUrl(config.baseUrl);
   const url = `${config.baseUrl.replace(/\/(?:v1\/?)?$/, '')}/v1/embeddings`;

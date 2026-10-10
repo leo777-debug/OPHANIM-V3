@@ -20,6 +20,13 @@ CSV, TXT/MD and plain-text EML are supported; HTML-only EML requires a text expo
 MSG is excluded until a permissively licensed parser is reviewed. Files <=10 MB,
 PDFs <=200 pages, <=2,000 chunks. Office expansion and extraction output are bounded.
 
+Containers use the optional private Debian/Python extractor service via
+KNOWLEDGE_EXTRACTOR_URL, because PDFium wheels require glibc while the web
+container uses Alpine. Allow that exact internal origin in AI_LOCAL_BASE_URLS.
+The service requires the worker secret and exposes no host port.
+The Compose model profile also starts a scheduler that calls the authenticated
+queue endpoint every minute. Set KNOWLEDGE_CRON_SECRET in the uncommitted .env.
+
 Set EMBEDDING_BASE_URL, EMBEDDING_MODEL (Qwen3-Embedding-0.6B, 1,024 dimensions),
 optional EMBEDDING_API_KEY. Allow local origins through AI_LOCAL_BASE_URLS. Keep
 embedding model identity unchanged until a full reindex; dimensions alone do not
@@ -53,6 +60,13 @@ with the deployment secret. Every file requires reviewed commercial-use metadata
 unknown licences are denied. `ml/scripts/import_knowledge.py` builds events and
 sidecars; do not put customer files into knowledge/. Stale snapshots preserve
 original dates when archived. Refresh ingestion explicitly after changing rights.
+Snapshots mark knowledge_period as past/present; current-only search excludes
+past. Their published_at is the compilation time of the normalized snapshot,
+not an invented source publication date. Original event start/end dates remain
+inside records. As-of queries conservatively exclude snapshots compiled later.
+The queue worker automatically marks shared present snapshots older than 30 days
+as past without changing dates. The importer moves local snapshots to past on
+each refresh. Changing other metadata or rights requires delete/reimport.
 
 Run `npm test -- src/lib/knowledge` and `npx tsc --noEmit`.
 Live RLS tests run when DATABASE_URL is set and otherwise visibly skip. They use

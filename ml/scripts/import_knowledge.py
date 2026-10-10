@@ -8,6 +8,7 @@ import math
 import os
 import shutil
 import urllib.request
+import zipfile
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
@@ -21,6 +22,11 @@ def timestamp(value):
     if len(text)==15 and text.endswith('Z'):return datetime.strptime(text,'%Y%m%dT%H%M%SZ').replace(tzinfo=timezone.utc).isoformat()
     try:return datetime.fromisoformat(text.replace('Z','+00:00')).isoformat()
     except ValueError:return None
+
+
+def utc(value):
+    parsed=datetime.fromisoformat(value)
+    return parsed.astimezone(timezone.utc) if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
 
 
 def event(source,id_,type_,name,lat,lon,start,end=None,severity='unknown',links=None,impact=None):
@@ -92,11 +98,15 @@ def archive(root,older_than_days=30):
     cutoff=datetime.now(timezone.utc)-timedelta(days=older_than_days)
     for sidecar in (root/'present').glob('*.meta.json'):
         m=json.loads(sidecar.read_text(encoding='utf-8'));published=timestamp(m.get('published_at'))
-        if not published or datetime.fromisoformat(published).replace(tzinfo=timezone.utc)>=cutoff:continue
+        if not published or utc(published)>=cutoff:continue
         file=Path(str(sidecar)[:-10]);destination=root/'past'/file.name
         if destination.exists() or Path(str(destination)+'.meta.json').exists():continue
         # Preserve dates and metadata byte-for-byte, don't rewrite history as now.
         file.rename(destination);sidecar.rename(Path(str(destination)+'.meta.json'))
+        # Preserve all original dates while excluding archived snapshots from
+        # current-only answers. Moving folders alone cannot change DB metadata.
+        m['knowledge_period']='past'
+        Path(str(destination)+'.meta.json').write_text(json.dumps(m,indent=2),encoding='utf-8')
 
 
 if __name__=='__main__':
@@ -119,8 +129,20 @@ if __name__=='__main__':
         with urllib.request.urlopen(urllib.request.Request(url,headers={'User-Agent':'Ophanim/1.0 logistics knowledge importer'}),timeout=120) as response:
             raw=response.read(64*1024**2+1)
         if len(raw)>64*1024**2:raise RuntimeError('Source response exceeds 64 MiB; use a smaller date range')
-    text=raw.decode('utf-8-sig');data=text if args.source in ('ibtracs','ucdp') else json.loads(text)
+    if args.source=='ucdp' and raw[:2]==b'PK':
+        with zipfile.ZipFile(io.BytesIO(raw)) as z:
+            files=[f for f in z.infolist() if f.filename.lower().endswith('.csv')]
+            if len(files)!=1 or files[0].file_size>512*1024**2:raise RuntimeError('Expected one bounded UCDP CSV; use a filtered export')
+            raw_csv=z.read(files[0])
+        text=raw_csv.decode('utf-8-sig')
+    else:text=raw.decode('utf-8-sig')
+    data=text if args.source in ('ibtracs','ucdp') else json.loads(text)
+    if args.source=='usgs' and len(data.get('features',[]))>=1000:raise RuntimeError('USGS response reaches the request limit; choose a smaller date range rather than silently truncating history')
     events=list(normalise(args.source,data))
+    beginning=utc(args.start)
+    ending=utc(args.end)+timedelta(days=1)
+    events=[e for e in events if e.get('start') and utc(e['start'])<ending and utc(e.get('end') or e['start'])>=beginning]
+    if not events:raise RuntimeError('No dated events in the requested range')
     if args.gazetteer:
         gmeta=json.loads(Path(args.gazetteer+'.meta.json').read_text())
         if gmeta.get('commercial_use') is not True or gmeta.get('customer_data') is not False:raise RuntimeError('Gazetteer licence not cleared')
@@ -130,8 +152,13 @@ if __name__=='__main__':
         if not e.get('start'):raise RuntimeError('Event lacks a trustworthy start date; exclude or correct the source export')
     stamp=datetime.now(timezone.utc).isoformat()
     name=f'{args.source}-{args.start}-{args.end}-{hashlib.sha256(raw).hexdigest()[:12]}.json'
-    file=folder/('present' if args.present else 'past')/name
-    if file.exists():raise RuntimeError('Snapshot exists; not overwriting')
+    destination=folder/('present' if args.present else 'past')
+    files=[destination/name.replace('.json',f'-part-{i//1000+1:04d}.json') for i in range(0,len(events),1000)]
+    if any(f.exists() or Path(str(f)+'.meta.json').exists() for f in files):raise RuntimeError('Snapshot exists; not overwriting')
     metadata=dict(source=args.source,source_url=url,licence=source['licence'],licence_url=source['licence_url'],commercial_use=True,customer_data=False,reviewed_at=source.get('reviewed_at','2026-10-10'),attribution=source['attribution'],published_at=stamp,valid_from=args.start,valid_to=args.end,region='Global',language='en',raw_sha256=hashlib.sha256(raw).hexdigest())
-    file.write_text(json.dumps({'events':events},ensure_ascii=False,indent=2),encoding='utf-8');Path(str(file)+'.meta.json').write_text(json.dumps(metadata,indent=2),encoding='utf-8')
-    archive(folder);print(json.dumps({'file':str(file),'events':len(events),'commercial_use':True}))
+    metadata.update(knowledge_period='present' if args.present else 'past',retrieved_at=stamp,publication_note='Publication date of this normalized snapshot, not an inferred original report publication date. Original event dates remain in each record.')
+    for i,file in enumerate(files):
+        payload=json.dumps({'events':events[i*1000:(i+1)*1000]},ensure_ascii=False,indent=2)
+        if len(payload.encode('utf-8'))>10*1024**2:raise RuntimeError('Part exceeds upload limit; use a smaller source export')
+        file.write_text(payload,encoding='utf-8');Path(str(file)+'.meta.json').write_text(json.dumps(metadata,indent=2),encoding='utf-8')
+    archive(folder);print(json.dumps({'files':[str(f) for f in files],'events':len(events),'commercial_use':True}))

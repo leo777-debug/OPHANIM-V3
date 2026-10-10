@@ -10,9 +10,29 @@ from extract_document import extract
 from generate_dataset import generate,container_number
 from model_store import root,inside,register,verify,reserve_destination
 from compare import score
+from import_knowledge import normalise,nearest,archive,utc
 
 
 class PipelineTests(unittest.TestCase):
+    def test_shared_normalisation_and_nearest_reference_points(self):
+        source={'features':[{'id':'fixture','geometry':{'coordinates':[55.3,25.2,10]},'properties':{'place':'Synthetic fixture','time':1609459200000,'mag':4.2,'url':'https://example.test/event'}}]}
+        record=list(normalise('usgs',source))[0]
+        self.assertEqual(record['start'],'2021-01-01T00:00:00+00:00')
+        self.assertEqual(record['place']['longitude'],55.3)
+        nearest(record,[{'type':'airport','code':'SYN','latitude':25.2,'longitude':55.3}])
+        self.assertEqual(record['place']['nearest_airports'][0],{'code':'SYN','distance_km':0.0})
+        self.assertEqual(utc('2021-01-01T04:00:00+04:00').hour,0)
+
+    def test_shared_archive_preserves_source_dates(self):
+        with tempfile.TemporaryDirectory(dir=root()/'eval') as directory:
+            folder=Path(directory);(folder/'past').mkdir();(folder/'present').mkdir()
+            file=folder/'present'/'fixture.json';file.write_text('{"events":[]}')
+            metadata={'published_at':'2021-01-01T00:00:00Z','valid_from':'2020-12-31','knowledge_period':'present'}
+            Path(str(file)+'.meta.json').write_text(json.dumps(metadata))
+            archive(folder)
+            moved=json.loads((folder/'past'/'fixture.json.meta.json').read_text())
+            self.assertEqual(moved['published_at'],metadata['published_at']);self.assertEqual(moved['valid_from'],metadata['valid_from']);self.assertEqual(moved['knowledge_period'],'past')
+
     def test_synthetic_splits_and_unanswerables(self):
         with tempfile.TemporaryDirectory(dir=root()/'eval') as directory:
             folder=Path(directory);summary=generate(folder,132)
@@ -76,6 +96,7 @@ class PipelineTests(unittest.TestCase):
         row={'task':'grounded_qa','unanswerable':True,'target':{'statements':[{'label':'NOT FOUND','text':'not found','citations':[]}]},'schema':{'type':'object'},'context':[]}
         self.assertEqual(score(row,'not JSON')['hallucination'],1)
         self.assertEqual(score(row,json.dumps(row['target']))['not_found_correct'],1)
+        self.assertEqual(score(row,'{"statements":["NOT FOUND"]}')['not_found_correct'],0)
         self.assertEqual(score(row,'{"statements":[{"label":"FACT","text":"invented","citations":["another-org"]}]}')['hallucination'],1)
 
 

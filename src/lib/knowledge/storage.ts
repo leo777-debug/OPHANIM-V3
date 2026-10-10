@@ -10,9 +10,9 @@ async function localPath(key: string) {
   const candidate = path.resolve(root, key);
   if (!candidate.startsWith(root + path.sep) || key.split(/[\\/]/).some((p) => !p || p === '..' || p === '.')) throw new Error('Invalid private storage key.');
   await mkdir(root, { recursive: true });
-  const resolvedRoot = await realpath(root);
+  const resolvedRoot = await realpath(/* turbopackIgnore: true */ root);
   await mkdir(path.dirname(candidate), { recursive: true });
-  const resolvedParent = await realpath(path.dirname(candidate));
+  const resolvedParent = await realpath(/* turbopackIgnore: true */ path.dirname(candidate));
   if (!resolvedParent.startsWith(resolvedRoot + path.sep)) throw new Error('Storage symlink escapes the private root.');
   return candidate;
 }

@@ -11,6 +11,7 @@ export default function KnowledgeWorkspace({shared=false}:{shared?:boolean}) {
   const [documents,setDocuments]=useState<Document[]>([]); const [bytes,setBytes]=useState(0); const [message,setMessage]=useState('');
   const [question,setQuestion]=useState(''); const [currentOnly,setCurrentOnly]=useState(false); const [asOf,setAsOf]=useState(''); const [mode,setMode]=useState('logistics');
   const [answer,setAnswer]=useState<Answer|null>(null); const [busy,setBusy]=useState(false); const [dragging,setDragging]=useState(false);
+  const [documentType,setDocumentType]=useState('other');const [publishedAt,setPublishedAt]=useState('');const [validFrom,setValidFrom]=useState('');const [validTo,setValidTo]=useState('');
   const fileInput=useRef<HTMLInputElement>(null);
   const endpoint=shared ? '/api/knowledge/shared':'/api/knowledge/documents';
   const load=useCallback(async()=>{
@@ -25,6 +26,7 @@ export default function KnowledgeWorkspace({shared=false}:{shared?:boolean}) {
     try {
       for(let offset=0;offset<files.length;offset+=10) {
         const form=new FormData(); Array.from(files).slice(offset,offset+10).forEach(f=>form.append('files',f));
+        form.append('metadata',JSON.stringify({document_type:documentType,published_at:publishedAt || undefined,valid_from:validFrom || undefined,valid_to:validTo || undefined}));
         const response=await fetch(endpoint,{method:'POST',body:form});const body=await response.json();
         if(!response.ok)throw new Error(body.error);
         for(const result of body.results)if(result.error)errors.push(`${result.file}: ${result.error}`);
@@ -48,6 +50,7 @@ export default function KnowledgeWorkspace({shared=false}:{shared?:boolean}) {
   return <div className="platform-content">
     <section className="platform-section"><div className="platform-section__heading"><div><p>{shared ? 'Deployment administration':'Company + shared sources'}</p><h2>{shared ? 'Shared knowledge catalogue':'Knowledge'}</h2></div><span>{(bytes/1024/1024).toFixed(2)} MB stored</span></div>
       <p>{shared ? 'Review source licences and validity dates. Shared uploads require the deployment administrator’s backend credentials.':'Upload documents for your organization, then search or ask questions with source citations.'}</p>
+      {!shared && <details><summary>Upload source dates and document type</summary><label>Type <select value={documentType} onChange={e=>setDocumentType(e.target.value)}>{['other','awb','bill_of_lading','invoice','packing_list','booking_confirmation','arrival_notice','delivery_order','email','contract','sop'].map(t=><option key={t} value={t}>{t.replace(/_/g,' ')}</option>)}</select></label> <label>Published <input type="date" value={publishedAt} onChange={e=>setPublishedAt(e.target.value)}/></label> <label>Valid from <input type="date" value={validFrom} onChange={e=>setValidFrom(e.target.value)}/></label> <label>Valid until <input type="date" value={validTo} onChange={e=>setValidTo(e.target.value)}/></label><p>Applies to this upload batch. Undated files are excluded from current/as-of searches.</p></details>}
       {!shared && <div onDragOver={e=>{e.preventDefault();setDragging(true);}} onDragLeave={()=>setDragging(false)} onDrop={e=>{e.preventDefault();setDragging(false);if(!busy)void upload(e.dataTransfer.files);}} style={{border:`1px dashed ${dragging ? '#7cffcb':'#566'}`,padding:24,margin:'16px 0'}}>
         <label>Drag files here, or select files<input ref={fileInput} type="file" multiple disabled={busy} accept=".pdf,.docx,.xlsx,.csv,.txt,.md,.eml,.png,.jpg,.jpeg" onChange={e=>{if(e.target.files)void upload(e.target.files);}} /></label>
         <p>10 MB per file. Scanned PDFs and images require the OCR runtime.</p>

@@ -9,6 +9,11 @@ do $$ begin
 end $$;
 grant ophanim_knowledge_app, ophanim_knowledge_worker to current_user;
 grant usage on schema public, app_private to ophanim_knowledge_app, ophanim_knowledge_worker;
+do $$ begin
+  if exists (select 1 from pg_namespace where nspname='extensions') then
+    grant usage on schema extensions to ophanim_knowledge_app, ophanim_knowledge_worker;
+  end if;
+end $$;
 
 -- The backend validates the session, sets its user/org transaction-locally, then
 -- drops privileges. This helper only exposes a membership boolean.

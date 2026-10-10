@@ -1,6 +1,7 @@
 import type { OrganizationActor } from '@/lib/operations/types';
 import { knowledgeTransaction } from './database';
-import { embedTexts, embeddingConfig, vectorLiteral } from './embeddings';
+import { embedTexts, vectorLiteral } from './embeddings';
+import { getEmbeddingSettings } from './settings';
 import type { KnowledgeChunk, KnowledgeFilters } from './types';
 
 export function reciprocalRankFusion(lists: KnowledgeChunk[][], limit = 8): KnowledgeChunk[] {
@@ -25,7 +26,8 @@ export function parseFilters(value: unknown): KnowledgeFilters {
 
 export async function searchKnowledge(actor: OrganizationActor, question: string, filters: KnowledgeFilters = {}) {
   let vector: number[] | null = null; let warning: string | null = null;
-  try { [vector] = await embedTexts([`Instruct: Retrieve documents answering the question.\nQuery: ${question}`]); }
+  const settings=await getEmbeddingSettings(actor.organizationId,actor);
+  try { [vector] = await embedTexts([`Instruct: Retrieve documents answering the question.\nQuery: ${question}`],settings); }
   catch { warning = 'Embedding server unavailable; searched full text only.'; }
   const chunks = await knowledgeTransaction(actor, async (client) => {
     const values = [question, filters.documentTypes?.length ? filters.documentTypes : null, filters.asOf ?? null, filters.currentOnly ?? false, filters.shipmentId ?? null];
@@ -34,7 +36,7 @@ export async function searchKnowledge(actor: OrganizationActor, question: string
       and ($2::text[] is null or c.document_type=any($2))
       and ($5::uuid is null or d.shipment_id=$5 or d.organization_id is null)
       and ($3::timestamptz is null or (c.published_at <= $3 and c.valid_from <= $3 and (c.valid_to is null or c.valid_to >= $3)))
-      and (not $4::boolean or (c.published_at <= now() and c.valid_from <= now() and (c.valid_to is null or c.valid_to >= now())))`;
+      and (not $4::boolean or (coalesce(d.metadata->>'knowledge_period','')<>'past' and c.published_at <= now() and c.valid_from <= now() and (c.valid_to is null or c.valid_to >= now())))`;
     const lexical = await client.query<KnowledgeChunk>(`select c.*, ts_rank_cd(c.search_vector,websearch_to_tsquery('simple',$1)) as score
       from ophanim_knowledge_chunks c join ophanim_knowledge_documents d on d.id=c.document_id
       where ${predicate} and c.search_vector @@ websearch_to_tsquery('simple',$1)
@@ -45,7 +47,7 @@ export async function searchKnowledge(actor: OrganizationActor, question: string
         from ophanim_knowledge_chunks c join ophanim_knowledge_documents d on d.id=c.document_id
         join ophanim_knowledge_embeddings e on e.chunk_id=c.id
         where ${predicate} and e.model=$7 and (e.embedding <=> $6::vector)<0.65
-        order by e.embedding <=> $6::vector, c.published_at desc nulls last limit 32`, [...values, vectorLiteral(vector), embeddingConfig().model]);
+        order by e.embedding <=> $6::vector, c.published_at desc nulls last limit 32`, [...values, vectorLiteral(vector), settings.model]);
       semantic = result.rows;
     }
     return reciprocalRankFusion([lexical.rows, semantic]);

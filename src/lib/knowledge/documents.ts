@@ -7,12 +7,18 @@ import { hashContent, validateSharedMetadata } from './safety';
 import type { SharedMetadata } from './types';
 
 export const KNOWLEDGE_EXTENSIONS = ['.pdf','.docx','.xlsx','.csv','.txt','.md','.eml','.png','.jpg','.jpeg','.json','.jsonl'];
+export interface PrivateDocumentMetadata {document_type?:string;language?:string;published_at?:string;valid_from?:string;valid_to?:string|null;shipment_id?:string}
 
-export async function addDocument(actor: OrganizationActor | null, file: File, metadata?: SharedMetadata) {
+export async function addDocument(actor: OrganizationActor | null, file: File, metadata?: SharedMetadata & PrivateDocumentMetadata | PrivateDocumentMetadata) {
   if (!file.size || file.size > 10 * 1024 * 1024) throw new Error('Each file must be between 1 byte and 10 MB.');
   const fileName = path.basename(file.name.replace(/\\/g,'/')).replace(/[\u0000-\u001f]/g,'').slice(0,255);
   if (!KNOWLEDGE_EXTENSIONS.includes(path.extname(fileName).toLowerCase())) throw new Error('Unsupported file type. Export .msg to .eml.');
   if (!actor) validateSharedMetadata(metadata);
+  if(actor && metadata){
+    for(const date of [metadata.published_at,metadata.valid_from,metadata.valid_to])if(date && (typeof date!=='string' || !Number.isFinite(Date.parse(date))))throw new Error('Invalid document date.');
+    if(metadata.document_type && (typeof metadata.document_type!=='string' || metadata.document_type.length>80))throw new Error('Invalid document type.');
+    if(metadata.language && !['en','ar','mixed','und'].includes(metadata.language))throw new Error('Invalid document language.');
+  }
   const bytes = Buffer.from(await file.arrayBuffer()); const hash = hashContent(bytes);
   const existing = await knowledgeTransaction(actor, (client) => client.query('select id,status from ophanim_knowledge_documents where organization_id is not distinct from $1 and content_hash=$2', [actor?.organizationId ?? null, hash]));
   if (existing.rows[0]) return { ...existing.rows[0], duplicate: true };
@@ -21,9 +27,9 @@ export async function addDocument(actor: OrganizationActor | null, file: File, m
   try {
     return await knowledgeTransaction(actor, async (client) => {
       const result = await client.query(`insert into ophanim_knowledge_documents
-        (id,organization_id,created_by_user_id,file_name,storage_path,mime_type,file_size_bytes,content_hash,language,published_at,valid_from,valid_to,metadata)
-        values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) returning id,status`,
-        [id,actor?.organizationId ?? null,actor?.userId ?? null,fileName,storagePath,file.type || 'application/octet-stream',bytes.length,hash,metadata?.language ?? 'und',metadata?.published_at ?? null,metadata?.valid_from ?? null,metadata?.valid_to ?? null,JSON.stringify(metadata ?? {})]);
+        (id,organization_id,created_by_user_id,file_name,storage_path,mime_type,file_size_bytes,content_hash,language,published_at,valid_from,valid_to,metadata,document_type,shipment_id)
+        values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) returning id,status`,
+        [id,actor?.organizationId ?? null,actor?.userId ?? null,fileName,storagePath,file.type || 'application/octet-stream',bytes.length,hash,metadata?.language ?? 'und',metadata?.published_at ?? null,metadata?.valid_from ?? null,metadata?.valid_to ?? null,JSON.stringify(metadata ?? {}),metadata && 'document_type' in metadata ? metadata.document_type ?? 'other':'other',metadata && 'shipment_id' in metadata ? metadata.shipment_id ?? null:null]);
       await client.query('insert into ophanim_knowledge_jobs (organization_id,document_id) values ($1,$2)', [actor?.organizationId ?? null,id]);
       return { ...result.rows[0], duplicate: false };
     });

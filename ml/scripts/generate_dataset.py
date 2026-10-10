@@ -30,12 +30,17 @@ def container_number(serial):
 
 
 def schema_for(target, task):
+    if task=='grounded_qa':
+        # Same schema for answerable and unanswerable inputs: never reveal the
+        # expected answer through a target-dependent schema or array length.
+        statement={'type':'object','properties':{'label':{'enum':['FACT','NOT FOUND']},'text':{'type':'string'},'quote':{'type':'string'},'citations':{'type':'array','items':{'type':'string'}}},'required':['label','text','citations'],'additionalProperties':False}
+        return {'type':'object','properties':{'statements':{'type':'array','minItems':1,'items':statement}},'required':['statements'],'additionalProperties':False}
     if task in FIELDS:
         return {'type':'object','properties':{k:{'type':['number','null'] if k in ('pieces','gross_weight_kg','net_weight_kg','total_amount') else ['string','null']} for k in FIELDS[task]},'required':FIELDS[task],'additionalProperties':False}
     def infer(value):
         if isinstance(value,dict):
             return {'type':'object','properties':{k:infer(v) for k,v in value.items()},'required':list(value),'additionalProperties':False}
-        if isinstance(value,list): return {'type':'array'}
+        if isinstance(value,list): return {'type':'array','items':infer(value[0]) if value else {'type':'string'}}
         if isinstance(value,bool): return {'type':'boolean'}
         if isinstance(value,(int,float)): return {'type':'number'}
         return {'type':['string','null']}

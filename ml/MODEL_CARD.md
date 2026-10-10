@@ -1,6 +1,9 @@
 # Ophanim Logistics model card
 
-Status: development, base model + prompts. No fine-tuned release or claimed scores.
+Status: development, base model + prompts. No fine-tuned release. A three-step
+CPU LoRA smoke run used a tiny random test fixture, not the 4B base model. Real
+measurements are in FINAL_REPORT.md and eval/REPORT.md. The provisional 4B model
+fails the founder's 8 tokens/second CPU gate and the initial grounded-QA evaluation.
 
 Base: Qwen/Qwen3-4B-Instruct-2507, [Apache-2.0 licence](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507/blob/main/LICENSE).
 Commercial use and modification are allowed; preserve licence, notices and
