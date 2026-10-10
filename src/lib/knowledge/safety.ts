@@ -38,6 +38,7 @@ export function validateSharedMetadata(value: unknown): SharedMetadata {
   for (const url of [m.source_url, m.licence_url]) if (!url || !/^https?:\/\//.test(url)) throw new Error('Source and licence URLs are required.');
   for (const date of [m.reviewed_at, m.published_at, m.valid_from, m.valid_to]) if (date && !Number.isFinite(Date.parse(date))) throw new Error('Invalid source date.');
   if (m.valid_to && Date.parse(m.valid_to) < Date.parse(m.valid_from)) throw new Error('Invalid validity range.');
+  if (m.knowledge_period !== undefined && !['past','present'].includes(m.knowledge_period)) throw new Error('Invalid shared knowledge period.');
   return m;
 }
 

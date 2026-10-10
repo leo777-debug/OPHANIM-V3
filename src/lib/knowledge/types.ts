@@ -9,4 +9,5 @@ export interface KnowledgeStatement { label: 'FACT' | 'INFERENCE' | 'NOT FOUND';
 export interface SharedMetadata {
   source: string; source_url: string; licence: string; licence_url: string; commercial_use: boolean; customer_data: false;
   reviewed_at: string; attribution: string; published_at: string; valid_from: string; valid_to: string | null; region: string; language: string;
+  knowledge_period?: 'past' | 'present';
 }

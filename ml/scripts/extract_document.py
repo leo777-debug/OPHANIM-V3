@@ -3,6 +3,7 @@ import base64
 import csv
 import io
 import json
+import os
 import sys
 import zipfile
 from email import policy
@@ -20,6 +21,8 @@ def check_archive(data):
 
 def ocr(image):
     import pytesseract
+    if os.environ.get('OPHANIM_TESSERACT_CMD'):
+        pytesseract.pytesseract.tesseract_cmd = os.environ['OPHANIM_TESSERACT_CMD']
     available = pytesseract.get_languages(config='')
     if not {'eng', 'ara'}.issubset(available):
         raise RuntimeError('OCR requires Tesseract with both eng and ara language packs')
@@ -109,6 +112,10 @@ def extract(name, data):
 
 
 if __name__ == '__main__':
+    # Windows pipe defaults can be CP1252. Node sends/reads UTF-8 JSON,
+    # including Arabic filenames and extracted text; use an explicit protocol.
+    for stream in (sys.stdin, sys.stdout, sys.stderr):
+        stream.reconfigure(encoding='utf-8')
     try:
         request = json.load(sys.stdin)
         raw = base64.b64decode(request['content_base64'], validate=True)

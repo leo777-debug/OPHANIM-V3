@@ -43,11 +43,11 @@ export async function searchKnowledge(actor: OrganizationActor, question: string
       order by score desc, c.published_at desc nulls last limit 32`, values);
     let semantic: KnowledgeChunk[] = [];
     if (vector) {
-      const result = await client.query<KnowledgeChunk>(`select c.*, 1-(e.embedding <=> $6::vector) as score
+      const result = await client.query<KnowledgeChunk>(`select c.*, 1-(e.embedding <=> $1::vector) as score
         from ophanim_knowledge_chunks c join ophanim_knowledge_documents d on d.id=c.document_id
         join ophanim_knowledge_embeddings e on e.chunk_id=c.id
-        where ${predicate} and e.model=$7 and (e.embedding <=> $6::vector)<0.65
-        order by e.embedding <=> $6::vector, c.published_at desc nulls last limit 32`, [...values, vectorLiteral(vector), settings.model]);
+        where ${predicate} and e.model=$6 and (e.embedding <=> $1::vector)<0.65
+        order by e.embedding <=> $1::vector, c.published_at desc nulls last limit 32`, [vectorLiteral(vector), ...values.slice(1), settings.model]);
       semantic = result.rows;
     }
     return reciprocalRankFusion([lexical.rows, semantic]);

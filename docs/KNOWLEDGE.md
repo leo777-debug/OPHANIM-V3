@@ -72,3 +72,12 @@ Run `npm test -- src/lib/knowledge` and `npx tsc --noEmit`.
 Live RLS tests run when DATABASE_URL is set and otherwise visibly skip. They use
 transactional fixtures and rollback; they test crafted SQL/vector searches, shared
 visibility, cross-tenant writes/FKs, viewer permissions and deletion cascades.
+
+Without a configured native PostgreSQL, `node db/test-isolated-rls.mjs` applies
+every migration to disposable PostgreSQL WASM with real pgcrypto/pgvector and
+runs those SQL isolation tests. Auth and Storage service schemas are test fixtures;
+this does not test Supabase's HTTP storage API or concurrent worker locks. It
+never reads or modifies the production database configuration. With the local
+embedding endpoint and KNOWLEDGE_PYTHON configured, append
+`src/lib/knowledge/pipeline.integration.test.ts` to exercise uploads, extraction,
+real embeddings, retrieval, deduplication and deletion on synthetic files.

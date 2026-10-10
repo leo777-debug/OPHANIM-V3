@@ -14,7 +14,9 @@ describe('knowledge additive schema',()=>{
 });
 describe.skipIf(!process.env.DATABASE_URL)('knowledge live RLS — requires migrated DATABASE_URL',()=>{
   it('company A cannot retrieve B through raw, lexical or crafted vector queries; shared is visible, writes/links are isolated',async()=>{
-    const c=new Client({connectionString:process.env.DATABASE_URL});await c.connect();
+    const c=process.env.OPHANIM_TEST_PGLITE==='1'
+      ? await (await import('./isolated-db.test-helper')).createIsolatedClient()
+      : new Client({connectionString:process.env.DATABASE_URL});await c.connect();
     const a=randomUUID(),b=randomUUID(),ua=randomUUID(),ub=randomUUID(),authA=randomUUID(),authB=randomUUID();
     const docs=[randomUUID(),randomUUID(),randomUUID()],chunks=[randomUUID(),randomUUID(),randomUUID()];
     const vector=`[${[1,...Array(1023).fill(0)].join(',')}]`;
@@ -44,16 +46,23 @@ describe.skipIf(!process.env.DATABASE_URL)('knowledge live RLS — requires migr
       expect((await c.query('select id from ophanim_knowledge_chunks where id=$1',[chunks[1]])).rows).toHaveLength(0);
       expect((await c.query("select id from ophanim_knowledge_chunks where id=any($1::uuid[]) and search_vector @@ websearch_to_tsquery('simple','tenant secret')",[chunks])).rows.map(r=>r.id).sort()).toEqual([chunks[0],chunks[2]].sort());
       expect((await c.query('select chunk_id from ophanim_knowledge_embeddings where chunk_id=any($2::uuid[]) order by embedding <=> $1::vector',[vector,chunks])).rows.map(r=>r.chunk_id).sort()).toEqual([chunks[0],chunks[2]].sort());
+      await c.query("select set_config('ophanim.organization_id',$1,true)",[b]);
+      expect((await c.query('select id from ophanim_knowledge_chunks where id=any($1::uuid[])',[chunks])).rows).toHaveLength(0);
+      await c.query("select set_config('ophanim.organization_id',$1,true)",[a]);
       await c.query('savepoint denied');await expect(c.query('update ophanim_knowledge_documents set organization_id=$1 where id=$2',[b,docs[0]])).rejects.toThrow();await c.query('rollback to savepoint denied');
       await c.query('reset role');await c.query("select set_config('ophanim.user_id',$1,true),set_config('ophanim.organization_id',$2,true)",[ub,b]);await c.query('set local role ophanim_knowledge_app');
       expect((await c.query('select id from ophanim_knowledge_chunks where id=$1',[chunks[0]])).rows).toHaveLength(0);
       expect((await c.query('update ophanim_knowledge_documents set status=\'deleting\' where id=$1 returning id',[docs[1]])).rows).toHaveLength(0);
       await c.query('reset role');await c.query("select set_config('request.jwt.claim.sub',$1,true)",[authA]);await c.query('set local role authenticated');
+      expect((await c.query('select auth.uid() as uid')).rows[0].uid).toEqual(authA);
       expect((await c.query('select id from ophanim_knowledge_chunks where id=any($1::uuid[])',[chunks])).rows.map(r=>r.id).sort()).toEqual([chunks[0],chunks[2]].sort());
       await c.query('reset role');await c.query('set local role ophanim_knowledge_worker');await c.query('savepoint bad_fk');
       await expect(c.query("insert into ophanim_knowledge_chunks(organization_id,document_id,ordinal,content,content_hash,source_file,document_type,language) values($1,$2,2,'x','x','x','other','en')",[a,docs[1]])).rejects.toThrow();await c.query('rollback to savepoint bad_fk');
       await c.query('delete from ophanim_knowledge_documents where id=$1',[docs[0]]);
       for(const table of ['ophanim_knowledge_chunks','ophanim_knowledge_embeddings','ophanim_knowledge_jobs'])expect((await c.query(`select * from ${table} where organization_id=$1`,[a])).rows).toHaveLength(0);
+      await c.query('reset role');
+      const mimeTypes=(await c.query("select allowed_mime_types from storage.buckets where id='ophanim-private'")).rows[0].allowed_mime_types;
+      expect(mimeTypes).toEqual(expect.arrayContaining(['application/pdf','text/plain','image/png','application/vnd.openxmlformats-officedocument.wordprocessingml.document']));
     }finally{await c.query('rollback');await c.end();}
   },30000);
 });

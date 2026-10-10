@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useSyncExternalStore } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { readClientAiConfig, writeClientAiConfig } from '@/lib/ai/client-config';
 import { AI_TASKS, type AiTask } from '@/lib/ai/providers/types';
@@ -108,8 +108,9 @@ interface AiAnalystProps {
   mode?: 'briefing' | 'settings';
 }
 
-const GEMINI_KEY_STORAGE = 'ophanim-gemini-key';
-const LEGACY_GEMINI_KEY_STORAGE = ['osi', 'ris-gemini-key'].join('');
+const subscribeToHydration = () => () => {};
+const clientSnapshot = () => true;
+const serverSnapshot = () => false;
 
 /* ─────────────────────────────────────────────────────────────
    Helpers
@@ -196,6 +197,9 @@ function renderMarkdown(text: string): string {
    ───────────────────────────────────────────────────────────── */
 
 export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
+  const isClient = useSyncExternalStore(subscribeToHydration, clientSnapshot, serverSnapshot);
+  const [configHydrated, setConfigHydrated] = useState(false);
+  const [previousMode, setPreviousMode] = useState(mode);
   const [isOpen, setIsOpen] = useState(true);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
@@ -217,7 +221,8 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   // Provider credentials are held only for the current browser session.
-  useEffect(() => {
+  if (isClient && !configHydrated) {
+    setConfigHydrated(true);
     const saved = readClientAiConfig();
     if (saved) {
       setApiKeyInput(saved.apiKey);
@@ -227,12 +232,13 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
       setTaskModels(saved.taskModels ?? {});
       setKeySaved(true);
     }
-  }, []);
+  }
 
-  useEffect(() => {
+  if (previousMode !== mode) {
+    setPreviousMode(mode);
     setIsOpen(true);
     setShowSettings(mode === 'settings');
-  }, [mode]);
+  }
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -245,15 +251,6 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
       setTimeout(() => inputRef.current?.focus(), 300);
     }
   }, [isOpen, showSettings]);
-
-  const getHeaders = useCallback((): Record<string, string> => {
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-    const savedKey = localStorage.getItem(GEMINI_KEY_STORAGE) || localStorage.getItem(LEGACY_GEMINI_KEY_STORAGE);
-    if (savedKey) {
-      headers['x-gemini-key'] = savedKey;
-    }
-    return headers;
-  }, []);
 
   const handleSend = useCallback(async () => {
     const query = inputText.trim();
@@ -307,7 +304,7 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [inputText, isLoading, data, getHeaders]);
+  }, [inputText, isLoading, data]);
 
   const handleBriefing = useCallback(async () => {
     if (isLoading) return;
@@ -359,7 +356,7 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, data, getHeaders]);
+  }, [isLoading, data]);
 
   const briefingRef = useRef(handleBriefing);
   useEffect(() => { briefingRef.current = handleBriefing; }, [handleBriefing]);
