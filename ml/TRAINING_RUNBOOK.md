@@ -10,10 +10,13 @@ The private [Kaggle notebook](https://www.kaggle.com/code/leonardvk/ophanim-cont
 already has [synthetic inputs v3](https://www.kaggle.com/datasets/leonardvk/ophanim-cpt-synthetic-inputs-v3-20261011)
 attached. Kaggle automatically expands the uploaded ZIP; the corrected setup cell
 supports expanded folders and an intact ZIP, verifies all hashes, and refuses unsafe
-paths or replacement of different staged files. As of 12 October, Kaggle still
-requires account verification before GPU and Internet can be selected. No full
-training job has started. Complete verification in Kaggle itself, then refresh the
-editor, select GPU and enable Internet before Save & Run All.
+paths or replacement of different staged files. On 12 October phone verification
+was confirmed, T4 ×2 and Internet were enabled, and the UI showed 30 GPU hours
+remaining. The editor failed with `Firebase: Error (auth/internal-error)`; its
+Save & Run All attempt did not create a GPU run. No full training job has started.
+The official CLI is installed at `D:\models\tools\kaggle-venv`. Authentication
+still reports missing local credentials; the founder's configured credential
+file location is needed. Use the API procedure below once it is available.
 
 1. Connect Leonard External Drive (D:), ideally USB 3. Existing files are preserved.
    Loading over USB is slower at startup; generation uses RAM after loading.
@@ -94,11 +97,14 @@ held-out gates, not merely completing an epoch of this small bundle.
    corpus is small and repetitive; a short successful run does not establish
    useful domain learning. Diversify licence-cleared procedural text and compare
    results before scaling. Live rules, schedules and disruptions stay in RAG.
-10. Download the zip from Output onto D:\models\kaggle-downloads, or install the
-    official `kaggle` Python package and use download_from_kaggle.py owner/notebook
-    --version VERSION. Official credentials stay in ~/.kaggle/kaggle.json or Kaggle
-    environment settings, never in this repo. The script rejects path traversal,
-    unsafe archives, missing checksums and overwritten versions.
+10. Download the zip from Output onto D:\models\kaggle-downloads, or use the
+    external-drive Kaggle environment and download_from_kaggle.py owner/notebook/RUN_NUMBER
+    --version VERSION. VERSION must equal the adapter version printed in the notebook.
+    The official CLI file filter downloads only `ophanim-output.zip`, excluding
+    downloaded base weights and caches. Official credentials stay in
+    ~/.kaggle/kaggle.json (legacy), ~/.kaggle/access_token, or Kaggle environment
+    settings, never in this repo. The script rejects path traversal, unsafe archives,
+    missing checksums and overwritten versions. Allow 12 GiB free for zip plus extraction.
 11. Release only if extraction accuracy, valid-JSON rate and not-found accuracy
     improve without higher hallucination, separately by mode and English/Arabic.
     Full training and held-out checks must complete. Otherwise keep base + RAG.
@@ -112,6 +118,42 @@ held-out gates, not merely completing an epoch of this small bundle.
     Pin a reviewed llama.cpp source revision; install its converter requirements
     into the external-drive Python environment. Exports are safetensors, F16 GGUF,
     Q4_K_M, Q5_K_M and Q8_0. Previous versions remain available.
+
+For API submission when the browser editor fails, use the isolated official
+[Kaggle CLI](https://github.com/Kaggle/kaggle-cli/blob/main/docs/kernels.md).
+Its [authentication instructions](https://github.com/Kaggle/kaggle-cli/blob/main/docs/README.md#authentication)
+support a token in `C:\Users\Leonard\.kaggle\access_token`, legacy
+`C:\Users\Leonard\.kaggle\kaggle.json`, or `KAGGLE_API_TOKEN`. Set credentials
+locally; never paste tokens in chat or commit them. A custom legacy credential
+directory can be selected with `KAGGLE_CONFIG_DIR`.
+
+```powershell
+$env:PIP_CACHE_DIR='D:\models\tools\pip-cache'
+python -m venv D:\models\tools\kaggle-venv # Only when it does not already exist.
+$taskKagglePython='D:\models\tools\kaggle-venv\Scripts\python.exe'
+& $taskKagglePython -m pip install -r ml/requirements-kaggle.txt
+& $env:OPHANIM_PYTHON ml/scripts/prepare_kaggle_submission.py --kernel leonardvk/ophanim-continued-pretraining --dataset leonardvk/ophanim-cpt-synthetic-inputs-v3-20261011 --version NEW_SUBMISSION_VERSION
+& $taskKagglePython -m kaggle kernels status leonardvk/ophanim-continued-pretraining
+```
+
+After authentication succeeds, check that there is no existing active run before
+pushing once. The prepared folder already exists at
+`D:\models\kaggle-downloads\submission-cpt-v5-20261012-api`. It is a local,
+checksummed submission, **not a launched job**. Metadata keeps the notebook private
+and attaches only the private synthetic dataset. The notebook pins base revision
+`cdbee75f17c01a7cc42f958dc650907174af0554`. T4 ×2 is the allocation name;
+`CUDA_VISIBLE_DEVICES=0` restricts training to one GPU. A failed evaluation preserves
+the adapter and writes `evaluation_failure.json`; it cannot establish acceptance.
+
+```powershell
+& $taskKagglePython -m kaggle kernels push --path D:\models\kaggle-downloads\submission-cpt-v5-20261012-api --accelerator NvidiaTeslaT4 --timeout 43200
+& $taskKagglePython -m kaggle kernels status leonardvk/ophanim-continued-pretraining/RUN_NUMBER
+& $taskKagglePython ml/scripts/download_from_kaggle.py leonardvk/ophanim-continued-pretraining/RUN_NUMBER --version ADAPTER_VERSION_FROM_LOG
+```
+
+Confirm the API response and run number before claiming submission. Check the
+notebook logs for actual GPU, peak memory, epoch estimate and completion; download
+only after outputs are available. The 12-hour cap is a limit, not a measured runtime.
 
 Start a NEW Ollama daemon from a shell with OLLAMA_MODELS set (quit the existing
 tray daemon first, if it uses another directory). `ollama serve`, then in another
