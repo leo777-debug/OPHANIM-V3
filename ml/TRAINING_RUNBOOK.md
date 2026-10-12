@@ -1,10 +1,19 @@
 # Founder runbook
 
-The competition on **17 October 2026** uses a base model + RAG + prompts. Run full
-training afterwards. The founder selected **continued pretraining of an existing
+The competition on **17 October 2026** uses a base model + RAG + prompts until an
+accepted trained release is available. The founder selected **continued pretraining of an existing
 model**: unlabelled domain text, next-token prediction, QLoRA to fit 16 GB. This
 differs from the original supervised task training plan. No trained model is
 released until held-out gates pass. The original SFT scripts remain optional.
+
+The private [Kaggle notebook](https://www.kaggle.com/code/leonardvk/ophanim-continued-pretraining)
+already has [synthetic inputs v3](https://www.kaggle.com/datasets/leonardvk/ophanim-cpt-synthetic-inputs-v3-20261011)
+attached. Kaggle automatically expands the uploaded ZIP; the corrected setup cell
+supports expanded folders and an intact ZIP, verifies all hashes, and refuses unsafe
+paths or replacement of different staged files. As of 12 October, Kaggle still
+requires account verification before GPU and Internet can be selected. No full
+training job has started. Complete verification in Kaggle itself, then refresh the
+editor, select GPU and enable Internet before Save & Run All.
 
 1. Connect Leonard External Drive (D:), ideally USB 3. Existing files are preserved.
    Loading over USB is slower at startup; generation uses RAM after loading.

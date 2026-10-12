@@ -16,6 +16,26 @@ from pretrain import load_corpus,pack,verified_base
 
 
 class PipelineTests(unittest.TestCase):
+    def test_kaggle_accepts_expanded_inputs_and_rejects_corruption_and_traversal(self):
+        import hashlib,zipfile
+        from kaggle_inputs import stage_inputs
+        with tempfile.TemporaryDirectory(dir=root()/'eval') as directory:
+            folder=Path(directory);inputs=folder/'input';inputs.mkdir()
+            checks={'corpus/train.jsonl':hashlib.sha256(b'synthetic fixture').hexdigest()}
+            archive=inputs/'ophanim-cpt-input.zip'
+            with zipfile.ZipFile(archive,'w') as z:
+                z.writestr('corpus/train.jsonl',b'synthetic fixture');z.writestr('bundle_manifest.json',json.dumps(checks))
+            self.assertEqual(stage_inputs(inputs,folder/'zip-output')['form'],'zip')
+            # Explicitly simulate Kaggle's observed automatic expansion.
+            expanded=folder/'expanded';(expanded/'corpus').mkdir(parents=True)
+            (expanded/'corpus/train.jsonl').write_bytes(b'synthetic fixture')
+            (expanded/'bundle_manifest.json').write_text(json.dumps(checks))
+            self.assertEqual(stage_inputs(expanded,folder/'expanded-output')['verified_files'],1)
+            (expanded/'corpus/train.jsonl').write_bytes(b'corrupt')
+            with self.assertRaisesRegex(RuntimeError,'Corrupted input'):stage_inputs(expanded,folder/'bad-output')
+            (expanded/'bundle_manifest.json').write_text(json.dumps({'../outside':checks['corpus/train.jsonl']}))
+            with self.assertRaisesRegex(RuntimeError,'Unsafe input path'):stage_inputs(expanded,folder/'bad-output')
+
     def test_model_loading_rejects_unregistered_inputs_and_mixed_revisions(self):
         import os
         from unittest.mock import patch

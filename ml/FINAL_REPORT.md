@@ -1,14 +1,29 @@
-# Ophanim model and knowledge implementation — 11 October 2026
+# Ophanim model and knowledge implementation — 12 October 2026
 
 The founder selected **continued pretraining of an existing model**, using causal
 next-token loss on unlabelled domain text. The real Qwen 4B model completed a bounded
 CPU training test and saved an adapter. **No accepted production model is released.**
-The full GPU run needs a signed-in Kaggle account with an available accelerator;
-the browser was signed out and no Kaggle API credentials were available. This
-machine has no NVIDIA GPU. The founder's CPU also fails the main-model speed gate.
+The Kaggle account is now signed in, the private notebook is imported, and its
+private synthetic input dataset is attached. GPU and Internet remain disabled:
+Kaggle still asks for phone verification. The open Persona inquiry had expired;
+a fresh Kaggle verification form was opened on 12 October. No GPU training run
+has started. This machine has no NVIDIA GPU. The founder's CPU also fails the
+main-model speed gate.
 RAG ingestion, multilingual retrieval, actual SQL tenant isolation and three live
 grounded-answer tests now pass. These small synthetic tests do not establish
 competition readiness. Customer uploads are never training inputs.
+
+Prepared private resources: [continued-pretraining notebook](https://www.kaggle.com/code/leonardvk/ophanim-continued-pretraining)
+and [synthetic input dataset](https://www.kaggle.com/datasets/leonardvk/ophanim-cpt-synthetic-inputs-v3-20261011).
+Kaggle expanded the input ZIP into folders. The setup loader now supports both
+forms, validates every file hash before staging, and rejects unsafe paths or
+replacement of different staged files. The corrected setup cell was saved and
+checked again after reloading the editor. Notebook import created an initial CPU
+version before inputs/settings were attached; it is not a completed training run.
+An attempt to run only the setup/checksum cell on 12 October reached “Session is
+starting,” then Kaggle's editor displayed an unknown-error page. Refresh did not
+recover the editor, and the input cell has no confirmed execution result. No
+GPU/model-training completion or cloud performance measurement is claimed.
 
 ## Where the model is
 
@@ -285,18 +300,19 @@ Verification: production Next build, TypeScript, targeted TS/TSX lint and Compos
 configuration validation passed. The AiAnalyst hydration/mode lint errors were fixed.
 The app suite has 233 passing tests and five environment-dependent skips across
 63 files; isolated SQL/RLS + real embedding/model tests
-have four passing tests. Thirteen Python pipeline tests, Python compilation and
+have four passing tests. Fourteen Python pipeline tests, Python compilation and
 PowerShell syntax checks passed. This is not a repository-wide lint claim.
 
-Sign in to a GPU-enabled Kaggle account to run the prepared CPT notebook and private
-input bundle. Native PostgreSQL/Supabase private Storage, authenticated browser flows
+Complete Kaggle's current verification requirement to enable GPU/Internet and run
+the already attached private CPT inputs. Native PostgreSQL/Supabase private Storage, authenticated browser flows
 and concurrent workers still need deployment tests. Fix Docker Desktop startup for
 container runtime verification. Automatic approval review rejected the Windows OCR
 installer action with **“blocked by policy”**; scanned-document OCR remains unverified.
 Choose whether to evaluate a smaller 3B alternative or revise the ≥8 tokens/s target;
 the current main model has not met it. Review source rights/gazetteer and curate
 logistics-impact case studies. Evaluate improved prompts with real formatting and
-human Arabic/summary/citation review before the 17 October demonstration. Afterwards,
-run Kaggle 16 GB fit/time profiling, full continued pretraining and held-out comparison.
+human Arabic/summary/citation review before the 17 October demonstration. Run Kaggle
+16 GB fit/time profiling, full continued pretraining and held-out comparison when
+account access is enabled; base + RAG remains the fallback until acceptance.
 Full-model merging/quantization and Ollama installation are blocked on an accepted
 adapter. Customer data remains RAG-only throughout.
