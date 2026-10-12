@@ -15,8 +15,9 @@ was confirmed, T4 ×2 and Internet were enabled, and the UI showed 30 GPU hours
 remaining. The editor failed with `Firebase: Error (auth/internal-error)`; its
 Save & Run All attempt did not create a GPU run. No full training job has started.
 The official CLI is installed at `D:\models\tools\kaggle-venv`. Authentication
-still reports missing local credentials; the founder's configured credential
-file location is needed. Use the API procedure below once it is available.
+still reports missing local credentials; the founder confirmed none had been saved.
+The official CLI OAuth approval page is open, awaiting the founder's approval of
+the Kaggle SDK's `resources.admin` access. Use the API procedure below after approval.
 
 1. Connect Leonard External Drive (D:), ideally USB 3. Existing files are preserved.
    Loading over USB is slower at startup; generation uses RAM after loading.
@@ -124,8 +125,15 @@ For API submission when the browser editor fails, use the isolated official
 Its [authentication instructions](https://github.com/Kaggle/kaggle-cli/blob/main/docs/README.md#authentication)
 support a token in `C:\Users\Leonard\.kaggle\access_token`, legacy
 `C:\Users\Leonard\.kaggle\kaggle.json`, or `KAGGLE_API_TOKEN`. Set credentials
-locally; never paste tokens in chat or commit them. A custom legacy credential
-directory can be selected with `KAGGLE_CONFIG_DIR`.
+locally; never paste tokens in chat or commit them. Alternatively, run
+`D:\models\tools\kaggle-venv\Scripts\python.exe -m kaggle auth login` and
+approve the official Kaggle SDK in the browser. This creates persistent CLI access
+with the SDK's default `resources.admin` scope; review that permission yourself.
+The official flow saves credentials locally and prints only a sign-in confirmation.
+No manually copied token is needed. Keep the command running until the browser
+redirects to localhost and the command confirms login. Access can be revoked in
+Kaggle Account Settings. A custom legacy credential directory can be selected
+with `KAGGLE_CONFIG_DIR`.
 
 ```powershell
 $env:PIP_CACHE_DIR='D:\models\tools\pip-cache'

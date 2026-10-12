@@ -12,7 +12,9 @@ initial failed CPU version and zero active events. No GPU training run has start
 The official Kaggle CLI 2.2.4 is installed on the external drive and a checksummed
 private API submission is prepared. Its status command reports authentication
 required: no credentials are visible in the standard local files or environment.
-The founder reported configuring credentials; their exact file location is needed.
+The founder subsequently confirmed that no credentials had been saved. The official
+CLI OAuth flow is open at Kaggle's authorization page, awaiting the founder's
+approval of the Kaggle SDK's `resources.admin` access. No token is requested in chat.
 This machine has no NVIDIA GPU. The founder's CPU also fails the
 main-model speed gate.
 RAG ingestion, multilingual retrieval, actual SQL tenant isolation and three live
@@ -311,7 +313,7 @@ The app suite has 233 passing tests and five environment-dependent skips across
 have four passing tests. Fourteen Python pipeline tests, Python compilation and
 PowerShell syntax checks passed. This is not a repository-wide lint claim.
 
-Locate the configured Kaggle API credential file, authenticate, and submit the
+Complete the staged Kaggle CLI authorization (or configure a local token), authenticate, and submit the
 already attached private CPT inputs. Phone verification is complete. Native PostgreSQL/Supabase private Storage, authenticated browser flows
 and concurrent workers still need deployment tests. Fix Docker Desktop startup for
 container runtime verification. Automatic approval review rejected the Windows OCR
