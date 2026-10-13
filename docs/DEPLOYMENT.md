@@ -24,3 +24,10 @@ The import cron calls `/api/imports/cron`, which processes both legacy import jo
 ## Database migration policy
 
 Run migrations with `node db/run-migrations.mjs`. Do not edit a migration that has already been applied to a shared database; create a later numbered migration for corrective schema work. Back up production PostgreSQL before a large import or deployment.
+
+Knowledge adds pgvector, restricted RLS roles, private ingestion and embedding
+settings. Use [KNOWLEDGE.md](KNOWLEDGE.md) for native setup or the optional
+docker-compose.models.yml profile with CPU Ollama, embeddings, OCR and scheduler.
+This profile requires a mounted external model folder and a worker secret; weights
+are installed explicitly. [ml/FINAL_REPORT.md](../ml/FINAL_REPORT.md) records the
+outstanding database, runtime, model quality and training acceptance gates.

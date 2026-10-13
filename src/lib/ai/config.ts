@@ -8,7 +8,9 @@ export function parseAiConfig(value: unknown): AiProviderConfig | null {
   if (!value || typeof value !== 'object') return null;
   const raw = value as Partial<AiProviderConfig>;
   if ((raw.apiKey !== undefined && typeof raw.apiKey !== 'string') || typeof raw.baseUrl !== 'string' || typeof raw.model !== 'string') return null;
-  const config = { apiKey: raw.apiKey?.trim() ?? '', baseUrl: raw.baseUrl.trim(), model: raw.model.trim(), enabledTasks: tasks(raw.enabledTasks) };
+  const taskModels = raw.taskModels && typeof raw.taskModels==='object'
+    ? Object.fromEntries(Object.entries(raw.taskModels).filter(([task,model])=>AI_TASKS.includes(task as typeof AI_TASKS[number]) && typeof model==='string' && model.trim()).map(([task,model])=>[task,model.trim()])) : undefined;
+  const config = { apiKey: raw.apiKey?.trim() ?? '', baseUrl: raw.baseUrl.trim(), model: raw.model.trim(), enabledTasks: tasks(raw.enabledTasks), taskModels };
   return config.baseUrl && config.model ? config : null;
 }
 

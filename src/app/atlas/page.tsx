@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Layers, BarChart3, Newspaper, Search, X, Globe, MapPinned, Radar, Satellite, Moon, ExternalLink, AlertTriangle, Activity, Database, Wifi, Play, Network, Crosshair, Brain, Bookmark, Settings, FileUp } from 'lucide-react';
 import IntelligenceWorkbench, { type IntelligenceWorkbenchView } from '@/components/IntelligenceWorkbench';
@@ -1271,6 +1272,7 @@ export default function Dashboard() {
           <span className="text-[8px] text-[var(--text-muted)] font-medium tracking-[0.03em] opacity-70 truncate">
             Observe, investigate, and monitor live signals
           </span>
+          {isMobile && <Link href="/verify" className="text-[10px] font-semibold text-[var(--cyan-primary)]" title="Verify a public event claim">VERIFY</Link>}
         </div>
       </motion.div>
 
@@ -1283,6 +1285,7 @@ export default function Dashboard() {
             <button onClick={() => window.dispatchEvent(new Event('ophanim:open-watchlists'))} className="ophanim-command-button" title="Open Watchlists"><Bookmark className="w-4 h-4" /><span>WATCH</span></button>
             <button onClick={() => window.location.assign('/imports')} className="ophanim-command-button" title="Import organization CSV data"><FileUp className="w-4 h-4" /><span>IMPORT</span></button>
             <button onClick={() => setShowProviders((value) => !value)} className="ophanim-command-button" title="View provider and source status"><Database className="w-4 h-4" /><span>SOURCES</span></button>
+            <Link href="/verify" className="ophanim-command-button" title="Verify a public event claim" aria-label="Verify a public event claim"><Search className="w-4 h-4" /></Link>
           </div>
         </motion.div>
       )}

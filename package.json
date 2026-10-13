@@ -21,6 +21,7 @@
     "framer-motion": "^12.38.0",
     "google-libphonenumber": "^3.2.44",
     "hls.js": "^1.6.16",
+    "htmlparser2": "10.0.0",
     "lucide-react": "^1.14.0",
     "maplibre-gl": "^5.24.0",
     "motion": "13.1.0",
@@ -40,6 +41,8 @@
     "ws": "^8.21.0"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "@electric-sql/pglite-pgvector": "^0.0.9",
     "@tailwindcss/postcss": "^4",
     "@types/google-libphonenumber": "^7.4.30",
     "@types/node": "^20",

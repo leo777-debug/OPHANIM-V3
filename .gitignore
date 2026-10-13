@@ -47,7 +47,7 @@ scanner/
 threatfox.json
 
 # Dev scripts (one-time migration helpers)
-scripts/
+/scripts/
 
 # AI agent config files
 CLAUDE.md
@@ -73,3 +73,20 @@ scanner_backend_backup.js
 /test-artifacts/*.png
 /test-artifacts/full-walkthrough-raw/
 /supabase/.temp/
+
+# ML artifacts and private knowledge: rebuild with ml/scripts, never commit.
+/ml/.venv/
+**/__pycache__/
+/ml/data/*.jsonl
+/ml/data/generated/
+/ml/eval/results/
+/knowledge/past/*
+/knowledge/present/*
+!/knowledge/past/.gitkeep
+!/knowledge/present/.gitkeep
+*.gguf
+*.safetensors
+*.pt
+*.bin
+/models/
+/.knowledge-storage/

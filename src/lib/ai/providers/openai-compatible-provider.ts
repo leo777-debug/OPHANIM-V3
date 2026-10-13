@@ -1,6 +1,7 @@
 import { validateHost } from '@/lib/ssrf-guard';
 import { buildAiMessages } from '../task-policy';
 import type { AiGenerationRequest, AiProvider, AiProviderConfig } from './types';
+import { TASK_SCHEMAS } from '../task-schemas';
 
 function endpoint(baseUrl: string): URL {
   const url = new URL(baseUrl);
@@ -32,7 +33,7 @@ export const openAiCompatibleProvider: AiProvider = {
     const response = await fetch(url, {
       method: 'POST', redirect: 'error', signal: AbortSignal.timeout(120_000),
       headers: { 'Content-Type': 'application/json', ...(config.apiKey ? { Authorization: `Bearer ${config.apiKey}` } : {}) },
-      body: JSON.stringify({ model: config.model, messages: buildAiMessages(request), temperature: 0.2 }),
+      body: JSON.stringify({ model: config.model, messages: buildAiMessages(request), temperature: 0.2, max_tokens: 1200, ...(TASK_SCHEMAS[request.task] ? { response_format: { type:'json_object' } } : {}) }),
     });
     if (!response.ok) throw new Error(`AI provider returned ${response.status}`);
     const payload = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
