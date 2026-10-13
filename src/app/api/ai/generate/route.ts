@@ -4,10 +4,13 @@ import { generateWithRouting } from '@/lib/ai/local-model';
 import { validateTaskOutput } from '@/lib/ai/task-validation';
 import { AI_TASKS, type AiGenerationRequest } from '@/lib/ai/providers/types';
 import { getClientIp, isRateLimited } from '@/lib/ssrf-guard';
+import { authorizeAiRequest } from '@/lib/ai/access';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
+  const denied = await authorizeAiRequest(request);
+  if (denied) return denied;
   if (isRateLimited(getClientIp(request), 10, 60_000)) return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
   let body: { task?: string; input?: unknown; context?: unknown; config?: unknown };
   try { body = await request.json(); } catch { return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 }); }

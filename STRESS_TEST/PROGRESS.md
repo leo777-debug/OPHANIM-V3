@@ -29,7 +29,9 @@ do not treat a scaffold, mocked unit test or unavailable database as complete co
 - Original checkout contains unrelated model-training edits. They remain untouched.
 - Docker is installed but still has no reachable Linux daemon after startup. Local database setup pending.
 - Isolated PGlite runner passes 2 RLS integration tests using real PostgreSQL SQL semantics; this is not concurrent-server or full tenant-matrix coverage.
-- Preliminary review found publicly accessible AI routes that may use server credentials. Reproduction tests and fixes pending; no provider requests made.
+- SEC-001 reproduced with five failing mock tests. Added shared login/CSRF/user-budget guards for five AI routes and optional Verify AI; 13 new tests pass, four existing Verify HTTP tests pass. TypeScript passes. No live model calls.
+- Gitleaks scanned 314 commits and staged changes with full redaction. No new staged leaks; two historical FIRMS key locations require founder rotation. Docker source-revision ARG is a documented false positive. No history rewrite.
+- Audit baseline: two critical, nine high, one moderate. Next/Sharp patches applied; patched MapLibre imports migrated to named exports. Dependency and browser validation still in progress.
 - This checkout intentionally has no copied production/provider secrets.
 
 ## Next

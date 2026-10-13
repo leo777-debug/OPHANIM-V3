@@ -3,9 +3,11 @@ import { parseWithOptionalAi } from '@/lib/verify/ai';
 import { parseClaimText } from '@/lib/verify/claim';
 import { fetchArticle } from '@/lib/verify/url-fetch';
 import { errorResponse, jsonResponse, readBody, requestContext } from '@/lib/verify/http';
+import { authorizeAiRequest } from '@/lib/ai/access';
 export const runtime = 'nodejs';
 export async function POST(request: NextRequest) {
   try { const { owner } = await requestContext(request, true); const body = await readBody(request);
+    if (body.useAi === true) { const denied = await authorizeAiRequest(request); if (denied) return denied; }
     const text = typeof body.text === 'string' ? body.text : '';
     parseClaimText(text);
     let articleText = '', warning = '';

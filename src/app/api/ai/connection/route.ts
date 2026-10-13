@@ -2,8 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { parseAiConfig } from '@/lib/ai/config';
 import { openAiCompatibleProvider } from '@/lib/ai/providers/openai-compatible-provider';
 import { getClientIp, isRateLimited } from '@/lib/ssrf-guard';
+import { authorizeAiRequest } from '@/lib/ai/access';
 
 export async function POST(request: NextRequest) {
+  const denied = await authorizeAiRequest(request);
+  if (denied) return denied;
   if (isRateLimited(getClientIp(request), 5, 60_000)) return NextResponse.json({ error: 'Please wait before testing again.' }, { status: 429 });
   let config;
   try { config = parseAiConfig(await request.json()); }

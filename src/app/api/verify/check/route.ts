@@ -4,10 +4,12 @@ import { summarizeWithOptionalAi } from '@/lib/verify/ai';
 import { fetchArticle } from '@/lib/verify/url-fetch';
 import { remember, readRun, saveRun } from '@/lib/verify/store';
 import { errorResponse, jsonResponse, readBody, requestContext, VerifyHttpError } from '@/lib/verify/http';
+import { authorizeAiRequest } from '@/lib/ai/access';
 export const runtime = 'nodejs';
 export async function POST(request: NextRequest) {
   try {
     const { actor, owner } = await requestContext(request, true); const body = await readBody(request);
+    if (body.useAi === true) { const denied = await authorizeAiRequest(request); if (denied) return denied; }
     if (body.confirmed !== true) throw new VerifyHttpError('Review and confirm the parsed claim first.', 400);
     const previousId = typeof body.previousId === 'string' ? body.previousId : undefined;
     const previous = previousId ? await readRun(previousId, actor, owner) : null;

@@ -7,6 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { authorizeAiRequest } from '@/lib/ai/access';
 import {
   createGeminiClient,
   rotateApiKey,
@@ -99,6 +100,8 @@ interface ErrorResponse {
 export async function POST(
   request: NextRequest
 ): Promise<NextResponse<AnalyzeResponse | ErrorResponse>> {
+  const denied = await authorizeAiRequest(request);
+  if (denied) return denied;
   // Extract client IP
   const ip =
     request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
