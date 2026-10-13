@@ -1,0 +1,1 @@
+Continue the Ophanim stress test. Check out branch stress-test/competition, read STRESS_TEST/state.json and STRESS_TEST/PROGRESS.md, and continue from the first task that is not done, following the rules in STRESS_TEST/PROMPT.md. If finished is true, print the final summary and stop.

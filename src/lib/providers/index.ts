@@ -16,6 +16,7 @@ import { infrastructureMapProvider } from './providers/infrastructure-map-provid
 import { warSanctionsProvider } from './providers/war-sanctions-provider';
 import { voidAccessProvider } from './providers/voidaccess-provider';
 import { ProviderRegistry } from './provider-registry';
+import { shodanProvider } from './providers/shodan-provider';
 import { classifySearch, type SearchInput } from './query-classifier';
 import type { ProviderExecutionContext, ProviderQuery } from './types';
 
@@ -25,6 +26,7 @@ export { providerMetrics } from './provider-metrics';
 
 const registry = new ProviderRegistry([
   ipIntelligenceProvider,
+  shodanProvider,
   domainIntelligenceProvider,
   emailBreachProvider,
   githubUsernameProvider,
@@ -67,7 +69,7 @@ export async function searchProviders(input: SearchInput, context: Omit<Provider
   }
 
   const allowed = context.allowedProviderIds?.length ? new Set(context.allowedProviderIds) : null;
-  const providers = registry.findProviders(query).filter((provider) => !allowed || allowed.has(provider.metadata.id ?? provider.metadata.name));
+  const providers = registry.findProviders(query).filter((provider) => (provider.metadata.id !== 'shodan' || Boolean(context.organizationId)) && (!allowed || allowed.has(provider.metadata.id ?? provider.metadata.name)));
   return enrichmentManager.enrich(query, providers, context);
 }
 
@@ -95,6 +97,6 @@ export async function checkWatchlistProviders(
       port: { intent: 'port_lookup', entityType: 'port' }, company: { intent: 'company_lookup', entityType: 'company' },
       region: { intent: 'region_lookup', entityType: 'region' }, country: { intent: 'country_lookup', entityType: 'country' },
     }[item.type] as Pick<ProviderQuery, 'intent' | 'entityType'>), query: value, limit: 8 });
-  const response = await enrichmentManager.enrich(query, registry.findProviders(query), context);
+  const response = await enrichmentManager.enrich(query, registry.findProviders(query).filter((provider) => provider.metadata.id !== 'shodan' || Boolean(context.organizationId)), context);
   return { ...response, coverage: response.diagnostics.length ? 'available' as const : 'unavailable' as const };
 }

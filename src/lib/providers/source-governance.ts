@@ -41,6 +41,12 @@ const DEFAULT_GOVERNANCE: Omit<SourceGovernanceRecord, "provider"> = {
 };
 
 const RECORDS: Record<string, Omit<SourceGovernanceRecord, "provider">> = {
+  shodan: {
+    attribution: "Shodan (https://www.shodan.io). Observation dates are retained.",
+    licensing: "Shodan API subscription terms; commercial redistribution requires review of your agreement.",
+    retentionHours: 1,
+    notes: "Server-configured API key only. Searches are passive; active scans require owner authorization and a configured target allowlist.",
+  },
   "war-sanctions": {
     attribution: "War & Sanctions, Defence Intelligence of Ukraine.",
     licensing: "Use subject to the source terms and applicable law.",
