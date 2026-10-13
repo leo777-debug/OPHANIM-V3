@@ -13,13 +13,17 @@ CPU LoRA smoke run used a tiny random test fixture, not the 4B base model. Real
 measurements are in FINAL_REPORT.md and eval/REPORT.md. The provisional 4B model
 fails the founder's 8 tokens/second CPU gate and the initial 50-case grounded-QA
 evaluation. Three subsequent live RAG cases passed with valid evidence/refusal;
-broader held-out evaluation and full GPU training have not run.
+broader held-out evaluation remains pending.
 
-On 13 October Kaggle version 3 was submitted for full CPT and held-out evaluation.
+On 13 October Kaggle version 3 completed CPT on a Tesla T4: 18 optimizer steps,
+144,876 tokens, 385.93 seconds elapsed and 5.11 GiB peak allocated GPU memory.
+Validation loss improved 2.303625 → 2.280127 and perplexity 10.0104 → 9.7779;
+adapter parameter update L2 was 0.170264. The adapter is
+`cpt-20261013-172004`, still on Kaggle while held-out evaluation runs.
 Version 2 allocated a Tesla T4 but failed the original disk preflight before any
 optimizer step. The retry uses actual download sizes plus adapter checkpoint
 headroom and pins the input bundle hash. Submission is not training completion;
-no accepted GPU-trained model is claimed until results are available.
+no accepted GPU-trained release is claimed until task results are available.
 
 Base: Qwen/Qwen3-4B-Instruct-2507, [Apache-2.0 licence](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507/blob/main/LICENSE).
 Commercial use and modification are allowed; preserve licence, notices and

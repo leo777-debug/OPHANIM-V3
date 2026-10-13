@@ -17,8 +17,10 @@ Save & Run All attempt did not create a GPU run. The founder approved official C
 OAuth, and authentication now succeeds. **Version 2 failed before training** on a
 Tesla T4 because its fixed disk preflight exceeded the available working volume.
 It consumed 0.06 GPU quota hours. **Version 3 was submitted on 13 October** with
-the corrected disk budget and updated private inputs. GPU training completion
-and evaluation remain pending. The official CLI is installed at
+the corrected disk budget and updated private inputs. CPT completed: 18 steps,
+144,876 tokens, 385.93 seconds elapsed, 5.11 GiB peak allocation. Adapter
+`cpt-20261013-172004` is still on Kaggle while held-out evaluation and packaging
+run. It is not accepted merely because validation loss improved. The official CLI is installed at
 `D:\models\tools\kaggle-venv`; no token is copied into chat or the repository.
 
 1. Connect Leonard External Drive (D:), ideally USB 3. Existing files are preserved.
@@ -35,6 +37,8 @@ $env:OLLAMA_MODELS=Join-Path $env:OPHANIM_MODELS_DIR 'ollama'
 python -m venv D:\models\tools\ophanim-venv
 $env:OPHANIM_PYTHON='D:\models\tools\ophanim-venv\Scripts\python.exe'
 $env:PIP_CACHE_DIR='D:\models\tools\pip-cache'
+$env:PYTHONUTF8='1'
+$env:PYTHONIOENCODING='utf-8'
 & $env:OPHANIM_PYTHON -m pip install -r ml/requirements-cpu.txt
 & $env:OPHANIM_PYTHON ml/scripts/download_base_models.py
 ```
