@@ -1,4 +1,4 @@
-# Kaggle Python 3.11/3.12, single 16 GB CUDA GPU. fp16, never bf16.
+# Kaggle Python 3.13 observed; single 16 GB CUDA GPU. fp16, never bf16.
 # CUDA 12.4 wheel retains Pascal/P100 support; installed explicitly in notebook.
 torch==2.6.0
 transformers==4.57.1

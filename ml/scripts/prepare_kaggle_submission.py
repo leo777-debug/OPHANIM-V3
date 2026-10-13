@@ -2,17 +2,24 @@
 import argparse
 import json
 import re
-from model_store import root, inside, register
+import hashlib
+import zipfile
+from pathlib import Path
+from model_store import root, inside, register, verify
 from prepare_pretraining import notebook, BASE_REVISION
 
 
-def prepare(kernel, dataset, version):
+def prepare(kernel, dataset, version, bundle):
     for value in (kernel, dataset):
         if not re.fullmatch(r'[A-Za-z0-9_-]+/[A-Za-z0-9_-]+', value):
             raise ValueError('Expected owner/slug for the notebook and private dataset')
     if not re.fullmatch(r'[A-Za-z0-9_-]+', version):
         raise ValueError('Use a simple new submission version')
     store = root(10 * 1024**2)
+    bundle = Path(bundle).resolve()
+    bundle = verify(store, bundle.relative_to(store).as_posix())
+    with zipfile.ZipFile(bundle) as archive:
+        expected_manifest_sha256 = hashlib.sha256(archive.read('bundle_manifest.json')).hexdigest()
     target = inside(store, f'kaggle-downloads/submission-{version}')
     if target.exists():
         raise RuntimeError('Submission version exists; choose a new version')
@@ -23,9 +30,10 @@ def prepare(kernel, dataset, version):
                     enable_internet=True, machine_shape='NvidiaTeslaT4',
                     dataset_sources=[dataset], competition_sources=[],
                     kernel_sources=[], model_sources=[])
-    files = {code_file: notebook(), 'kernel-metadata.json': metadata,
+    files = {code_file: notebook(expected_manifest_sha256), 'kernel-metadata.json': metadata,
              'submission.json': dict(kernel=kernel, dataset=dataset,
                                      base_revision=BASE_REVISION,
+                                     input_manifest_sha256=expected_manifest_sha256,
                                      uses_one_gpu=True, submitted=False)}
     for name, data in files.items():
         file = target / name
@@ -40,5 +48,6 @@ if __name__ == '__main__':
     parser.add_argument('--kernel', required=True)
     parser.add_argument('--dataset', required=True)
     parser.add_argument('--version', required=True)
+    parser.add_argument('--bundle', required=True, help='Registered private input ZIP on the external model disk')
     args = parser.parse_args()
-    print(prepare(args.kernel, args.dataset, args.version))
+    print(prepare(args.kernel, args.dataset, args.version, args.bundle))

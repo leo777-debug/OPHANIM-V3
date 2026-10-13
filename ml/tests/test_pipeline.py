@@ -16,6 +16,29 @@ from pretrain import load_corpus,pack,verified_base
 
 
 class PipelineTests(unittest.TestCase):
+    def test_download_budget_fits_kaggle_volume_and_still_rejects_insufficient_space(self):
+        import os
+        from unittest.mock import patch
+        from collections import namedtuple
+        from download_base_models import download
+        usage=namedtuple('usage','total used free')
+        with tempfile.TemporaryDirectory(dir=root()/'eval') as directory:
+            with patch.dict(os.environ,{'OPHANIM_MODELS_DIR':directory}):
+                info={'sha':'fixture-revision','siblings':[{'rfilename':'model.safetensors','size':8*1024**3}]}
+                response=io.BytesIO(json.dumps(info).encode())
+                def fake_download(repo,name,revision,local_dir):
+                    file=Path(local_dir)/name;file.write_bytes(b'synthetic download fixture');return str(file)
+                # 11 GiB is less than the old fixed 12/20 GiB check, but fits
+                # 8 GiB base + 2 GiB adapter checkpoints + 512 MiB reserve.
+                with patch('shutil.disk_usage',return_value=usage(20*1024**3,9*1024**3,11*1024**3)),patch('urllib.request.urlopen',return_value=response),patch('huggingface_hub.hf_hub_download',side_effect=fake_download) as fetch:
+                    download('fixture/model','base',extra_required_bytes=2*1024**3)
+                    fetch.assert_called_once()
+                response=io.BytesIO(json.dumps({'sha':'fixture','siblings':[{'rfilename':'other.safetensors','size':16*1024**3}]}).encode())
+                with patch('shutil.disk_usage',return_value=usage(20*1024**3,9*1024**3,11*1024**3)),patch('urllib.request.urlopen',return_value=response),patch('huggingface_hub.hf_hub_download') as fetch:
+                    with self.assertRaisesRegex(RuntimeError,'Insufficient free space'):
+                        download('fixture/too-large','base',extra_required_bytes=2*1024**3)
+                    fetch.assert_not_called()
+
     def test_kaggle_accepts_expanded_inputs_and_rejects_corruption_and_traversal(self):
         import hashlib,zipfile
         from kaggle_inputs import stage_inputs
@@ -26,6 +49,8 @@ class PipelineTests(unittest.TestCase):
             with zipfile.ZipFile(archive,'w') as z:
                 z.writestr('corpus/train.jsonl',b'synthetic fixture');z.writestr('bundle_manifest.json',json.dumps(checks))
             self.assertEqual(stage_inputs(inputs,folder/'zip-output')['form'],'zip')
+            with self.assertRaisesRegex(RuntimeError,'pinned submission bundle'):
+                stage_inputs(inputs,folder/'wrong-version','0'*64)
             # Explicitly simulate Kaggle's observed automatic expansion.
             expanded=folder/'expanded';(expanded/'corpus').mkdir(parents=True)
             (expanded/'corpus/train.jsonl').write_bytes(b'synthetic fixture')

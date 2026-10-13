@@ -75,7 +75,10 @@ def verified_base(store, relative, model_id):
 
 
 def run(args):
-    store = root(1024**3 if args.cpu_smoke else 20 * 1024**3)
+    # QLoRA saves adapter/optimizer checkpoints, never full 4B checkpoints.
+    # The base downloader separately reserves its actual missing file bytes.
+    checkpoint_reserve = 1024**3 if args.cpu_smoke else 2 * 1024**3
+    store = root(checkpoint_reserve)
     import torch
     from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, Trainer, TrainerCallback, TrainingArguments
     from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
@@ -112,7 +115,7 @@ def run(args):
             revision = revision or model_info(config['model_id']).sha
             if args.base != f'base/{config["model_id"].replace("/", "--")}':
                 raise RuntimeError('Download the selected base into its registered model folder first')
-            download(config['model_id'], 'base', revision=revision)
+            download(config['model_id'], 'base', revision=revision, extra_required_bytes=checkpoint_reserve)
         base, installed_revision = verified_base(store, args.base, config['model_id'])
         if revision and installed_revision != revision:
             raise RuntimeError('Installed base differs from the requested/resume revision; existing weights are never overwritten')

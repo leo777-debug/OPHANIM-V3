@@ -5,7 +5,7 @@ import zipfile
 from pathlib import Path
 
 
-def stage_inputs(input_root, output_root):
+def stage_inputs(input_root, output_root, expected_manifest_sha256=None):
     inputs = Path(input_root)
     output = Path(output_root).resolve()
     archives = list(inputs.rglob('ophanim-cpt-input.zip'))
@@ -15,7 +15,8 @@ def stage_inputs(input_root, output_root):
             names = archive.namelist()
             if len(names) != len(set(names)):
                 raise RuntimeError('Duplicate archive entries')
-            checks = json.loads(archive.read('bundle_manifest.json'))
+            manifest_bytes = archive.read('bundle_manifest.json')
+            checks = json.loads(manifest_bytes)
             if set(checks) != set(names) - {'bundle_manifest.json'}:
                 raise RuntimeError('Incomplete bundle')
             payload = {name: archive.read(name) for name in checks}
@@ -23,7 +24,8 @@ def stage_inputs(input_root, output_root):
     elif not archives and len(manifests) == 1:
         # Kaggle's dataset uploader automatically expands ZIP archives.
         folder = manifests[0].parent.resolve()
-        checks = json.loads(manifests[0].read_text(encoding='utf-8'))
+        manifest_bytes = manifests[0].read_bytes()
+        checks = json.loads(manifest_bytes)
         payload = {}
         for name in checks:
             file = (folder / name).resolve()
@@ -33,6 +35,9 @@ def stage_inputs(input_root, output_root):
         source = str(folder); form = 'expanded'
     else:
         raise RuntimeError('Attach exactly one private Ophanim CPT input dataset')
+
+    if expected_manifest_sha256 and hashlib.sha256(manifest_bytes).hexdigest() != expected_manifest_sha256:
+        raise RuntimeError('Attached dataset is not the pinned submission bundle')
 
     # Validate the entire bundle before writing or executing any input code.
     for name, data in payload.items():

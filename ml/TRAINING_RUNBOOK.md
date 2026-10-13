@@ -13,11 +13,13 @@ supports expanded folders and an intact ZIP, verifies all hashes, and refuses un
 paths or replacement of different staged files. On 12 October phone verification
 was confirmed, T4 ×2 and Internet were enabled, and the UI showed 30 GPU hours
 remaining. The editor failed with `Firebase: Error (auth/internal-error)`; its
-Save & Run All attempt did not create a GPU run. No full training job has started.
-The official CLI is installed at `D:\models\tools\kaggle-venv`. Authentication
-still reports missing local credentials; the founder confirmed none had been saved.
-The official CLI OAuth approval page is open, awaiting the founder's approval of
-the Kaggle SDK's `resources.admin` access. Use the API procedure below after approval.
+Save & Run All attempt did not create a GPU run. The founder approved official CLI
+OAuth, and authentication now succeeds. **Version 2 failed before training** on a
+Tesla T4 because its fixed disk preflight exceeded the available working volume.
+It consumed 0.06 GPU quota hours. **Version 3 was submitted on 13 October** with
+the corrected disk budget and updated private inputs. GPU training completion
+and evaluation remain pending. The official CLI is installed at
+`D:\models\tools\kaggle-venv`; no token is copied into chat or the repository.
 
 1. Connect Leonard External Drive (D:), ideally USB 3. Existing files are preserved.
    Loading over USB is slower at startup; generation uses RAM after loading.
@@ -39,7 +41,10 @@ $env:PIP_CACHE_DIR='D:\models\tools\pip-cache'
 
 The uncommitted .env may override OPHANIM_MODELS_DIR. Download scripts load that
 setting only. No missing-drive fallback or model download to C: is allowed.
-Use Python 3.11/3.12 for the full Kaggle stack. Windows CPU smoke can use a
+Kaggle's observed image uses Python 3.13; its CUDA 12.4 torch 2.6 wheel installed
+successfully. The notebook removes incompatible optional vision/audio packages
+in that disposable session and disables TensorFlow/Flax imports. Full GPU training
+still needs runtime verification. Windows CPU smoke can use a
 supported CPU PyTorch wheel (the development run used Python 3.14 / torch 2.9.1).
 
 3. Generate the unlabelled corpus and private CPT input bundle. The separate
@@ -54,8 +59,8 @@ supported CPU PyTorch wheel (the development run used Python 3.14 / torch 2.9.1)
 Choose a NEW dataset version if one already exists; never overwrite a held-out
 test. The generator excludes customer uploads. Verify DATA_CARD.md and the
 synthetic-only bundle before uploading. All generated data is ignored by Git.
-The prepared final bundle is
-`D:\models\kaggle-downloads\ophanim-cpt-cpt-v3-20261011\ophanim-cpt-input.zip`;
+The updated private bundle is
+`D:\models\kaggle-downloads\ophanim-cpt-cpt-v4-20261013\ophanim-cpt-input.zip`;
 import `ml/kaggle/ophanim_continued_pretraining.ipynb`. The corpus has only 1,440
 passages from a few procedural templates. It validates the pipeline; useful
 production pretraining requires a more diverse licence-cleared corpus and the
@@ -71,6 +76,11 @@ held-out gates, not merely completing an epoch of this small bundle.
    wheel. CUDA 12.8+ wheels omit Pascal, so do not substitute a newer CUDA build
    without checking compatibility. Base and adapter checksums are verified before
    loading; training and evaluation use registered local weights only.
+   Download space is computed from missing upstream files, with 2 GiB reserved
+   for adapter/optimizer checkpoints and a further 512 MiB safety margin. This
+   fits the intended 20 GiB working volume without disabling space checks. The
+   notebook disables Xet's extra chunk cache and pip's wheel cache, then prints
+   free space before downloading. It does not write a duplicate base cache.
 5. Upload the input zip as a **private Kaggle Dataset**. No customer files, personal
    data, consent proofs or production secrets. Import ml/kaggle/ophanim_continued_pretraining.ipynb,
    attach that dataset, select GPU in Settings → Accelerator, turn Internet on
@@ -140,21 +150,23 @@ $env:PIP_CACHE_DIR='D:\models\tools\pip-cache'
 python -m venv D:\models\tools\kaggle-venv # Only when it does not already exist.
 $taskKagglePython='D:\models\tools\kaggle-venv\Scripts\python.exe'
 & $taskKagglePython -m pip install -r ml/requirements-kaggle.txt
-& $env:OPHANIM_PYTHON ml/scripts/prepare_kaggle_submission.py --kernel leonardvk/ophanim-continued-pretraining --dataset leonardvk/ophanim-cpt-synthetic-inputs-v3-20261011 --version NEW_SUBMISSION_VERSION
+& $env:OPHANIM_PYTHON ml/scripts/prepare_kaggle_submission.py --kernel leonardvk/ophanim-continued-pretraining --dataset leonardvk/ophanim-cpt-synthetic-inputs-v3-20261011 --version NEW_SUBMISSION_VERSION --bundle D:\models\kaggle-downloads\ophanim-cpt-cpt-v4-20261013\ophanim-cpt-input.zip
 & $taskKagglePython -m kaggle kernels status leonardvk/ophanim-continued-pretraining
 ```
 
 After authentication succeeds, check that there is no existing active run before
 pushing once. The prepared folder already exists at
-`D:\models\kaggle-downloads\submission-cpt-v5-20261012-api`. It is a local,
-checksummed submission, **not a launched job**. Metadata keeps the notebook private
+`D:\models\kaggle-downloads\submission-cpt-v6-20261013-api`. It was submitted
+successfully as version 3; **do not push it again while that run is active**.
+Metadata keeps the notebook private
 and attaches only the private synthetic dataset. The notebook pins base revision
 `cdbee75f17c01a7cc42f958dc650907174af0554`. T4 ×2 is the allocation name;
+the private input manifest hash is pinned too, so an older dataset version is rejected.
 `CUDA_VISIBLE_DEVICES=0` restricts training to one GPU. A failed evaluation preserves
 the adapter and writes `evaluation_failure.json`; it cannot establish acceptance.
 
 ```powershell
-& $taskKagglePython -m kaggle kernels push --path D:\models\kaggle-downloads\submission-cpt-v5-20261012-api --accelerator NvidiaTeslaT4 --timeout 43200
+& $taskKagglePython -m kaggle kernels push --path D:\models\kaggle-downloads\submission-cpt-v6-20261013-api --accelerator NvidiaTeslaT4 --timeout 43200
 & $taskKagglePython -m kaggle kernels status leonardvk/ophanim-continued-pretraining/RUN_NUMBER
 & $taskKagglePython ml/scripts/download_from_kaggle.py leonardvk/ophanim-continued-pretraining/RUN_NUMBER --version ADAPTER_VERSION_FROM_LOG
 ```

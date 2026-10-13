@@ -15,6 +15,12 @@ fails the founder's 8 tokens/second CPU gate and the initial 50-case grounded-QA
 evaluation. Three subsequent live RAG cases passed with valid evidence/refusal;
 broader held-out evaluation and full GPU training have not run.
 
+On 13 October Kaggle version 3 was submitted for full CPT and held-out evaluation.
+Version 2 allocated a Tesla T4 but failed the original disk preflight before any
+optimizer step. The retry uses actual download sizes plus adapter checkpoint
+headroom and pins the input bundle hash. Submission is not training completion;
+no accepted GPU-trained model is claimed until results are available.
+
 Base: Qwen/Qwen3-4B-Instruct-2507, [Apache-2.0 licence](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507/blob/main/LICENSE).
 Commercial use and modification are allowed; preserve licence, notices and
 copyright, mark modifications; no trademark grant. Backup Phi-4-mini-instruct
