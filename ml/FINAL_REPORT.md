@@ -328,7 +328,7 @@ Verification: production Next build, TypeScript, targeted TS/TSX lint and Compos
 configuration validation passed. The AiAnalyst hydration/mode lint errors were fixed.
 The app suite has 233 passing tests and five environment-dependent skips across
 63 files; isolated SQL/RLS + real embedding/model tests
-have four passing tests. Fifteen Python pipeline tests, Python compilation and
+have four passing tests. Seventeen Python pipeline tests, Python compilation and
 PowerShell syntax checks passed. This is not a repository-wide lint claim.
 
 Monitor the submitted Kaggle version 3, record actual GPU training and held-out

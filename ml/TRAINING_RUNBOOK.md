@@ -120,6 +120,11 @@ held-out gates, not merely completing an epoch of this small bundle.
     ~/.kaggle/kaggle.json (legacy), ~/.kaggle/access_token, or Kaggle environment
     settings, never in this repo. The script rejects path traversal, unsafe archives,
     missing checksums and overwritten versions. Allow 12 GiB free for zip plus extraction.
+    The installed CLI reads latest session outputs even when a run number is
+    supplied. The wrapper verifies the requested run against current notebook
+    metadata before and after download, rejecting mismatches. All archive member
+    checksums are validated before any adapter directory is created. Failed
+    downloads are preserved; retries use a fresh attempt directory.
 11. Release only if extraction accuracy, valid-JSON rate and not-found accuracy
     improve without higher hallucination, separately by mode and English/Arabic.
     Full training and held-out checks must complete. Otherwise keep base + RAG.

@@ -16,6 +16,24 @@ from pretrain import load_corpus,pack,verified_base
 
 
 class PipelineTests(unittest.TestCase):
+    def test_kaggle_download_rejects_silently_changed_run(self):
+        from download_from_kaggle import require_run
+        self.assertEqual(require_run('owner/notebook/3',3),'owner/notebook')
+        with self.assertRaisesRegex(RuntimeError,'no longer latest'):
+            require_run('owner/notebook/2',3)
+
+    def test_adapter_zip_integrity_is_checked_before_import(self):
+        import hashlib,zipfile
+        from download_from_kaggle import validate_archive
+        data=b'synthetic adapter fixture';checks={'adapter_model.safetensors':hashlib.sha256(data).hexdigest()}
+        stream=io.BytesIO()
+        with zipfile.ZipFile(stream,'w') as archive:
+            archive.writestr('adapter_model.safetensors',b'corrupted')
+            archive.writestr('checksums.json',json.dumps(checks))
+        with zipfile.ZipFile(io.BytesIO(stream.getvalue())) as archive:
+            with self.assertRaisesRegex(RuntimeError,'checksum mismatch'):
+                validate_archive(archive,'fixture')
+
     def test_download_budget_fits_kaggle_volume_and_still_rejects_insufficient_space(self):
         import os
         from unittest.mock import patch
