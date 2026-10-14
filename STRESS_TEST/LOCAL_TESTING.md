@@ -25,11 +25,15 @@ Artifacts contain synthetic screenshots and measured check results. Runtime cont
 
 After building, run `node STRESS_TEST/tenant-http.mjs`. It owns and stops its
 loopback app/database processes, seeds two synthetic owner organizations, and
-checks 42 positive-control, foreign-read/write and child-link assertions. The
+checks 72 positive-control, foreign-read/write, child-link and session assertions. The
 final artifact is `STRESS_TEST/artifacts/tenant-http.json`; the original four
 child-link failures are retained in `tenant-http-before-fix.json`. Runtime
-session tokens are synthetic, local-only and ignored. Knowledge, Verify,
-alerts, file access and remaining child links still need HTTP coverage.
+session tokens are synthetic, local-only and ignored. Coverage includes private
+knowledge-document downloads/deletion, Verify history/recheck/share ownership,
+expired/revoked sessions, viewer denials and logout token reuse. Alerts, remaining
+file/child-link surfaces, complete role coverage and Supabase runtime sessions
+still need further testing. Local private files stay under ignored runtime/,
+never public/, and contain only synthetic tenant markers.
 
 Migration `027_platform_child_tenant_guards.sql` adds database ownership guards
 without deleting existing data or changing production. Run

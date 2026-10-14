@@ -13,6 +13,7 @@ Object.assign(env, {
   DATABASE_URL: 'postgresql://postgres@127.0.0.1:55432/postgres?sslmode=disable',
   APP_URL: 'http://127.0.0.1:3100',
   HOSTNAME: '127.0.0.1', PORT: '3100',
+  KNOWLEDGE_STORAGE_DIR: resolve(root, 'STRESS_TEST/runtime/private-files'),
   NODE_OPTIONS: `--require "${resolve(root, 'STRESS_TEST/network-guard.cjs').replaceAll('\\', '/')}"`,
 });
 for (const name of ['.env', '.env.local', '.env.production', '.env.production.local']) {

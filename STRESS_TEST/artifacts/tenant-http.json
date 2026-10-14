@@ -1,87 +1,132 @@
 {
-  "checkedAt": "2026-10-14T09:43:10.723Z",
+  "checkedAt": "2026-10-14T13:26:09.840Z",
   "database": "embedded PostgreSQL socket; sequential HTTP, not native concurrency",
-  "coverage": "shipments/imports/entities/events/cases/evidence; knowledge/alerts/files/Verify and child links still pending",
+  "coverage": "core records, private knowledge documents/download/delete, Verify history/recheck/share ownership, legacy logout; alerts, other files/child links and complete role coverage still pending",
   "checks": [
     {
       "check": "positive control: own record",
-      "path": "/api/logistics/shipments/d4c8a980-b209-42e4-9ce8-aec1f215fadf",
+      "path": "/api/logistics/shipments/e1632d7e-248f-457a-a633-c16e1a2b7c78",
       "status": 200,
       "pass": true
     },
     {
       "check": "positive control: own record",
-      "path": "/api/imports/bf63d4a4-9bad-4e25-97e7-14e998ca3ab7",
+      "path": "/api/imports/a515cb0d-da58-441b-90b5-f6e1b9b1e798",
       "status": 200,
       "pass": true
     },
     {
       "check": "positive control: own record",
-      "path": "/api/imports/bf63d4a4-9bad-4e25-97e7-14e998ca3ab7/error-report",
+      "path": "/api/imports/a515cb0d-da58-441b-90b5-f6e1b9b1e798/error-report",
       "status": 200,
       "pass": true
     },
     {
       "check": "positive control: own record",
-      "path": "/api/platform/entities/fe74ead0-5117-45b5-8ffc-e60ff7dcbd68",
+      "path": "/api/platform/entities/f8b43e3c-c42e-4ec9-923f-0925be40f201",
       "status": 200,
       "pass": true
     },
     {
       "check": "positive control: own record",
-      "path": "/api/platform/cases/ddd1f34e-955a-4f91-a039-c45a221079ff",
+      "path": "/api/platform/cases/06b9946d-0bc2-411e-86ff-be1c4c173b74",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "positive control: own record",
+      "path": "/api/knowledge/documents/bf63fb90-96cb-4b8a-91f7-1924c53df3da",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "positive control: own record",
+      "path": "/api/knowledge/documents/bf63fb90-96cb-4b8a-91f7-1924c53df3da?download=1",
       "status": 200,
       "pass": true
     },
     {
       "check": "other tenant read",
-      "path": "/api/logistics/shipments/cae0a0e4-9610-435e-8ed6-775c81ce3e19",
+      "path": "/api/logistics/shipments/c5b5a7b3-fcbc-4bcf-b977-3dae560ab65f",
       "status": 404,
       "pass": true
     },
     {
       "check": "other tenant read",
-      "path": "/api/imports/58f3ad4d-fbe2-4a21-9622-765356a5fe4d",
+      "path": "/api/imports/8ae20886-fd21-463e-a18b-d264ede99794",
       "status": 404,
       "pass": true
     },
     {
       "check": "other tenant read",
-      "path": "/api/imports/58f3ad4d-fbe2-4a21-9622-765356a5fe4d/error-report",
+      "path": "/api/imports/8ae20886-fd21-463e-a18b-d264ede99794/error-report",
       "status": 404,
       "pass": true
     },
     {
       "check": "other tenant read",
-      "path": "/api/platform/entities/0fba81fb-6eba-4a92-b18e-b79a0613d89e",
+      "path": "/api/platform/entities/65fd0001-0317-44b3-a858-ee055f103847",
       "status": 404,
       "pass": true
     },
     {
       "check": "other tenant read",
-      "path": "/api/platform/cases/db3a7ffe-67d9-4268-8447-d24a1c211053",
+      "path": "/api/platform/cases/2c761eef-60d7-4731-b9ad-f3c4d5a7c14b",
+      "status": 404,
+      "pass": true
+    },
+    {
+      "check": "other tenant read",
+      "path": "/api/knowledge/documents/41499ffd-38d2-47e3-8366-c36aa96ca0b7",
+      "status": 404,
+      "pass": true
+    },
+    {
+      "check": "other tenant read",
+      "path": "/api/knowledge/documents/41499ffd-38d2-47e3-8366-c36aa96ca0b7?download=1",
       "status": 404,
       "pass": true
     },
     {
       "check": "other tenant mutation",
-      "path": "/api/logistics/shipments/cae0a0e4-9610-435e-8ed6-775c81ce3e19",
+      "path": "/api/logistics/shipments/c5b5a7b3-fcbc-4bcf-b977-3dae560ab65f",
       "method": "PATCH",
       "status": 404,
       "pass": true
     },
     {
       "check": "other tenant mutation",
-      "path": "/api/logistics/shipments/cae0a0e4-9610-435e-8ed6-775c81ce3e19",
+      "path": "/api/logistics/shipments/c5b5a7b3-fcbc-4bcf-b977-3dae560ab65f",
       "method": "DELETE",
       "status": 404,
       "pass": true
     },
     {
       "check": "other tenant mutation",
-      "path": "/api/imports/58f3ad4d-fbe2-4a21-9622-765356a5fe4d/confirm",
+      "path": "/api/imports/8ae20886-fd21-463e-a18b-d264ede99794/confirm",
       "method": "POST",
       "status": 400,
+      "pass": true
+    },
+    {
+      "check": "other tenant mutation",
+      "path": "/api/knowledge/documents/41499ffd-38d2-47e3-8366-c36aa96ca0b7",
+      "method": "DELETE",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "other tenant mutation",
+      "path": "/api/verify/check",
+      "method": "POST",
+      "status": 403,
+      "pass": true
+    },
+    {
+      "check": "other tenant mutation",
+      "path": "/api/verify/shares",
+      "method": "POST",
+      "status": 403,
       "pass": true
     },
     {
@@ -125,88 +170,149 @@
       "pass": true
     },
     {
+      "check": "scoped list includes own, excludes other marker",
+      "path": "/api/knowledge/documents",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "scoped list includes own, excludes other marker",
+      "path": "/api/verify/history",
+      "status": 200,
+      "pass": true
+    },
+    {
       "check": "database proves foreign shipment unchanged",
       "pass": true
     },
     {
+      "check": "database proves foreign document not queued for deletion",
+      "pass": true
+    },
+    {
       "check": "positive control: own record",
-      "path": "/api/logistics/shipments/cae0a0e4-9610-435e-8ed6-775c81ce3e19",
+      "path": "/api/logistics/shipments/c5b5a7b3-fcbc-4bcf-b977-3dae560ab65f",
       "status": 200,
       "pass": true
     },
     {
       "check": "positive control: own record",
-      "path": "/api/imports/58f3ad4d-fbe2-4a21-9622-765356a5fe4d",
+      "path": "/api/imports/8ae20886-fd21-463e-a18b-d264ede99794",
       "status": 200,
       "pass": true
     },
     {
       "check": "positive control: own record",
-      "path": "/api/imports/58f3ad4d-fbe2-4a21-9622-765356a5fe4d/error-report",
+      "path": "/api/imports/8ae20886-fd21-463e-a18b-d264ede99794/error-report",
       "status": 200,
       "pass": true
     },
     {
       "check": "positive control: own record",
-      "path": "/api/platform/entities/0fba81fb-6eba-4a92-b18e-b79a0613d89e",
+      "path": "/api/platform/entities/65fd0001-0317-44b3-a858-ee055f103847",
       "status": 200,
       "pass": true
     },
     {
       "check": "positive control: own record",
-      "path": "/api/platform/cases/db3a7ffe-67d9-4268-8447-d24a1c211053",
+      "path": "/api/platform/cases/2c761eef-60d7-4731-b9ad-f3c4d5a7c14b",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "positive control: own record",
+      "path": "/api/knowledge/documents/41499ffd-38d2-47e3-8366-c36aa96ca0b7",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "positive control: own record",
+      "path": "/api/knowledge/documents/41499ffd-38d2-47e3-8366-c36aa96ca0b7?download=1",
       "status": 200,
       "pass": true
     },
     {
       "check": "other tenant read",
-      "path": "/api/logistics/shipments/d4c8a980-b209-42e4-9ce8-aec1f215fadf",
+      "path": "/api/logistics/shipments/e1632d7e-248f-457a-a633-c16e1a2b7c78",
       "status": 404,
       "pass": true
     },
     {
       "check": "other tenant read",
-      "path": "/api/imports/bf63d4a4-9bad-4e25-97e7-14e998ca3ab7",
+      "path": "/api/imports/a515cb0d-da58-441b-90b5-f6e1b9b1e798",
       "status": 404,
       "pass": true
     },
     {
       "check": "other tenant read",
-      "path": "/api/imports/bf63d4a4-9bad-4e25-97e7-14e998ca3ab7/error-report",
+      "path": "/api/imports/a515cb0d-da58-441b-90b5-f6e1b9b1e798/error-report",
       "status": 404,
       "pass": true
     },
     {
       "check": "other tenant read",
-      "path": "/api/platform/entities/fe74ead0-5117-45b5-8ffc-e60ff7dcbd68",
+      "path": "/api/platform/entities/f8b43e3c-c42e-4ec9-923f-0925be40f201",
       "status": 404,
       "pass": true
     },
     {
       "check": "other tenant read",
-      "path": "/api/platform/cases/ddd1f34e-955a-4f91-a039-c45a221079ff",
+      "path": "/api/platform/cases/06b9946d-0bc2-411e-86ff-be1c4c173b74",
+      "status": 404,
+      "pass": true
+    },
+    {
+      "check": "other tenant read",
+      "path": "/api/knowledge/documents/bf63fb90-96cb-4b8a-91f7-1924c53df3da",
+      "status": 404,
+      "pass": true
+    },
+    {
+      "check": "other tenant read",
+      "path": "/api/knowledge/documents/bf63fb90-96cb-4b8a-91f7-1924c53df3da?download=1",
       "status": 404,
       "pass": true
     },
     {
       "check": "other tenant mutation",
-      "path": "/api/logistics/shipments/d4c8a980-b209-42e4-9ce8-aec1f215fadf",
+      "path": "/api/logistics/shipments/e1632d7e-248f-457a-a633-c16e1a2b7c78",
       "method": "PATCH",
       "status": 404,
       "pass": true
     },
     {
       "check": "other tenant mutation",
-      "path": "/api/logistics/shipments/d4c8a980-b209-42e4-9ce8-aec1f215fadf",
+      "path": "/api/logistics/shipments/e1632d7e-248f-457a-a633-c16e1a2b7c78",
       "method": "DELETE",
       "status": 404,
       "pass": true
     },
     {
       "check": "other tenant mutation",
-      "path": "/api/imports/bf63d4a4-9bad-4e25-97e7-14e998ca3ab7/confirm",
+      "path": "/api/imports/a515cb0d-da58-441b-90b5-f6e1b9b1e798/confirm",
       "method": "POST",
       "status": 400,
+      "pass": true
+    },
+    {
+      "check": "other tenant mutation",
+      "path": "/api/knowledge/documents/bf63fb90-96cb-4b8a-91f7-1924c53df3da",
+      "method": "DELETE",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "other tenant mutation",
+      "path": "/api/verify/check",
+      "method": "POST",
+      "status": 403,
+      "pass": true
+    },
+    {
+      "check": "other tenant mutation",
+      "path": "/api/verify/shares",
+      "method": "POST",
+      "status": 403,
       "pass": true
     },
     {
@@ -250,7 +356,82 @@
       "pass": true
     },
     {
+      "check": "scoped list includes own, excludes other marker",
+      "path": "/api/knowledge/documents",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "scoped list includes own, excludes other marker",
+      "path": "/api/verify/history",
+      "status": 200,
+      "pass": true
+    },
+    {
       "check": "database proves foreign shipment unchanged",
+      "pass": true
+    },
+    {
+      "check": "database proves foreign document not queued for deletion",
+      "pass": true
+    },
+    {
+      "check": "expired session cannot access protected shipments",
+      "status": 401,
+      "pass": true
+    },
+    {
+      "check": "revoked session cannot access protected shipments",
+      "status": 401,
+      "pass": true
+    },
+    {
+      "check": "viewer positive read control",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "viewer cannot mutate or administer",
+      "path": "/api/logistics/shipments",
+      "method": "POST",
+      "status": 401,
+      "pass": true
+    },
+    {
+      "check": "viewer cannot mutate or administer",
+      "path": "/api/logistics/shipments/e1632d7e-248f-457a-a633-c16e1a2b7c78",
+      "method": "DELETE",
+      "status": 401,
+      "pass": true
+    },
+    {
+      "check": "viewer cannot mutate or administer",
+      "path": "/api/knowledge/documents/bf63fb90-96cb-4b8a-91f7-1924c53df3da",
+      "method": "DELETE",
+      "status": 403,
+      "pass": true
+    },
+    {
+      "check": "viewer cannot mutate or administer",
+      "path": "/api/platform/configuration",
+      "method": "PUT",
+      "status": 403,
+      "pass": true
+    },
+    {
+      "check": "viewer cannot mutate or administer",
+      "path": "/api/scanner",
+      "method": "POST",
+      "status": 403,
+      "pass": true
+    },
+    {
+      "check": "forged workspace cookie does not switch legacy session tenant",
+      "pass": true
+    },
+    {
+      "check": "logout revokes old token for subsequent protected requests",
+      "status": 401,
       "pass": true
     }
   ]

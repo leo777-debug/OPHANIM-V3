@@ -46,6 +46,8 @@ do not treat a scaffold, mocked unit test or unavailable database as complete co
 - This checkout intentionally has no copied production/provider secrets.
 
 ## Next
+Expanded HTTP checkpoint: all 72 assertions pass. Added synthetic private knowledge documents/files and Verify runs; own reads/downloads work while foreign reads/downloads/deletes/rechecks/shares fail. History lists exclude the other tenant. Expired/revoked sessions, viewer writes/admin access, forged organization cookie and old-token reuse after logout are covered. Focused script lint passes. Full role/Supabase session, alert and remaining file/child-link coverage still pending.
+
 P0 child-link checkpoint: actual HTTP reproduced cross-organization evidence injection (four failed checks). Fixed both write validation and case child reads; additive migration 027 enforces target/template ownership even for RLS-bypassing service connections. All 42 core HTTP checks pass. Full suite: 488 passed, seven skipped; six embedded RLS tests pass, production build and focused lint pass. Before-fix artifact retained. Complete Knowledge/Verify/alerts/files and remaining child-link/role/session coverage still pending.
 
 Scanner and import-intake follow-up: 23 focused tests pass. Anonymous legacy scanner access and forwarded-IP import-budget bypass were reproduced before fixes. Scanner now requires owner confirmation, approved literal IP and a database audit before contact; no real active scans performed. Multipart import intake is capped before parsing, including chunked/dishonest-length requests. Full suite: 479 passed, six skipped; TypeScript, focused lint and production build pass. OsintPanel adds no legacy lint findings (27 errors/seven warnings before and after).
