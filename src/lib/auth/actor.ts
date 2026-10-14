@@ -15,9 +15,9 @@ function isUuid(value: string | undefined): value is string {
   return Boolean(value && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value));
 }
 
-async function getSupabaseActor(request: NextRequest): Promise<AuthenticatedActor | null> {
+async function getSupabaseActor(request: NextRequest): Promise<AuthenticatedActor | null | undefined> {
   const supabase = await createSupabaseServerClient();
-  if (!supabase) return null;
+  if (!supabase) return undefined;
   const { data, error } = await supabase.auth.getClaims();
   const authUserId = !error && typeof data?.claims?.sub === 'string' ? data.claims.sub : null;
   if (!authUserId) return null;
@@ -49,7 +49,9 @@ async function getSupabaseActor(request: NextRequest): Promise<AuthenticatedActo
 
 export async function getAuthenticatedActor(request: NextRequest): Promise<AuthenticatedActor | null> {
   const supabaseActor = await getSupabaseActor(request);
-  if (supabaseActor) return supabaseActor;
+  // Configured Auth is authoritative even when the token/membership is invalid.
+  // Only an unconfigured Supabase installation may accept legacy sessions.
+  if (supabaseActor !== undefined) return supabaseActor;
   const token = request.cookies.get(SESSION_COOKIE)?.value;
   if (!token) return null;
   const result = await db().query<{
