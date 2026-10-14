@@ -46,6 +46,8 @@ do not treat a scaffold, mocked unit test or unavailable database as complete co
 - This checkout intentionally has no copied production/provider secrets.
 
 ## Next
+Scanner and import-intake follow-up: 23 focused tests pass. Anonymous legacy scanner access and forwarded-IP import-budget bypass were reproduced before fixes. Scanner now requires owner confirmation, approved literal IP and a database audit before contact; no real active scans performed. Multipart import intake is capped before parsing, including chunked/dishonest-length requests. Full suite: 479 passed, six skipped; TypeScript, focused lint and production build pass. OsintPanel adds no legacy lint findings (27 errors/seven warnings before and after).
+
 Latest checkpoint: 454 tests passed, six skipped; production build passed. Fixed canonical UUID rejection in import review/confirm/error reports and route-intelligence inputs. Fixed URL attribute injection in map popups with seven regression tests. Anonymous mocked-principal sweep covers 108 protected handler methods; full HTTP tenant/role/session coverage remains pending. Legacy scanner authentication/authorization is the next focused check.
 
 Continue Phase 2: exhaustive HTTP tenant/role/session, injection, SSRF, uploads, AI and abuse coverage. Investigate OPS-002; validate the patched map renderer. Then execute the remaining load/chaos/demo/video phases. The resume state remains unfinished.

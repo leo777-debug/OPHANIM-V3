@@ -111,6 +111,8 @@ function OsintPanelInner({ isMobile, onSweepVisualize, onScanGeolocate }: OsintP
 
   const runLookup = useCallback(async () => {
     if (!query.trim() || loading) return;
+    const scannerType = activeTab === 'scanner' ? scanType : ['headers', 'ssl', 'subdomains', 'tech'].includes(activeTab) ? activeTab : null;
+    if (scannerType && !window.confirm(`Scan ${query.trim()}? This contacts a live host. Confirm you own it or have written authorization. Only administrator-approved IP addresses are accepted.`)) return;
     setLoading(true); setError(''); setResults(null);
 
     // IP Sweep / Vuln Scan — separate flow
@@ -204,7 +206,10 @@ function OsintPanelInner({ isMobile, onSweepVisualize, onScanGeolocate }: OsintP
         case 'tech': url = `/api/scanner?target=${encodeURIComponent(query)}&type=tech`; break;
         case 'shodan': url = `/api/osint/shodan?ip=${encodeURIComponent(query)}`; break;
       }
-      const res = await fetch(url, activeTab === 'shodan' ? { cache: 'no-store' } : undefined);
+      const res = await fetch(scannerType ? '/api/scanner' : url, scannerType ? {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target: query.trim(), type: scannerType, confirm: true }),
+      } : activeTab === 'shodan' ? { cache: 'no-store' } : undefined);
       if (activeTab === 'shodan' && res.status === 404) {
         setResults({ ip: query, status: 'No Shodan InternetDB records found', ports: [], cpes: [], hostnames: [], tags: [], vulns: [] });
         setLoading(false);

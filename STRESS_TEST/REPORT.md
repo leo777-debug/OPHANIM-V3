@@ -18,6 +18,9 @@ See BASELINE.md. TypeScript and production build passed; 311 tests passed, five 
 | OPS-002 | P1 | Test runtime / packaging | Isolated packaged standalone health request times out; Next production CLI succeeds with the same fixture database/guard | Open; root cause unconfirmed | node STRESS_TEST/smoke.mjs --standalone vs node STRESS_TEST/smoke.mjs |
 | APP-001 | P1 | Imports | Malformed UUID regex rejects canonical import IDs, blocking review, confirmation and error reports; route intelligence has the same defect | Fixed; full suite/build pass | src/app/api/imports/import-id.test.ts; src/lib/route-intelligence/validation.test.ts |
 | SEC-004 | P1 | Map popup | An untrusted HTTP URL containing quotes can inject HTML attributes into popup links | Fixed; regression reproduced before fix | src/lib/map-popup-safety.test.ts: seven cases, including actual HTML attribute parsing |
+| SEC-005 | P1 | Legacy scanner | Configured scanner permits anonymous GET-triggered live-host contact without owned-target approval or audit | Fixed; eighteen mock regression tests pass | src/app/api/scanner/route.test.ts; owner permission, confirmed POST, workspace allowlist, literal IP, pre-call audit, redirect rejection, credential redaction |
+| SEC-006 | P2 | Import abuse | Changing forwarded IP resets the same authenticated user's import-preview budget | Fixed; failing test reproduced before fix | src/app/api/imports/preview/abuse.test.ts |
+| SEC-007 | P1 | Upload resource limits | Multipart upload is fully parsed before the file parser enforces its byte cap | Fixed for import preview; other upload surfaces pending | src/lib/http/limited-form-data.test.ts; actual stream limit, missing/dishonest length, cancellation and unchanged valid CSV bytes |
 
 P0 findings confirmed so far: none. This does not mean tenant isolation has passed; exhaustive coverage is pending.
 
@@ -52,6 +55,8 @@ Git recovery: OneDrive failed to read a reverse-index pack file. A branch push s
 ## Performance / Failure / Demo
 
 Latest source checkpoint: 454 tests pass, six skip; production build passes on Next 16.3.8. A sweep of 108 protected handler methods rejects anonymous mocked principals before any provider fetch. This is not an exhaustive HTTP session/role or tenant matrix. Import UUID regressions and popup attribute injection were reproduced before fixes. Focused new-file lint passes; modified legacy lint counts remain unchanged. The disruption-map route now returns 401, rather than 400, for missing authentication.
+
+Scanner/import follow-up: 23 focused tests pass. Scanner submissions now require owner permission, explicit confirmation, one approved literal public IP and a successful audit insert before backend contact. GET cannot scan. Provider redirects are rejected; raw credential-bearing failures are hidden. A backend DNS-pinning contract is required before re-enabling hostname targets. No real active scans were performed. Import previews now share one per-user budget and cap the actual request stream before multipart parsing. Full suite: 479 passed, six skipped; TypeScript and production build pass. Focused route/helper/test lint passes. OsintPanel lint baseline remains 27 errors and seven warnings, unchanged by the focused UI wiring.
 
 Not measured yet. No load traffic sent to any provider. No demo video recorded yet. No real customer or personal data used. No production deploy, infrastructure or billing change performed.
 

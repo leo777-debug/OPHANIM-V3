@@ -1,98 +1,96 @@
-import { NextResponse } from 'next/server';
-import { validateHost, isRateLimited, getClientIp } from '@/lib/ssrf-guard';
+import { isIP } from 'node:net';
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuthenticatedActor } from '@/lib/auth/actor';
+import { OrganizationAccessError } from '@/lib/operations/authorization';
+import { validateHost, isRateLimited } from '@/lib/ssrf-guard';
+import { scanAllowlist, validateScanTargets } from '@/lib/shodan/scan-guard';
+import { ShodanError } from '@/lib/shodan/types';
+import { db } from '@/lib/watchlists/db';
 
-/**
- * OSIRIS — Scanner Proxy (Hardened)
- * Rate-limited, target-validated, scope-restricted
- */
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
-const SCANNER_URL = process.env.SCANNER_URL || '';
-const SCANNER_KEY = process.env.SCANNER_KEY || '';
-
-// The string-based regex previously here matched only literal dotted-quad
-// IPv4, missed every IPv6 form, and never resolved hostnames — so an attacker
-// could bypass it with `target=metadata.example.com` (DNS A → 169.254.169.254),
-// `target=2130706433` (decimal 127.0.0.1), or `target=::1`. Validation now
-// canonicalises the input and resolves hostnames before deciding. See
-// `src/lib/ssrf-guard.ts`.
-
-// ── ALLOWED SCAN TYPES (safe subset only) ──
 const ALLOWED_SCANS: Record<string, { endpoint: string; timeout: number }> = {
-  quick:      { endpoint: '/scan/quick',      timeout: 15000 },
-  ssl:        { endpoint: '/scan/ssl',        timeout: 10000 },
-  headers:    { endpoint: '/scan/headers',    timeout: 10000 },
-  rdns:       { endpoint: '/scan/rdns',       timeout: 8000  },
+  quick: { endpoint: '/scan/quick', timeout: 15000 },
+  ssl: { endpoint: '/scan/ssl', timeout: 10000 },
+  headers: { endpoint: '/scan/headers', timeout: 10000 },
+  rdns: { endpoint: '/scan/rdns', timeout: 8000 },
   subdomains: { endpoint: '/scan/subdomains', timeout: 15000 },
-  tech:       { endpoint: '/scan/tech',       timeout: 15000 },
-  whois:      { endpoint: '/scan/whois',      timeout: 10000 },
-  geoloc:     { endpoint: '/scan/geoloc',     timeout: 8000  },
-  vuln:       { endpoint: '/scan/vuln',       timeout: 90000 },
+  tech: { endpoint: '/scan/tech', timeout: 15000 },
+  whois: { endpoint: '/scan/whois', timeout: 10000 },
+  geoloc: { endpoint: '/scan/geoloc', timeout: 8000 },
+  vuln: { endpoint: '/scan/vuln', timeout: 90000 },
 };
 
-// REMOVED from public access: deep, ports, banner, traceroute
-// These are dangerous in an unauthenticated context:
-//   deep     → scans 65,535 ports (DDoS amplifier)
-//   banner   → harvests software versions from targets using our IP
-//   traceroute → reveals hosting infrastructure
-//   ports    → arbitrary port range scanning
+function response(value: unknown, status = 200) {
+  return NextResponse.json(value, { status, headers: { 'Cache-Control': 'no-store' } });
+}
+function failure(error: unknown) {
+  if (error instanceof OrganizationAccessError) return response({ error: error.message }, error.message === 'Authentication is required.' ? 401 : 403);
+  if (error instanceof ShodanError) return response({ error: error.message, code: error.code }, error.status);
+  return response({ error: 'Scanner unavailable. Check the service and audit database configuration.' }, 503);
+}
+function redact(value: unknown, key: string): unknown {
+  if (typeof value === 'string') return value.replaceAll(key, '[redacted]');
+  if (Array.isArray(value)) return value.map((item) => redact(item, key));
+  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([name, item]) => [name.replaceAll(key, '[redacted]'), redact(item, key)]));
+  return value;
+}
 
-export async function GET(req: Request) {
-  // 1. Check scanner is configured
-  if (!SCANNER_KEY) {
-    return NextResponse.json({ error: 'Scanner not configured', hint: 'Set SCANNER_URL and SCANNER_KEY in .env' }, { status: 503 });
-  }
-
-  // 2. Rate limit by client IP
-  const clientIp = getClientIp(req);
-  if (isRateLimited(clientIp, 5, 60_000)) {
-    return NextResponse.json({
-      error: 'Rate limit exceeded',
-      detail: `Maximum 5 scans per minute. Please wait before scanning again.`,
-    }, { status: 429 });
-  }
-
-  // 3. Validate params
-  const { searchParams } = new URL(req.url);
-  const target = searchParams.get('target')?.trim();
-  const scanType = searchParams.get('type') || 'quick';
-
-  if (!target) {
-    return NextResponse.json({ error: 'Missing target parameter' }, { status: 400 });
-  }
-
-  // 4. Block private/internal targets (DNS-resolves before deciding so a
-  //    hostname pointing at a reserved range is rejected, and IPv6 + non-
-  //    canonical IPv4 forms are no longer free bypasses).
-  const guard = await validateHost(target);
-  if (!guard.ok) {
-    return NextResponse.json({
-      error: 'Target blocked',
-      detail: `Target validation failed: ${guard.reason}`,
-    }, { status: 403 });
-  }
-
-  // 5. Validate scan type (only safe scans allowed)
-  const scanConfig = ALLOWED_SCANS[scanType];
-  if (!scanConfig) {
-    return NextResponse.json({
-      error: 'Scan type not available',
-      detail: `"${scanType}" is restricted. Available: ${Object.keys(ALLOWED_SCANS).join(', ')}`,
-      available_scans: Object.keys(ALLOWED_SCANS),
-    }, { status: 403 });
-  }
-
-  // 6. Execute scan with tight timeout
+// GET must never contact a live target (including via link previews or crawlers).
+export async function GET(request: NextRequest) {
   try {
-    const params = new URLSearchParams({ key: SCANNER_KEY, target });
-    const res = await fetch(`${SCANNER_URL}${scanConfig.endpoint}?${params.toString()}`, {
-      signal: AbortSignal.timeout(scanConfig.timeout),
-    });
-    const data = await res.json();
-    return NextResponse.json(data, { status: res.status });
-  } catch (e: any) {
-    return NextResponse.json({
-      error: 'Scanner unreachable',
-      detail: e.message,
-    }, { status: 502 });
-  }
+    await requireAuthenticatedActor(request, 'cyber:read');
+    return NextResponse.json({ error: 'Use a confirmed POST to submit an authorized scan.' }, { status: 405, headers: { Allow: 'POST', 'Cache-Control': 'no-store' } });
+  } catch (error) { return failure(error); }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const origin = request.headers.get('origin');
+    if ((origin && origin !== request.nextUrl.origin) || request.headers.get('sec-fetch-site') === 'cross-site') return response({ error: 'Cross-origin scan submissions are not permitted.' }, 403);
+    const actor = await requireAuthenticatedActor(request, 'organization:manage');
+    if (isRateLimited(`scanner:user:${actor.userId}`, 3, 60000)) return response({ error: 'Scan limit reached. Wait a minute.' }, 429);
+    const text = await request.text();
+    if (text.length > 4096) return response({ error: 'Scan request is too large.' }, 400);
+    let body: Record<string, unknown>;
+    try {
+      const parsed: unknown = JSON.parse(text);
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return response({ error: 'Expected a JSON scan request.' }, 400);
+      body = parsed as Record<string, unknown>;
+    } catch { return response({ error: 'Expected a JSON scan request.' }, 400); }
+    if (body.confirm !== true) return response({ error: 'Confirm you own or have written authorization to scan this host.' }, 400);
+    const target = typeof body.target === 'string' ? body.target.trim() : '';
+    // The legacy backend cannot pin hostname resolution. Literal authorized IPs
+    // avoid a second DNS resolution changing the target after approval.
+    if (!isIP(target)) return response({ error: 'Use one approved literal IPv4 or IPv6 address, not a hostname, URL or CIDR.' }, 400);
+    validateScanTargets(target, true, scanAllowlist(actor.organizationId), 1);
+    const guard = await validateHost(target);
+    if (!guard.ok) return response({ error: 'Private or reserved scan targets are blocked.' }, 403);
+    const type = typeof body.type === 'string' ? body.type : 'quick';
+    const config = Object.hasOwn(ALLOWED_SCANS, type) ? ALLOWED_SCANS[type] : undefined;
+    if (!config) return response({ error: 'This scan type is not available.' }, 403);
+    const key = process.env.SCANNER_KEY ?? '';
+    const service = process.env.SCANNER_URL ?? '';
+    if (!key || !service) return response({ error: 'Scanner not configured. Ask the administrator to configure the private scanner service.' }, 503);
+    const endpoint = new URL(config.endpoint, service);
+    if (!['https:', 'http:'].includes(endpoint.protocol) || endpoint.username || endpoint.password) return response({ error: 'Invalid scanner service configuration.' }, 503);
+    // Fail closed if an audit record cannot be stored, before touching a host.
+    const audit = await db().query<{ id: string }>(
+      `insert into ophanim_audit_events(organization_id,actor_user_id,action,subject_type,metadata) values($1,$2,'scanner.scan.started','scanner_scan',$3) returning id`,
+      [actor.organizationId, actor.userId, JSON.stringify({ target, type, submittedAt: new Date().toISOString() })]);
+    const auditId = audit.rows[0]?.id;
+    if (!auditId) return response({ error: 'Scan audit could not be recorded.' }, 503);
+    endpoint.search = new URLSearchParams({ key, target }).toString();
+    try {
+      const result = await fetch(endpoint, { signal: AbortSignal.timeout(config.timeout), redirect: 'error' });
+      if (!result.ok) throw new Error('Scanner provider rejected the request');
+      const data: unknown = await result.json();
+      await db().query(`update ophanim_audit_events set action='scanner.scan.completed' where id=$1 and organization_id=$2`, [auditId, actor.organizationId]);
+      return response(redact(data, key));
+    } catch {
+      await db().query(`update ophanim_audit_events set action='scanner.scan.unconfirmed' where id=$1 and organization_id=$2`, [auditId, actor.organizationId]).catch(() => {});
+      return response({ error: 'Scanner request could not be confirmed. Do not automatically retry; ask an administrator to check the audit.' }, 502);
+    }
+  } catch (error) { return failure(error); }
 }

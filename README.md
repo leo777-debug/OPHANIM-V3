@@ -110,6 +110,15 @@ Active scans require workspace-owner permission, a target allowlist in
 audit storage. Empty allowlists disable scans. Scanning consumes Shodan credits;
 no active scans run automatically. See [Shodan setup and API usage](docs/SHODAN.md).
 
+The separate legacy scanner (`SCANNER_URL` / `SCANNER_KEY`) is also owner-only.
+Recon requests confirmation before sending a scan. Its `/api/scanner` endpoint
+accepts confirmed POST requests for one literal, approved public IP address;
+GET never runs a scan. `AUTHORIZED_SCAN_TARGETS` uses the same workspace-scoped
+configuration as Shodan. Hostnames are not accepted until the scanner backend
+can pin DNS resolution. Every submission must be recorded in PostgreSQL first;
+unconfirmed responses are not retried automatically. Scanner credentials stay
+server-side, and redirects to another scanner service are rejected.
+
 ### Watchlists, Notifications and Operations
 
 - Persisted watchlists, entity pages and provider checks.
