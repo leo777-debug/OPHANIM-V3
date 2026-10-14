@@ -73,6 +73,9 @@ if __name__=='__main__':
     if len(zips)!=1:raise RuntimeError('Notebook must produce one ophanim-output.zip')
     with zipfile.ZipFile(zips[0]) as archive:
         members,expected=validate_archive(archive,args.version)
+        scores={}
+        for filename,label in (('run_metrics.json','training'),('comparison.json','evaluation')):
+            if filename in expected:scores[label]=json.loads(archive.read(filename))
         adapter.mkdir(parents=True)
         for member in members:
             if member.is_dir():continue
@@ -81,6 +84,6 @@ if __name__=='__main__':
             with archive.open(member) as source,destination.open('xb') as output:
                 __import__('shutil').copyfileobj(source,output)
             if member.filename!='checksums.json' and (member.filename not in expected or checksum(destination)!=expected[member.filename]):raise RuntimeError('Producer checksum mismatch; do not load this adapter')
-            register(store,destination,'ophanim-logistics',args.version,'Qwen/Qwen3-4B-Instruct-2507','Apache-2.0',expected_sha256=expected.get(member.filename))
-    register(store,zips[0],'ophanim-kaggle-output',args.version,'Qwen/Qwen3-4B-Instruct-2507','Apache-2.0')
+            register(store,destination,'ophanim-logistics',args.version,'Qwen/Qwen3-4B-Instruct-2507','Apache-2.0',eval_scores=scores,expected_sha256=expected.get(member.filename))
+    register(store,zips[0],'ophanim-kaggle-output',args.version,'Qwen/Qwen3-4B-Instruct-2507','Apache-2.0',eval_scores=scores)
     print(f'Checksummed adapter output imported into {adapter}; evaluation gate still applies.')

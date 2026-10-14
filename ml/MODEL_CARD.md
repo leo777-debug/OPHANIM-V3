@@ -13,17 +13,28 @@ CPU LoRA smoke run used a tiny random test fixture, not the 4B base model. Real
 measurements are in FINAL_REPORT.md and eval/REPORT.md. The provisional 4B model
 fails the founder's 8 tokens/second CPU gate and the initial 50-case grounded-QA
 evaluation. Three subsequent live RAG cases passed with valid evidence/refusal;
-broader held-out evaluation remains pending.
+the completed held-out comparison below still fails the release gate.
 
 On 13 October Kaggle version 3 completed CPT on a Tesla T4: 18 optimizer steps,
 144,876 tokens, 385.93 seconds elapsed and 5.11 GiB peak allocated GPU memory.
 Validation loss improved 2.303625 → 2.280127 and perplexity 10.0104 → 9.7779;
 adapter parameter update L2 was 0.170264. The adapter is
-`cpt-20261013-172004`, still on Kaggle while held-out evaluation runs.
+`cpt-20261013-172004`, downloaded with verified producer checksums to
+`D:\models\adapters\cpt-20261013-172004` on 14 October. The 23,631,240-byte
+adapter requires the existing base weights; it is not a standalone model.
+Both base and adapter completed 240 held-out task cases. Extraction field exact
+tied at 99.38%, valid JSON regressed 94.17% → 93.33%, NOT FOUND tied at 8/8,
+and unsupported/contract-failure proxy tied at 23/31. General Arabic and mixed
+JSON/schema scores regressed. English task metrics did not improve. Held-out
+corpus perplexity improved in every language but does not establish task quality.
+**Not accepted:** keep base + RAG; no merged/GGUF/Ollama trained release is built.
+See [eval/CPT_REPORT.md](eval/CPT_REPORT.md) for per-language/mode/task results,
+GPU speed, confusion matrices, checksum and the report rebuild command. Larger
+model and adapted CPU scores were not measured; semantic human review remains.
 Version 2 allocated a Tesla T4 but failed the original disk preflight before any
 optimizer step. The retry uses actual download sizes plus adapter checkpoint
-headroom and pins the input bundle hash. Submission is not training completion;
-no accepted GPU-trained release is claimed until task results are available.
+headroom and pins the input bundle hash. Version 3 proves actual training and
+fit on one 16 GB T4 for this small synthetic corpus, not production acceptance.
 
 Base: Qwen/Qwen3-4B-Instruct-2507, [Apache-2.0 licence](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507/blob/main/LICENSE).
 Commercial use and modification are allowed; preserve licence, notices and
@@ -52,4 +63,5 @@ claims are supported. Grounded QA uses a conservative quote validation gate.
 
 Artifacts live exclusively in OPHANIM_MODELS_DIR (Windows default D:\models).
 See MODEL_SELECTION.md, TRAINING_RUNBOOK.md and eval/REPORT.md for evidence,
-rebuild instructions and release gates. Keep the previous accepted version.
+rebuild instructions and release gates; eval/CPT_REPORT.md records the completed
+GPU comparison. Keep previous versions, including this experimental adapter.

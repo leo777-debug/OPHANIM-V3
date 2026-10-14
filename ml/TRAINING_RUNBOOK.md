@@ -19,8 +19,15 @@ Tesla T4 because its fixed disk preflight exceeded the available working volume.
 It consumed 0.06 GPU quota hours. **Version 3 was submitted on 13 October** with
 the corrected disk budget and updated private inputs. CPT completed: 18 steps,
 144,876 tokens, 385.93 seconds elapsed, 5.11 GiB peak allocation. Adapter
-`cpt-20261013-172004` is still on Kaggle while held-out evaluation and packaging
-run. It is not accepted merely because validation loss improved. The official CLI is installed at
+`cpt-20261013-172004` was downloaded on 14 October to
+`D:\models\adapters\cpt-20261013-172004`, with all 35 imported files verified
+against the disk manifest and producer checksums. Base and adapter each completed
+240 held-out task cases. **Not accepted:** extraction tied at 99.38%, JSON fell
+94.17% → 93.33%, and NOT FOUND tied at 8/8. No trained GGUF or Ollama release is
+built; use base + RAG. See [eval/CPT_REPORT.md](eval/CPT_REPORT.md) for full
+metrics and the checksum-verifying report rebuild command. This was real continued
+pretraining on unlabelled text, not SFT; the adapter requires its verified base.
+The official CLI is installed at
 `D:\models\tools\kaggle-venv`; no token is copied into chat or the repository.
 
 1. Connect Leonard External Drive (D:), ideally USB 3. Existing files are preserved.
@@ -47,8 +54,9 @@ The uncommitted .env may override OPHANIM_MODELS_DIR. Download scripts load that
 setting only. No missing-drive fallback or model download to C: is allowed.
 Kaggle's observed image uses Python 3.13; its CUDA 12.4 torch 2.6 wheel installed
 successfully. The notebook removes incompatible optional vision/audio packages
-in that disposable session and disables TensorFlow/Flax imports. Full GPU training
-still needs runtime verification. Windows CPU smoke can use a
+in that disposable session and disables TensorFlow/Flax imports. One 16 GB T4
+training and held-out evaluation completed for this small corpus; P100 and larger
+corpora remain unverified. Windows CPU smoke can use a
 supported CPU PyTorch wheel (the development run used Python 3.14 / torch 2.9.1).
 
 3. Generate the unlabelled corpus and private CPT input bundle. The separate
@@ -166,7 +174,8 @@ $taskKagglePython='D:\models\tools\kaggle-venv\Scripts\python.exe'
 After authentication succeeds, check that there is no existing active run before
 pushing once. The prepared folder already exists at
 `D:\models\kaggle-downloads\submission-cpt-v6-20261013-api`. It was submitted
-successfully as version 3; **do not push it again while that run is active**.
+successfully as version 3, and that run is now complete. **Do not push it again.**
+Preserve its artifacts and observed held-out results; never tune against this test.
 Metadata keeps the notebook private
 and attaches only the private synthetic dataset. The notebook pins base revision
 `cdbee75f17c01a7cc42f958dc650907174af0554`. T4 ×2 is the allocation name;
