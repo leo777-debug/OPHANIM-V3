@@ -30,6 +30,10 @@ pretraining on unlabelled text, not SFT; the adapter requires its verified base.
 The official CLI is installed at
 `D:\models\tools\kaggle-venv`; no token is copied into chat or the repository.
 
+To try the trained adapter without deploying it, follow [RUN_MODEL.md](RUN_MODEL.md).
+The installed offline CPU terminal runner loads the verified base plus adapter
+from D: and leaves Ophanim's configured model unchanged.
+
 1. Connect Leonard External Drive (D:), ideally USB 3. Existing files are preserved.
    Loading over USB is slower at startup; generation uses RAM after loading.
 2. In PowerShell from the repository, configure the model root:
