@@ -46,4 +46,6 @@ do not treat a scaffold, mocked unit test or unavailable database as complete co
 - This checkout intentionally has no copied production/provider secrets.
 
 ## Next
+Latest checkpoint: 454 tests passed, six skipped; production build passed. Fixed canonical UUID rejection in import review/confirm/error reports and route-intelligence inputs. Fixed URL attribute injection in map popups with seven regression tests. Anonymous mocked-principal sweep covers 108 protected handler methods; full HTTP tenant/role/session coverage remains pending. Legacy scanner authentication/authorization is the next focused check.
+
 Continue Phase 2: exhaustive HTTP tenant/role/session, injection, SSRF, uploads, AI and abuse coverage. Investigate OPS-002; validate the patched map renderer. Then execute the remaining load/chaos/demo/video phases. The resume state remains unfinished.

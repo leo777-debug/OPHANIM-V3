@@ -6,6 +6,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import DynamicProviderLayers from './DynamicProviderLayers';
 import type { ProviderMapLayer } from '@/lib/providers';
 import type { MapViewport } from '@/lib/map-workspaces';
+import { safePopupUrl } from '@/lib/map-popup-safety';
 
 interface OphanimMapProps {
   data: any;
@@ -719,7 +720,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     // ── XSS PROTECTION HELPERS ──
     const htmlEsc = (s: any): string => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     const idSafe = (s: any): string => String(s ?? '').replace(/[^a-zA-Z0-9_\.\-]/g, '');
-    const urlSafe = (s: any): string => { const u = String(s ?? ''); return /^https?:\/\//i.test(u) ? u : '#'; };
+    const urlSafe = safePopupUrl;
     const colorSafe = (s: any): string => /^#[0-9a-fA-F]{3,8}$/.test(String(s ?? '')) ? String(s) : '#aaa';
 
     // ── Flights (with FlightAware + ADS-B Exchange links) ──
