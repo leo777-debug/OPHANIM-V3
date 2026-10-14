@@ -21,6 +21,22 @@ An open packaging/guard problem is reproducible with `node STRESS_TEST/smoke.mjs
 
 Artifacts contain synthetic screenshots and measured check results. Runtime context and logs are ignored. No video has been recorded yet. Do not present screenshots of test fixtures as live intelligence.
 
+## Tenant HTTP Regression
+
+After building, run `node STRESS_TEST/tenant-http.mjs`. It owns and stops its
+loopback app/database processes, seeds two synthetic owner organizations, and
+checks 42 positive-control, foreign-read/write and child-link assertions. The
+final artifact is `STRESS_TEST/artifacts/tenant-http.json`; the original four
+child-link failures are retained in `tenant-http-before-fix.json`. Runtime
+session tokens are synthetic, local-only and ignored. Knowledge, Verify,
+alerts, file access and remaining child links still need HTTP coverage.
+
+Migration `027_platform_child_tenant_guards.sql` adds database ownership guards
+without deleting existing data or changing production. Run
+`node db/test-isolated-rls.mjs` for six embedded database/RLS assertions,
+including service-bypass child-link attempts. DATABASE_URL suites remain
+optional outside this disposable runner.
+
 For OneDrive Git index failures, a command-local workaround succeeded:
 
 ```powershell

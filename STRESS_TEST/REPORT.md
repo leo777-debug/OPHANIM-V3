@@ -21,8 +21,9 @@ See BASELINE.md. TypeScript and production build passed; 311 tests passed, five 
 | SEC-005 | P1 | Legacy scanner | Configured scanner permits anonymous GET-triggered live-host contact without owned-target approval or audit | Fixed; eighteen mock regression tests pass | src/app/api/scanner/route.test.ts; owner permission, confirmed POST, workspace allowlist, literal IP, pre-call audit, redirect rejection, credential redaction |
 | SEC-006 | P2 | Import abuse | Changing forwarded IP resets the same authenticated user's import-preview budget | Fixed; failing test reproduced before fix | src/app/api/imports/preview/abuse.test.ts |
 | SEC-007 | P1 | Upload resource limits | Multipart upload is fully parsed before the file parser enforces its byte cap | Fixed for import preview; other upload surfaces pending | src/lib/http/limited-form-data.test.ts; actual stream limit, missing/dishonest length, cancellation and unchanged valid CSV bytes |
+| SEC-008 | P0 | Tenant child links | An organization can POST evidence linked to a different private case; the other organization then sees the foreign evidence in case detail | Fixed; reproduced with actual sequential HTTP before fix | STRESS_TEST/tenant-http.mjs: four failed assertions before, all 42 pass after; nine unit tests; additive migration 027 and service-bypass DB regression |
 
-P0 findings confirmed so far: none. This does not mean tenant isolation has passed; exhaustive coverage is pending.
+P0 findings confirmed so far: one, fixed in this branch. Exhaustive tenant isolation is still pending; passing core HTTP checks is not certification of every route.
 
 ## Secret Scan
 
@@ -53,6 +54,10 @@ Local smoke: health, anonymous shipment access rejection and authenticated synth
 Git recovery: OneDrive failed to read a reverse-index pack file. A branch push succeeded with optional multi-pack/reverse-index reads disabled for that command only. No files were removed, no repository was reset and no history was rewritten.
 
 ## Performance / Failure / Demo
+
+Latest tenant checkpoint: 488 unit tests pass, seven opt-in tests skip; six embedded database/RLS tests pass. TypeScript (including production build) and focused lint pass. An actual local HTTP test seeded two synthetic owner organizations and checked positive controls, foreign shipments/imports/entities/cases, scoped event/evidence lists, import confirmation, shipment updates/deletes and evidence child-link injection. The initial core matrix passed 38 checks, then the added child-link attack produced four failures (POST 201 and foreign marker visible in both directions). After the fix all 42 pass. The failing artifact is retained as tenant-http-before-fix.json; final results are tenant-http.json. No production/provider traffic or real customer data was used.
+
+Migration 027_platform_child_tenant_guards.sql adds evidence-target and workflow-template ownership triggers; existing tables/RLS are retained and no production migration was run. Service-bypass insert/update tests fail closed with SQLSTATE 42501. Application checks validate links before writes, restrict workflow templates/assignees, and scope case child reads to the owning organization (or explicitly global entities/events). Existing inconsistent rows are not deleted; read guards exclude foreign private child data. Native PostgreSQL, complete HTTP Knowledge/Verify/alerts/files coverage and other child-link surfaces remain to test.
 
 Latest source checkpoint: 454 tests pass, six skip; production build passes on Next 16.3.8. A sweep of 108 protected handler methods rejects anonymous mocked principals before any provider fetch. This is not an exhaustive HTTP session/role or tenant matrix. Import UUID regressions and popup attribute injection were reproduced before fixes. Focused new-file lint passes; modified legacy lint counts remain unchanged. The disruption-map route now returns 401, rather than 400, for missing authentication.
 

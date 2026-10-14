@@ -5,6 +5,7 @@ import { PGLiteSocketServer } from '@electric-sql/pglite-socket';
 import { Client } from 'pg';
 import { createIsolatedClient } from '../src/lib/knowledge/isolated-db.test-helper.ts';
 import { hashPassword } from '../src/lib/auth/passwords.ts';
+import { seedTenantFixtures } from './tenant-fixtures.mjs';
 
 process.chdir(resolve(import.meta.dirname, '..'));
 const isolated = await createIsolatedClient();
@@ -15,6 +16,7 @@ await isolated.query('insert into ophanim_users(id,email,display_name,password_h
 await isolated.query("insert into ophanim_organization_memberships(organization_id,user_id,role) values($1,$2,'owner')", [org, user]);
 const token = 'synthetic-local-demo-session-not-for-production';
 await isolated.query("insert into ophanim_sessions(user_id,organization_id,token_hash,expires_at) values($1,$2,$3,now()+interval '1 day')", [user, org, createHash('sha256').update(token).digest('hex')]);
+const tenants = process.argv.includes('--tenant-fixtures') ? await seedTenantFixtures(isolated, { organizationId: org, userId: user, token }) : undefined;
 const server = new PGLiteSocketServer({ db: isolated.database, host: '127.0.0.1', port: 55432, maxConnections: 10, inspect: false, debug: false });
 try {
   await server.start();
@@ -25,6 +27,7 @@ try {
   await client.end();
   await mkdir('STRESS_TEST/runtime', { recursive: true });
   await writeFile('STRESS_TEST/runtime/demo-context.json', JSON.stringify({ organizationId: org, userId: user, token, email: 'presenter@example.test', password, database: 'embedded-postgresql-not-native-concurrency', replay: 'synthetic fixtures only' }, null, 2));
+  if (tenants) await writeFile('STRESS_TEST/runtime/tenant-context.json', JSON.stringify(tenants, null, 2));
   console.log('Disposable PostgreSQL socket verified at 127.0.0.1:55432. Synthetic DEMO ONLY organization seeded.');
   console.log('This is embedded PostgreSQL with a socket multiplexer, not native PostgreSQL performance/concurrency certification.');
   if (process.argv.includes('--check')) { await server.stop(); await isolated.end(); }

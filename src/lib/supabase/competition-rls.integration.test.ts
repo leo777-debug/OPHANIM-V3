@@ -63,6 +63,27 @@ describe.skipIf(!process.env.DATABASE_URL)('Competition database tenant boundary
         expect((await client.query('select name from storage.objects where name=$1', [otherObject])).rows).toHaveLength(0);
         expect((await client.query('delete from storage.objects where name=$1 returning name', [otherObject])).rows).toHaveLength(0);
       }
-    } finally { await client.query('rollback'); await client.end(); }
+    } finally { await client.query('rollback'); if (!isolated) await client.end(); }
+  }, 30000);
+  it('enforces child-target ownership even for a service connection that bypasses RLS', async () => {
+    const client = isolated ?? new Client({ connectionString: process.env.DATABASE_URL });
+    await client.connect();
+    const a = randomUUID(), b = randomUUID(), ca = randomUUID(), cb = randomUUID(), evidence = randomUUID(), template = randomUUID();
+    try {
+      await client.query('begin');
+      await client.query('insert into ophanim_organizations(id,name,slug) values($1,$2,$3),($4,$5,$6)', [a, 'DEMO ONLY Child A', `child-${a}`, b, 'DEMO ONLY Child B', `child-${b}`]);
+      await client.query('insert into ophanim_cases(id,organization_id,title) values($1,$2,$3),($4,$5,$6)', [ca, a, 'Synthetic case A', cb, b, 'Synthetic case B']);
+      await client.query("insert into ophanim_evidence(id,organization_id,evidence_type,title) values($1,$2,'manual','Synthetic evidence')", [evidence, a]);
+      await client.query("insert into ophanim_evidence_links(evidence_id,resource_type,resource_id) values($1,'case',$2)", [evidence, ca]);
+      await client.query('savepoint foreign_link');
+      await expect(client.query("insert into ophanim_evidence_links(evidence_id,resource_type,resource_id) values($1,'case',$2)", [evidence, cb])).rejects.toMatchObject({ code: '42501' });
+      await client.query('rollback to savepoint foreign_link');
+      await expect(client.query("update ophanim_evidence_links set resource_id=$2 where evidence_id=$1", [evidence, cb])).rejects.toMatchObject({ code: '42501' });
+      await client.query('rollback to savepoint foreign_link');
+      await client.query("insert into ophanim_workflow_templates(id,organization_id,template_key,name) values($1,$2,'synthetic-template','Synthetic foreign template')", [template, b]);
+      await expect(client.query('update ophanim_cases set workflow_template_id=$2 where id=$1', [ca, template])).rejects.toMatchObject({ code: '42501' });
+      await client.query('rollback to savepoint foreign_link');
+      expect((await client.query('select resource_id from ophanim_evidence_links where evidence_id=$1', [evidence])).rows[0].resource_id).toBe(ca);
+    } finally { await client.query('rollback'); if (!isolated) await client.end(); }
   }, 30000);
 });
