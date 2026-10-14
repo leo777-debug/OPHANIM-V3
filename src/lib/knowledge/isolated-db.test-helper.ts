@@ -35,9 +35,11 @@ export async function createIsolatedClient() {
     catch(error) { await db.close(); throw new Error(`Isolated migration failed: ${name}`, {cause: error}); }
   }
   console.log(`Isolated PostgreSQL: all ${files.length} migrations applied, including pgcrypto and pgvector.`);
+  let closed = false;
   return {
+    database: db,
     connect: async () => {},
     query: async (sql: string, values?: unknown[]) => db.query<Record<string, string>>(sql, values),
-    end: async () => db.close(),
+    end: async () => { if (!closed) { closed = true; await db.close(); } },
   };
 }

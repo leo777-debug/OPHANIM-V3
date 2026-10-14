@@ -43,8 +43,8 @@ const rows = files.filter((file) => /[\\/](page\.tsx|route\.ts)$/.test(file)).ma
   const text = dependencies.map((item) => inspect(item).source).join('\n');
   const api = file.endsWith('route.ts');
   const methods = api ? [...source.matchAll(/export\s+(?:async\s+)?function\s+(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\b/g)].map((match) => match[1]).join(', ') : 'page';
-  const session = /await\s+(?:requireAuthenticatedActor|getAuthenticatedActor|requestContext)\s*\(/.test(source);
-  const auth = session ? (/requestContext/.test(source) ? 'Verify session (anonymous + optional login)' : /requireAuthenticatedActor/.test(source) ? 'Login gate; inspect per-method permissions' : 'Optional actor; review method policy')
+  const session = /await\s+(?:requireAuthenticatedActor|getAuthenticatedActor|requestContext|authorizeAiRequest)\s*\(/.test(source);
+  const auth = session ? (/requestContext/.test(source) ? 'Verify session (anonymous + optional login; AI needs login)' : /authorizeAiRequest/.test(source) ? 'Login + same-origin AI gate' : /requireAuthenticatedActor/.test(source) ? 'Login gate; inspect per-method permissions' : 'Optional actor; review method policy')
     : /CRON_SECRET|cronAuthorized|requireCron|isCronAuthorized|verifyCronSecret/.test(text) ? 'Cron secret / manual review'
     : /verifySignature|verifyWebhook|WEBHOOK_SECRET|SDK_API_KEY/.test(text) ? 'Signature/key / manual review'
     : api ? 'No direct login gate; review public policy' : 'UI shell; underlying API owns authorization';

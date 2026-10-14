@@ -9,7 +9,8 @@ const repo = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 // expected SQL errors/savepoint recovery, so it cannot prove these policies.
 const url = 'postgresql://isolated-test-only';
 const args = ['node_modules/vitest/vitest.mjs', 'run', '--maxWorkers=1', '--no-file-parallelism',
-  'src/lib/knowledge/rls.integration.test.ts', ...process.argv.slice(2)];
+  'src/lib/knowledge/rls.integration.test.ts', 'src/lib/verify/rls.integration.test.ts',
+  'src/lib/supabase/competition-rls.integration.test.ts', ...process.argv.slice(2)];
 const code = await new Promise((resolve, reject) => {
   const child = spawn(process.execPath, args, { cwd: repo, stdio: 'inherit',
     env: { ...process.env, DATABASE_URL: url, OPHANIM_TEST_PGLITE: '1', NODE_ENV: 'test' } });

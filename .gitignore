@@ -90,3 +90,5 @@ scanner_backend_backup.js
 *.bin
 /models/
 /.knowledge-storage/
+# Generated from the pinned dependency during predev/prebuild; includes its license.
+/public/maplibre-build/

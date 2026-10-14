@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { resolve } from 'node:path';
 
 const nextConfig: NextConfig = {
   // Lets a local recovery server run independently from a stale development process.
@@ -6,6 +7,21 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   serverExternalPackages: ['ws'],
   transpilePackages: ['react-map-gl', 'mapbox-gl', 'maplibre-gl'],
+  turbopack: {
+    rules: {
+      '**/maplibre-gl/dist/maplibre-gl.mjs': {
+        loaders: ['./tools/maplibre-worker-loader.cjs'],
+      },
+    },
+  },
+  webpack(config) {
+    config.module.rules.push({
+      test: /maplibre-gl\.mjs$/,
+      include: /node_modules[\\/]maplibre-gl[\\/]/,
+      use: [resolve(process.cwd(), 'tools/maplibre-worker-loader.cjs')],
+    });
+    return config;
+  },
   experimental: {
     // OneDrive can drop Turbopack's persistent cache while files are syncing.
     turbopackFileSystemCacheForDev: false,

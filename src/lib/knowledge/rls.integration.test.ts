@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import { Client } from 'pg';
-import { describe,expect,it } from 'vitest';
+import { afterAll,beforeAll,describe,expect,it } from 'vitest';
 
 const tables=['ophanim_knowledge_documents','ophanim_knowledge_chunks','ophanim_knowledge_embeddings','ophanim_knowledge_jobs'];
 describe('knowledge additive schema',()=>{
@@ -13,10 +13,13 @@ describe('knowledge additive schema',()=>{
   });
 });
 describe.skipIf(!process.env.DATABASE_URL)('knowledge live RLS — requires migrated DATABASE_URL',()=>{
+  let isolated: Awaited<ReturnType<(typeof import('./isolated-db.test-helper'))['createIsolatedClient']>> | undefined;
+  beforeAll(async () => {
+    if (process.env.OPHANIM_TEST_PGLITE === '1') isolated = await (await import('./isolated-db.test-helper')).createIsolatedClient();
+  }, 120000);
+  afterAll(async () => { await isolated?.end(); });
   it('company A cannot retrieve B through raw, lexical or crafted vector queries; shared is visible, writes/links are isolated',async()=>{
-    const c=process.env.OPHANIM_TEST_PGLITE==='1'
-      ? await (await import('./isolated-db.test-helper')).createIsolatedClient()
-      : new Client({connectionString:process.env.DATABASE_URL});await c.connect();
+    const c=isolated ?? new Client({connectionString:process.env.DATABASE_URL});await c.connect();
     const a=randomUUID(),b=randomUUID(),ua=randomUUID(),ub=randomUUID(),authA=randomUUID(),authB=randomUUID();
     const docs=[randomUUID(),randomUUID(),randomUUID()],chunks=[randomUUID(),randomUUID(),randomUUID()];
     const vector=`[${[1,...Array(1023).fill(0)].join(',')}]`;

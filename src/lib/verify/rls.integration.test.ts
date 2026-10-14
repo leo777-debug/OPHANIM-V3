@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import { Client } from 'pg';
-import { describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 describe('Verify additive migration assertions', () => {
   it('enables RLS for every new organization table and limits access to creator membership', () => {
@@ -14,8 +14,13 @@ describe('Verify additive migration assertions', () => {
   });
 });
 describe.skipIf(!process.env.DATABASE_URL)('Verify live database/RLS (DATABASE_URL required)', () => {
+  let isolated: Awaited<ReturnType<(typeof import('../knowledge/isolated-db.test-helper'))['createIsolatedClient']>> | undefined;
+  beforeAll(async () => {
+    if (process.env.OPHANIM_TEST_PGLITE === '1') isolated = await (await import('../knowledge/isolated-db.test-helper')).createIsolatedClient();
+  }, 120000);
+  afterAll(async () => { await isolated?.end(); });
   it('isolates organizations and users; denies anon and cross-tenant references', async () => {
-    const client = new Client({ connectionString: process.env.DATABASE_URL }); await client.connect();
+    const client = isolated ?? new Client({ connectionString: process.env.DATABASE_URL }); await client.connect();
     const orgA = randomUUID(), orgB = randomUUID(), userA = randomUUID(), userB = randomUUID(), authA = randomUUID(), authB = randomUUID(), runA = randomUUID(), runB = randomUUID();
     try {
       await client.query('begin');
