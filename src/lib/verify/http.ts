@@ -3,14 +3,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedActor } from '@/lib/auth/actor';
 import { getClientIp, isRateLimited } from '@/lib/ssrf-guard';
 import { VERIFY_CONFIG } from './types';
+import { trustedRequestOrigin } from '@/lib/http/request-origin';
 
 export const SESSION_COOKIE = 'ophanim_verify_session';
 export class VerifyHttpError extends Error { constructor(message: string, readonly status: number) { super(message); } }
 export async function requestContext(request: NextRequest, mutation = false) {
   if (mutation) {
-    const origin = request.headers.get('origin');
-    if (origin && origin !== request.nextUrl.origin) throw new VerifyHttpError('Cross-origin requests are not permitted.', 403);
-    if (request.headers.get('sec-fetch-site') === 'cross-site') throw new VerifyHttpError('Cross-site requests are not permitted.', 403);
+    if (!trustedRequestOrigin(request)) throw new VerifyHttpError('Cross-origin requests are not permitted.', 403);
     if (isRateLimited(`verify:ip:${getClientIp(request)}`, VERIFY_CONFIG.ratePerIp)) throw new VerifyHttpError('Too many checks. Try again in a minute.', 429);
   }
   const actor = process.env.DATABASE_URL ? await getAuthenticatedActor(request) : null;

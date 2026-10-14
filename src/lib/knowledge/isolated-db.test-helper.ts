@@ -7,9 +7,7 @@ import path from 'node:path';
 /** Real PostgreSQL statements and policies, disposable in-memory database.
  * Supabase Auth/Storage tables are emulated; no production services are used.
  * This tests SQL isolation, not networking or concurrent worker scheduling. */
-export async function createIsolatedClient() {
-  const db = await PGlite.create({ extensions: { pgcrypto, vector } });
-  await db.exec(`
+export const TEST_BOOTSTRAP_SQL = `
     create role anon nologin;
     create role authenticated nologin;
     create role service_role nologin bypassrls;
@@ -25,7 +23,11 @@ export async function createIsolatedClient() {
     grant select,insert,update,delete on storage.objects to authenticated,service_role;
     alter default privileges in schema public grant select,insert,update,delete on tables to authenticated,service_role;
     create table ophanim_schema_migrations(name text primary key,checksum text not null,applied_at timestamptz default now());
-  `);
+  `;
+
+export async function createIsolatedClient() {
+  const db = await PGlite.create({ extensions: { pgcrypto, vector } });
+  await db.exec(TEST_BOOTSTRAP_SQL);
   const files: {name: string; file: string}[] = [];
   for (const folder of ['db/migrations', 'supabase/migrations']) {
     for (const name of await readdir(folder)) if (name.endsWith('.sql')) files.push({ name, file: path.join(folder, name) });

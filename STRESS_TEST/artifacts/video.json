@@ -1,0 +1,67 @@
+{
+  "file": "C:\\Users\\Leonard\\.codex\\worktrees\\competition-stress\\OPHANIM-V3 2\\STRESS_TEST\\video\\Ophanim-Demo-2026-10.mp4",
+  "recording": [
+    {
+      "importedShipment": true,
+      "ruleBasedWeatherMatch": true,
+      "verifyReplay": true,
+      "sharedResult": true,
+      "history": true,
+      "errors": [],
+      "durationSeconds": 121.2907488
+    }
+  ],
+  "captions": [
+    {
+      "start": 0.00020380000000113797,
+      "text": "Ophanim - organization-scoped freight intelligence. Synthetic demo only."
+    },
+    {
+      "start": 5.624645699999999,
+      "text": "Import an Excel shipment file. Review mapping before any records are created."
+    },
+    {
+      "start": 18.2448036,
+      "text": "The review gate validates columns and duplicates. The operator confirms the import."
+    },
+    {
+      "start": 31.939332800000003,
+      "text": "DXB-291: Jebel Ali to Nhava Sheva. The stored shipment opens as a real record."
+    },
+    {
+      "start": 45.1259862,
+      "text": "A synthetic weather advisory matches DXB-291 by destination port. Rules decide; operators review."
+    },
+    {
+      "start": 61.762372500000005,
+      "text": "Verify checks public-event claims. These examples are explicitly synthetic replays."
+    },
+    {
+      "start": 69.31566319999999,
+      "text": "PARTLY TRUE: fog and diversions, but recorded departures contradict a full closure."
+    },
+    {
+      "start": 82.357742,
+      "text": "Evidence shows sources, observation times and what supports or contradicts the claim."
+    },
+    {
+      "start": 90.37531469999999,
+      "text": "A public share contains only the claim and evidence, not private organization records."
+    },
+    {
+      "start": 102.84358339999999,
+      "text": "Signed-in history preserves previous checks. Deterministic verification works without AI."
+    },
+    {
+      "start": 113.2815522,
+      "text": "Ophanim watches the world for your freight. Recorded fixtures, not live intelligence."
+    }
+  ],
+  "limitations": [
+    "Existing import, shipment, actual port-match and Verify workflows recorded.",
+    "This matcher shows a port match, not a validated forecast-cone/time-window engine.",
+    "Document discrepancy, Gulf signal, confirmation and decision scenes not yet included.",
+    "No real customer data, API keys or live provider traffic."
+  ],
+  "complete": false
+}

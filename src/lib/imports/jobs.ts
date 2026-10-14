@@ -186,8 +186,8 @@ async function claimImportJob(): Promise<ImportJobRow | null> {
          where jobs.status = 'queued' and jobs.next_attempt_at <= now()
          order by jobs.next_attempt_at, jobs.created_at for update skip locked limit 1
        ) update ophanim_import_jobs jobs set status = 'running', attempts = attempts + 1, started_at = coalesce(started_at, now()), updated_at = now()
-       from candidate join ophanim_imports imports on imports.id = jobs.import_id
-       where jobs.id = candidate.id
+       from candidate, ophanim_imports imports
+       where jobs.id = candidate.id and imports.id = jobs.import_id
        returning jobs.id, jobs.import_id, jobs.attempts, imports.created_by_user_id, imports.organization_id, imports.import_type`,
     );
     await client.query('commit');

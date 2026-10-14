@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedActor } from '@/lib/auth/actor';
 import { getClientIp, isRateLimited } from '@/lib/ssrf-guard';
+import { trustedRequestOrigin } from '@/lib/http/request-origin';
 
 export async function authorizeAiRequest(request: NextRequest): Promise<NextResponse<{ error: string; code: string }> | null> {
   const headers = { 'Cache-Control': 'no-store' };
-  const origin = request.headers.get('origin');
-  if ((origin && origin !== request.nextUrl.origin) || request.headers.get('sec-fetch-site') === 'cross-site') {
+  if (!trustedRequestOrigin(request)) {
     return NextResponse.json({ error: 'Cross-origin AI requests are not permitted.', code: 'FORBIDDEN' }, { status: 403, headers });
   }
   let actor;

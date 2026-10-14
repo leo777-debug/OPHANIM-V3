@@ -204,7 +204,7 @@ export async function POST(
       );
     }
 
-    console.error('[OPHANIM AI] Briefing error:', message);
+    console.error('[OPHANIM AI] Briefing error: BRIEFING_FAILED');
     return NextResponse.json(
       { error: 'Briefing generation failed. Please try again.', code: 'BRIEFING_FAILED' },
       { status: 500 }

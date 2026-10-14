@@ -67,7 +67,8 @@ function ipv4InBlocked(ip: string): boolean {
 }
 
 function ipv6InBlocked(ip: string): boolean {
-  const lower = ip.toLowerCase().replace(/^\[/, '').replace(/\]$/, '');
+  const literal = ip.toLowerCase().replace(/^\[/, '').replace(/\]$/, '');
+  const lower = new URL(`http://[${literal}]`).hostname.slice(1, -1);
   // Exact-match singletons first
   if (lower === '::' || lower === '::1') return true;
   for (const prefix of IPV6_BLOCK_PREFIXES) {
@@ -186,10 +187,13 @@ export async function safeFetch(
   init: RequestInit & { maxRedirects?: number } = {},
 ): Promise<Response> {
   const maxRedirects = init.maxRedirects ?? 3;
-  // Spread into a new init we mutate, then explicitly drop our extra prop
-  // so it isn't passed through to fetch().
-  const passInit: RequestInit & { maxRedirects?: number } = { ...init };
-  delete passInit.maxRedirects;
+  if (!Number.isInteger(maxRedirects) || maxRedirects < 0 || maxRedirects > 5) throw new Error('safeFetch: invalid redirect limit');
+  const method = (init.method ?? 'GET').toUpperCase();
+  if (method !== 'GET' && method !== 'HEAD') throw new Error('safeFetch: only read-only requests are supported');
+  const { pinnedPublicFetch } = await import('@/lib/http/pinned-public-fetch');
+  const headers = new Headers(init.headers);
+  const deadline = AbortSignal.timeout(15000);
+  const signal = init.signal ? AbortSignal.any([deadline, init.signal]) : deadline;
   let currentUrl = inputUrl;
   for (let i = 0; i <= maxRedirects; i++) {
     let parsed: URL;
@@ -197,15 +201,12 @@ export async function safeFetch(
     if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
       throw new Error(`safeFetch: blocked protocol ${parsed.protocol}`);
     }
-    const check = await validateHost(parsed.hostname);
-    if (!check.ok) {
-      throw new Error(`safeFetch: blocked target — ${check.reason}`);
-    }
-    const res = await fetch(currentUrl, { ...passInit, redirect: 'manual' });
+    const res = await pinnedPublicFetch(currentUrl, { method, headers: Object.fromEntries(headers), signal, redirect: 'manual' });
     if (res.status >= 300 && res.status < 400) {
       const loc = res.headers.get('location');
       if (!loc) return res;
       const nextUrl = new URL(loc, currentUrl).toString();
+      if (new URL(nextUrl).origin !== parsed.origin) { headers.delete('authorization'); headers.delete('cookie'); }
       currentUrl = nextUrl;
       continue;
     }

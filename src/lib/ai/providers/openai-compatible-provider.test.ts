@@ -1,10 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/lib/ssrf-guard', () => ({ validateHost: vi.fn().mockResolvedValue({ ok: true }) }));
+vi.mock('@/lib/http/pinned-public-fetch', () => ({ pinnedPublicFetch: vi.fn() }));
 
 import { openAiCompatibleProvider, validateAiBaseUrl } from './openai-compatible-provider';
 import { validateHost } from '@/lib/ssrf-guard';
 import { parseAiConfig } from '../config';
+import { pinnedPublicFetch } from '@/lib/http/pinned-public-fetch';
 
 afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); vi.clearAllMocks(); });
 
@@ -31,7 +33,7 @@ describe('openAiCompatibleProvider', () => {
   });
   it('uses chat completions without tools or search calls', async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ choices: [{ message: { content: 'Concise summary.' } }] }), { status: 200 }));
-    vi.stubGlobal('fetch', fetchMock);
+    vi.mocked(pinnedPublicFetch).mockImplementation(fetchMock);
     const output = await openAiCompatibleProvider.generate(
       { apiKey: 'key', baseUrl: 'https://api.example.com/v1', model: 'model', enabledTasks: ['summarize'] },
       { task: 'summarize', context: { item: 'source text' } },

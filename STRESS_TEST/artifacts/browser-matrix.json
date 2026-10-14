@@ -1,0 +1,428 @@
+{
+  "checkedAt": "2026-10-14T15:05:51.307Z",
+  "checks": [
+    {
+      "browser": "chromium",
+      "width": 390,
+      "path": "/verify",
+      "elapsedMs": 4034,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "chromium",
+      "width": 390,
+      "path": "/imports",
+      "elapsedMs": 2608,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "chromium",
+      "width": 390,
+      "path": "/logistics/command",
+      "elapsedMs": 4665,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "chromium",
+      "width": 390,
+      "path": "/atlas",
+      "elapsedMs": 3067,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true,
+      "mapAssets": "external basemap blocked; canvas count is NOT a nonblank-map test"
+    },
+    {
+      "browser": "chromium",
+      "width": 390,
+      "path": "Verify offline failure and replay recovery",
+      "pass": true
+    },
+    {
+      "browser": "chromium",
+      "width": 820,
+      "path": "/verify",
+      "elapsedMs": 2407,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "chromium",
+      "width": 820,
+      "path": "/imports",
+      "elapsedMs": 2461,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "chromium",
+      "width": 820,
+      "path": "/logistics/command",
+      "elapsedMs": 6495,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "chromium",
+      "width": 820,
+      "path": "/atlas",
+      "elapsedMs": 3254,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 1,
+      "pass": true,
+      "mapAssets": "external basemap blocked; canvas count is NOT a nonblank-map test"
+    },
+    {
+      "browser": "chromium",
+      "width": 820,
+      "path": "Verify offline failure and replay recovery",
+      "pass": true
+    },
+    {
+      "browser": "chromium",
+      "width": 1920,
+      "path": "/verify",
+      "elapsedMs": 2426,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "chromium",
+      "width": 1920,
+      "path": "/imports",
+      "elapsedMs": 2551,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "chromium",
+      "width": 1920,
+      "path": "/logistics/command",
+      "elapsedMs": 3867,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "chromium",
+      "width": 1920,
+      "path": "/atlas",
+      "elapsedMs": 4333,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true,
+      "mapAssets": "external basemap blocked; canvas count is NOT a nonblank-map test"
+    },
+    {
+      "browser": "chromium",
+      "width": 1920,
+      "path": "Verify offline failure and replay recovery",
+      "pass": true
+    },
+    {
+      "browser": "firefox",
+      "width": 390,
+      "path": "/verify",
+      "elapsedMs": 3244,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "firefox",
+      "width": 390,
+      "path": "/imports",
+      "elapsedMs": 2309,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "firefox",
+      "width": 390,
+      "path": "/logistics/command",
+      "elapsedMs": 3223,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "firefox",
+      "width": 390,
+      "path": "/atlas",
+      "elapsedMs": 2552,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 1,
+      "pass": true,
+      "mapAssets": "external basemap blocked; canvas count is NOT a nonblank-map test"
+    },
+    {
+      "browser": "firefox",
+      "width": 390,
+      "path": "Verify offline failure and replay recovery",
+      "pass": true
+    },
+    {
+      "browser": "firefox",
+      "width": 820,
+      "path": "/verify",
+      "elapsedMs": 2458,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "firefox",
+      "width": 820,
+      "path": "/imports",
+      "elapsedMs": 2277,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "firefox",
+      "width": 820,
+      "path": "/logistics/command",
+      "elapsedMs": 2880,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "firefox",
+      "width": 820,
+      "path": "/atlas",
+      "elapsedMs": 2770,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 1,
+      "pass": true,
+      "mapAssets": "external basemap blocked; canvas count is NOT a nonblank-map test"
+    },
+    {
+      "browser": "firefox",
+      "width": 820,
+      "path": "Verify offline failure and replay recovery",
+      "pass": true
+    },
+    {
+      "browser": "firefox",
+      "width": 1920,
+      "path": "/verify",
+      "elapsedMs": 2623,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "firefox",
+      "width": 1920,
+      "path": "/imports",
+      "elapsedMs": 2262,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "firefox",
+      "width": 1920,
+      "path": "/logistics/command",
+      "elapsedMs": 2869,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "firefox",
+      "width": 1920,
+      "path": "/atlas",
+      "elapsedMs": 2641,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 1,
+      "pass": true,
+      "mapAssets": "external basemap blocked; canvas count is NOT a nonblank-map test"
+    },
+    {
+      "browser": "firefox",
+      "width": 1920,
+      "path": "Verify offline failure and replay recovery",
+      "pass": true
+    },
+    {
+      "browser": "webkit",
+      "width": 390,
+      "path": "/verify",
+      "elapsedMs": 2320,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "webkit",
+      "width": 390,
+      "path": "/imports",
+      "elapsedMs": 2154,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "webkit",
+      "width": 390,
+      "path": "/logistics/command",
+      "elapsedMs": 2661,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "webkit",
+      "width": 390,
+      "path": "/atlas",
+      "elapsedMs": 2408,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 1,
+      "pass": true,
+      "mapAssets": "external basemap blocked; canvas count is NOT a nonblank-map test"
+    },
+    {
+      "browser": "webkit",
+      "width": 390,
+      "path": "Verify offline failure and replay recovery",
+      "pass": true
+    },
+    {
+      "browser": "webkit",
+      "width": 820,
+      "path": "/verify",
+      "elapsedMs": 2325,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "webkit",
+      "width": 820,
+      "path": "/imports",
+      "elapsedMs": 2203,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "webkit",
+      "width": 820,
+      "path": "/logistics/command",
+      "elapsedMs": 2841,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "webkit",
+      "width": 820,
+      "path": "/atlas",
+      "elapsedMs": 2632,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 1,
+      "pass": true,
+      "mapAssets": "external basemap blocked; canvas count is NOT a nonblank-map test"
+    },
+    {
+      "browser": "webkit",
+      "width": 820,
+      "path": "Verify offline failure and replay recovery",
+      "pass": true
+    },
+    {
+      "browser": "webkit",
+      "width": 1920,
+      "path": "/verify",
+      "elapsedMs": 2321,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "webkit",
+      "width": 1920,
+      "path": "/imports",
+      "elapsedMs": 2297,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "webkit",
+      "width": 1920,
+      "path": "/logistics/command",
+      "elapsedMs": 2770,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "webkit",
+      "width": 1920,
+      "path": "/atlas",
+      "elapsedMs": 3271,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 1,
+      "pass": true,
+      "mapAssets": "external basemap blocked; canvas count is NOT a nonblank-map test"
+    },
+    {
+      "browser": "webkit",
+      "width": 1920,
+      "path": "Verify offline failure and replay recovery",
+      "pass": true
+    }
+  ]
+}

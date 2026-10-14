@@ -1,0 +1,174 @@
+{
+  "checkedAt": "2026-10-14T14:58:01.310Z",
+  "database": "native PostgreSQL 18 core; pgvector/Knowledge unavailable",
+  "checks": [
+    {
+      "batch": 0,
+      "status": 200,
+      "elapsedMs": 15264,
+      "id": "caa5aa0a-920d-43ea-be27-2389a788ca05",
+      "validRows": 5000,
+      "pass": true
+    },
+    {
+      "batch": 1,
+      "status": 200,
+      "elapsedMs": 15751,
+      "id": "092535de-5fcb-460e-86ac-381803fb1ab0",
+      "validRows": 5000,
+      "pass": true
+    },
+    {
+      "batch": 2,
+      "status": 200,
+      "elapsedMs": 15476,
+      "id": "50f32a0e-6f8a-4736-a4c6-ebc86711cc04",
+      "validRows": 5000,
+      "pass": true
+    },
+    {
+      "batch": 3,
+      "status": 200,
+      "elapsedMs": 15605,
+      "id": "6bc72e99-74b9-4a65-92d3-5458dc626a46",
+      "validRows": 5000,
+      "pass": true
+    },
+    {
+      "batch": 4,
+      "status": 200,
+      "elapsedMs": 15676,
+      "id": "cd385378-c4fc-4e87-9402-79ee6437e5cf",
+      "validRows": 5000,
+      "pass": true
+    },
+    {
+      "batch": 5,
+      "status": 200,
+      "elapsedMs": 15433,
+      "id": "66db13c1-c626-4d28-a1bc-ca9c503c224a",
+      "validRows": 5000,
+      "pass": true
+    },
+    {
+      "batch": 6,
+      "status": 200,
+      "elapsedMs": 24152,
+      "id": "d6f5585c-f814-41cf-bd95-ce83a5ea743f",
+      "validRows": 5000,
+      "pass": true
+    },
+    {
+      "batch": 7,
+      "status": 200,
+      "elapsedMs": 15311,
+      "id": "aef7fa9e-e327-4b32-901f-be42faf592d4",
+      "validRows": 5000,
+      "pass": true
+    },
+    {
+      "batch": 8,
+      "status": 200,
+      "elapsedMs": 15248,
+      "id": "b0b8c6ed-1a06-4940-9be1-220cd29d7600",
+      "validRows": 5000,
+      "pass": true
+    },
+    {
+      "batch": 9,
+      "status": 200,
+      "elapsedMs": 15085,
+      "id": "ddbe6b93-f95d-49bc-8870-1ccc6b709506",
+      "validRows": 5000,
+      "pass": true
+    },
+    {
+      "batch": 10,
+      "status": 200,
+      "elapsedMs": 15320,
+      "id": "7ede61ab-6f68-43c6-8ddc-998c45eb240f",
+      "validRows": 5000,
+      "pass": true
+    },
+    {
+      "batch": 11,
+      "status": 200,
+      "elapsedMs": 23843,
+      "id": "972947d3-7783-435c-9934-f3c40cd3335f",
+      "validRows": 5000,
+      "pass": true
+    },
+    {
+      "batch": 12,
+      "status": 200,
+      "elapsedMs": 23999,
+      "id": "860d95d3-7ba3-4965-9063-9c755c97d729",
+      "validRows": 5000,
+      "pass": true
+    },
+    {
+      "batch": 13,
+      "status": 200,
+      "elapsedMs": 24026,
+      "id": "f64b14ff-8656-49f0-bb1d-131a41a5815c",
+      "validRows": 5000,
+      "pass": true
+    },
+    {
+      "batch": 14,
+      "status": 200,
+      "elapsedMs": 23780,
+      "id": "ff9102b8-60f2-4fff-bda2-aa7ec8e9d04b",
+      "validRows": 5000,
+      "pass": true
+    },
+    {
+      "batch": 15,
+      "status": 200,
+      "elapsedMs": 23929,
+      "id": "33dc7318-20a6-4602-bfb7-4164c0182dcd",
+      "validRows": 5000,
+      "pass": true
+    },
+    {
+      "batch": 16,
+      "status": 200,
+      "elapsedMs": 24068,
+      "id": "e6b764b4-4768-40a5-9418-3aa83f5e47a5",
+      "validRows": 5000,
+      "pass": true
+    },
+    {
+      "batch": 17,
+      "status": 200,
+      "elapsedMs": 24162,
+      "id": "4f819785-5a6d-4279-b14c-426db7402073",
+      "validRows": 5000,
+      "pass": true
+    },
+    {
+      "batch": 18,
+      "status": 200,
+      "elapsedMs": 24134,
+      "id": "2c5888ae-9ce3-42d2-bb6c-8585b1d279d8",
+      "validRows": 5000,
+      "pass": true
+    },
+    {
+      "batch": 19,
+      "status": 200,
+      "elapsedMs": 23831,
+      "id": "0ae54c32-d003-40e1-9f6b-caae32a34430",
+      "validRows": 5000,
+      "pass": true
+    }
+  ],
+  "integrity": {
+    "imports": 20,
+    "declaredRows": 100000,
+    "actualRows": 100000,
+    "shipmentsBeforeConfirmation": 0
+  },
+  "pass": true,
+  "scope": "20 simultaneous CSV previews of 5000 rows through real HTTP/SQL; background confirmation/restart still separate tests"
+}

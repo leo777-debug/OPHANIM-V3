@@ -24,8 +24,7 @@ export async function POST(request: NextRequest) {
     const result = await generateWithRouting(config, { task, input: typeof body.input === 'string' ? body.input : undefined, context: body.context });
     validateTaskOutput(task,result.output);
     return NextResponse.json({ ...result, provider: 'openai-compatible', task, generatedAt: new Date().toISOString() });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'AI provider failed';
-    return NextResponse.json({ error: message }, { status: 502 });
+  } catch {
+    return NextResponse.json({ error: 'AI model unavailable or returned invalid output. Check the configured model and try again.', code: 'AI_UNAVAILABLE' }, { status: 502 });
   }
 }

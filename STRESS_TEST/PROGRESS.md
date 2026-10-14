@@ -4,6 +4,11 @@ Competition: 17 October 2026. Code freeze: end of 16 October, Asia/Dubai.
 Branch: `stress-test/competition`. Finished: **no**.
 
 ## Current Checkpoint
+- [x] Latest source checks: 547 tests pass, seven database-opt-in tests skip; typecheck and focused lint pass.
+- [x] Native PostgreSQL load/restart tests and 20 concurrent 5,000-row import previews recorded.
+- [x] Captioned 127-second H.264 video recorded and copied to D:/OPHANIM/Documentation; title, weather and share frames inspected.
+- [ ] Restarted one-hour soak after fixing real background-job SQL; 5,000 imported rows complete, zero failures, all subsequent status samples 200 so far.
+- [ ] Final build, extended role/alert/1,000-document/burst tests and nonblank fallback-map browser checks pending.
 - [x] Fetch origin and create an isolated branch from the remote default.
 - [x] Merge already-built Verify/RAG foundation without changing the original checkout.
 - [x] Preserve known Shodan/freshness source changes; exclude secrets and unrelated edits.
@@ -11,7 +16,7 @@ Branch: `stress-test/competition`. Finished: **no**.
 - [x] Install locked dependencies without lifecycle scripts or copied credentials.
 - [x] Baseline: TypeScript passes; 311 tests pass, 5 skip; production build passes.
 - [x] Full lint baseline: 428 errors, 86 warnings across 573 files; legacy issues left alone.
-- [x] Disposable embedded PostgreSQL: 37 migrations applied, socket probe passed, labelled demo organization seeded. Native PostgreSQL still unavailable; no concurrency certification.
+- [x] Disposable embedded PostgreSQL baseline and six expanded RLS tests. Native PostgreSQL 18 now supports concurrency/restart tests; it does not bundle pgvector, so native Knowledge concurrency remains unverified.
 - [x] Isolated app baseline: health, anonymous shipment 401, authenticated synthetic demo shipment API, Chromium Verify at 1920/390px pass. Full presentation workflows remain pending.
 - [x] Inventory 194 pages/API routes with static auth/provider/AI markers; runtime policy review pending.
 - [ ] Phase 2: security and tenant-isolation matrix with regression tests.
@@ -46,6 +51,8 @@ do not treat a scaffold, mocked unit test or unavailable database as complete co
 - This checkout intentionally has no copied production/provider secrets.
 
 ## Next
+Current measured checkpoint: 507 tests pass/seven skip, six embedded RLS tests pass, build/TypeScript/focused lint pass. Fixed legitimate proxy-origin rejection and credential-bearing AI errors. Native core PostgreSQL runs 10k shipments/100k events: zero errors at 50/200 connections (p95 1.44s/3.90s, still above speed budgets). All 20 simultaneous 5k-row previews pass with 100k stored rows and no pre-confirmation shipments. Actual mid-import database restart rolls back cleanly and retry succeeds. All 45 cross-browser/layout/offline checks pass; nonblank basemap acceptance still open because external assets are blocked. Nine mock-AI HTTP failure checks pass. A 121-second captioned 1080p draft demo is recorded and copied to D:/OPHANIM/Documentation; no real customer data/live providers. One-hour background-import soak running. Do not mark the mission finished: remaining coverage/asset/scale/polish gates remain.
+
 Expanded HTTP checkpoint: all 72 assertions pass. Added synthetic private knowledge documents/files and Verify runs; own reads/downloads work while foreign reads/downloads/deletes/rechecks/shares fail. History lists exclude the other tenant. Expired/revoked sessions, viewer writes/admin access, forged organization cookie and old-token reuse after logout are covered. Focused script lint passes. Full role/Supabase session, alert and remaining file/child-link coverage still pending.
 
 P0 child-link checkpoint: actual HTTP reproduced cross-organization evidence injection (four failed checks). Fixed both write validation and case child reads; additive migration 027 enforces target/template ownership even for RLS-bypassing service connections. All 42 core HTTP checks pass. Full suite: 488 passed, seven skipped; six embedded RLS tests pass, production build and focused lint pass. Before-fix artifact retained. Complete Knowledge/Verify/alerts/files and remaining child-link/role/session coverage still pending.

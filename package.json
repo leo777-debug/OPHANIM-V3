@@ -11,7 +11,14 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:live": "RUN_LIVE_TESTS=1 vitest run"
+    "test:live": "RUN_LIVE_TESTS=1 vitest run",
+    "demo:video": "node STRESS_TEST/demo-video.mjs",
+    "stress:load": "node STRESS_TEST/load.mjs --native --large",
+    "stress:imports": "node STRESS_TEST/import-load.mjs",
+    "stress:browsers": "node STRESS_TEST/browser-matrix.mjs",
+    "stress:restart": "node STRESS_TEST/restart-test.mjs",
+    "stress:ai-failure": "node STRESS_TEST/ai-failure.mjs",
+    "stress:soak": "node STRESS_TEST/soak.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -55,6 +62,7 @@
     "@types/react-dom": "^19",
     "@types/ws": "^8.18.1",
     "autocannon": "8.0.0",
+    "embedded-postgres": "18.4.0-beta.17",
     "eslint": "^9",
     "eslint-config-next": "16.3.8",
     "tailwindcss": "^4",

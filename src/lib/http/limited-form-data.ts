@@ -2,7 +2,7 @@ export class RequestBodyLimitError extends Error {
   constructor() { super('Upload exceeds the request size limit.'); }
 }
 
-export async function limitedFormData(request: Request, maxBytes: number): Promise<FormData> {
+export async function limitedRequestBytes(request: Request, maxBytes: number): Promise<Uint8Array<ArrayBuffer>> {
   const declared = request.headers.get('content-length');
   if (declared && Number(declared) > maxBytes) throw new RequestBodyLimitError();
   if (!request.body) throw new Error('Upload body is missing.');
@@ -26,5 +26,10 @@ export async function limitedFormData(request: Request, maxBytes: number): Promi
   const body = new Uint8Array(size);
   let offset = 0;
   for (const chunk of chunks) { body.set(chunk, offset); offset += chunk.byteLength; }
+  return body;
+}
+
+export async function limitedFormData(request: Request, maxBytes: number): Promise<FormData> {
+  const body = await limitedRequestBytes(request, maxBytes);
   return new Request(request.url, { method: 'POST', headers: { 'Content-Type': request.headers.get('content-type') ?? '' }, body }).formData();
 }

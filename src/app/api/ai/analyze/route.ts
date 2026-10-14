@@ -222,7 +222,7 @@ export async function POST(
       );
     }
 
-    console.error('[OPHANIM AI] Analysis error:', message);
+    console.error('[OPHANIM AI] Analysis error: ANALYSIS_FAILED');
     return NextResponse.json(
       { error: 'Intelligence analysis failed. Please try again.', code: 'ANALYSIS_FAILED' },
       { status: 500 }

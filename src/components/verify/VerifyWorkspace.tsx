@@ -10,7 +10,9 @@ import styles from './verify.module.css';
 type Share = { token: string; path: string; expires: string; temporary: boolean };
 const examples = [{ id: 'dubai-fog', text: 'Dubai airport fog' }, { id: 'earthquake', text: 'Tokyo earthquake' }, { id: 'red-sea', text: 'Red Sea ship claim' }, { id: 'sanctions', text: 'Sanctions claim' }, { id: 'opinion', text: 'Opinion' }];
 async function post(path: string, body: unknown, method = 'POST') {
-  const response = await fetch(path, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  let response: Response;
+  try { response = await fetch(path, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); }
+  catch { throw new Error('Ophanim is unreachable. Reconnect and try again.'); }
   const data = await response.json(); if (!response.ok) throw new Error(data.error ?? 'Request failed.'); return data;
 }
 export default function VerifyWorkspace() {

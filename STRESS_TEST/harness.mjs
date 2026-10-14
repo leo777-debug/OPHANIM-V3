@@ -30,15 +30,17 @@ export async function withIsolatedApp(run, options = {}) {
   await vacant(3100); await vacant(55432);
   const children = [];
   try {
-    const database = spawn(process.execPath, ['STRESS_TEST/local-db.mjs', ...(options.databaseArgs ?? [])], { cwd: root, env, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
+    const database = spawn(process.execPath, [options.native ? 'STRESS_TEST/native-db.mjs' : 'STRESS_TEST/local-db.mjs', ...(options.databaseArgs ?? [])], { cwd: root, env, stdio: options.native ? ['ignore', 'pipe', 'pipe', 'ipc'] : ['ignore', 'pipe', 'pipe'], windowsHide: true });
     children.push(database); database.stderr.on('data', () => {});
     await ready(database, 'Disposable PostgreSQL socket verified');
     const app = startTestApp(['ignore', 'pipe', 'pipe'], options.standalone ?? false);
     children.push(app); app.stderr.on('data', () => {});
     await ready(app, 'Ready in');
-    return await run({ base: 'http://127.0.0.1:3100', root, app });
+    return await run({ base: 'http://127.0.0.1:3100', root, app, database });
   } finally {
-    for (const child of children.reverse()) child.kill('SIGTERM');
+    for (const child of children.reverse()) {
+      if (child.connected) child.send('stop'); else child.kill('SIGTERM');
+    }
     for (let i = 0; i < 50 && children.some((child) => child.exitCode === null && child.signalCode === null); i++) await pause(100);
     if (children.some((child) => child.exitCode === null && child.signalCode === null)) throw new Error('Owned test child did not terminate; inspect it before resuming.');
   }

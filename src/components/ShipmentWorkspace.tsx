@@ -1,9 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type SetStateAction } from "react";
 import Link from "next/link";
 import {
   Archive,
+  ChevronLeft,
+  ChevronRight,
   FileUp,
   MoreHorizontal,
   Plus,
@@ -124,14 +126,20 @@ export default function ShipmentWorkspace({
   const [shipments, setShipments] = useState<ShipmentRecord[]>([]);
   const [shipment, setShipment] = useState<ShipmentRecord | null>(null);
   const [form, setForm] = useState<ShipmentInput>(emptyShipment);
-  const [filters, setFilters] = useState<Filters>(defaultFilters);
+  const [filters, setFiltersState] = useState<Filters>(defaultFilters);
   const [showCreate, setShowCreate] = useState(false);
   const [openMenu, setOpenMenu] = useState<string>();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [pageOffset, setPageOffset] = useState(0);
+  const [pageInfo, setPageInfo] = useState({ limit: 100, offset: 0, total: 0, hasMore: false });
+  const [facets, setFacets] = useState<Record<string,string[]>>({});
+  const generation = useRef(0);
+  const setFilters = (value: SetStateAction<Filters>) => { setPageOffset(0); setFiltersState(value); };
 
   const load = useCallback(async () => {
+    const requestGeneration = ++generation.current;
     setLoading(true);
     setError("");
     try {
@@ -139,15 +147,20 @@ export default function ShipmentWorkspace({
         const data = await requestJson<{ shipment: ShipmentRecord }>(
           `/api/logistics/shipments/${shipmentId}`,
         );
+        if (requestGeneration !== generation.current) return;
         setShipment(data.shipment);
         setForm(formFrom(data.shipment));
       } else {
-        const data = await requestJson<{ shipments: ShipmentRecord[] }>(
-          "/api/logistics/shipments",
+        const params = new URLSearchParams({ offset: String(pageOffset), limit: '100', ...filters });
+        const data = await requestJson<{ shipments: ShipmentRecord[]; page: typeof pageInfo; facets: Record<string,string[]> }>(
+          `/api/logistics/shipments?${params}`,
         );
+        if (requestGeneration !== generation.current) return;
         setShipments(data.shipments);
+        setPageInfo(data.page); setFacets(data.facets);
       }
     } catch (cause) {
+      if (requestGeneration !== generation.current) return;
       if (
         cause instanceof Error &&
         cause.message === "Authentication is required."
@@ -158,9 +171,9 @@ export default function ShipmentWorkspace({
           cause instanceof Error ? cause.message : "Unable to load shipments.",
         );
     } finally {
-      setLoading(false);
+      if (requestGeneration === generation.current) setLoading(false);
     }
-  }, [router, shipmentId]);
+  }, [router, shipmentId, filters, pageOffset]);
 
   useEffect(() => {
     void Promise.resolve().then(load);
@@ -204,7 +217,7 @@ export default function ShipmentWorkspace({
       });
   }, [filters, shipments]);
 
-  const options = (field: keyof ShipmentRecord) =>
+  const options = (field: keyof ShipmentRecord) => facets[field] ??
     Array.from(
       new Set(
         shipments
@@ -416,9 +429,14 @@ export default function ShipmentWorkspace({
             <div>
               <h2>Shipment list</h2>
               <p>
-                {filtered.length} of {shipments.length} active shipment
-                {shipments.length === 1 ? "" : "s"}
+                {filtered.length} shown of {pageInfo.total} matching active shipment
+                {pageInfo.total === 1 ? "" : "s"}
               </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button type="button" title="Previous shipment page" aria-label="Previous shipment page" disabled={loading || pageOffset === 0} onClick={() => setPageOffset(Math.max(0, pageOffset - 100))} className="ops-button ops-button--secondary"><ChevronLeft size={16} /></button>
+              <span className="text-xs">Page {Math.floor(pageOffset / 100) + 1}</span>
+              <button type="button" title="Next shipment page" aria-label="Next shipment page" disabled={loading || !pageInfo.hasMore} onClick={() => setPageOffset(pageOffset + 100)} className="ops-button ops-button--secondary"><ChevronRight size={16} /></button>
             </div>
           </div>
           <div className="ops-panel ops-shipment-table">

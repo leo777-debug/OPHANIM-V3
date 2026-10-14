@@ -174,8 +174,8 @@ async function geminiOverview(mode: Mode, digest: Digest, keys: string[]): Promi
     const result = await model.generateContent(prompt);
     const text = result.response.text().trim();
     return text || null;
-  } catch (e) {
-    console.warn('[OPHANIM] Gemini overview failed, using heuristic:', e);
+  } catch {
+    console.warn('[OPHANIM] Gemini overview failed, using heuristic: MODEL_UNAVAILABLE');
     return null;
   }
 }

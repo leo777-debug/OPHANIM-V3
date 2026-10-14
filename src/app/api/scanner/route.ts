@@ -6,6 +6,7 @@ import { validateHost, isRateLimited } from '@/lib/ssrf-guard';
 import { scanAllowlist, validateScanTargets } from '@/lib/shodan/scan-guard';
 import { ShodanError } from '@/lib/shodan/types';
 import { db } from '@/lib/watchlists/db';
+import { trustedRequestOrigin } from '@/lib/http/request-origin';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -47,8 +48,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const origin = request.headers.get('origin');
-    if ((origin && origin !== request.nextUrl.origin) || request.headers.get('sec-fetch-site') === 'cross-site') return response({ error: 'Cross-origin scan submissions are not permitted.' }, 403);
+    if (!trustedRequestOrigin(request)) return response({ error: 'Cross-origin scan submissions are not permitted.' }, 403);
     const actor = await requireAuthenticatedActor(request, 'organization:manage');
     if (isRateLimited(`scanner:user:${actor.userId}`, 3, 60000)) return response({ error: 'Scan limit reached. Wait a minute.' }, 429);
     const text = await request.text();

@@ -80,7 +80,10 @@ async function runProvider(
   const timeout = setTimeout(() => controller.abort(), provider.timeoutMs);
   try {
     const providerContext = { ...context, signal: controller.signal };
-    const raw = await provider.fetch(providerContext);
+    const raw = await Promise.race([
+      provider.fetch(providerContext),
+      new Promise<never>((_, reject) => controller.signal.addEventListener('abort', () => reject(new Error('Provider timed out.')), { once: true })),
+    ]);
     const events = provider
       .normalize(raw, providerContext)
       .map(validateNormalizedIntelligenceEvent);
@@ -93,7 +96,7 @@ async function runProvider(
         durationMs: Date.now() - started,
       },
     };
-  } catch (error) {
+  } catch {
     return {
       events: [],
       diagnostic: {
@@ -101,7 +104,7 @@ async function runProvider(
         status: "error",
         eventCount: 0,
         durationMs: Date.now() - started,
-        message: error instanceof Error ? error.message : "Provider failed.",
+        message: controller.signal.aborted ? 'Provider timed out.' : 'Provider failed. Check its configuration and health.',
       },
     };
   } finally {

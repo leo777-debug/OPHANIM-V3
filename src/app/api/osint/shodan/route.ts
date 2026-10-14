@@ -5,6 +5,7 @@ import { getClientIp, isRateLimited } from '@/lib/ssrf-guard';
 import { shodanClient } from '@/lib/shodan/client';
 import { getScanStatus, submitScan } from '@/lib/shodan/scans';
 import { ShodanError } from '@/lib/shodan/types';
+import { trustedRequestOrigin } from '@/lib/http/request-origin';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -46,8 +47,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const actor = await requireAuthenticatedActor(request, 'organization:manage');
-    const origin = request.headers.get('origin');
-    if (origin && origin !== new URL(request.url).origin) throw new ShodanError('access_denied', 'Scan submissions must come from this Ophanim deployment.', 403);
+    if (!trustedRequestOrigin(request)) throw new ShodanError('access_denied', 'Scan submissions must come from this Ophanim deployment.', 403);
     if (isRateLimited(`shodan-scan:${actor.userId}`, 3, 60000)) throw new ShodanError('rate_limited', 'Too many scan submissions. Wait a minute.', 429);
     const input = await request.text();
     if (input.length > 8192) throw new ShodanError('invalid_request', 'Scan request is too large.', 400);

@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { clearSessionCookie, revokeSession, SESSION_COOKIE } from '@/lib/auth/session';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { trustedRequestOrigin } from '@/lib/http/request-origin';
 
 export async function POST(request: NextRequest) {
+  if (!trustedRequestOrigin(request)) return NextResponse.json({ error: 'Cross-origin logout is not permitted.' }, { status: 403 });
   const supabase = await createSupabaseServerClient();
   if (supabase) await supabase.auth.signOut().catch(() => undefined);
   const token = request.cookies.get(SESSION_COOKIE)?.value;

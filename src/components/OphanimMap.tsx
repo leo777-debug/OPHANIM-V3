@@ -7,6 +7,7 @@ import DynamicProviderLayers from './DynamicProviderLayers';
 import type { ProviderMapLayer } from '@/lib/providers';
 import type { MapViewport } from '@/lib/map-workspaces';
 import { safePopupUrl } from '@/lib/map-popup-safety';
+import { offlineBasemap } from '@/lib/offline-basemap';
 
 interface OphanimMapProps {
   data: any;
@@ -61,6 +62,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
   const mapRef = useRef<maplibregl.Map | null>(null);
   const popupRef = useRef<maplibregl.Popup | null>(null);
   const [mapReady, setMapReady] = useState(false);
+  const [offlineMap, setOfflineMap] = useState(false);
   const prevStyleRef = useRef<'dark' | 'earth' | 'satellite'>('dark');
 
   // Create aircraft icon on canvas (for WebGL symbol layer)
@@ -200,14 +202,24 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
       transformRequest: (url: string) => ({ url }),
     });
 
+    let recovering = false;
+    const recoverBasemap = () => {
+      if (recovering || mapRef.current) return;
+      recovering = true;
+      setOfflineMap(true);
+      map.setStyle(offlineBasemap());
+    };
+    const basemapDeadline = setTimeout(recoverBasemap, 8000);
     map.on('error', (event) => {
       // Switching a raster layer can cancel an obsolete tile request. MapLibre
       // reports that expected cancellation as an error event in development.
       if (isExpectedMapTileAbort(event.error)) return;
-      console.warn('MapLibre error:', event.error);
+      if (!mapRef.current && !recovering) queueMicrotask(recoverBasemap);
+      else console.warn('MapLibre source unavailable.');
     });
 
     map.on('load', () => {
+      clearTimeout(basemapDeadline);
       mapRef.current = map;
 
       // Theme colors
@@ -1202,7 +1214,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
       });
     });
 
-    return () => { map.remove(); mapRef.current = null; };
+    return () => { clearTimeout(basemapDeadline); map.remove(); mapRef.current = null; };
   }, []);
 
   // Day/Night
@@ -1818,6 +1830,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
 
   return <>
     <div ref={containerRef} className="absolute inset-0 w-full h-full" />
+    {offlineMap && <div role="status" data-testid="offline-basemap" className="absolute top-32 left-1/2 z-10 -translate-x-1/2 bg-black/80 px-3 py-2 text-xs text-white">Offline basemap: low-detail Natural Earth geography</div>}
     <DynamicProviderLayers map={mapReady ? mapRef.current : null} layers={providerLayers} onEntityClick={onEntityClick} />
   </>;
 }

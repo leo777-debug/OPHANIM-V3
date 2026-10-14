@@ -1,0 +1,59 @@
+{
+  "checkedAt": "2026-10-14T15:33:13.481Z",
+  "checks": [
+    {
+      "mode": "invalid",
+      "status": 502,
+      "elapsedMs": 2438,
+      "pass": true
+    },
+    {
+      "mode": "invalid",
+      "check": "deterministic shipment API still works",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "mode": "empty",
+      "status": 502,
+      "elapsedMs": 41,
+      "pass": true
+    },
+    {
+      "mode": "empty",
+      "check": "deterministic shipment API still works",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "mode": "failure",
+      "status": 502,
+      "elapsedMs": 32,
+      "pass": true
+    },
+    {
+      "mode": "failure",
+      "check": "deterministic shipment API still works",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "mode": "slow",
+      "status": 200,
+      "elapsedMs": 1237,
+      "pass": true
+    },
+    {
+      "mode": "slow",
+      "check": "deterministic shipment API still works",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "mode": "unreachable",
+      "status": 502,
+      "pass": true
+    }
+  ],
+  "scope": "owned loopback mock; no live AI or paid provider; short-delay behavior, not a full 120-second timeout test"
+}

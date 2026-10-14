@@ -15,10 +15,7 @@ export async function POST(request: NextRequest) {
   try {
     await openAiCompatibleProvider.generate(config, { task: 'explain', input: 'Reply with: Connection successful.' });
     return NextResponse.json({ connected: true, model: config.model });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Connection failed';
-    return NextResponse.json({ error: message === 'fetch failed'
-      ? 'Cannot reach the model server from Ophanim. Start your model server and check its address. Localhost refers to the computer running the Ophanim backend.'
-      : message }, { status: 502 });
+  } catch {
+    return NextResponse.json({ error: 'Cannot validate the model connection. Check the server address, model name and credentials. Localhost refers to the computer running the Ophanim backend.', code: 'AI_UNAVAILABLE' }, { status: 502 });
   }
 }
