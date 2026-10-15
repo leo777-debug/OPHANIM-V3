@@ -34,6 +34,8 @@ if (!encodeOnly) await withIsolatedApp(async ({ base }) => {
   const warm = await context.newPage();
   await warm.goto(`${base}/imports`, { waitUntil: 'domcontentloaded' });
   await warm.getByRole('heading', { name: 'Import records', exact: true }).waitFor();
+  await warm.goto(`${base}/logistics/rescue`, { waitUntil: 'domcontentloaded' });
+  await warm.getByRole('heading', { name: 'Active rescue cases', exact: true }).waitFor();
   await warm.close();
   const page = await context.newPage();
   const errors = []; page.on('pageerror', (error) => errors.push(error.message));
@@ -79,6 +81,23 @@ if (!encodeOnly) await withIsolatedApp(async ({ base }) => {
     await page.getByRole('heading', { name: disruption.title, exact: true }).waitFor();
     await page.getByText('DXB-291', { exact: true }).first().scrollIntoViewIfNeeded();
     await pause(16000);
+    const rescueResponse = await context.request.post(`${base}/api/logistics/rescue-cases`, { data: { shipmentId: shipment.id, disruptionId: disruption.id, objective: 'DEMO ONLY - review carrier options before changing bookings.' } });
+    if (rescueResponse.status() !== 201) throw new Error('Actual rescue workflow could not be created.');
+    const rescue = (await rescueResponse.json()).rescueCase;
+    caption('The operator records a next step and rationale. No carrier booking is changed.');
+    await page.goto(`${base}/logistics/rescue`, { waitUntil: 'domcontentloaded' });
+    await page.locator('button.ops-case-row').filter({ hasText: 'DXB-291' }).first().click();
+    await page.getByRole('heading', { name: 'Decisions and evidence', exact: true }).waitFor();
+    await page.getByRole('heading', { name: 'Decisions and evidence', exact: true }).scrollIntoViewIfNeeded();
+    await page.getByLabel('Decision', { exact: true }).selectOption('note');
+    const rationale = 'DEMO ONLY: ask the carrier for alternate sailings before changing bookings.';
+    await page.getByPlaceholder('Decision rationale', { exact: true }).fill(rationale);
+    await pause(4000);
+    await page.getByRole('button', { name: 'Record decision', exact: true }).click();
+    await page.getByText(rationale, { exact: false }).waitFor();
+    const storedDecision = await context.request.get(`${base}/api/logistics/rescue-cases/${rescue.id}`);
+    if (!(await storedDecision.json()).rescueCase?.decisions?.some((item) => item.rationale === rationale)) throw new Error('The actual decision log did not preserve the operator note.');
+    await pause(10000);
     caption('Verify checks public-event claims. These examples are explicitly synthetic replays.');
     await page.goto(`${base}/verify`, { waitUntil: 'domcontentloaded' });
     await page.getByRole('heading', { name: 'Is this true?', exact: true }).waitFor();
@@ -107,7 +126,7 @@ if (!encodeOnly) await withIsolatedApp(async ({ base }) => {
     caption('Ophanim watches the world for your freight. Recorded fixtures, not live intelligence.');
     await pause(8000);
     if (errors.length) throw new Error(`Demo path has ${errors.length} page exceptions.`);
-    recording.push({ importedShipment: true, ruleBasedWeatherMatch: true, verifyReplay: true, sharedResult: true, history: true, errors, durationSeconds: (performance.now() - start) / 1000 });
+    recording.push({ importedShipment: true, ruleBasedWeatherMatch: true, decisionLog: true, verifyReplay: true, sharedResult: true, history: true, errors, durationSeconds: (performance.now() - start) / 1000 });
   } finally {
     const video = page.video(); await context.close();
     if (video) await video.saveAs(resolve(out, 'raw/verified-demo.webm'));
@@ -128,5 +147,5 @@ await new Promise((resolve, reject) => {
 });
 const copy = 'D:/OPHANIM/Documentation';
 if (await stat(copy).then((item) => item.isDirectory()).catch(() => false)) await copyFile(file, resolve(copy, 'Ophanim-Demo-2026-10.mp4'));
-await writeFile(resolve(root, 'STRESS_TEST/artifacts/video.json'), JSON.stringify({ file, recording, captions, limitations: ['Existing import, shipment, actual port-match and Verify workflows recorded.', 'This matcher shows a port match, not a validated forecast-cone/time-window engine.', 'Document discrepancy, Gulf signal, confirmation and decision scenes not yet included.', 'No real customer data, API keys or live provider traffic.'], complete: false }, null, 2));
+await writeFile(resolve(root, 'STRESS_TEST/artifacts/video.json'), JSON.stringify({ file, recording, captions, limitations: ['Existing import, shipment, actual port-match, operator decision log and Verify workflows recorded.', 'This matcher shows a port match, not a validated forecast-cone/time-window engine. The operator note does not change a carrier booking.', 'Document discrepancy, Gulf signal and confirmation scenes not yet included.', 'No real customer data, API keys or live provider traffic.'], complete: false }, null, 2));
 console.log(`Recorded H.264 demo: ${file}`);

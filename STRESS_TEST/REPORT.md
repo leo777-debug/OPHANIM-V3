@@ -13,6 +13,7 @@ checkpoints later in this document. Updated 15 October 2026, Asia/Dubai.
 | TypeScript / focused lint | Passed on current source | Legacy lint deliberately retained; no new rule disabled |
 | SQL/RLS | Six passing embedded PostgreSQL tests, 29.02 seconds | Rerun with migration 028; native Windows PostgreSQL lacks pgvector |
 | Tenant HTTP | 72 checks pass | Own positive controls and foreign reads/writes, private file download, Verify history and legacy sessions; not all 194 routes |
+| Rescue workflow HTTP | 36 additional native checks pass | Own case/action/decision/evidence controls; foreign parent/child writes denied; database unchanged; viewer/anonymous approval denials |
 | Native roles/alerts/bursts | 24 checks pass | Four roles; alert ownership; 100 notifications, not 100 generated alerts; Verify 10x200/20x429 |
 | Generated intelligence alerts | Four additional checks pass | Four concurrent actual reconciliations: 100 alerts / 100 assessments / 100 tasks, no duplicates, tenant-isolated; 1,691 ms |
 | Browser matrix | 45 pass / 0 fail on fresh standalone package | Chromium/Firefox/WebKit x 390/820/1920px; pre-fix cold timeout retained separately |
@@ -21,7 +22,8 @@ checkpoints later in this document. Updated 15 October 2026, Asia/Dubai.
 | AI failures | 12 real HTTP checks pass | Owned mock only; full 120,044 ms timeout, malformed/empty JSON, 503, delay, unreachable; deterministic shipments survive |
 | Knowledge scale | Three checks pass, 1,000 files/documents/chunks | List 639 ms, download exact, no-embedding retrieval 350 ms; post-extraction fixtures, not 1,000 extraction jobs |
 | Demo reset | Real workflow check passes | Fresh disposable organization, login, DXB-291, destination-port advisory match; no production database |
-| Video | Recorded and inspected | H.264 1080p/30fps, 127.2 seconds, synthetic labels, title/captions/closing; see VIDEO_REVIEW.md |
+| Extractor safety | Ten bounded synthetic checks pass | Text/Office/PDF/image guards, network blocked; bundled parsers differ from deployment pins; no OCR/resource sandbox certification |
+| Video | Updated, recorded and inspected | H.264 1080p/30fps, 143.17 seconds, real UI-entered operator note, synthetic labels; see VIDEO_REVIEW.md |
 
 ### Changes Since The Last Pushed Checkpoint
 
@@ -55,11 +57,12 @@ paid subscription, production migration, deployment or active scan was introduce
 - Fresh Windows standalone passes five HTTP and all 45 browser checks. No
   Linux/Render deployment validation was attempted.
 - Forecast-cone/ETA-window matching, Last Safe Move, document 50-vs-48 comparison,
-  GPS-interference and confirmation/reply stories were not fabricated for the video.
+  GPS-interference and confirmation/reply stories were not fabricated. The updated
+  video now includes a genuine decision note, independently read back through the API.
 - Historical FIRMS credentials still require founder rotation; no history rewrite.
-- D: is not mounted in the current session. An earlier copy was recorded there;
-  only the worktree MP4 is currently verifiable. Its SHA256 is
-  `becdaa0bbf5f7d7becb5ce23df865a0b0eaf4cf5ad2c755074fb3913662c7fce`.
+- D: is not mounted. Its earlier 127-second copy is not the current 143-second
+  revision. The current worktree MP4 SHA256 is
+  `ff15b73b72880adcae5b5559f0c5a57f887f787597c69683db659b61c151fffc`.
 - Fresh production audit attempt on 15 October failed with npm registry ECONNRESET;
   prior clean production / eight development advisories are historical, not a new pass.
 - Concurrent build/test attempt hit a 10-second PGlite setup timeout and a Vitest
@@ -126,6 +129,7 @@ See BASELINE.md. TypeScript and production build passed; 311 tests passed, five 
 | SEC-012 | P1 | Cross-origin writes | Shared authenticated endpoints did not consistently reject an explicit foreign Origin | Fixed on shared guard; four actual browser controls and eight auth tests pass | auth/actor.test.ts; artifacts/browser-security.json; own-origin POST remains 201 |
 | SEC-013 | P1 | Raw feed popup HTML | String-built feed popup could retain executable markup beyond the previously fixed URL attribute case | Fixed at central DOMPurify boundary; seven DOM/action regressions | map-popup-html.test.ts; scripts/events/unsafe links removed, explicit deep-dive click retained |
 | APP-005 | P1 | Vessel identifiers | Legacy SQL double-escaped digit classes, rejecting seven-digit IMO and nine-digit MMSI values on shipments/routes | Corrective migration 028; five executable SQL regressions pass | Actual native HTTP POST failed before fix; vessel-identifiers.test.ts proves legacy rejection, corrected writes, malformed rejection, retained rows and RLS |
+| DEMO-001 | P2 | Reset fixture | Demo reset used originPort/destinationPort instead of the persisted Name fields, silently omitting names | Fixed and verified | demo:reset -- --check now asserts both returned names and stores a genuine operator note |
 
 P0 findings confirmed so far: one, fixed in this branch. Exhaustive tenant isolation is still pending; passing core HTTP checks is not certification of every route.
 

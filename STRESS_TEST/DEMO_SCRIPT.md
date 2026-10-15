@@ -12,17 +12,18 @@ Do not describe a replay as current/live intelligence.
 | 0:30 | Mapping and review | "The operator checks the mapping, validation and duplicates, then confirms. Preview does not silently import." |
 | 0:50 | DXB-291 detail | "Here is the imported Jebel Ali to Nhava Sheva shipment, not a separate mock screen." |
 | 1:05 | Disruptions: synthetic weather, DXB-291 assessment | "A weather advisory touches the destination port. The matching rule explains which shipment it affects. This example is a port match, not a forecast-cone prediction." |
-| 1:35 | Verify: Dubai fog replay | "An airport-closure claim is partly true: the recorded evidence supports fog and diversions, but departures contradict a full closure." |
-| 2:00 | Evidence and timestamps | "The verdict comes from rules. Sources, observation times and missing checks remain visible. AI is optional." |
-| 2:20 | Consented share | "A public share contains the public claim and evidence, not the private shipment records." |
+| 1:25 | Rescue case: record an operator note | "The operator records why they will ask the carrier for alternate sailings. This saves a decision; it does not change a booking." |
+| 1:50 | Verify: Dubai fog replay | "An airport-closure claim is partly true: the recorded evidence supports fog and diversions, but departures contradict a full closure." |
+| 2:10 | Evidence and timestamps | "The verdict comes from rules. Sources, observation times and missing checks remain visible. AI is optional." |
+| 2:25 | Consented share | "A public share contains the public claim and evidence, not the private shipment records." |
 | 2:40 | History / Tokyo earthquake replay | "Previous checks remain in organization-scoped history. New evidence can change the result." |
 | 2:55 | Closing | "Ophanim connects outside events to the work an operator actually needs to review." |
 
 ## Do not claim
 
 - Validated cyclone cones, ETA-overlap logic or carrier schedules from this port-match example.
-- A document-comparison engine catching 50 versus 48 boxes, verified GPS interference,
-  saved confirmation replies or a decision-log scene unless separately demonstrated.
+- A document-comparison engine catching 50 versus 48 boxes, verified GPS interference
+  or saved confirmation replies. A recorded operator note is not a carrier approval.
 - That configured sources are online, that synthetic fixtures are real news,
   or that all production security/performance gates have passed.
 

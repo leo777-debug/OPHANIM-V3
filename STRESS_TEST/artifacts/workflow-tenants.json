@@ -1,0 +1,183 @@
+{
+  "checkedAt": "2026-10-15T06:33:33.636Z",
+  "database": "native PostgreSQL 18",
+  "scope": "Actual rescue-case/actions/decisions/evidence HTTP endpoints, synthetic organizations; source URLs stored only, no third-party contact",
+  "checks": [
+    {
+      "check": "own rescue creation positive control",
+      "status": 201,
+      "pass": true
+    },
+    {
+      "check": "own action positive control",
+      "status": 201,
+      "pass": true
+    },
+    {
+      "check": "own decision is persisted",
+      "status": 201,
+      "pass": true
+    },
+    {
+      "check": "own evidence positive control without fetching URL",
+      "status": 201,
+      "pass": true
+    },
+    {
+      "check": "own rescue creation positive control",
+      "status": 201,
+      "pass": true
+    },
+    {
+      "check": "own action positive control",
+      "status": 201,
+      "pass": true
+    },
+    {
+      "check": "own decision is persisted",
+      "status": 201,
+      "pass": true
+    },
+    {
+      "check": "own evidence positive control without fetching URL",
+      "status": 201,
+      "pass": true
+    },
+    {
+      "check": "own detail includes decision and evidence, excludes foreign marker",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "foreign case read denied",
+      "status": 404,
+      "pass": true
+    },
+    {
+      "check": "case list tenant-scoped with own positive control",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "foreign write or child link denied: POST /api/logistics/rescue-cases",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign write or child link denied: PATCH /api/logistics/rescue-cases/:id",
+      "status": 404,
+      "pass": true
+    },
+    {
+      "check": "foreign write or child link denied: POST /api/logistics/rescue-cases/:id/actions",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign write or child link denied: POST /api/logistics/rescue-cases/:id/decisions",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign write or child link denied: POST /api/logistics/rescue-cases/:id/evidence",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign write or child link denied: POST /api/logistics/rescue-cases/:id/decisions",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign write or child link denied: POST /api/logistics/rescue-cases/:id/evidence",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "database proves foreign child counts unchanged",
+      "pass": true
+    },
+    {
+      "check": "database proves foreign case not closed",
+      "pass": true
+    },
+    {
+      "check": "own detail includes decision and evidence, excludes foreign marker",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "foreign case read denied",
+      "status": 404,
+      "pass": true
+    },
+    {
+      "check": "case list tenant-scoped with own positive control",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "foreign write or child link denied: POST /api/logistics/rescue-cases",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign write or child link denied: PATCH /api/logistics/rescue-cases/:id",
+      "status": 404,
+      "pass": true
+    },
+    {
+      "check": "foreign write or child link denied: POST /api/logistics/rescue-cases/:id/actions",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign write or child link denied: POST /api/logistics/rescue-cases/:id/decisions",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign write or child link denied: POST /api/logistics/rescue-cases/:id/evidence",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign write or child link denied: POST /api/logistics/rescue-cases/:id/decisions",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign write or child link denied: POST /api/logistics/rescue-cases/:id/evidence",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "database proves foreign child counts unchanged",
+      "pass": true
+    },
+    {
+      "check": "database proves foreign case not closed",
+      "pass": true
+    },
+    {
+      "check": "viewer can inspect own rescue",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "viewer cannot record an approval",
+      "status": 403,
+      "pass": true
+    },
+    {
+      "check": "anonymous case read rejected",
+      "status": 403,
+      "pass": true
+    },
+    {
+      "check": "anonymous approval rejected",
+      "status": 403,
+      "pass": true
+    }
+  ]
+}

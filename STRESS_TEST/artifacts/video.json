@@ -4,63 +4,68 @@
     {
       "importedShipment": true,
       "ruleBasedWeatherMatch": true,
+      "decisionLog": true,
       "verifyReplay": true,
       "sharedResult": true,
       "history": true,
       "errors": [],
-      "durationSeconds": 121.2907488
+      "durationSeconds": 137.28347699999998
     }
   ],
   "captions": [
     {
-      "start": 0.00020380000000113797,
+      "start": 0.0007684000000008382,
       "text": "Ophanim - organization-scoped freight intelligence. Synthetic demo only."
     },
     {
-      "start": 5.624645699999999,
+      "start": 5.798647700000001,
       "text": "Import an Excel shipment file. Review mapping before any records are created."
     },
     {
-      "start": 18.2448036,
+      "start": 18.481198099999997,
       "text": "The review gate validates columns and duplicates. The operator confirms the import."
     },
     {
-      "start": 31.939332800000003,
+      "start": 31.9243216,
       "text": "DXB-291: Jebel Ali to Nhava Sheva. The stored shipment opens as a real record."
     },
     {
-      "start": 45.1259862,
+      "start": 44.9653992,
       "text": "A synthetic weather advisory matches DXB-291 by destination port. Rules decide; operators review."
     },
     {
-      "start": 61.762372500000005,
+      "start": 61.72165549999999,
+      "text": "The operator records a next step and rationale. No carrier booking is changed."
+    },
+    {
+      "start": 77.08918949999999,
       "text": "Verify checks public-event claims. These examples are explicitly synthetic replays."
     },
     {
-      "start": 69.31566319999999,
+      "start": 84.90242629999999,
       "text": "PARTLY TRUE: fog and diversions, but recorded departures contradict a full closure."
     },
     {
-      "start": 82.357742,
+      "start": 97.95394189999999,
       "text": "Evidence shows sources, observation times and what supports or contradicts the claim."
     },
     {
-      "start": 90.37531469999999,
+      "start": 105.9741048,
       "text": "A public share contains only the claim and evidence, not private organization records."
     },
     {
-      "start": 102.84358339999999,
+      "start": 118.67027379999999,
       "text": "Signed-in history preserves previous checks. Deterministic verification works without AI."
     },
     {
-      "start": 113.2815522,
+      "start": 129.2763143,
       "text": "Ophanim watches the world for your freight. Recorded fixtures, not live intelligence."
     }
   ],
   "limitations": [
-    "Existing import, shipment, actual port-match and Verify workflows recorded.",
-    "This matcher shows a port match, not a validated forecast-cone/time-window engine.",
-    "Document discrepancy, Gulf signal, confirmation and decision scenes not yet included.",
+    "Existing import, shipment, actual port-match, operator decision log and Verify workflows recorded.",
+    "This matcher shows a port match, not a validated forecast-cone/time-window engine. The operator note does not change a carrier booking.",
+    "Document discrepancy, Gulf signal and confirmation scenes not yet included.",
     "No real customer data, API keys or live provider traffic."
   ],
   "finalEncoding": {
@@ -68,12 +73,12 @@
     "width": 1920,
     "height": 1080,
     "framesPerSecond": 30,
-    "durationSeconds": 127.2,
-    "bytes": 2584303,
-    "sha256": "becdaa0bbf5f7d7becb5ce23df865a0b0eaf4cf5ad2c755074fb3913662c7fce",
+    "durationSeconds": 143.166667,
+    "bytes": 2960851,
+    "sha256": "ff15b73b72880adcae5b5559f0c5a57f887f787597c69683db659b61c151fffc",
     "audio": false,
     "review": "STRESS_TEST/VIDEO_REVIEW.md",
-    "scope": "Video deliverable only; not overall application acceptance. Earlier recording duration excludes title/closing cards."
+    "scope": "Updated video deliverable with actual UI-entered and API-confirmed decision note; not overall application certification."
   },
   "complete": true
 }

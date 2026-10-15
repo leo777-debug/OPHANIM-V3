@@ -11,7 +11,8 @@ seeds and verifies the real workflow, then stops its owned services.
 Demo-only login: presenter@example.test / Synthetic-Demo-Only-2026.
 Organization slug: competition-demo.
 These are publicly labelled fixture credentials, never production credentials.
-The initial scenario is DXB-291 plus a synthetic weather destination-port match.
+The initial scenario is DXB-291 with persisted port names, a synthetic weather
+destination-port match and a rescue-case operator note.
 It is not live news, a carrier schedule or a validated forecast-cone calculation.
 Verify's replay buttons work without an AI model or external providers.
 
@@ -45,7 +46,7 @@ Cold health still takes about 7.8 seconds; do not claim the two-second budget.
 
 Artifacts contain synthetic screenshots and measured check results. Runtime context
 and logs are ignored. `npm run demo:video` records the actual demo workflow; the
-127.2-second MP4 and review are documented in VIDEO_REVIEW.md. Do not present
+143.17-second MP4 and review are documented in VIDEO_REVIEW.md. Do not present
 screenshots or the recorded fixture video as live intelligence.
 
 ## Tenant HTTP Regression
@@ -75,3 +76,15 @@ git -c core.multiPackIndex=false -c pack.readReverseIndex=false push origin stre
 ```
 
 Do not delete packs, factory-reset Docker, force-push history or move the original dirty checkout as a workaround.
+
+## Additional Security Probes
+
+`node STRESS_TEST/workflow-tenants.mjs` runs 36 actual native PostgreSQL/HTTP
+rescue-case/action/decision/evidence checks. It refuses occupied loopback ports
+and stops only its own test services. Evidence URLs are stored, never fetched.
+
+`python STRESS_TEST/extraction-safety.py` requires pypdf and Pillow and runs ten
+bounded in-memory synthetic probes, with network connections blocked. The recorded
+run used the bundled Python 3.12.14, pypdf 6.10.0 and Pillow 12.3.0, not the older
+pins in ml/requirements.txt. It is not deployment-runtime, OCR or arbitrary hostile
+PDF memory/CPU isolation certification. No unbounded decompression probe is run.
