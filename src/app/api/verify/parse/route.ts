@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     let articleText = '', warning = '';
     if (body.url) {
       if (body.urlPermission !== true) throw new Error('Confirm permission to retrieve this article.');
-      try { articleText = (await fetchArticle(String(body.url))).text; } catch (error) { warning = error instanceof Error ? error.message : 'Article unavailable.'; }
+      try { articleText = (await fetchArticle(String(body.url))).text; } catch { warning = 'Article unavailable.'; }
     }
     const parsed = body.useAi === true ? await parseWithOptionalAi(text, body.aiConfig, articleText) : { claim: parseClaimText(text), parser: 'rules', warning: '' };
     parsed.warning = [parsed.warning, warning].filter(Boolean).join(' ');

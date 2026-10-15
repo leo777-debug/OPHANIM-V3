@@ -1,3 +1,4 @@
+import { KnowledgeInputError } from './errors';
 import type { OrganizationActor } from '@/lib/operations/types';
 import { knowledgeTransaction } from './database';
 import { embedTexts, vectorLiteral } from './embeddings';
@@ -14,21 +15,24 @@ export function reciprocalRankFusion(lists: KnowledgeChunk[][], limit = 8): Know
 }
 export function parseFilters(value: unknown): KnowledgeFilters {
   if (value === undefined) return {};
-  if (!value || typeof value !== 'object') throw new Error('Invalid search filters.');
+  if (!value || typeof value !== 'object') throw new KnowledgeInputError('Invalid search filters.');
   const f = value as KnowledgeFilters;
-  if (f.asOf && (!/^\d{4}-\d{2}-\d{2}(?:T.*)?$/.test(f.asOf) || !Number.isFinite(Date.parse(f.asOf)))) throw new Error('Invalid as-of date.');
-  if (f.currentOnly !== undefined && typeof f.currentOnly !== 'boolean') throw new Error('Invalid current-only filter.');
-  if (f.currentOnly && f.asOf) throw new Error('Choose current-only or as-of, not both.');
-  if (f.documentTypes && (!Array.isArray(f.documentTypes) || f.documentTypes.length > 20 || f.documentTypes.some((t) => typeof t !== 'string' || t.length > 80))) throw new Error('Invalid document types.');
-  if (f.shipmentId && !/^[a-f0-9-]{36}$/i.test(f.shipmentId)) throw new Error('Invalid shipment ID.');
+  if (f.asOf && (!/^\d{4}-\d{2}-\d{2}(?:T.*)?$/.test(f.asOf) || !Number.isFinite(Date.parse(f.asOf)))) throw new KnowledgeInputError('Invalid as-of date.');
+  if (f.currentOnly !== undefined && typeof f.currentOnly !== 'boolean') throw new KnowledgeInputError('Invalid current-only filter.');
+  if (f.currentOnly && f.asOf) throw new KnowledgeInputError('Choose current-only or as-of, not both.');
+  if (f.documentTypes && (!Array.isArray(f.documentTypes) || f.documentTypes.length > 20 || f.documentTypes.some((t) => typeof t !== 'string' || t.length > 80))) throw new KnowledgeInputError('Invalid document types.');
+  if (f.shipmentId && !/^[a-f0-9-]{36}$/i.test(f.shipmentId)) throw new KnowledgeInputError('Invalid shipment ID.');
   return { asOf: f.asOf, currentOnly: f.currentOnly, documentTypes: f.documentTypes, shipmentId: f.shipmentId };
 }
 
-export async function searchKnowledge(actor: OrganizationActor, question: string, filters: KnowledgeFilters = {}) {
+export async function searchKnowledge(actor: OrganizationActor, question: string, filters: KnowledgeFilters = {}, options: {useEmbeddings?: boolean} = {}) {
   let vector: number[] | null = null; let warning: string | null = null;
-  const settings=await getEmbeddingSettings(actor.organizationId,actor);
-  try { [vector] = await embedTexts([`Instruct: Retrieve documents answering the question.\nQuery: ${question}`],settings); }
-  catch { warning = 'Embedding server unavailable; searched full text only.'; }
+  let embeddingModel: string | null = null;
+  if(options.useEmbeddings !== false) {
+    const settings=await getEmbeddingSettings(actor.organizationId,actor); embeddingModel=settings.model;
+    try { [vector] = await embedTexts([`Instruct: Retrieve documents answering the question.\nQuery: ${question}`],settings); }
+    catch { warning = 'Embedding server unavailable; searched full text only.'; }
+  } else warning='Source-only search; no AI model was called.';
   const chunks = await knowledgeTransaction(actor, async (client) => {
     const values = [question, filters.documentTypes?.length ? filters.documentTypes : null, filters.asOf ?? null, filters.currentOnly ?? false, filters.shipmentId ?? null];
     // RLS enforces tenant access even without an organization predicate.
@@ -47,7 +51,7 @@ export async function searchKnowledge(actor: OrganizationActor, question: string
         from ophanim_knowledge_chunks c join ophanim_knowledge_documents d on d.id=c.document_id
         join ophanim_knowledge_embeddings e on e.chunk_id=c.id
         where ${predicate} and e.model=$6 and (e.embedding <=> $1::vector)<0.65
-        order by e.embedding <=> $1::vector, c.published_at desc nulls last limit 32`, [vectorLiteral(vector), ...values.slice(1), settings.model]);
+        order by e.embedding <=> $1::vector, c.published_at desc nulls last limit 32`, [vectorLiteral(vector), ...values.slice(1), embeddingModel]);
       semantic = result.rows;
     }
     return reciprocalRankFusion([lexical.rows, semantic]);

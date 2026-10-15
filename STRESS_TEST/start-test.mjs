@@ -27,6 +27,13 @@ export function startTestApp(stdio = 'inherit', standalone = process.argv.includ
   const buildDirectory = process.env.OPHANIM_STRESS_BUILD_DIR ?? '.next';
   if (!['.next', '.next-stress-final'].includes(buildDirectory)) throw new Error('Unexpected stress build directory.');
   const childEnv = { ...env, NEXT_DEV_DIST_DIR: buildDirectory, PORT: String(port), APP_URL: `http://127.0.0.1:${port}` };
+  const replayContext=JSON.parse(readFileSync(resolve(root,'STRESS_TEST/runtime/demo-context.json'),'utf8'));
+  childEnv.OPHANIM_DEMO_REPLAY_CREATED_AT=replayContext.createdAt ?? new Date().toISOString();
+  if(process.argv.includes('--sdk-fixture')) {
+    const demo=JSON.parse(readFileSync(resolve(root,'STRESS_TEST/runtime/demo-context.json'),'utf8'));
+    childEnv.SDK_INGEST_KEY='synthetic-owned-sdk-fixture-only';
+    childEnv.SDK_INGEST_ORGANIZATION_ID=demo.organizationId;
+  }
   if (!standalone) return spawn(process.execPath, [require.resolve('next/dist/bin/next'), 'start', '--hostname', '127.0.0.1', '--port', String(port)], { cwd: root, env: childEnv, stdio, windowsHide: true });
   const output = resolve(root, buildDirectory, 'standalone');
   if (!existsSync(resolve(output, 'server.js'))) throw new Error('Run npm run build before the isolated smoke test.');

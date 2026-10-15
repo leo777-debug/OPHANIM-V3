@@ -13,6 +13,6 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     if (!disruption) return NextResponse.json({ error: 'Disruption not found.' }, { status: 404 });
     return NextResponse.json({ layers: disruptionMapLayer(disruption) }, { headers: { 'Cache-Control': 'private, max-age=30' } });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Disruption map layer failed.' }, { status: error instanceof OrganizationAccessError ? 401 : 400 });
+    return NextResponse.json({ error: 'Disruption map layer failed.' }, { status: error instanceof OrganizationAccessError ? 401 : 400 });
   }
 }

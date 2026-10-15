@@ -66,7 +66,7 @@ export async function GET() {
         fires = [...fires, ...volcanoes];
         if (!source) source = 'NASA-EONET';
       }
-    } catch (e) { console.warn('[OSIRIS] Suppressed EONET error:', e instanceof Error ? e.message : e); }
+    } catch { console.warn('[OSIRIS] Suppressed EONET error:'); }
 
     return NextResponse.json({
       fires,
@@ -78,8 +78,8 @@ export async function GET() {
         'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=1200',
       },
     });
-  } catch (error) {
-    console.error('Fire fetch error:', error);
+  } catch {
+    console.error('Fire fetch error:');
     return NextResponse.json({ fires: [], error: 'Failed to fetch fire data' }, { status: 500 });
   }
 }

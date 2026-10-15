@@ -47,8 +47,8 @@ export async function GET(request: NextRequest) {
       },
     });
 
-  } catch (error) {
-    console.error('Tile proxy error:', error);
+  } catch {
+    console.error('Tile proxy error:');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -19,6 +19,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ shipmentImport, preview });
   } catch (error) {
     const status = error instanceof OrganizationAccessError ? 401 : 400;
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Import preview failed.' }, { status });
+    return NextResponse.json({ error: 'Import preview failed.' }, { status });
   }
 }

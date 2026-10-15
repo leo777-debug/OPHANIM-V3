@@ -2,16 +2,17 @@ import { NextRequest,NextResponse } from 'next/server';
 import { requireAuthenticatedActor } from '@/lib/auth/actor';
 import { getServerAiConfig,parseAiConfig } from '@/lib/ai/config';
 import { generateWithRouting } from '@/lib/ai/local-model';
-import { knowledgeError } from '@/lib/knowledge/http';
+import { knowledgeError,readKnowledgeBody } from '@/lib/knowledge/http';
+import { KnowledgeInputError } from '@/lib/knowledge/errors';
+import { authorizeAiRequest } from '@/lib/ai/access';
 import { parseFilters,searchKnowledge } from '@/lib/knowledge/search';
 import { neutraliseInstructions,NOT_FOUND,validateGroundedAnswer } from '@/lib/knowledge/safety';
-import { getClientIp,isRateLimited } from '@/lib/ssrf-guard';
 import type { KnowledgeStatement } from '@/lib/knowledge/types';
 export async function POST(request:NextRequest) {
-  if (isRateLimited(getClientIp(request),10,60_000)) return NextResponse.json({error:'Rate limit exceeded'},{status:429});
+  const denied=await authorizeAiRequest(request); if(denied)return denied;
   try {
-    const actor=await requireAuthenticatedActor(request,'import:read'); const body=await request.json();
-    if (typeof body.question!=='string' || !body.question.trim() || body.question.length>2000) throw new Error('Enter a question of 1–2,000 characters.');
+    const actor=await requireAuthenticatedActor(request,'import:read'); const body=await readKnowledgeBody(request);
+    if (typeof body.question!=='string' || !body.question.trim() || body.question.length>2000) throw new KnowledgeInputError('Enter a question of 1–2,000 characters.');
     const result=await searchKnowledge(actor,body.question,parseFilters(body.filters));
     let statements:KnowledgeStatement[]=[{label:'NOT FOUND',text:NOT_FOUND,citations:[]}]; let warning=result.warning;
     if (result.chunks.length) {

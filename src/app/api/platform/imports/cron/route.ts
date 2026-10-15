@@ -16,8 +16,8 @@ export async function GET(request: NextRequest) {
     const processed = await processEntityImports();
     await recordJobRun('platform-entity-imports', 'completed', { durationMs: Date.now() - started, metadata: { processed } });
     return NextResponse.json({ processed });
-  } catch (error) {
-    await recordJobRun('platform-entity-imports', 'failed', { durationMs: Date.now() - started, error: error instanceof Error ? error.message : 'Import processing failed' }).catch(() => {});
+  } catch {
+    await recordJobRun('platform-entity-imports', 'failed', { durationMs: Date.now() - started, error: 'Import processing failed' }).catch(() => {});
     return NextResponse.json({ error: 'Import processing failed.' }, { status: 500 });
   }
 }

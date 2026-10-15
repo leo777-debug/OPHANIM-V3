@@ -21,7 +21,7 @@ describe.skipIf(!process.env.DATABASE_URL)('knowledge live RLS — requires migr
   it('company A cannot retrieve B through raw, lexical or crafted vector queries; shared is visible, writes/links are isolated',async()=>{
     const c=isolated ?? new Client({connectionString:process.env.DATABASE_URL});await c.connect();
     const a=randomUUID(),b=randomUUID(),ua=randomUUID(),ub=randomUUID(),authA=randomUUID(),authB=randomUUID();
-    const docs=[randomUUID(),randomUUID(),randomUUID()],chunks=[randomUUID(),randomUUID(),randomUUID()];
+    const docs=[randomUUID(),randomUUID(),randomUUID()],chunks=[randomUUID(),randomUUID(),randomUUID()],shipments=[randomUUID(),randomUUID()];
     const vector=`[${[1,...Array(1023).fill(0)].join(',')}]`;
     try{
       await c.query('begin');
@@ -29,6 +29,7 @@ describe.skipIf(!process.env.DATABASE_URL)('knowledge live RLS — requires migr
       await c.query('insert into ophanim_organizations(id,name,slug) values($1,\'Knowledge A\',$2),($3,\'Knowledge B\',$4)',[a,`k-${a}`,b,`k-${b}`]);
       await c.query('insert into ophanim_users(id,auth_user_id,email) values($1,$2,$3),($4,$5,$6)',[ua,authA,`${ua}@example.test`,ub,authB,`${ub}@example.test`]);
       await c.query('insert into ophanim_organization_memberships(organization_id,user_id,role) values($1,$2,\'analyst\'),($3,$4,\'viewer\')',[a,ua,b,ub]);
+      await c.query("insert into ophanim_shipments(id,organization_id,shipment_reference) values($1,$2,'Synthetic A'),($3,$4,'Synthetic B')",[shipments[0],a,shipments[1],b]);
       await c.query("insert into ophanim_knowledge_settings(organization_id,embedding_base_url,embedding_model) values($1,'http://localhost:11434/v1','test-a'),($2,'http://localhost:11434/v1','test-b')",[a,b]);
       await c.query('set local role ophanim_knowledge_worker');
       for(let i=0;i<3;i++){
@@ -60,6 +61,10 @@ describe.skipIf(!process.env.DATABASE_URL)('knowledge live RLS — requires migr
       expect((await c.query('select auth.uid() as uid')).rows[0].uid).toEqual(authA);
       expect((await c.query('select id from ophanim_knowledge_chunks where id=any($1::uuid[])',[chunks])).rows.map(r=>r.id).sort()).toEqual([chunks[0],chunks[2]].sort());
       await c.query('reset role');await c.query('set local role ophanim_knowledge_worker');await c.query('savepoint bad_fk');
+      await expect(c.query('update ophanim_knowledge_documents set shipment_id=$1 where id=$2',[shipments[1],docs[0]])).rejects.toThrow();await c.query('rollback to savepoint bad_fk');
+      await c.query('update ophanim_knowledge_documents set shipment_id=$1 where id=$2',[shipments[0],docs[0]]);
+      expect((await c.query('select shipment_id from ophanim_knowledge_documents where id=$1',[docs[0]])).rows[0].shipment_id).toBe(shipments[0]);
+      await expect(c.query('update ophanim_knowledge_documents set shipment_id=$1 where id=$2',[shipments[0],docs[2]])).rejects.toThrow();await c.query('rollback to savepoint bad_fk');
       await expect(c.query("insert into ophanim_knowledge_chunks(organization_id,document_id,ordinal,content,content_hash,source_file,document_type,language) values($1,$2,2,'x','x','x','other','en')",[a,docs[1]])).rejects.toThrow();await c.query('rollback to savepoint bad_fk');
       await c.query('delete from ophanim_knowledge_documents where id=$1',[docs[0]]);
       for(const table of ['ophanim_knowledge_chunks','ophanim_knowledge_embeddings','ophanim_knowledge_jobs'])expect((await c.query(`select * from ${table} where organization_id=$1`,[a])).rows).toHaveLength(0);

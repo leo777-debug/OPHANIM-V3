@@ -18,8 +18,8 @@ export async function GET() {
     if (data.solana?.usd) prices.push({ symbol: 'SOL', price: data.solana.usd });
 
     return NextResponse.json(prices);
-  } catch (error) {
-    console.error('Failed to fetch crypto prices:', error);
+  } catch {
+    console.error('Failed to fetch crypto prices:');
     return NextResponse.json([]); // Return empty if entirely failed, no static fallbacks
   }
 }

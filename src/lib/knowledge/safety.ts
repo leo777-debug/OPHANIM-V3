@@ -1,3 +1,4 @@
+import { KnowledgeInputError } from './errors';
 import type { ExtractedBlock, KnowledgeChunk, KnowledgeStatement, SharedMetadata } from './types';
 import { createHash } from 'node:crypto';
 
@@ -34,27 +35,27 @@ export function hashContent(bytes: Uint8Array | string): string { return createH
 export function validateSharedMetadata(value: unknown): SharedMetadata {
   const m = value as SharedMetadata;
   if (!m || m.commercial_use !== true || m.customer_data !== false || !m.licence?.trim() || /unknown|non.commercial/i.test(m.licence)
-    || !m.source || !m.attribution || !m.region || !m.language || !m.reviewed_at || !m.published_at || !m.valid_from) throw new Error('Shared data requires reviewed commercial rights, attribution, dates and no customer data.');
-  for (const url of [m.source_url, m.licence_url]) if (!url || !/^https?:\/\//.test(url)) throw new Error('Source and licence URLs are required.');
-  for (const date of [m.reviewed_at, m.published_at, m.valid_from, m.valid_to]) if (date && !Number.isFinite(Date.parse(date))) throw new Error('Invalid source date.');
-  if (m.valid_to && Date.parse(m.valid_to) < Date.parse(m.valid_from)) throw new Error('Invalid validity range.');
-  if (m.knowledge_period !== undefined && !['past','present'].includes(m.knowledge_period)) throw new Error('Invalid shared knowledge period.');
+    || !m.source || !m.attribution || !m.region || !m.language || !m.reviewed_at || !m.published_at || !m.valid_from) throw new KnowledgeInputError('Shared data requires reviewed commercial rights, attribution, dates and no customer data.');
+  for (const url of [m.source_url, m.licence_url]) if (!url || !/^https?:\/\//.test(url)) throw new KnowledgeInputError('Source and licence URLs are required.');
+  for (const date of [m.reviewed_at, m.published_at, m.valid_from, m.valid_to]) if (date && !Number.isFinite(Date.parse(date))) throw new KnowledgeInputError('Invalid source date.');
+  if (m.valid_to && Date.parse(m.valid_to) < Date.parse(m.valid_from)) throw new KnowledgeInputError('Invalid validity range.');
+  if (m.knowledge_period !== undefined && !['past','present'].includes(m.knowledge_period)) throw new KnowledgeInputError('Invalid shared knowledge period.');
   return m;
 }
 
 export function validateGroundedAnswer(output: string, chunks: KnowledgeChunk[]): KnowledgeStatement[] {
   const parsed = JSON.parse(output) as { statements?: KnowledgeStatement[] };
-  if (!Array.isArray(parsed.statements) || parsed.statements.length > 12) throw new Error('Invalid grounded answer schema.');
+  if (!Array.isArray(parsed.statements) || parsed.statements.length > 12) throw new KnowledgeInputError('Invalid grounded answer schema.');
   const sources = new Map(chunks.map((chunk) => [chunk.id, neutraliseInstructions(chunk.content)]));
   return parsed.statements.map((statement) => {
-    if (!['FACT', 'INFERENCE', 'NOT FOUND'].includes(statement.label) || typeof statement.text !== 'string' || !Array.isArray(statement.citations)) throw new Error('Invalid statement.');
+    if (!['FACT', 'INFERENCE', 'NOT FOUND'].includes(statement.label) || typeof statement.text !== 'string' || !Array.isArray(statement.citations)) throw new KnowledgeInputError('Invalid statement.');
     if (statement.label === 'NOT FOUND') return { label: 'NOT FOUND', text: NOT_FOUND, citations: [] };
-    if (!statement.citations.length || statement.citations.some((id) => !sources.has(id))) throw new Error('Unknown or missing citation.');
+    if (!statement.citations.length || statement.citations.some((id) => !sources.has(id))) throw new KnowledgeInputError('Unknown or missing citation.');
     // Fail closed: factual text itself must be verbatim supporting source text.
     // Free-form paraphrases/inferences cannot be automatically proven by a small
     // model and are rejected here until a separately evaluated verifier exists.
-    if (statement.label !== 'FACT' || !statement.quote || statement.text !== statement.quote || !statement.citations.every((id) => sources.get(id)!.includes(statement.quote!))) throw new Error('Unsupported claim or inference.');
-    if (statement.text.length > 900 || statement.text.length < 3) throw new Error('Invalid evidence quote.');
+    if (statement.label !== 'FACT' || !statement.quote || statement.text !== statement.quote || !statement.citations.every((id) => sources.get(id)!.includes(statement.quote!))) throw new KnowledgeInputError('Unsupported claim or inference.');
+    if (statement.text.length > 900 || statement.text.length < 3) throw new KnowledgeInputError('Invalid evidence quote.');
     return statement;
   });
 }

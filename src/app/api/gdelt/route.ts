@@ -73,8 +73,8 @@ export async function GET() {
     }, {
       headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' },
     });
-  } catch (error) {
-    console.error('[OSIRIS] GDACS fetch error:', error);
+  } catch {
+    console.error('[OSIRIS] GDACS fetch error:');
     return NextResponse.json({ events: [], total: 0, error: 'GDACS unavailable' }, { status: 500 });
   }
 }

@@ -170,8 +170,8 @@ export async function GET() {
     }, {
       headers: { 'Cache-Control': 'no-store' }, // Prevent caching so alerts update real-time
     });
-  } catch (error) {
-    console.error('Markets fetch error:', error);
+  } catch {
+    console.error('Markets fetch error:');
     return NextResponse.json({ stocks: {}, oil: {}, commodities: {}, crypto: {}, indices: {}, scm_alerts: [], error: 'Failed' }, { status: 500 });
   }
 }

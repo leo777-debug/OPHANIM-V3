@@ -44,8 +44,23 @@ await withIsolatedApp(async ({ base, root }) => {
       tenant.task = (await database.query("select id from ophanim_operational_tasks where organization_id=$1 and workflow_id=$2 and workflow_type='cyber_exposure'", [tenant.organizationId, tenant.signal])).rows[0]?.id;
       if (!tenant.assessment || !tenant.task) throw new Error('Assessment/task fixture setup failed.');
     }
+    for(const tenant of tenants){
+      const created=await call(tenant,'/api/cyber/clients','POST',{name:`${tenant.marker} client`,reference:`SYN-${tenant.organizationId}`,accountOwnerUserId:tenant.userId});
+      record('own cyber client and member positive control',created,[201]);tenant.client=created.body.client?.id;
+      if(!tenant.client)throw new Error('Cyber client fixture setup failed.');
+      record('own cyber asset client link positive control',await call(tenant,'/api/cyber/assets','POST',{customerId:tenant.client,assetName:`${tenant.marker} client asset`,assetType:'application'}),[201]);
+      record('own dependency client link positive control',await call(tenant,'/api/cyber/dependencies','POST',{customerId:tenant.client,vendor:`${tenant.marker} vendor`}),[201]);
+    }
     for (let i = 0; i < 2; i++) {
       const own = tenants[i], other = tenants[1 - i];
+      for(const path of ['/api/cyber/clients','/api/cyber/assets','/api/cyber/dependencies']){
+        const listed=await call(own,path);record(`private client inventory list: ${path}`,listed,[200],JSON.stringify(listed.body).includes(own.marker) && !JSON.stringify(listed.body).includes(other.marker));
+      }
+      for(const [path,body] of [
+        ['/api/cyber/clients',{name:'Forbidden owner',reference:`FORBIDDEN-${own.organizationId}`,accountOwnerUserId:other.userId}],
+        ['/api/cyber/assets',{customerId:other.client,assetName:'Forbidden asset',assetType:'application'}],
+        ['/api/cyber/dependencies',{customerId:other.client,vendor:'Forbidden dependency'}],
+      ])record(`foreign customer/member link rejected: ${path}`,await call(own,path,'POST',body),[400,403,404]);
       for (const listPath of ['/api/logistics/assets', '/api/logistics/zero-day-roll-calls', '/api/intelligence/tasks']) {
         const list = await call(own, listPath);
         record(`scoped list: ${listPath}`, list, [200], JSON.stringify(list.body).includes(own.marker) && !JSON.stringify(list.body).includes(other.marker));

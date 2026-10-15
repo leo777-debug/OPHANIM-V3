@@ -251,6 +251,27 @@ parity is not claimed.
 
 The Knowledge page adds private organization documents, shared sources, hybrid
 retrieval and cited answers. Setup: [Knowledge operations](docs/KNOWLEDGE.md).
+
+### Security And Demo Configuration
+
+- Knowledge document lists use bounded 100-item pages with previous/next controls.
+  Source-only search never calls an embedding or generation model; AI answers
+  require a signed-in user and share the application's user-level AI budget.
+- Resend delivery webhooks require `RESEND_WEBHOOK_SECRET` and verify the raw
+  signed payload before database writes. Duplicate signed events are idempotent.
+- Optional SDK ingestion requires both `SDK_INGEST_KEY` and
+  `SDK_INGEST_ORGANIZATION_ID`. The backend assigns that organization; a caller
+  cannot choose another organization in the payload. Status and SSE reads require
+  a member session, return only that organization's data, and periodically
+  reconnect to re-check authorization. Existing installations must configure the
+  organization explicitly; unconfigured ingestion fails closed.
+- The isolated presentation launcher sets `OPHANIM_DEMO_REPLAY_CREATED_AT` and
+  displays a persistent **DEMO REPLAY / Not live data** banner. This marks synthetic
+  fixtures, not live observations. The local fixture demo runs without external
+  internet, but still needs its local application/database processes. It is not
+  a fully offline cached PWA.
+- See [stress-test results](STRESS_TEST/REPORT.md) and
+  [isolated testing](STRESS_TEST/LOCAL_TESTING.md) for measured coverage and limits.
 Local model/Kaggle tooling lives in ml/; see the [implementation and evaluation
 report](ml/FINAL_REPORT.md) and [founder runbook](ml/TRAINING_RUNBOOK.md). The custom
 model is optional and remains behind hardware/quality acceptance gates.

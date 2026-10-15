@@ -27,8 +27,8 @@ export async function GET() {
         'Cache-Control': 'public, s-maxage=1800, stale-while-revalidate=3600',
       },
     });
-  } catch (error) {
-    console.error('Frontlines fetch error:', error);
+  } catch {
+    console.error('Frontlines fetch error:');
     return NextResponse.json({ frontlines: null, error: 'Failed to fetch frontline data' }, { status: 500 });
   }
 }

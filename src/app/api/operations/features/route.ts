@@ -11,6 +11,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(getFeatureFlags());
   } catch (error) {
     const status = error instanceof OrganizationAccessError ? 401 : 400;
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Feature configuration unavailable' }, { status });
+    return NextResponse.json({ error: 'Feature configuration unavailable' }, { status });
   }
 }

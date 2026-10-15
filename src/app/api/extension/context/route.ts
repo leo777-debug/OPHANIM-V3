@@ -42,6 +42,6 @@ export async function POST(request: NextRequest) {
     return withExtensionHeaders(request, NextResponse.json(await loadExtensionContext(actor, input)));
   } catch (error) {
     const status = error instanceof OrganizationAccessError ? 401 : error instanceof ExtensionContextValidationError || error instanceof SyntaxError ? 400 : 500;
-    return withExtensionHeaders(request, NextResponse.json({ error: error instanceof Error ? error.message : 'Extension context request failed.' }, { status }));
+    return withExtensionHeaders(request, NextResponse.json({ error: 'Extension context request failed.' }, { status }));
   }
 }

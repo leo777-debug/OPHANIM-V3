@@ -5,11 +5,14 @@ import { OrganizationAccessError } from '@/lib/operations/authorization';
 import { isFeatureEnabled } from '@/lib/operations/feature-flags';
 import { db } from '@/lib/watchlists/db';
 import { getClientIp, isRateLimited } from '@/lib/ssrf-guard';
+import { authorizeAiRequest } from '@/lib/ai/access';
+import { limitedRequestBytes, RequestBodyLimitError } from '@/lib/http/limited-form-data';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
+  const denied=await authorizeAiRequest(request);if(denied)return denied;
   if (isRateLimited(getClientIp(request), 6, 60_000)) return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
   try {
     const actor = await requireAuthenticatedActor(request, 'research:run');
@@ -19,7 +22,7 @@ export async function POST(request: NextRequest) {
     if (!sandboxResearchConfigured()) {
       return NextResponse.json({ error: 'Sandbox research is not configured for this deployment.' }, { status: 503 });
     }
-    const input = validateSandboxResearchRequest(await request.json());
+    const input = validateSandboxResearchRequest(JSON.parse(Buffer.from(await limitedRequestBytes(request,32*1024)).toString('utf8')));
     const research = await researchInSandbox(input);
     await db().query(
       `insert into ophanim_audit_events (organization_id, actor_user_id, action, subject_type, metadata)
@@ -28,8 +31,8 @@ export async function POST(request: NextRequest) {
     );
     return NextResponse.json({ research, sandbox: true, generatedAt: new Date().toISOString() });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Sandbox research failed';
-    const status = error instanceof OrganizationAccessError ? (message === 'Authentication is required.' ? 401 : 403) : 400;
+    const message = 'Sandbox research failed';
+    const status = error instanceof OrganizationAccessError ? (error.message === 'Authentication is required.' ? 401 : 403) : error instanceof RequestBodyLimitError ? 413 : 400;
     return NextResponse.json({ error: message }, { status });
   }
 }

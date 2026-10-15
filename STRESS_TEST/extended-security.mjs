@@ -66,7 +66,7 @@ await withIsolatedApp(async ({ base, root }) => {
       from generate_series(1,1000) i`, [tenants[0].organizationId, tenants[0].userId]);
     const docs = await call(tenants[0].token, '/api/knowledge/documents');
     const parsed = JSON.parse(docs.text);
-    checks.push({ check: '1000-document list stays bounded and scoped', status: docs.status, elapsedMs: docs.elapsedMs, returned: parsed.documents?.length, pass: docs.status === 200 && parsed.documents?.length === 500 && !docs.text.includes(tenants[1].marker), limitation: 'Existing 500-document cap has no continuation UI; report as P2, not complete pagination.' });
+    checks.push({ check: '1000-document list stays bounded and scoped', status: docs.status, elapsedMs: docs.elapsedMs, returned: parsed.documents?.length, pass: docs.status === 200 && parsed.documents?.length === 100 && parsed.pagination?.hasMore && !docs.text.includes(tenants[1].marker), scope: 'First bounded page; full continuation and browser controls verified separately by knowledge-scale.mjs.' });
     }
     const verification = await Promise.all(Array.from({ length: 30 }, () => call(tenants[0].token, '/api/verify/check', 'POST', { claim: { text: 'Synthetic claim' }, confirmed: true, fixture: 'earthquake', useAi: false })));
     checks.push({ check: 'Verify burst completes or rate-limits without server errors', counts: Object.fromEntries([200, 429].map((status) => [status, verification.filter((item) => item.status === status).length])), pass: verification.some((item) => item.status === 200) && verification.some((item) => item.status === 429) && verification.every((item) => [200, 429].includes(item.status)) });

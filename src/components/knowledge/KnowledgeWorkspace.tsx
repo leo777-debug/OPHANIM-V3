@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useCallback,useEffect,useRef,useState } from 'react';
 import { readClientAiConfig } from '@/lib/ai/client-config';
 import type { KnowledgeStatement,SourceReference } from '@/lib/knowledge/types';
+import { ChevronLeft,ChevronRight } from 'lucide-react';
 
 interface Document { id:string;organization_id:string|null;file_name:string;status:string;progress:number;error:string|null;file_size_bytes:number;published_at:string|null;valid_from:string|null;valid_to:string|null;ingested_at:string|null;metadata?:{source?:string;licence?:string;licence_url?:string} }
 interface Citation { id:string;fileName:string;reference:SourceReference;date:string|null;url:string }
@@ -12,14 +13,18 @@ export default function KnowledgeWorkspace({shared=false}:{shared?:boolean}) {
   const [question,setQuestion]=useState(''); const [currentOnly,setCurrentOnly]=useState(false); const [asOf,setAsOf]=useState(''); const [mode,setMode]=useState('logistics');
   const [answer,setAnswer]=useState<Answer|null>(null); const [busy,setBusy]=useState(false); const [dragging,setDragging]=useState(false);
   const [documentType,setDocumentType]=useState('other');const [publishedAt,setPublishedAt]=useState('');const [validFrom,setValidFrom]=useState('');const [validTo,setValidTo]=useState('');
+  const [offset,setOffset]=useState(0);const [loadedOffset,setLoadedOffset]=useState(0);const [hasMore,setHasMore]=useState(false);const [loading,setLoading]=useState(false);
   const fileInput=useRef<HTMLInputElement>(null);
   const endpoint=shared ? '/api/knowledge/shared':'/api/knowledge/documents';
-  const load=useCallback(async()=>{
-    const response=await fetch(endpoint,{cache:'no-store'}); const body=await response.json();
+  const load=useCallback(async(signal?:AbortSignal)=>{
+    const response=await fetch(`${endpoint}?limit=100&offset=${offset}`,{cache:'no-store',signal}); const body=await response.json();
     if (!response.ok) throw new Error(body.error ?? 'Knowledge unavailable.');
+    if(signal?.aborted)return;
     setDocuments(body.documents); setBytes(body.storageBytes);
-  },[endpoint]);
-  useEffect(()=>{ let active=true; const refresh=()=>void load().catch(e=>{if(active)setMessage(e.message);}); refresh(); const timer=setInterval(refresh,5000);return()=>{active=false;clearInterval(timer);};},[load]);
+    setLoadedOffset(offset);
+    setHasMore(Boolean(body.pagination?.hasMore));
+  },[endpoint,offset]);
+  useEffect(()=>{ const controller=new AbortController();let active=true; const refresh=()=>{setLoading(true);void load(controller.signal).catch(e=>{if(active && !controller.signal.aborted)setMessage(e.message);}).finally(()=>{if(active)setLoading(false);});}; refresh(); const timer=setInterval(refresh,5000);return()=>{active=false;controller.abort();clearInterval(timer);};},[load]);
   async function upload(files:FileList|File[]) {
     setBusy(true); setMessage('Uploading to private storage…');
     const errors:string[]=[];
@@ -59,6 +64,11 @@ export default function KnowledgeWorkspace({shared=false}:{shared?:boolean}) {
       <div style={{overflowX:'auto'}}><table style={{width:'100%',textAlign:'left'}}><thead><tr><th>File</th><th>Status</th><th>Source / licence</th><th>Validity / refresh</th><th>Action</th></tr></thead><tbody>
         {documents.map(d=><tr key={d.id}><td><Link href={`/knowledge/documents/${d.id}`}>{d.file_name}</Link><br/><small>{d.organization_id ? 'Your organization':'Shared'}</small></td><td>{d.status} {d.progress}%{d.error && <p role="alert">{d.error}</p>}</td><td>{d.metadata?.source ?? 'Private upload'}<br/>{d.metadata?.licence_url ? <a href={d.metadata.licence_url} target="_blank" rel="noreferrer">{d.metadata.licence}</a>:d.metadata?.licence}</td><td>{d.valid_from ?? 'Undated'} → {d.valid_to ?? 'No end supplied'}<br/><small>Indexed: {d.ingested_at ?? 'Pending'}</small></td><td>{d.organization_id && !shared && <button disabled={d.status==='deleting'} onClick={()=>void remove(d.id)}>Delete</button>}</td></tr>)}
       </tbody></table></div>
+      <nav aria-label="Document pages" style={{display:'flex',alignItems:'center',gap:12,marginTop:16}}>
+        <button type="button" aria-label="Previous document page" title="Previous document page" disabled={busy || loading || offset===0} onClick={()=>{setLoading(true);setOffset(previous=>Math.max(0,previous-100));}}><ChevronLeft size={18}/></button>
+        <span>{documents.length ? `${loadedOffset+1}-${loadedOffset+documents.length}`:'No documents'}</span>
+        <button type="button" aria-label="Next document page" title="Next document page" disabled={busy || loading || !hasMore} onClick={()=>{setLoading(true);setOffset(previous=>previous+100);}}><ChevronRight size={18}/></button>
+      </nav>
     </section>
     {!shared && <section className="platform-section"><h2>Ask your knowledge</h2>
       <form onSubmit={e=>{e.preventDefault();void ask();}}><label>Question<input style={{width:'100%'}} value={question} maxLength={2000} onChange={e=>setQuestion(e.target.value)} required /></label>

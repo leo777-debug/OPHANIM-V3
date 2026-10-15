@@ -193,13 +193,13 @@ async function fetchAllLiveConflictData(): Promise<{ events: ConflictEvent[]; ev
         });
         
         if (!res.ok) {
-          console.log(`[OSIRIS] RSS Fetch Failed for ${url}: ${res.status}`);
+          console.log('[OPHANIM] Provider operation status changed.');
           return [];
         }
         
         const xml = await res.text();
         const rawItems = xml.split(/<item>/i).slice(1);
-        console.log(`[OSIRIS] RSS ${url} returned ${rawItems.length} items`);
+        console.log('[OPHANIM] Provider operation status changed.');
         
         return rawItems.map(rawItem => {
           const item = rawItem.split(/<\/item>/i)[0];
@@ -214,8 +214,8 @@ async function fetchAllLiveConflictData(): Promise<{ events: ConflictEvent[]; ev
             desc: descMatch ? descMatch[1].replace(/<[^>]*>/g, '').trim() : ''
           };
         }).filter(Boolean);
-      } catch (err) {
-        console.log(`[OSIRIS] RSS Fetch Error for ${url}:`, (err as Error).message);
+      } catch {
+        console.log('[OPHANIM] Provider operation status changed.');
         return [];
       }
     });
@@ -262,9 +262,9 @@ async function fetchAllLiveConflictData(): Promise<{ events: ConflictEvent[]; ev
         }
       }
     }
-    console.log(`[OSIRIS] Mapped ${allEvents.length} conflict events from RSS.`);
-  } catch (e) {
-    console.error('OSINT Conflict Fetch Error:', e);
+    console.log('[OPHANIM] Provider operation status changed.');
+  } catch {
+    console.error('OSINT Conflict Fetch Error:');
   }
 
   return { events: allEvents, eventsByRegion };
@@ -312,8 +312,8 @@ export async function GET() {
         'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
       },
     });
-  } catch (error) {
-    console.error('[OSIRIS] Conflict API error:', error);
+  } catch {
+    console.error('[OSIRIS] Conflict API error:');
     
     // Fallback: return known zones without live enrichment
     const fallbackZones = KNOWN_CONFLICTS.map(zone => ({

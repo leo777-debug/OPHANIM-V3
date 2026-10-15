@@ -7,4 +7,6 @@ describe('cyber inventory validation', () => {
   it('accepts a client-scoped IP asset and preserves inventory uncertainty', () => expect(validateCyberAssetInput({ customerId: clientId, assetName: 'VPN gateway', ipAddress: '203.0.113.10', internetFacing: 'true', verificationStatus: 'version_unknown' })).toMatchObject({ internetFacing: true, verificationStatus: 'version_unknown' }));
   it('rejects invalid IP inventory', () => expect(() => validateCyberAssetInput({ customerId: clientId, assetName: 'VPN', ipAddress: 'not-an-ip' })).toThrow(CyberValidationError));
   it('validates vendor dependencies without claiming verification', () => expect(validateVendorDependencyInput({ customerId: clientId, vendor: 'Example Vendor', verificationStatus: 'inventory_incomplete' }).verificationStatus).toBe('inventory_incomplete'));
+  it('uses the schema-supported other environment rather than inventing production',()=>expect(validateCyberAssetInput({customerId:clientId,assetName:'Synthetic default'}).environment).toBe('other'));
+  it.each(['arbitrary','unknown'])('rejects an environment outside the database contract: %s',environment=>expect(()=>validateCyberAssetInput({customerId:clientId,assetName:'Synthetic invalid',environment})).toThrow(CyberValidationError));
 });

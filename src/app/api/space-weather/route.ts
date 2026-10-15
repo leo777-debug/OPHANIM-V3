@@ -76,8 +76,8 @@ export async function GET() {
       solar_flares: flares,
       timestamp: new Date().toISOString(),
     });
-  } catch (error) {
-    console.error('Space Weather API error:', error);
+  } catch {
+    console.error('Space Weather API error:');
     return NextResponse.json({
       kp_index: 0, storm_level: 'Unknown', storm_color: '#555',
       alerts: [], solar_flares: [], error: 'Failed to fetch space weather data',

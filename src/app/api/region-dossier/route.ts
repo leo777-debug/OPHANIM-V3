@@ -51,7 +51,7 @@ export async function GET(request: Request) {
             { signal: AbortSignal.timeout(5000) }
           );
           if (res.ok) return await res.json();
-        } catch (e) { console.warn('[OSIRIS] Country fetch error:', e instanceof Error ? e.message : e); }
+        } catch { console.warn('[OSIRIS] Country fetch error:'); }
         return null;
       })(),
 
@@ -72,7 +72,7 @@ export async function GET(request: Request) {
               thumbnail: wiki.thumbnail?.source,
             };
           }
-        } catch (e) { console.warn('[OSIRIS] Wikipedia fetch error:', e instanceof Error ? e.message : e); }
+        } catch { console.warn('[OSIRIS] Wikipedia fetch error:'); }
         return null;
       })(),
 
@@ -106,7 +106,7 @@ export async function GET(request: Request) {
               };
             }
           }
-        } catch (e) { console.warn('[OSIRIS] Wikidata fetch error:', e instanceof Error ? e.message : e); }
+        } catch { console.warn('[OSIRIS] Wikidata fetch error:'); }
         return null;
       })(),
     ]);
@@ -142,8 +142,8 @@ export async function GET(request: Request) {
         'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
       },
     });
-  } catch (error) {
-    console.error('Region dossier error:', error);
+  } catch {
+    console.error('Region dossier error:');
     return NextResponse.json({ error: 'Failed to fetch region data' }, { status: 500 });
   }
 }

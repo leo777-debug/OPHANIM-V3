@@ -35,6 +35,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ import: imported, preview, adapter: { type: adapter.type, label: adapter.label, available: adapter.available, unavailableReason: adapter.unavailableReason } });
   } catch (error) {
     const status = error instanceof OrganizationAccessError ? 401 : error instanceof RequestBodyLimitError ? 413 : 400;
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Import preview failed.' }, { status });
+    return NextResponse.json({ error: 'Import preview failed.' }, { status });
   }
 }

@@ -86,8 +86,8 @@ export async function GET(req: Request) {
       }
     });
 
-  } catch (error) {
-    console.error('Stats aggregation failed:', error);
+  } catch {
+    console.error('Stats aggregation failed:');
     return NextResponse.json({ error: 'Failed to compute stats' }, { status: 500 });
   }
 }

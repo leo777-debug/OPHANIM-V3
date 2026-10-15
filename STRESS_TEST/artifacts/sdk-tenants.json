@@ -1,0 +1,38 @@
+{
+  "checkedAt": "2026-10-15T13:01:00.785Z",
+  "scope": "Owned loopback only, two synthetic organizations, no device contact or external provider",
+  "checks": [
+    {
+      "name": "anonymous /api/sdk/ingest denied",
+      "pass": true
+    },
+    {
+      "name": "anonymous /api/sdk/stream denied",
+      "pass": true
+    },
+    {
+      "name": "service ingestion assigns configured organization, not supplied foreign organization",
+      "pass": true
+    },
+    {
+      "name": "own SDK status stays scoped",
+      "pass": true
+    },
+    {
+      "name": "own actual SSE payload stays scoped",
+      "pass": true
+    },
+    {
+      "name": "foreign SDK status stays scoped",
+      "pass": true
+    },
+    {
+      "name": "foreign actual SSE payload stays scoped",
+      "pass": true
+    },
+    {
+      "name": "member cookie alone cannot ingest without the service credential",
+      "pass": true
+    }
+  ]
+}

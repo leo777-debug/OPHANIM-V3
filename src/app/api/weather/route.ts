@@ -214,8 +214,8 @@ export async function GET() {
             provider: 'NASA EONET',
           });
         }
-      } catch (error) {
-        console.error('NASA EONET normalization error:', error);
+      } catch {
+        console.error('NASA EONET normalization error:');
       }
     }
 
@@ -245,8 +245,8 @@ export async function GET() {
             provider: 'NOAA/NWS',
           });
         }
-      } catch (error) {
-        console.error('NOAA/NWS normalization error:', error);
+      } catch {
+        console.error('NOAA/NWS normalization error:');
       }
     }
 
@@ -255,8 +255,8 @@ export async function GET() {
         const xml = await gdacsRes.value.text();
         events.push(...parseGdacsRss(xml));
         providerSucceeded = true;
-      } catch (error) {
-        console.error('GDACS normalization error:', error);
+      } catch {
+        console.error('GDACS normalization error:');
       }
     }
 
@@ -269,8 +269,8 @@ export async function GET() {
       total: events.length,
       timestamp: new Date().toISOString(),
     });
-  } catch (error) {
-    console.error('Weather API error:', error);
+  } catch {
+    console.error('Weather API error:');
     return NextResponse.json({ events: [], error: 'Failed to fetch weather data' }, { status: 500 });
   }
 }

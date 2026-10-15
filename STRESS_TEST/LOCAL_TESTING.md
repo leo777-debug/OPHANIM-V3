@@ -108,3 +108,32 @@ bounded in-memory synthetic probes, with network connections blocked. The record
 run used the bundled Python 3.12.14, pypdf 6.10.0 and Pillow 12.3.0, not the older
 pins in ml/requirements.txt. It is not deployment-runtime, OCR or arbitrary hostile
 PDF memory/CPU isolation certification. No unbounded decompression probe is run.
+
+## Current Security And Presentation Checks
+
+`npm test` defaults to one worker: parallel fork/WASM initialization exhausted this
+Windows laptop. Hook deadlines and assertions are unchanged. Live and database
+integration tests remain opt-in; `node db/test-isolated-rls.mjs` runs the six real
+embedded database/RLS tests explicitly.
+
+After rebuilding, set `$env:OPHANIM_STRESS_BUILD_DIR='.next-stress-final'` when
+using that alternate build, then run these scripts sequentially (they own the
+same loopback ports and refuse occupied services):
+
+- `node STRESS_TEST/sdk-tenants.mjs`: real authenticated SDK status/SSE isolation,
+  trusted service ownership, anonymous denials and no member-key substitution.
+- `node STRESS_TEST/knowledge-scale.mjs`: 1,001 private documents across 11 bounded
+  pages, exact file download, lexical search, and real mobile/desktop pagination.
+  These are post-extraction fixtures, not 1,000 simultaneous extraction jobs.
+- `node STRESS_TEST/demo-readiness.mjs`: production headers, private-path denial,
+  replay timestamps and workflows with all internet blocked. Records timings
+  separately, including failures against speed budgets rather than hiding them.
+
+The fixture launcher displays a persistent timestamped **DEMO REPLAY / Not live
+data** banner. Its creation time is not a real provider observation date. The
+demo still requires the local app/database; browser-offline error/recovery is
+covered separately, not misrepresented as a cached offline application.
+
+`node STRESS_TEST/focused-lint.mjs` compares changed source against HEAD's existing
+lint messages. `review-logs.mjs` and `review-errors.mjs` audit API console payloads
+and generic exception disclosure; static checks do not cover dependency logs.

@@ -7,5 +7,5 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try { return NextResponse.json(await reconcileIntelligence(await requireAuthenticatedActor(request, 'intelligence:write'))); }
-  catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : 'Intelligence reconciliation failed.' }, { status: error instanceof OrganizationAccessError ? 401 : 400 }); }
+  catch (error) { return NextResponse.json({ error: 'Intelligence reconciliation failed.' }, { status: error instanceof OrganizationAccessError ? 401 : 400 }); }
 }

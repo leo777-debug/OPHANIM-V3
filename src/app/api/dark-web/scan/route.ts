@@ -15,5 +15,5 @@ export async function POST(request: NextRequest) {
     const mentions = await Promise.all(result.diagnostics.filter((diagnostic) => !diagnostic.error).map(async (diagnostic) => storeDarkWebMentions(actor, diagnostic.providerId, result.mentions.filter((item) => item.providerId === diagnostic.providerId).map((item) => item.mention))));
     const reconciliation = await reconcileIntelligence(actor);
     return NextResponse.json({ mentions: mentions.flat(), diagnostics: result.diagnostics, reconciliation });
-  } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : 'Dark-web scan failed.' }, { status: error instanceof OrganizationAccessError ? 401 : 400 }); }
+  } catch (error) { return NextResponse.json({ error: 'Dark-web scan failed.' }, { status: error instanceof OrganizationAccessError ? 401 : 400 }); }
 }

@@ -50,7 +50,7 @@ export async function POST(request: Request) {
         });
 
         if (!response.ok) {
-            console.error('GitHub webhook forwarding failed', response.status);
+            console.error('GitHub webhook forwarding failed');
             return NextResponse.json({ error: 'Failed to forward to bot' }, { status: 500 });
         }
 

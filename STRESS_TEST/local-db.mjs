@@ -26,7 +26,7 @@ try {
   if (result.rows[0]?.name !== 'DEMO ONLY - Ophanim Competition') throw new Error('Local database probe failed.');
   await client.end();
   await mkdir('STRESS_TEST/runtime', { recursive: true });
-  await writeFile('STRESS_TEST/runtime/demo-context.json', JSON.stringify({ organizationId: org, userId: user, token, email: 'presenter@example.test', password, database: 'embedded-postgresql-not-native-concurrency', replay: 'synthetic fixtures only' }, null, 2));
+  await writeFile('STRESS_TEST/runtime/demo-context.json', JSON.stringify({ organizationId: org, userId: user, token, email: 'presenter@example.test', password, createdAt:new Date().toISOString(), database: 'embedded-postgresql-not-native-concurrency', replay: 'synthetic fixtures only' }, null, 2));
   if (tenants) await writeFile('STRESS_TEST/runtime/tenant-context.json', JSON.stringify(tenants, null, 2));
   console.log('Disposable PostgreSQL socket verified at 127.0.0.1:55432. Synthetic DEMO ONLY organization seeded.');
   console.log('This is embedded PostgreSQL with a socket multiplexer, not native PostgreSQL performance/concurrency certification.');

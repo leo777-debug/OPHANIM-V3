@@ -1,0 +1,273 @@
+{
+  "checkedAt": "2026-10-15T12:52:56.258Z",
+  "scope": "AST review of application API console calls, not framework/dependency logs",
+  "calls": 60,
+  "unsafe": [
+    {
+      "file": "src/app/api/air-quality/route.ts",
+      "line": 67,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/cctv/route.ts",
+      "line": 633,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/conflicts/route.ts",
+      "line": 196,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/conflicts/route.ts",
+      "line": 202,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/conflicts/route.ts",
+      "line": 218,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/conflicts/route.ts",
+      "line": 265,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/conflicts/route.ts",
+      "line": 267,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/conflicts/route.ts",
+      "line": 316,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/country-risk/route.ts",
+      "line": 84,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/crypto/route.ts",
+      "line": 22,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/earthquakes/route.ts",
+      "line": 53,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/entity/expand/route.ts",
+      "line": 69,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/fires/route.ts",
+      "line": 69,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/fires/route.ts",
+      "line": 82,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/flights/route.ts",
+      "line": 201,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/flights/route.ts",
+      "line": 211,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/flights/route.ts",
+      "line": 320,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/flights/route.ts",
+      "line": 398,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/frontlines/route.ts",
+      "line": 31,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/gdelt/route.ts",
+      "line": 77,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/github-webhook/route.ts",
+      "line": 53,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/malware/route.ts",
+      "line": 340,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/markets/route.ts",
+      "line": 174,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/osint/ip/route.ts",
+      "line": 54,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/osint/ip/route.ts",
+      "line": 78,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/osint/sweep/route.ts",
+      "line": 123,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/osint/threats/route.ts",
+      "line": 42,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/osint/threats/route.ts",
+      "line": 76,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/osint/threats/route.ts",
+      "line": 94,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/osint/whois/route.ts",
+      "line": 58,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/osint/whois/route.ts",
+      "line": 92,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/osint/whois/route.ts",
+      "line": 109,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/proxy-tiles/route.ts",
+      "line": 51,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/public/feedback/route.ts",
+      "line": 19,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/public/signup/route.ts",
+      "line": 19,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/radar/route.ts",
+      "line": 39,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/radar/route.ts",
+      "line": 84,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/region-dossier/route.ts",
+      "line": 54,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/region-dossier/route.ts",
+      "line": 75,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/region-dossier/route.ts",
+      "line": 109,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/region-dossier/route.ts",
+      "line": 146,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/satellites/route.ts",
+      "line": 333,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/satellites/route.ts",
+      "line": 402,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/scm-suppliers/route.ts",
+      "line": 89,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/sentinel/route.ts",
+      "line": 45,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/sentinel/route.ts",
+      "line": 68,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/sentinel/route.ts",
+      "line": 91,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/space-weather/route.ts",
+      "line": 80,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/stats/route.ts",
+      "line": 90,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/weather/route.ts",
+      "line": 218,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/weather/route.ts",
+      "line": 249,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/weather/route.ts",
+      "line": 259,
+      "staticOnly": false
+    },
+    {
+      "file": "src/app/api/weather/route.ts",
+      "line": 273,
+      "staticOnly": false
+    }
+  ],
+  "pass": false
+}

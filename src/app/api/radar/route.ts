@@ -36,7 +36,7 @@ export async function GET() {
       headers: { 'User-Agent': 'OSIRIS/4.2', 'Accept': 'application/json' },
     });
 
-    console.log('[OSIRIS] IODA response status:', res.status);
+    console.log('[OSIRIS] IODA response status:');
 
     if (!res.ok) {
       // Fallback: return empty but valid response
@@ -80,8 +80,8 @@ export async function GET() {
     }, {
       headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' },
     });
-  } catch (error) {
-    console.error('[OSIRIS] IODA fetch error:', error);
+  } catch {
+    console.error('[OSIRIS] IODA fetch error:');
     return NextResponse.json({ outages: [], total: 0, error: 'IODA unavailable' }, { status: 500 });
   }
 }

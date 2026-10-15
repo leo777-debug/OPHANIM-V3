@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
   try {
     const result = await checkWatchlistProviders({ type: body.type as WatchlistType, value: body.value }, { locale: request.headers.get('accept-language')?.split(',')[0] || 'en' });
     return NextResponse.json(result, { headers: { 'Cache-Control': 'no-store' } });
-  } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Watchlist check failed' }, { status: 502 });
+  } catch {
+    return NextResponse.json({ error: 'Watchlist check failed' }, { status: 502 });
   }
 }

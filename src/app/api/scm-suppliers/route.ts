@@ -85,8 +85,8 @@ export async function GET() {
       });
     }
 
-  } catch (e) {
-    console.error("SCM Risk overlay error:", e);
+  } catch {
+    console.error("SCM Risk overlay error:");
   }
 
   return NextResponse.json({

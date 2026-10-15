@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import { resolve } from 'node:path';
+import { securityHeaders } from './src/lib/http/security-headers';
 
 const nextConfig: NextConfig = {
   // Lets a local recovery server run independently from a stale development process.
@@ -37,13 +38,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/(.*)',
-        headers: [
-          { key: 'Content-Security-Policy', value: "default-src 'self' 'unsafe-inline' 'unsafe-eval' https: wss: data: blob:;" },
-          { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
-          { key: 'X-Content-Type-Options', value: 'nosniff' },
-          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
-          { key: 'X-XSS-Protection', value: '1; mode=block' },
-        ],
+        headers: securityHeaders(process.env.NODE_ENV === 'production'),
       },
     ];
   },

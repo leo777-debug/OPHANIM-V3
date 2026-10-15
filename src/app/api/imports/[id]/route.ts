@@ -18,6 +18,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ import: imported, rows: rows.slice(0, 100), rowCount: rows.length });
   } catch (error) {
     const status = error instanceof OrganizationAccessError ? 401 : 400;
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Import lookup failed.' }, { status });
+    return NextResponse.json({ error: 'Import lookup failed.' }, { status });
   }
 }

@@ -198,7 +198,7 @@ async function getOpenSkyToken(): Promise<string | null> {
         signal: AbortSignal.timeout(10000),
       }
     );
-    if (!res.ok) { console.warn('[OSIRIS] OpenSky token failed:', res.status); return null; }
+    if (!res.ok) { console.warn('[OSIRIS] OpenSky token failed:'); return null; }
     const data = await res.json();
     if (!data.access_token) {
       console.warn('[OSIRIS] OpenSky token response missing access_token');
@@ -207,8 +207,8 @@ async function getOpenSkyToken(): Promise<string | null> {
     osToken = data.access_token;
     osTokenExpiry = Date.now() + ((data.expires_in || 1800) - 60) * 1000;
     return osToken;
-  } catch (e) {
-    console.warn('[OSIRIS] OpenSky token error:', e);
+  } catch {
+    console.warn('[OSIRIS] OpenSky token error:');
     return null;
   }
 }
@@ -316,8 +316,8 @@ export async function GET() {
               }
             }
           }
-        } catch (e) {
-          console.warn('[OSIRIS] OpenSky parse error:', e);
+        } catch {
+          console.warn('[OSIRIS] OpenSky parse error:');
         }
       } else {
         await osRes.value.body?.cancel();
@@ -394,8 +394,8 @@ export async function GET() {
         'Cache-Control': data.total < 100 ? 'no-store, max-age=0' : 'public, s-maxage=30, stale-while-revalidate=60',
       },
     });
-  } catch (error) {
-    console.error('[OSIRIS] Flight fetch error:', error);
+  } catch {
+    console.error('[OSIRIS] Flight fetch error:');
     fetchPromise = null;
     return NextResponse.json({ error: 'Failed to fetch flight data' }, { status: 500 });
   }

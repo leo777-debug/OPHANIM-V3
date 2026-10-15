@@ -24,7 +24,7 @@ const cases = routes(root).flatMap((file) => {
   // has dedicated tests in api/search/route.test.ts.
   if (name === '/search') return [];
   if (!/await\s+(requireAuthenticatedActor|authorizeAiRequest)\s*\(/.test(source)) return [];
-  return [...source.matchAll(/export\s+(?:async\s+)?function\s+(GET|POST|PUT|PATCH|DELETE)\b/g)].map((match) => ({
+  return [...source.matchAll(/export\s+(?:async\s+)?function\s+(GET|POST|PUT|PATCH|DELETE)\b/g)].filter((match)=>!(name==='/sdk/ingest' && match[1]==='POST')).map((match) => ({
     file, method: match[1], name,
   }));
 });

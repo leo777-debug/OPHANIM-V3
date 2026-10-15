@@ -56,9 +56,9 @@ export async function GET(req: Request) {
       source: 'OpenSanctions / US OFAC SDN',
       timestamp: new Date().toISOString(),
     });
-  } catch (e) {
+  } catch {
     return NextResponse.json(
-      { error: 'Sanctions lookup failed', detail: e instanceof Error ? e.message : String(e) },
+      { error: 'Sanctions lookup failed', detail: 'Backend request unavailable.' },
       { status: 502 }
     );
   }

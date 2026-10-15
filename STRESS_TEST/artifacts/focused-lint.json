@@ -1,0 +1,14 @@
+{
+  "checkedAt": "2026-10-15T13:41:28.914Z",
+  "comparison": "HEAD versus working revision; diagnostic/rule multiplicity and flagged expressions retained, surrounding code-frame context/line numbers excluded",
+  "files": 140,
+  "baseline": {
+    "errors": 204,
+    "warnings": 33
+  },
+  "current": {
+    "errors": 202,
+    "warnings": 32
+  },
+  "introduced": []
+}

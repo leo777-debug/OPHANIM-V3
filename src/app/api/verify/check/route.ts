@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     const inputUrl = previous?.inputUrl ?? (typeof body.url === 'string' ? body.url : '');
     if (inputUrl && !fixture) {
       if (!previous?.inputUrl && body.urlPermission !== true) throw new VerifyHttpError('Confirm permission to retrieve this article.', 400);
-      try { article = await fetchArticle(inputUrl); } catch (error) { articleError = error instanceof Error ? error.message : 'Article unavailable.'; }
+      try { article = await fetchArticle(inputUrl); } catch { articleError = 'Article unavailable.'; }
     }
     let result = await verifyClaim(previous?.claim ?? body.claim, { fixture, previousId });
     if (articleError) result.couldNotCheck.push({ source: 'Submitted article', reason: articleError });

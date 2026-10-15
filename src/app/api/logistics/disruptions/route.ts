@@ -5,7 +5,7 @@ import { createDisruption, listDisruptions } from '@/lib/logistics/disruptions';
 
 function failure(error: unknown): NextResponse {
   if (error instanceof OrganizationAccessError) return NextResponse.json({ error: error.message }, { status: 403 });
-  return NextResponse.json({ error: error instanceof Error ? error.message : 'Disruption request failed.' }, { status: 400 });
+  return NextResponse.json({ error: 'Disruption request failed.' }, { status: 400 });
 }
 
 export async function GET(request: NextRequest) {

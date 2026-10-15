@@ -6,24 +6,37 @@ checkpoints later in this document. Updated 15 October 2026, Asia/Dubai.
 
 ## Current Verified Results
 
+Working revision after e274d16: Knowledge, SDK, signed webhooks, bootstrap,
+production CSP, API error/log redaction and timestamped replay labels are built
+and regression-tested. Final whole-suite run: **765 passed, seven opt-in skips**
+(76.69 seconds). Six explicit database/RLS tests pass (15.88 seconds). This is
+measured local coverage, not exhaustive security or live Supabase certification.
+The final browser rerun passes all 45 checks after moving the offline-basemap
+label clear of the mobile toolbar. No new focused lint findings were introduced:
+changed-file baseline 204 errors/33 warnings, current 202/32 across 140 files.
+
 | Check | Latest result | Scope / caveat |
 | --- | --- | --- |
-| Full unit/integration suite | 605 passed, 7 opt-in skipped | 95 passing files, 2 skipped; isolated one-worker run, 95.85 seconds |
+| Full unit/integration suite | 765 passed, 7 opt-in skipped | 106 passing files, 2 skipped; default one-worker run, 76.69 seconds |
 | Build | Passed, Next 16.3.8 | Rebuilt `.next-stress-final`; five generated-standalone HTTP checks pass |
 | TypeScript / focused lint | Passed on current source | Legacy lint deliberately retained; no new rule disabled |
-| SQL/RLS | Six passing embedded PostgreSQL tests, 38.87 seconds | Current source; native Windows PostgreSQL lacks pgvector |
+| SQL/RLS | Six passing embedded PostgreSQL tests, 15.88 seconds | Own-link controls and foreign/shared Knowledge shipment-link denials included; native Windows PostgreSQL lacks pgvector |
 | Tenant HTTP | 72 checks pass | Own positive controls and foreign reads/writes, private file download, Verify history and legacy sessions; not all 194 routes |
 | Rescue workflow HTTP | 36 additional native checks pass | Own case/action/decision/evidence controls; foreign parent/child writes denied; database unchanged; viewer/anonymous approval denials |
-| Cyber workflow boundaries | 54 additional native checks pass | Roll calls, assets, assessments, decisions/evidence, remediation and tasks; authenticated database-role positive control and deny-by-default Data API writes |
+| Cyber workflow boundaries | 72 native checks pass | Also covers client/member links and vendor dependencies; own positive controls, foreign denials, authenticated database-role controls and unchanged records |
+| SDK tenant boundaries | Eight actual HTTP/SSE checks pass | Anonymous denied, configured service ownership, member-scoped counts/updates, no organization override; four unit lifecycle regressions |
 | Native roles/alerts/bursts | 24 checks pass | Four roles; alert ownership; 100 notifications, not 100 generated alerts; Verify 10x200/20x429 |
 | Generated intelligence alerts | Four additional checks pass | Four concurrent actual reconciliations: 100 alerts / 100 assessments / 100 tasks, no duplicates, tenant-isolated; 1,691 ms |
-| Browser matrix | 45 pass / 0 fail at prior UI checkpoint | Chromium/Firefox/WebKit x 390/820/1920px; latest login additionally verified in Chromium; pre-fix cold timeout retained separately |
+| Browser matrix | 45 pass / 0 fail on final package | Chromium/Firefox/WebKit x 390/820/1920px; map, page exceptions, overflow, offline/reconnect; login additionally verified in Chromium; pre-fix cold timeout retained |
 | Map acceptance | Nonblank land/ocean pixels plus drag changes | All nine browser/viewport combinations; bundled real static geography, external tiles deliberately blocked |
 | One-hour soak | PASS: 3,601 seconds / 120 samples | Health, shipments, worker all 200; 5,000 imported, zero failed/pending; private memory stable about 146-148 MB after warmup |
 | AI failures | 16 expanded real HTTP checks pass | Owned mock only; oversized/chunked bodies, full 120,083 ms post-header timeout, malformed/empty JSON, 503, delay, unreachable; shipments survive. Earlier 12-check artifact retained |
 | AI status/transport regressions | 19 focused checks pass | Six failures before fix; metadata uses pinned transport, bounded local bodies, caller cancellation/deadline and safe errors |
 | Login boundary regressions | 13 focused plus seven actual HTTP/browser checks pass | Six failures before fix; explicit foreign-origin denial, 8 KiB actual body cap, account/IP budgets, cooldown, usable session and successful Chromium form login |
-| Knowledge scale | Three checks pass, 1,000 files/documents/chunks | List 639 ms, download exact, no-embedding retrieval 350 ms; post-extraction fixtures, not 1,000 extraction jobs |
+| Knowledge scale | Six checks pass, 1,000 added files/documents/chunks | 1,001 records reachable over 11 pages without duplication; actual 390/1920px next-page controls, exact download and lexical retrieval; not extraction-throughput testing |
+| Registered provider failures | 32 mocked cases pass | Eight adapters x error/garbage/empty/timeout, healthy source survives; no live provider load and no claim covering every legacy adapter |
+| Replay / headers / demo timings | 17 checks pass | Explicit synthetic creation time, no internet, no page exceptions/overflow, private paths 404; cold Verify HTML 2,019 ms misses target; replay interactions 144-388 ms |
+| Dependency audit | Production zero; development five high/three moderate | Fresh 15 October audit completed; proposed breaking tool downgrades not applied |
 | Demo reset | Real workflow check passes | Fresh disposable organization, login, DXB-291, destination-port advisory match; no production database |
 | Extractor safety | Ten bounded synthetic checks pass | Text/Office/PDF/image guards, network blocked; bundled parsers differ from deployment pins; no OCR/resource sandbox certification |
 | Video | Updated, recorded and inspected | H.264 1080p/30fps, 143.17 seconds, real UI-entered operator note, synthetic labels; see VIDEO_REVIEW.md |
@@ -57,9 +70,11 @@ paid subscription, production migration, deployment or active scan was introduce
 
 - Exhaustive endpoint/child-link/role review, Supabase runtime sessions, full log,
   malicious-PDF and provider-specific failure matrices are not certified.
-- Per-process abuse budgets are not distributed cost quotas. CSP still permits
-  broad sources/inline behavior and needs a separate compatibility-focused pass.
-- Document list is capped at 500 without continuation UI (P2).
+- Per-process abuse budgets are not distributed cost quotas. Production CSP now
+  forbids eval and blanket HTTPS script sources; inline hydration/styles remain.
+  Media/connect/frame allowances are not a strict nonce-based policy.
+- Document pagination is fixed and browser-tested; concurrent extraction/OCR
+  throughput and arbitrary hostile-parser CPU/memory isolation are not certified.
 - Generated intelligence-alert burst is now separately tested; neither test contacts
   a real dark-web provider, AI model or email service.
 - 200-connection p95 is 3.90 seconds; cold-start/one-second interaction goals are not
@@ -75,8 +90,8 @@ paid subscription, production migration, deployment or active scan was introduce
   is copied and SHA256-verified there; the old copy was preserved under a backup
   name. See artifacts/video-copy.json. Both current copies have SHA256
   `ff15b73b72880adcae5b5559f0c5a57f887f787597c69683db659b61c151fffc`.
-- Fresh production audit attempt on 15 October failed with npm registry ECONNRESET;
-  prior clean production / eight development advisories are historical, not a new pass.
+- Earlier audit attempts failed with registry ECONNRESET. A fresh later 15 October
+  audit succeeded: zero production and eight development advisories.
 - Concurrent build/test attempt hit a 10-second PGlite setup timeout and a Vitest
   worker-start failure. Re-running alone with one worker passes all 571 tests
   without weakening assertions or increasing timeouts. Parallel-run reliability
@@ -149,10 +164,19 @@ See BASELINE.md. TypeScript and production build passed; 311 tests passed, five 
 | SEC-013 | P1 | Raw feed popup HTML | String-built feed popup could retain executable markup beyond the previously fixed URL attribute case | Fixed at central DOMPurify boundary; seven DOM/action regressions | map-popup-html.test.ts; scripts/events/unsafe links removed, explicit deep-dive click retained |
 | SEC-014 | P1 | Local AI status/transport | Model-status used plain fetch after validation and returned raw errors; explicitly allowlisted model responses ignored byte caps and caller cancellation | Fixed; six mocked pre-fix failures, 19 focused checks pass | local-model.test.ts; openai-compatible-provider.test.ts; full suite 592 pass; 16 actual loopback HTTP checks in ai-failure-bounded.json. No live SSRF attack or provider contact |
 | SEC-015 | P1 | Sign-in abuse / browser origin | Forwarded-IP rotation bypassed sign-in budget; explicit cross-site attempts reached credential verification; oversized JSON unbounded and null JSON threw | Fixed; six pre-fix failures, 13 focused checks, full suite/build and seven actual HTTP/browser checks pass | api/auth/login/route.test.ts; login-security.json; account key hashes normalized email, excludes organization slug; IP budget retained. Per-process, not distributed |
+| SEC-016 | P1 | Knowledge AI / error boundary | Knowledge Q&A bypassed the shared user budget with rotated forwarded IPs; source-only search still invoked embeddings; unknown failures echoed raw exception messages | Fixed; six focused checks, full suite, build and real lexical-search flow pass | api/knowledge/security.test.ts; known safe validation errors retained; unsupported model answers fail grounding and keep source access |
+| SEC-017 | P1 | Resend webhook | Unsigned, modified and expired events could be stored and disable email subscriptions | Fixed; eight tests pass, including duplicate and connection failures | webhooks/resend/route.test.ts; existing SDK verifies raw bytes before atomic writes. RESEND_WEBHOOK_SECRET required; no real mail sent |
+| SEC-018 | P0 | SDK tenant isolation | Anonymous/global SDK stream exposed all ingested entities and counts; disconnect retained timers | Fixed; four unit and eight actual two-tenant HTTP/SSE checks pass | api/sdk/security.test.ts; sdk-tenants.json; backend-configured owner, scoped reads and cancel/abort cleanup |
+| SEC-019 | P1 | Bootstrap integrity | A thrown automatic sign-in after commit deleted the newly committed owner; null/unbounded setup bodies and connection errors escaped | Fixed; five failing regressions before fix now pass | auth/bootstrap/security.test.ts; no account deletion after commit, 32 KiB cap, origin gate, safe service errors |
+| SEC-020 | P1 | API diagnostics | Generic exception responses and dynamic console payloads could disclose provider credentials, paths or personal data | Fixed on reviewed API surfaces; regression and AST audits pass | 60 console calls reviewed, 53 dynamic payloads removed; 64 generic raw-error branches removed; typed Shodan guidance retained. Dependency logs not certified |
+| APP-006 | P1 | Cyber inventory creation | Missing environment defaults to unknown, rejected by the existing database constraint | Fixed; two actual HTTP failures before, all 72 cyber checks after | Three new validation regressions; missing environment uses other, invalid explicit values rejected; database constraints unchanged |
+| APP-007 | P2 | Document access | Hard 500-row list cap made later records unreachable | Fixed; all 1,001 records reached, mobile/desktop pagination verified | documents-page.test.ts; knowledge-scale-paginated.json; stale range-label browser failure reproduced and fixed |
 | APP-005 | P1 | Vessel identifiers | Legacy SQL double-escaped digit classes, rejecting seven-digit IMO and nine-digit MMSI values on shipments/routes | Corrective migration 028; five executable SQL regressions pass | Actual native HTTP POST failed before fix; vessel-identifiers.test.ts proves legacy rejection, corrected writes, malformed rejection, retained rows and RLS |
 | DEMO-001 | P2 | Reset fixture | Demo reset used originPort/destinationPort instead of the persisted Name fields, silently omitting names | Fixed and verified | demo:reset -- --check now asserts both returned names and stores a genuine operator note |
 
-P0 findings confirmed so far: one, fixed in this branch. Exhaustive tenant isolation is still pending; passing core HTTP checks is not certification of every route.
+P0 findings confirmed so far: two, both fixed in this branch. Exhaustive tenant
+isolation is still pending; the recorded route/role and HTTP matrices are not a
+formal certification of every possible endpoint, role, input and deployment.
 
 ## Secret Scan
 
@@ -214,6 +238,9 @@ The earlier checkpoints above are chronological, not the final status. Measured 
 1. Rotate/revoke any old FIRMS keys corresponding to the historical locations above.
 2. Do not merge this branch as competition-ready until the remaining acceptance work and final checks are complete.
 3. Enable the scheduled resume manually only using RESUME_SETUP.md; no scheduled task was registered by the agent.
+4. Before enabling optional ingestion/webhooks, configure SDK_INGEST_ORGANIZATION_ID
+   with SDK_INGEST_KEY and configure RESEND_WEBHOOK_SECRET. Unconfigured services
+   fail closed. No production configuration was changed by these tests.
 
 ## Vessel Constraint Correction
 

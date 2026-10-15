@@ -1835,7 +1835,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
 
   return <>
     <div ref={containerRef} className="absolute inset-0 w-full h-full" />
-    {offlineMap && <div role="status" data-testid="offline-basemap" className="absolute top-32 left-1/2 z-10 -translate-x-1/2 bg-black/80 px-3 py-2 text-xs text-white">Offline basemap: low-detail Natural Earth geography</div>}
+    {offlineMap && <div role="status" data-testid="offline-basemap" className="pointer-events-none absolute bottom-36 right-4 z-10 max-w-56 bg-black/80 px-3 py-2 text-xs text-white">Offline basemap: low-detail Natural Earth geography</div>}
     <DynamicProviderLayers map={mapReady ? mapRef.current : null} layers={providerLayers} onEntityClick={onEntityClick} />
   </>;
 }

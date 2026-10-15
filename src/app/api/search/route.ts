@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     }, { locale: request.headers.get('accept-language')?.split(',')[0] || 'en', organizationId: actor?.organizationId });
     return NextResponse.json(response, { headers: { 'Cache-Control': actor ? 'no-store' : 'private, max-age=60' } });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Invalid search request';
+    const message = error instanceof ShodanError ? error.message : 'Invalid search request';
     return NextResponse.json({ error: message, ...(error instanceof ShodanError ? { code: error.code } : {}) }, { status: error instanceof ShodanError ? error.status : error instanceof OrganizationAccessError ? 403 : 400 });
   }
 }

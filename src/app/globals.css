@@ -1,5 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
+
+.demo-replay-root,.demo-replay-surface {display:contents;}
+.demo-replay-root--active {display:block;--replay-height:40px;}
+.demo-replay-notice {height:var(--replay-height);display:flex;align-items:center;justify-content:center;gap:12px;padding:4px 12px;background:#dcecff;color:#152738;font:13px/16px Arial,sans-serif;box-sizing:border-box;}
+.demo-replay-notice strong {white-space:nowrap;}
+.demo-replay-root--active .demo-replay-surface {display:block;position:relative;height:calc(100dvh - var(--replay-height));overflow:auto;transform:translateZ(0);}
+@media(max-width:600px) {.demo-replay-root--active {--replay-height:64px;}.demo-replay-notice {gap:8px;font-size:12px;}}
 @source not "../../.next";
 @source not "../../.next-*";
 @source not "../../.next-local";

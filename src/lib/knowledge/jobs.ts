@@ -5,6 +5,7 @@ import { extractDocument } from './extract';
 import { embedTexts, vectorLiteral } from './embeddings';
 import { getEmbeddingSettings } from './settings';
 import { hashContent, splitBlocks, validateSharedMetadata } from './safety';
+import { knowledgeFailureMessage } from './errors';
 
 interface Job { id: string; document_id: string; attempts: number; kind: string }
 interface Document { organization_id: string | null; file_name: string; storage_path: string; content_hash: string; document_type: string; language: string; published_at: string | null; valid_from: string | null; valid_to: string | null; metadata: unknown; status: string }
@@ -83,7 +84,7 @@ export async function runKnowledgeJobs(limit = 3) {
       summary.completed++;
     } catch (error) {
       summary.failed++;
-      const message = (error instanceof Error ? error.message : 'Ingestion failed').slice(0,500);
+      const message = knowledgeFailureMessage(error);
       await knowledgeTransaction(null,async(c)=>{
         await c.query("update ophanim_knowledge_jobs set status=$2,last_error=$3,next_attempt_at=now()+interval '2 minutes' where id=$1",[job.id,job.attempts<3 ? 'queued':'failed',message]);
         await c.query("update ophanim_knowledge_documents set status=$2,error=$3 where id=$1 and status<>'deleting'",[job.document_id,job.attempts<3 ? 'queued':'failed',message]);

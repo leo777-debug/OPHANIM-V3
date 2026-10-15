@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-10-15T08:28:11.358Z",
+  "checkedAt": "2026-10-15T13:37:38.449Z",
   "database": "native PostgreSQL 18",
   "scope": "Synthetic HTTP plus authenticated database-role attacks; no actual scans, live advisories or provider traffic",
   "checks": [
@@ -61,6 +61,66 @@
     {
       "check": "own remediation positive control",
       "status": 201,
+      "pass": true
+    },
+    {
+      "check": "own cyber client and member positive control",
+      "status": 201,
+      "pass": true
+    },
+    {
+      "check": "own cyber asset client link positive control",
+      "status": 201,
+      "pass": true
+    },
+    {
+      "check": "own dependency client link positive control",
+      "status": 201,
+      "pass": true
+    },
+    {
+      "check": "own cyber client and member positive control",
+      "status": 201,
+      "pass": true
+    },
+    {
+      "check": "own cyber asset client link positive control",
+      "status": 201,
+      "pass": true
+    },
+    {
+      "check": "own dependency client link positive control",
+      "status": 201,
+      "pass": true
+    },
+    {
+      "check": "private client inventory list: /api/cyber/clients",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "private client inventory list: /api/cyber/assets",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "private client inventory list: /api/cyber/dependencies",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "foreign customer/member link rejected: /api/cyber/clients",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign customer/member link rejected: /api/cyber/assets",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign customer/member link rejected: /api/cyber/dependencies",
+      "status": 400,
       "pass": true
     },
     {
@@ -152,6 +212,36 @@
     {
       "check": "API does not disclose foreign asset through RLS-created child link",
       "status": 200,
+      "pass": true
+    },
+    {
+      "check": "private client inventory list: /api/cyber/clients",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "private client inventory list: /api/cyber/assets",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "private client inventory list: /api/cyber/dependencies",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "foreign customer/member link rejected: /api/cyber/clients",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign customer/member link rejected: /api/cyber/assets",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign customer/member link rejected: /api/cyber/dependencies",
+      "status": 400,
       "pass": true
     },
     {

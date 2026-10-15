@@ -174,8 +174,8 @@ export async function POST(
         },
       }
     );
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown Gemini API error';
+  } catch {
+    const message = 'Unknown Gemini API error';
 
     if (message.includes('API_KEY_INVALID') || message.includes('API key not valid')) {
       return NextResponse.json(

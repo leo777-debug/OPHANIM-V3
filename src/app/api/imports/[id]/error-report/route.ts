@@ -25,6 +25,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     });
   } catch (error) {
     const status = error instanceof OrganizationAccessError ? 401 : 400;
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Error report could not be generated.' }, { status });
+    return NextResponse.json({ error: 'Error report could not be generated.' }, { status });
   }
 }

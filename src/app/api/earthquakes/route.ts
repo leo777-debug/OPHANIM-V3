@@ -49,8 +49,8 @@ export async function GET() {
         'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
       },
     });
-  } catch (error) {
-    console.error('Earthquake fetch error:', error);
+  } catch {
+    console.error('Earthquake fetch error:');
     return NextResponse.json({ earthquakes: [], error: 'Failed to fetch earthquake data' }, { status: 500 });
   }
 }

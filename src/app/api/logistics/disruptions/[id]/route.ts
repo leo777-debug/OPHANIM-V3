@@ -14,6 +14,6 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     if (!disruption) return NextResponse.json({ error: 'Disruption not found.' }, { status: 404 });
     return NextResponse.json({ disruption, assessments: await listDisruptionAssessments(actor, id) });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof OrganizationAccessError ? error.message : error instanceof Error ? error.message : 'Disruption request failed.' }, { status: error instanceof OrganizationAccessError ? 403 : 400 });
+    return NextResponse.json({ error: error instanceof OrganizationAccessError ? error.message : 'Disruption request failed.' }, { status: error instanceof OrganizationAccessError ? 403 : 400 });
   }
 }
