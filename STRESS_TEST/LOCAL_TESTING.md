@@ -79,6 +79,12 @@ Do not delete packs, factory-reset Docker, force-push history or move the origin
 
 ## Additional Security Probes
 
+`node STRESS_TEST/cyber-tenants.mjs` runs 54 native HTTP/database-role checks for
+private assets, roll calls, assessment child links, remediation and task updates.
+It verifies the database identity using own/foreign shipment reads before testing
+restricted table writes. A permission denial before the positive control does not
+count as tenant isolation. No Data API grants are added to make the test pass.
+
 `node STRESS_TEST/workflow-tenants.mjs` runs 36 actual native PostgreSQL/HTTP
 rescue-case/action/decision/evidence checks. It refuses occupied loopback ports
 and stops only its own test services. Evidence URLs are stored, never fetched.

@@ -14,6 +14,7 @@ checkpoints later in this document. Updated 15 October 2026, Asia/Dubai.
 | SQL/RLS | Six passing embedded PostgreSQL tests, 29.02 seconds | Rerun with migration 028; native Windows PostgreSQL lacks pgvector |
 | Tenant HTTP | 72 checks pass | Own positive controls and foreign reads/writes, private file download, Verify history and legacy sessions; not all 194 routes |
 | Rescue workflow HTTP | 36 additional native checks pass | Own case/action/decision/evidence controls; foreign parent/child writes denied; database unchanged; viewer/anonymous approval denials |
+| Cyber workflow boundaries | 54 additional native checks pass | Roll calls, assets, assessments, decisions/evidence, remediation and tasks; authenticated database-role positive control and deny-by-default Data API writes |
 | Native roles/alerts/bursts | 24 checks pass | Four roles; alert ownership; 100 notifications, not 100 generated alerts; Verify 10x200/20x429 |
 | Generated intelligence alerts | Four additional checks pass | Four concurrent actual reconciliations: 100 alerts / 100 assessments / 100 tasks, no duplicates, tenant-isolated; 1,691 ms |
 | Browser matrix | 45 pass / 0 fail on fresh standalone package | Chromium/Firefox/WebKit x 390/820/1920px; pre-fix cold timeout retained separately |

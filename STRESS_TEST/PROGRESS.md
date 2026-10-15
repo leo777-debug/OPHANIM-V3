@@ -16,6 +16,7 @@ Branch: `stress-test/competition`. Finished: **no**.
 - [x] Native alert fixture uncovered broken IMO/MMSI SQL digit checks. New migration 028 preserves data/RLS; five SQL regressions pass. Four real concurrent reconciliations generate exactly 100 alerts/assessments/tasks without duplication or tenant leakage.
 - [x] Final 576-test full rerun passes. All 110 protected-handler checks also pass in isolation (7.74s). No assertion or timeout weakened.
 - [x] 36 additional native HTTP rescue/action/decision/evidence tests pass, including foreign child links, viewer/anonymous denials and database unchanged proofs.
+- [x] 54 native roll-call/remediation/task checks pass, including cross-organization asset/assessment links and authenticated-role identity controls. Roll-call Data API writes stay deny-by-default; no grants were broadened.
 - [x] Ten bounded extractor safety probes pass using bundled Python 3.12.14 / pypdf 6.10.0 / Pillow 12.3.0. Deployment-pinned parsers, OCR and arbitrary hostile-PDF resource isolation remain unverified.
 - [x] Fetch origin and create an isolated branch from the remote default.
 - [x] Merge already-built Verify/RAG foundation without changing the original checkout.
