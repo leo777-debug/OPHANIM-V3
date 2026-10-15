@@ -4,12 +4,18 @@ Competition: 17 October 2026. Code freeze: end of 16 October, Asia/Dubai.
 Branch: `stress-test/competition`. Finished: **no**.
 
 ## Current Checkpoint
-- [x] Working revision since e274d16: Knowledge user-budget/error and pagination fixes, signed Resend webhooks, tenant-scoped SDK streams, API log/error redaction, production CSP and timestamped synthetic replay banner. Full suite 765 pass/7 opt-in skip; production build passes. Six explicit database/RLS tests pass. Source-only search makes no AI calls.
+- [x] Latest application-source commit d933c68 pushed. Draft PR: https://github.com/leo777-debug/OPHANIM-V3/pull/16. No merge or deployment. Overall finished remains false because the coverage ledger lists required work still open.
+- [x] Full suite: 782 pass/seven opt-in skips in 58.81 seconds. Six explicit RLS checks pass in 14.47 seconds. TypeScript, production build and focused lint pass. New staged patch 109.90 KB and client assets 9.20 MB: redacted Gitleaks clean.
+- [x] Refreshed 139.8-second H.264 1080p video re-recorded and inspected, captions clear of controls, D: copy checksum-verified and previous files backed up. Current media/hash/copy proof: artifacts/video.json.
+- [x] Knowledge user-budget/error and pagination fixes, signed Resend webhooks, tenant-scoped SDK streams, production CSP, safe API/persisted errors and timestamped replay banner are regression-tested. Source-only search makes no AI calls.
 - [x] Actual new flows: eight SDK tenant HTTP/SSE checks, 72 expanded cyber checks, six 1,001-document pagination checks and 17 replay/header/readiness checks pass. Earlier pagination and cyber environment failures are documented. Final browser matrix: all 45 pass after moving the offline-basemap label clear of the mobile toolbar.
 - [x] Bootstrap preserves an already committed owner when automatic sign-in fails, bounds setup bodies, rejects cross-origin requests and catches connection failures. Five failing regressions before fix now pass. Resend duplicate delivery/connection failure coverage brings its suite to eight checks.
 - [x] Fresh production npm audit: zero vulnerabilities. Full audit: five high/three moderate development advisories, no critical; no incompatible forced downgrade. Thirty-two registered-provider failure cases pass with every network request mocked.
-- [x] Default npm test now uses one worker after repeated fork/WASM startup failures under fan-out. No timeout or assertion weakened. Final clean run: 765 pass, seven skip, 76.69 seconds.
-- [ ] Source security work is ready for a milestone commit after final lint/scanner checks. Broad endpoint certification, live Supabase sessions, hostile-parser isolation and remaining demo-speed caveats are still not claimed complete.
+- [x] Default npm test uses one worker after repeated fork/WASM startup failures under fan-out. No timeout or assertion weakened. Import aliases share the intake budget; eight extension route/nine HTTP and five alias/twelve HTTP checks pass.
+- [ ] Full endpoint/role/child-link permutations, live Supabase sessions, legacy provider URL/failure coverage, hostile-parser isolation and speed goals remain explicitly unfinished. See SECURITY_COVERAGE.md. No production-certification claim.
+
+### Earlier Results
+The older counts below are retained as history, not the current source result.
 - [x] Latest full source checks: 605 tests pass, seven database-opt-in tests skip (95.85s). TypeScript, focused lint and production rebuild pass; six opt-in RLS checks pass in 38.87s. Previous setup/import timeouts retained.
 - [x] Native PostgreSQL load/restart tests and 20 concurrent 5,000-row import previews recorded.
 - [x] Updated 143.17-second H.264 video includes a genuine UI-entered operator note; title, decision frame and refreshed contact sheet inspected. D: became available at 16:27; current copy SHA256-verified there, older 127-second copy backed up.
