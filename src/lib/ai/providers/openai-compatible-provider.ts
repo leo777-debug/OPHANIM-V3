@@ -29,9 +29,39 @@ export async function validateAiBaseUrl(baseUrl: string): Promise<void> {
 export async function fetchAiEndpoint(input: string | URL, options: PinnedRequestOptions): Promise<Response> {
   const url = new URL(input);
   if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) throw new Error('Invalid AI endpoint');
-  return isAllowedLocal(url)
-    ? fetch(url, { method: options.method, headers: options.headers, body: options.body, redirect: 'error', signal: AbortSignal.timeout(options.timeoutMs ?? 120_000) })
-    : pinnedPublicFetch(url, options);
+  if (!isAllowedLocal(url)) return pinnedPublicFetch(url, options);
+  const deadline = AbortSignal.timeout(options.timeoutMs ?? 120_000);
+  const signal = options.signal ? AbortSignal.any([deadline, options.signal]) : deadline;
+  signal.throwIfAborted();
+  const response = await fetch(url, { method: options.method, headers: options.headers, body: options.body, redirect: 'error', signal });
+  signal.throwIfAborted();
+  if (options.method === 'HEAD' || [204, 205, 304].includes(response.status) || !response.body) return response;
+
+  // Local runtimes need the same bounded, non-streaming JSON contract as public AI.
+  const maxBytes = options.maxResponseBytes ?? 2 * 1024 * 1024;
+  if (Number(response.headers.get('content-length') ?? 0) > maxBytes) {
+    void response.body.cancel().catch(() => {});
+    throw new Error('AI response exceeds the size limit.');
+  }
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let bytes = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      signal.throwIfAborted();
+      if (done) break;
+      bytes += value.byteLength;
+      if (bytes > maxBytes) throw new Error('AI response exceeds the size limit.');
+      chunks.push(value);
+    }
+    return new Response(Buffer.concat(chunks, bytes), { status: response.status, statusText: response.statusText, headers: response.headers });
+  } catch (error) {
+    void reader.cancel().catch(() => {});
+    throw error;
+  } finally {
+    reader.releaseLock();
+  }
 }
 
 export const openAiCompatibleProvider: AiProvider = {

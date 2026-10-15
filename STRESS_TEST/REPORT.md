@@ -8,10 +8,10 @@ checkpoints later in this document. Updated 15 October 2026, Asia/Dubai.
 
 | Check | Latest result | Scope / caveat |
 | --- | --- | --- |
-| Full unit/integration suite | 576 passed, 7 opt-in skipped | 93 passing files, 2 skipped; isolated one-worker run, 129.42 seconds |
-| Build | Passed, Next 16.3.8 | Alternate isolated output `.next-stress-final`; fresh standalone package passes five HTTP checks |
+| Full unit/integration suite | 592 passed, 7 opt-in skipped | 94 passing files, 2 skipped; isolated one-worker run, 96.66 seconds |
+| Build | Passed, Next 16.3.8 | Rebuilt `.next-stress-final`; five generated-standalone HTTP checks pass |
 | TypeScript / focused lint | Passed on current source | Legacy lint deliberately retained; no new rule disabled |
-| SQL/RLS | Six passing embedded PostgreSQL tests, 29.02 seconds | Rerun with migration 028; native Windows PostgreSQL lacks pgvector |
+| SQL/RLS | Six passing embedded PostgreSQL tests, 38.92 seconds | Current source; native Windows PostgreSQL lacks pgvector |
 | Tenant HTTP | 72 checks pass | Own positive controls and foreign reads/writes, private file download, Verify history and legacy sessions; not all 194 routes |
 | Rescue workflow HTTP | 36 additional native checks pass | Own case/action/decision/evidence controls; foreign parent/child writes denied; database unchanged; viewer/anonymous approval denials |
 | Cyber workflow boundaries | 54 additional native checks pass | Roll calls, assets, assessments, decisions/evidence, remediation and tasks; authenticated database-role positive control and deny-by-default Data API writes |
@@ -20,7 +20,8 @@ checkpoints later in this document. Updated 15 October 2026, Asia/Dubai.
 | Browser matrix | 45 pass / 0 fail on fresh standalone package | Chromium/Firefox/WebKit x 390/820/1920px; pre-fix cold timeout retained separately |
 | Map acceptance | Nonblank land/ocean pixels plus drag changes | All nine browser/viewport combinations; bundled real static geography, external tiles deliberately blocked |
 | One-hour soak | PASS: 3,601 seconds / 120 samples | Health, shipments, worker all 200; 5,000 imported, zero failed/pending; private memory stable about 146-148 MB after warmup |
-| AI failures | 12 real HTTP checks pass | Owned mock only; full 120,044 ms timeout, malformed/empty JSON, 503, delay, unreachable; deterministic shipments survive |
+| AI failures | 16 expanded real HTTP checks pass | Owned mock only; oversized/chunked bodies, full 120,083 ms post-header timeout, malformed/empty JSON, 503, delay, unreachable; shipments survive. Earlier 12-check artifact retained |
+| AI status/transport regressions | 19 focused checks pass | Six failures before fix; metadata uses pinned transport, bounded local bodies, caller cancellation/deadline and safe errors |
 | Knowledge scale | Three checks pass, 1,000 files/documents/chunks | List 639 ms, download exact, no-embedding retrieval 350 ms; post-extraction fixtures, not 1,000 extraction jobs |
 | Demo reset | Real workflow check passes | Fresh disposable organization, login, DXB-291, destination-port advisory match; no production database |
 | Extractor safety | Ten bounded synthetic checks pass | Text/Office/PDF/image guards, network blocked; bundled parsers differ from deployment pins; no OCR/resource sandbox certification |
@@ -39,6 +40,10 @@ checkpoints later in this document. Updated 15 October 2026, Asia/Dubai.
   health, authorized/unauthorized shipment requests, Verify and Atlas without a
   generated-file patch. Cold health is still 7.8 seconds, not a speed-budget pass.
 - Real private-file scale, role/alert/burst, safe demo-reset and final video artifacts.
+- Model-status now uses the pinned HTTP helper, rather than validating DNS then
+  issuing an unpinned fetch. Local responses are bounded even with dishonest length
+  headers; caller cancellation and deadlines remain active while reading the body.
+  Safe setup/checksum messages remain useful without echoing raw runtime errors.
 
 DOMPurify 3.4.17 is a production dependency (Apache-2.0 option of its dual licence);
 jsdom 30.1.2 is test-only. The runtime is Node 24.19. No new live data provider,
@@ -54,7 +59,8 @@ paid subscription, production migration, deployment or active scan was introduce
 - Generated intelligence-alert burst is now separately tested; neither test contacts
   a real dark-web provider, AI model or email service.
 - 200-connection p95 is 3.90 seconds; cold-start/one-second interaction goals are not
-  met merely because the prewarmed video looks smooth.
+  met merely because the prewarmed video looks smooth. Latest standalone cold health
+  is 8.81 seconds, Verify HTML 1.10 seconds and Atlas HTML 289 ms (not rendered timings).
 - Fresh Windows standalone passes five HTTP and all 45 browser checks. No
   Linux/Render deployment validation was attempted.
 - Forecast-cone/ETA-window matching, Last Safe Move, document 50-vs-48 comparison,
@@ -129,6 +135,7 @@ See BASELINE.md. TypeScript and production build passed; 311 tests passed, five 
 | MAP-001 | P1 | Map availability | Failure to load external basemap leaves initialization/overlays unavailable | Bundled fallback implemented; browser pixel/interaction validation pending | offline-basemap.test.ts; Natural Earth country geometry, original online style retained |
 | SEC-012 | P1 | Cross-origin writes | Shared authenticated endpoints did not consistently reject an explicit foreign Origin | Fixed on shared guard; four actual browser controls and eight auth tests pass | auth/actor.test.ts; artifacts/browser-security.json; own-origin POST remains 201 |
 | SEC-013 | P1 | Raw feed popup HTML | String-built feed popup could retain executable markup beyond the previously fixed URL attribute case | Fixed at central DOMPurify boundary; seven DOM/action regressions | map-popup-html.test.ts; scripts/events/unsafe links removed, explicit deep-dive click retained |
+| SEC-014 | P1 | Local AI status/transport | Model-status used plain fetch after validation and returned raw errors; explicitly allowlisted model responses ignored byte caps and caller cancellation | Fixed; six mocked pre-fix failures, 19 focused checks pass | local-model.test.ts; openai-compatible-provider.test.ts; full suite 592 pass; 16 actual loopback HTTP checks in ai-failure-bounded.json. No live SSRF attack or provider contact |
 | APP-005 | P1 | Vessel identifiers | Legacy SQL double-escaped digit classes, rejecting seven-digit IMO and nine-digit MMSI values on shipments/routes | Corrective migration 028; five executable SQL regressions pass | Actual native HTTP POST failed before fix; vessel-identifiers.test.ts proves legacy rejection, corrected writes, malformed rejection, retained rows and RLS |
 | DEMO-001 | P2 | Reset fixture | Demo reset used originPort/destinationPort instead of the persisted Name fields, silently omitting names | Fixed and verified | demo:reset -- --check now asserts both returned names and stores a genuine operator note |
 

@@ -159,6 +159,11 @@ must be explicitly allowed with `AI_LOCAL_BASE_URLS`, using origins without `/v1
 Keep this allowlist narrowly scoped and keep model services authenticated when
 exposed beyond your machine.
 
+Local and remote model calls have bounded response bodies and deadlines; local
+calls also honor caller cancellation. The verified-model status probe uses the
+same protected transport with a 2.5-second deadline and 1 MiB metadata limit.
+Status failures do not expose raw runtime errors or provider response bodies.
+
 Optional isolated research has a separate deployment/configuration boundary; see
 [sandbox research](docs/SANDBOX_RESEARCH.md). It is not enabled by selecting a
 local model.

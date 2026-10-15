@@ -79,6 +79,13 @@ Do not delete packs, factory-reset Docker, force-push history or move the origin
 
 ## Additional Security Probes
 
+After building, `node STRESS_TEST/ai-failure.mjs --bounded` exercises actual
+authenticated AI requests against an owned loopback mock. It adds declared and
+chunked oversized responses and a full 120-second stalled-body deadline after
+headers arrive. It saves a separate `artifacts/ai-failure-bounded.json`, preserving
+the earlier failure run. No external model, API key or active scan is involved.
+Set `OPHANIM_STRESS_BUILD_DIR=.next-stress-final` when testing the alternate build.
+
 `node STRESS_TEST/cyber-tenants.mjs` runs 54 native HTTP/database-role checks for
 private assets, roll calls, assessment child links, remediation and task updates.
 It verifies the database identity using own/foreign shipment reads before testing
