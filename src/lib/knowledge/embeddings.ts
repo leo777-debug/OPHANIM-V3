@@ -1,4 +1,4 @@
-import { validateAiBaseUrl } from '@/lib/ai/providers/openai-compatible-provider';
+import { fetchAiEndpoint } from '@/lib/ai/providers/openai-compatible-provider';
 import type { EmbeddingSettings } from './settings';
 
 export function embeddingConfig() {
@@ -7,9 +7,8 @@ export function embeddingConfig() {
 export async function embedTexts(texts: string[], settings?:EmbeddingSettings): Promise<number[][]> {
   const config = settings ?? embeddingConfig();
   if (!config.baseUrl || !config.model) throw new Error('Configure the embedding server in AI SETUP or EMBEDDING_BASE_URL / EMBEDDING_MODEL.');
-  await validateAiBaseUrl(config.baseUrl);
   const url = `${config.baseUrl.replace(/\/(?:v1\/?)?$/, '')}/v1/embeddings`;
-  const response = await fetch(url, { method: 'POST', redirect: 'error', signal: AbortSignal.timeout(120_000),
+  const response = await fetchAiEndpoint(url, { method: 'POST', timeoutMs:120_000,
     headers: { 'Content-Type': 'application/json', ...(config.apiKey ? { Authorization: `Bearer ${config.apiKey}` } : {}) },
     body: JSON.stringify({ model: config.model, input: texts, dimensions: 1024 }) });
   if (!response.ok) throw new Error(`Embedding server returned ${response.status}`);

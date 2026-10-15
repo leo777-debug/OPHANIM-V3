@@ -4,6 +4,7 @@ import { OrganizationAccessError, requireOrganizationAccess } from '@/lib/operat
 import type { OrganizationActor } from '@/lib/operations/types';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { hashSessionToken, ORGANIZATION_COOKIE, SESSION_COOKIE } from './session';
+import { trustedRequestOrigin } from '@/lib/http/request-origin';
 
 export interface AuthenticatedActor extends OrganizationActor {
   email: string;
@@ -72,6 +73,9 @@ export async function getAuthenticatedActor(request: NextRequest): Promise<Authe
 }
 
 export async function requireAuthenticatedActor(request: NextRequest, permission?: Parameters<typeof requireOrganizationAccess>[2]): Promise<AuthenticatedActor> {
+  if (!['GET', 'HEAD', 'OPTIONS'].includes(request.method) && !trustedRequestOrigin(request)) {
+    throw new OrganizationAccessError('Cross-origin mutations are not permitted.');
+  }
   const actor = await getAuthenticatedActor(request);
   if (!actor) throw new OrganizationAccessError('Authentication is required.');
   if (permission) requireOrganizationAccess(actor, actor.organizationId, permission);

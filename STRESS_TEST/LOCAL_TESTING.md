@@ -1,5 +1,20 @@
 # Isolated Local Testing
 
+## Disposable presentation reset
+
+`npm run demo:reset` starts a new, in-memory labelled demo at http://127.0.0.1:3100.
+It refuses occupied test ports instead of deleting or replacing an existing database.
+No configured production database or provider credentials are inherited.
+Stop with Ctrl+C; a later run creates a fresh demo. `npm run demo:reset -- --check`
+seeds and verifies the real workflow, then stops its owned services.
+
+Demo-only login: presenter@example.test / Synthetic-Demo-Only-2026.
+Organization slug: competition-demo.
+These are publicly labelled fixture credentials, never production credentials.
+The initial scenario is DXB-291 plus a synthetic weather destination-port match.
+It is not live news, a carrier schedule or a validated forecast-cone calculation.
+Verify's replay buttons work without an AI model or external providers.
+
 Use this dedicated stress branch, not the developer's credential-bearing checkout.
 Node 24 is required for the optional native TypeScript test bootstrap. The regular Next build does not depend on that bootstrap.
 
@@ -13,13 +28,25 @@ node STRESS_TEST/smoke.mjs
 
 The smoke runner starts an in-memory database on loopback port 55432, seeds a labelled synthetic organization, starts the production CLI on loopback port 3100, checks actual HTTP authorization and screenshots Verify at desktop/mobile sizes, then stops its own processes. Occupied ports are not taken over. No customer data or developer credentials are copied. Chromium installation: `npx playwright install chromium`; Firefox/WebKit are also installed for later matrix tests.
 
-The embedded PostgreSQL socket multiplexer is not native multi-process PostgreSQL. Native concurrency, import-restart, sustained large-data and 200-user performance certification remain pending. Raw RLS tests use the embedded engine directly, not the multiplexer, because protocol error/savepoint behavior differs.
+The embedded PostgreSQL socket multiplexer is not native multi-process PostgreSQL.
+Native PostgreSQL 18 now runs core load, restart and one-hour soak tests via
+`native-db.mjs`; its Windows binaries lack pgvector. Raw RLS and Knowledge tests
+use the embedded engine directly. Do not treat the multiplexer as a native
+concurrency benchmark or the core native tests as pgvector throughput evidence.
 
 `start-test.mjs` strips inherited secrets, refuses local/production environment files and preloads the server fetch/socket/DNS guard. Browser tests block all non-local requests. Only explicit synthetic empty USGS/EONET fixtures are supplied; other external sources fail closed. Do not disable this guard for load tests. Full provider replay fixtures are still to be built.
 
-An open packaging/guard problem is reproducible with `node STRESS_TEST/smoke.mjs --standalone`: health times out. The default CLI runner passes but warns that standalone output should normally use its generated server. Neither result is hidden; resolve OPS-002 before declaring production packaging ready.
+Historical standalone startup timeouts were reproduced with the default eager
+route preload. The documented `preloadEntriesOnStart: false` source setting now
+passes five real HTTP checks on a fresh generated package:
+`node STRESS_TEST/packaging.mjs`. The browser matrix accepts `--standalone` too.
+This is isolated Windows packaging verification, not a production deployment.
+Cold health still takes about 7.8 seconds; do not claim the two-second budget.
 
-Artifacts contain synthetic screenshots and measured check results. Runtime context and logs are ignored. No video has been recorded yet. Do not present screenshots of test fixtures as live intelligence.
+Artifacts contain synthetic screenshots and measured check results. Runtime context
+and logs are ignored. `npm run demo:video` records the actual demo workflow; the
+127.2-second MP4 and review are documented in VIDEO_REVIEW.md. Do not present
+screenshots or the recorded fixture video as live intelligence.
 
 ## Tenant HTTP Regression
 

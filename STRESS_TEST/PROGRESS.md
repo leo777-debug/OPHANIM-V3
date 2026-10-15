@@ -4,11 +4,17 @@ Competition: 17 October 2026. Code freeze: end of 16 October, Asia/Dubai.
 Branch: `stress-test/competition`. Finished: **no**.
 
 ## Current Checkpoint
-- [x] Latest source checks: 547 tests pass, seven database-opt-in tests skip; typecheck and focused lint pass.
+- [x] Latest full source checks: 576 tests pass, seven database-opt-in tests skip; production build passes. Previous setup/import timeouts retained; final isolated one-worker run passes in 129.42 seconds.
 - [x] Native PostgreSQL load/restart tests and 20 concurrent 5,000-row import previews recorded.
 - [x] Captioned 127-second H.264 video recorded and copied to D:/OPHANIM/Documentation; title, weather and share frames inspected.
-- [ ] Restarted one-hour soak after fixing real background-job SQL; 5,000 imported rows complete, zero failures, all subsequent status samples 200 so far.
-- [ ] Final build, extended role/alert/1,000-document/burst tests and nonblank fallback-map browser checks pending.
+- [x] One-hour native PostgreSQL soak: 3,601 seconds, 120 successful samples, 5,000 imported rows, zero failures/pending jobs; failed pre-fix run retained.
+- [x] 72 tenant HTTP checks, 24 native role/alert/notification/Verify checks, three 1,000-document scale checks, 12 real AI failure checks, six embedded RLS tests.
+- [x] Fresh generated standalone passes all 45 browser checks, including nonblank map pixels and drag changes at nine browser/viewport combinations. Previous cold timeout retained.
+- [x] Safe one-command demo reset and final 127.2-second captioned video inspected. See VIDEO_REVIEW.md.
+- [ ] Exhaustive security surfaces, full offline workflows and latency goals remain open. No overall completion claim.
+- [x] Fresh generated standalone passes five HTTP checks after documented preload setting. Client bundle Gitleaks: 9.20 MB, no findings.
+- [x] Native alert fixture uncovered broken IMO/MMSI SQL digit checks. New migration 028 preserves data/RLS; five SQL regressions pass. Four real concurrent reconciliations generate exactly 100 alerts/assessments/tasks without duplication or tenant leakage.
+- [x] Final 576-test full rerun passes. All 110 protected-handler checks also pass in isolation (7.74s). No assertion or timeout weakened.
 - [x] Fetch origin and create an isolated branch from the remote default.
 - [x] Merge already-built Verify/RAG foundation without changing the original checkout.
 - [x] Preserve known Shodan/freshness source changes; exclude secrets and unrelated edits.
@@ -22,11 +28,16 @@ Branch: `stress-test/competition`. Finished: **no**.
 - [ ] Phase 2: security and tenant-isolation matrix with regression tests.
 - [ ] Phase 3: isolated load/chaos/scale/soak/browser tests.
 - [ ] Phase 4: genuine offline demo, performance, polish and presenter materials.
-- [ ] Phase 5: record and inspect the 2-3 minute video.
+- [x] Phase 5: record and inspect the 2-3 minute video.
 - [ ] Final report/checks/push/PR. Do not mark finished before these are complete.
 
 The full granular task list is in `state.json`. Resume the first unfinished task;
 do not treat a scaffold, mocked unit test or unavailable database as complete coverage.
+
+## Historical Checkpoints
+
+The entries below are retained chronological notes. They do not override the current
+checkpoint above or the latest results table at the top of REPORT.md.
 
 ## Findings And Constraints
 - The remote default does not contain the local Verify/RAG foundation or Shodan

@@ -1,20 +1,11 @@
 {
-  "checkedAt": "2026-10-14T15:05:51.307Z",
+  "checkedAt": "2026-10-15T05:23:02.811Z",
+  "runtime": "generated standalone package",
   "checks": [
     {
       "browser": "chromium",
       "width": 390,
       "path": "/verify",
-      "elapsedMs": 4034,
-      "errors": [],
-      "overflow": false,
-      "canvasElements": 0,
-      "pass": true
-    },
-    {
-      "browser": "chromium",
-      "width": 390,
-      "path": "/imports",
       "elapsedMs": 2608,
       "errors": [],
       "overflow": false,
@@ -24,45 +15,8 @@
     {
       "browser": "chromium",
       "width": 390,
-      "path": "/logistics/command",
-      "elapsedMs": 4665,
-      "errors": [],
-      "overflow": false,
-      "canvasElements": 0,
-      "pass": true
-    },
-    {
-      "browser": "chromium",
-      "width": 390,
-      "path": "/atlas",
-      "elapsedMs": 3067,
-      "errors": [],
-      "overflow": false,
-      "canvasElements": 0,
-      "pass": true,
-      "mapAssets": "external basemap blocked; canvas count is NOT a nonblank-map test"
-    },
-    {
-      "browser": "chromium",
-      "width": 390,
-      "path": "Verify offline failure and replay recovery",
-      "pass": true
-    },
-    {
-      "browser": "chromium",
-      "width": 820,
-      "path": "/verify",
-      "elapsedMs": 2407,
-      "errors": [],
-      "overflow": false,
-      "canvasElements": 0,
-      "pass": true
-    },
-    {
-      "browser": "chromium",
-      "width": 820,
       "path": "/imports",
-      "elapsedMs": 2461,
+      "elapsedMs": 2340,
       "errors": [],
       "overflow": false,
       "canvasElements": 0,
@@ -70,9 +24,9 @@
     },
     {
       "browser": "chromium",
-      "width": 820,
+      "width": 390,
       "path": "/logistics/command",
-      "elapsedMs": 6495,
+      "elapsedMs": 3278,
       "errors": [],
       "overflow": false,
       "canvasElements": 0,
@@ -80,14 +34,71 @@
     },
     {
       "browser": "chromium",
-      "width": 820,
+      "width": 390,
       "path": "/atlas",
-      "elapsedMs": 3254,
+      "elapsedMs": 26540,
       "errors": [],
       "overflow": false,
       "canvasElements": 1,
+      "mapPixels": {
+        "land": 28163,
+        "ocean": 84790,
+        "changedAfterDrag": true
+      },
       "pass": true,
-      "mapAssets": "external basemap blocked; canvas count is NOT a nonblank-map test"
+      "mapAssets": "Bundled Natural Earth fallback; external tiles blocked; screenshot pixels and drag verified"
+    },
+    {
+      "browser": "chromium",
+      "width": 390,
+      "path": "Verify offline failure and replay recovery",
+      "pass": true
+    },
+    {
+      "browser": "chromium",
+      "width": 820,
+      "path": "/verify",
+      "elapsedMs": 2210,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "chromium",
+      "width": 820,
+      "path": "/imports",
+      "elapsedMs": 2228,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "chromium",
+      "width": 820,
+      "path": "/logistics/command",
+      "elapsedMs": 2569,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "chromium",
+      "width": 820,
+      "path": "/atlas",
+      "elapsedMs": 24182,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 1,
+      "mapPixels": {
+        "land": 37622,
+        "ocean": 101515,
+        "changedAfterDrag": true
+      },
+      "pass": true,
+      "mapAssets": "Bundled Natural Earth fallback; external tiles blocked; screenshot pixels and drag verified"
     },
     {
       "browser": "chromium",
@@ -99,7 +110,7 @@
       "browser": "chromium",
       "width": 1920,
       "path": "/verify",
-      "elapsedMs": 2426,
+      "elapsedMs": 2314,
       "errors": [],
       "overflow": false,
       "canvasElements": 0,
@@ -109,7 +120,7 @@
       "browser": "chromium",
       "width": 1920,
       "path": "/imports",
-      "elapsedMs": 2551,
+      "elapsedMs": 2350,
       "errors": [],
       "overflow": false,
       "canvasElements": 0,
@@ -119,7 +130,7 @@
       "browser": "chromium",
       "width": 1920,
       "path": "/logistics/command",
-      "elapsedMs": 3867,
+      "elapsedMs": 2829,
       "errors": [],
       "overflow": false,
       "canvasElements": 0,
@@ -129,12 +140,17 @@
       "browser": "chromium",
       "width": 1920,
       "path": "/atlas",
-      "elapsedMs": 4333,
+      "elapsedMs": 34805,
       "errors": [],
       "overflow": false,
-      "canvasElements": 0,
+      "canvasElements": 1,
+      "mapPixels": {
+        "land": 37533,
+        "ocean": 106638,
+        "changedAfterDrag": true
+      },
       "pass": true,
-      "mapAssets": "external basemap blocked; canvas count is NOT a nonblank-map test"
+      "mapAssets": "Bundled Natural Earth fallback; external tiles blocked; screenshot pixels and drag verified"
     },
     {
       "browser": "chromium",
@@ -146,7 +162,7 @@
       "browser": "firefox",
       "width": 390,
       "path": "/verify",
-      "elapsedMs": 3244,
+      "elapsedMs": 3459,
       "errors": [],
       "overflow": false,
       "canvasElements": 0,
@@ -156,7 +172,7 @@
       "browser": "firefox",
       "width": 390,
       "path": "/imports",
-      "elapsedMs": 2309,
+      "elapsedMs": 2189,
       "errors": [],
       "overflow": false,
       "canvasElements": 0,
@@ -166,7 +182,7 @@
       "browser": "firefox",
       "width": 390,
       "path": "/logistics/command",
-      "elapsedMs": 3223,
+      "elapsedMs": 2563,
       "errors": [],
       "overflow": false,
       "canvasElements": 0,
@@ -176,12 +192,17 @@
       "browser": "firefox",
       "width": 390,
       "path": "/atlas",
-      "elapsedMs": 2552,
+      "elapsedMs": 8340,
       "errors": [],
       "overflow": false,
       "canvasElements": 1,
+      "mapPixels": {
+        "land": 28430,
+        "ocean": 85074,
+        "changedAfterDrag": true
+      },
       "pass": true,
-      "mapAssets": "external basemap blocked; canvas count is NOT a nonblank-map test"
+      "mapAssets": "Bundled Natural Earth fallback; external tiles blocked; screenshot pixels and drag verified"
     },
     {
       "browser": "firefox",
@@ -193,7 +214,7 @@
       "browser": "firefox",
       "width": 820,
       "path": "/verify",
-      "elapsedMs": 2458,
+      "elapsedMs": 2211,
       "errors": [],
       "overflow": false,
       "canvasElements": 0,
@@ -203,7 +224,7 @@
       "browser": "firefox",
       "width": 820,
       "path": "/imports",
-      "elapsedMs": 2277,
+      "elapsedMs": 2300,
       "errors": [],
       "overflow": false,
       "canvasElements": 0,
@@ -213,7 +234,7 @@
       "browser": "firefox",
       "width": 820,
       "path": "/logistics/command",
-      "elapsedMs": 2880,
+      "elapsedMs": 2599,
       "errors": [],
       "overflow": false,
       "canvasElements": 0,
@@ -223,12 +244,17 @@
       "browser": "firefox",
       "width": 820,
       "path": "/atlas",
-      "elapsedMs": 2770,
+      "elapsedMs": 9579,
       "errors": [],
       "overflow": false,
       "canvasElements": 1,
+      "mapPixels": {
+        "land": 37478,
+        "ocean": 100921,
+        "changedAfterDrag": true
+      },
       "pass": true,
-      "mapAssets": "external basemap blocked; canvas count is NOT a nonblank-map test"
+      "mapAssets": "Bundled Natural Earth fallback; external tiles blocked; screenshot pixels and drag verified"
     },
     {
       "browser": "firefox",
@@ -240,7 +266,7 @@
       "browser": "firefox",
       "width": 1920,
       "path": "/verify",
-      "elapsedMs": 2623,
+      "elapsedMs": 2374,
       "errors": [],
       "overflow": false,
       "canvasElements": 0,
@@ -250,7 +276,7 @@
       "browser": "firefox",
       "width": 1920,
       "path": "/imports",
-      "elapsedMs": 2262,
+      "elapsedMs": 2239,
       "errors": [],
       "overflow": false,
       "canvasElements": 0,
@@ -260,7 +286,7 @@
       "browser": "firefox",
       "width": 1920,
       "path": "/logistics/command",
-      "elapsedMs": 2869,
+      "elapsedMs": 2859,
       "errors": [],
       "overflow": false,
       "canvasElements": 0,
@@ -270,12 +296,17 @@
       "browser": "firefox",
       "width": 1920,
       "path": "/atlas",
-      "elapsedMs": 2641,
+      "elapsedMs": 11165,
       "errors": [],
       "overflow": false,
       "canvasElements": 1,
+      "mapPixels": {
+        "land": 37523,
+        "ocean": 105726,
+        "changedAfterDrag": true
+      },
       "pass": true,
-      "mapAssets": "external basemap blocked; canvas count is NOT a nonblank-map test"
+      "mapAssets": "Bundled Natural Earth fallback; external tiles blocked; screenshot pixels and drag verified"
     },
     {
       "browser": "firefox",
@@ -287,7 +318,7 @@
       "browser": "webkit",
       "width": 390,
       "path": "/verify",
-      "elapsedMs": 2320,
+      "elapsedMs": 2258,
       "errors": [],
       "overflow": false,
       "canvasElements": 0,
@@ -297,7 +328,7 @@
       "browser": "webkit",
       "width": 390,
       "path": "/imports",
-      "elapsedMs": 2154,
+      "elapsedMs": 2235,
       "errors": [],
       "overflow": false,
       "canvasElements": 0,
@@ -307,7 +338,7 @@
       "browser": "webkit",
       "width": 390,
       "path": "/logistics/command",
-      "elapsedMs": 2661,
+      "elapsedMs": 2445,
       "errors": [],
       "overflow": false,
       "canvasElements": 0,
@@ -317,12 +348,17 @@
       "browser": "webkit",
       "width": 390,
       "path": "/atlas",
-      "elapsedMs": 2408,
+      "elapsedMs": 11081,
       "errors": [],
       "overflow": false,
       "canvasElements": 1,
+      "mapPixels": {
+        "land": 27950,
+        "ocean": 84713,
+        "changedAfterDrag": true
+      },
       "pass": true,
-      "mapAssets": "external basemap blocked; canvas count is NOT a nonblank-map test"
+      "mapAssets": "Bundled Natural Earth fallback; external tiles blocked; screenshot pixels and drag verified"
     },
     {
       "browser": "webkit",
@@ -334,7 +370,7 @@
       "browser": "webkit",
       "width": 820,
       "path": "/verify",
-      "elapsedMs": 2325,
+      "elapsedMs": 2274,
       "errors": [],
       "overflow": false,
       "canvasElements": 0,
@@ -344,7 +380,7 @@
       "browser": "webkit",
       "width": 820,
       "path": "/imports",
-      "elapsedMs": 2203,
+      "elapsedMs": 2208,
       "errors": [],
       "overflow": false,
       "canvasElements": 0,
@@ -354,7 +390,7 @@
       "browser": "webkit",
       "width": 820,
       "path": "/logistics/command",
-      "elapsedMs": 2841,
+      "elapsedMs": 2673,
       "errors": [],
       "overflow": false,
       "canvasElements": 0,
@@ -364,12 +400,17 @@
       "browser": "webkit",
       "width": 820,
       "path": "/atlas",
-      "elapsedMs": 2632,
+      "elapsedMs": 14247,
       "errors": [],
       "overflow": false,
       "canvasElements": 1,
+      "mapPixels": {
+        "land": 33047,
+        "ocean": 90987,
+        "changedAfterDrag": true
+      },
       "pass": true,
-      "mapAssets": "external basemap blocked; canvas count is NOT a nonblank-map test"
+      "mapAssets": "Bundled Natural Earth fallback; external tiles blocked; screenshot pixels and drag verified"
     },
     {
       "browser": "webkit",
@@ -381,7 +422,7 @@
       "browser": "webkit",
       "width": 1920,
       "path": "/verify",
-      "elapsedMs": 2321,
+      "elapsedMs": 2358,
       "errors": [],
       "overflow": false,
       "canvasElements": 0,
@@ -391,7 +432,7 @@
       "browser": "webkit",
       "width": 1920,
       "path": "/imports",
-      "elapsedMs": 2297,
+      "elapsedMs": 2428,
       "errors": [],
       "overflow": false,
       "canvasElements": 0,
@@ -401,7 +442,7 @@
       "browser": "webkit",
       "width": 1920,
       "path": "/logistics/command",
-      "elapsedMs": 2770,
+      "elapsedMs": 2785,
       "errors": [],
       "overflow": false,
       "canvasElements": 0,
@@ -411,12 +452,17 @@
       "browser": "webkit",
       "width": 1920,
       "path": "/atlas",
-      "elapsedMs": 3271,
+      "elapsedMs": 17493,
       "errors": [],
       "overflow": false,
       "canvasElements": 1,
+      "mapPixels": {
+        "land": 32297,
+        "ocean": 88372,
+        "changedAfterDrag": true
+      },
       "pass": true,
-      "mapAssets": "external basemap blocked; canvas count is NOT a nonblank-map test"
+      "mapAssets": "Bundled Natural Earth fallback; external tiles blocked; screenshot pixels and drag verified"
     },
     {
       "browser": "webkit",

@@ -1,0 +1,15 @@
+{
+  "observedDate": "2026-10-15",
+  "provenance": "Recorded from actual alert-burst.mjs HTTP setup failure before migration 028; not a live provider observation",
+  "database": "native PostgreSQL 18",
+  "request": {
+    "method": "POST",
+    "path": "/api/logistics/shipments",
+    "synthetic": true,
+    "imoNumber": "1234567"
+  },
+  "expectedStatus": 201,
+  "actualStatus": 400,
+  "error": "new row for relation ophanim_shipments violates check constraint ophanim_shipments_imo_number_check",
+  "cause": "Legacy SQL double-escaped the digit class; the fixture has the allowed seven-ASCII-digit format, not a claim of a registered real vessel"
+}

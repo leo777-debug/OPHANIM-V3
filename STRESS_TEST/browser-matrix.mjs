@@ -5,8 +5,9 @@ import { withIsolatedApp } from './harness.mjs';
 import { existsSync } from 'node:fs';
 import sharp from 'sharp';
 import { createHash } from 'node:crypto';
+import { withRunningSoakDatabase } from './with-soak-database.mjs';
 
-await withIsolatedApp(async ({ base, root }) => {
+await (process.argv.includes('--reuse-owned-soak') ? withRunningSoakDatabase : withIsolatedApp)(async ({ base, root }) => {
   const demo = JSON.parse(await readFile(resolve(root, 'STRESS_TEST/runtime/demo-context.json'), 'utf8'));
   await mkdir(resolve(root, 'STRESS_TEST/artifacts/browser'), { recursive: true });
   const checks = [];
@@ -76,7 +77,7 @@ await withIsolatedApp(async ({ base, root }) => {
     } catch (error) { checks.push({ browser: name, pass: false, reason: error.message.slice(0, 400) }); }
     finally { await browser?.close(); }
   }
-  await writeFile(resolve(root, 'STRESS_TEST/artifacts/browser-matrix.json'), JSON.stringify({ checkedAt: new Date().toISOString(), checks }, null, 2));
+  await writeFile(resolve(root, 'STRESS_TEST/artifacts/browser-matrix.json'), JSON.stringify({ checkedAt: new Date().toISOString(), runtime: process.argv.includes('--standalone') ? 'generated standalone package' : 'production CLI', checks }, null, 2));
   console.log(JSON.stringify({ passed: checks.filter((check) => check.pass).length, failed: checks.filter((check) => !check.pass) }));
   if (checks.some((check) => !check.pass)) process.exitCode = 1;
-});
+}, { standalone: process.argv.includes('--standalone') });

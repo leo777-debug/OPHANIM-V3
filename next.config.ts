@@ -23,6 +23,8 @@ const nextConfig: NextConfig = {
     return config;
   },
   experimental: {
+    // Load requested routes first instead of preloading every operational module.
+    preloadEntriesOnStart: false,
     // OneDrive can drop Turbopack's persistent cache while files are syncing.
     turbopackFileSystemCacheForDev: false,
   },

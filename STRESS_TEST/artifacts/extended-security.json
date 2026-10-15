@@ -1,0 +1,220 @@
+{
+  "checkedAt": "2026-10-14T16:46:21.024Z",
+  "database": "embedded PostgreSQL with pgvector; not native concurrency",
+  "checks": [
+    {
+      "check": "alerts are tenant-scoped",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "foreign alert cannot be changed",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign alert unchanged in database",
+      "pass": true
+    },
+    {
+      "check": "alerts are tenant-scoped",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "foreign alert cannot be changed",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign alert unchanged in database",
+      "pass": true
+    },
+    {
+      "check": "owner can read own shipments",
+      "pass": true
+    },
+    {
+      "check": "owner shipment write permission",
+      "status": 201,
+      "pass": true
+    },
+    {
+      "check": "owner cannot bypass owner administration",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "operations_manager can read own shipments",
+      "pass": true
+    },
+    {
+      "check": "operations_manager shipment write permission",
+      "status": 201,
+      "pass": true
+    },
+    {
+      "check": "operations_manager cannot bypass owner administration",
+      "status": 403,
+      "pass": true
+    },
+    {
+      "check": "analyst can read own shipments",
+      "pass": true
+    },
+    {
+      "check": "analyst shipment write permission",
+      "status": 201,
+      "pass": true
+    },
+    {
+      "check": "analyst cannot bypass owner administration",
+      "status": 403,
+      "pass": true
+    },
+    {
+      "check": "viewer can read own shipments",
+      "pass": true
+    },
+    {
+      "check": "viewer shipment write permission",
+      "status": 401,
+      "pass": true
+    },
+    {
+      "check": "viewer cannot bypass owner administration",
+      "status": 403,
+      "pass": true
+    },
+    {
+      "check": "100 concurrent notification creations",
+      "responses": [
+        201,
+        400,
+        201,
+        201,
+        400,
+        201,
+        201,
+        201,
+        201,
+        400,
+        201,
+        201,
+        201,
+        201,
+        201,
+        201,
+        201,
+        201,
+        400,
+        201,
+        201,
+        201,
+        400,
+        201,
+        201,
+        201,
+        201,
+        201,
+        201,
+        201,
+        201,
+        400,
+        400,
+        201,
+        201,
+        201,
+        400,
+        201,
+        201,
+        201,
+        201,
+        201,
+        400,
+        201,
+        201,
+        400,
+        201,
+        201,
+        201,
+        201,
+        201,
+        201,
+        400,
+        400,
+        201,
+        201,
+        201,
+        201,
+        201,
+        201,
+        201,
+        400,
+        201,
+        400,
+        201,
+        201,
+        201,
+        201,
+        201,
+        201,
+        400,
+        201,
+        201,
+        400,
+        201,
+        201,
+        201,
+        201,
+        201,
+        400,
+        201,
+        201,
+        201,
+        400,
+        201,
+        201,
+        201,
+        201,
+        400,
+        400,
+        201,
+        201,
+        201,
+        201,
+        201,
+        201,
+        201,
+        400,
+        201,
+        400
+      ],
+      "pass": false
+    },
+    {
+      "check": "notification burst not visible across tenants",
+      "pass": true
+    },
+    {
+      "check": "1000-document list stays bounded and scoped",
+      "status": 200,
+      "elapsedMs": 178,
+      "returned": 500,
+      "pass": true,
+      "limitation": "Existing 500-document cap has no continuation UI; report as P2, not complete pagination."
+    },
+    {
+      "check": "Verify burst completes or rate-limits without server errors",
+      "counts": {
+        "200": 8,
+        "429": 20
+      },
+      "pass": false
+    },
+    {
+      "check": "health security headers and no permissive CORS",
+      "pass": true
+    }
+  ]
+}

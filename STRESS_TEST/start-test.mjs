@@ -24,12 +24,14 @@ for (const name of ['.env', '.env.local', '.env.production', '.env.production.lo
 if (JSON.parse(readFileSync(resolve(root, 'STRESS_TEST/state.json'), 'utf8')).branch !== 'stress-test/competition') throw new Error('Unexpected checkpoint branch.');
 export function startTestApp(stdio = 'inherit', standalone = process.argv.includes('--standalone'), port = 3100) {
   if (![3100, 3101].includes(port)) throw new Error('Only owned stress-test ports are supported.');
-  const childEnv = { ...env, PORT: String(port), APP_URL: `http://127.0.0.1:${port}` };
+  const buildDirectory = process.env.OPHANIM_STRESS_BUILD_DIR ?? '.next';
+  if (!['.next', '.next-stress-final'].includes(buildDirectory)) throw new Error('Unexpected stress build directory.');
+  const childEnv = { ...env, NEXT_DEV_DIST_DIR: buildDirectory, PORT: String(port), APP_URL: `http://127.0.0.1:${port}` };
   if (!standalone) return spawn(process.execPath, [require.resolve('next/dist/bin/next'), 'start', '--hostname', '127.0.0.1', '--port', String(port)], { cwd: root, env: childEnv, stdio, windowsHide: true });
-  const output = resolve(root, '.next/standalone');
+  const output = resolve(root, buildDirectory, 'standalone');
   if (!existsSync(resolve(output, 'server.js'))) throw new Error('Run npm run build before the isolated smoke test.');
   cpSync(resolve(root, 'public'), resolve(output, 'public'), { recursive: true });
-  cpSync(resolve(root, '.next/static'), resolve(output, '.next/static'), { recursive: true });
+  cpSync(resolve(root, buildDirectory, 'static'), resolve(output, buildDirectory, 'static'), { recursive: true });
   return spawn(process.execPath, [resolve(output, 'server.js')], { cwd: root, env: childEnv, stdio, windowsHide: true });
 }
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

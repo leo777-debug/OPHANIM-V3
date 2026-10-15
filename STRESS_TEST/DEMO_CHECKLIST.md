@@ -3,7 +3,9 @@
 ## One hour before
 
 - Charge the laptop; connect power and test the projector at 1920x1080.
-- Open the local MP4 in D:/OPHANIM/Documentation and play it through once.
+- Open STRESS_TEST/video/Ophanim-Demo-2026-10.mp4 and play it through once.
+  A previous copy was saved in D:/OPHANIM/Documentation; verify that drive is
+  mounted before relying on it. The current worktree copy is verified.
 - Keep a second local copy; test playback without internet.
 - Use synthetic records only. Close mail, messaging, environment files and dashboards.
 - Disable notifications and sleep for the presentation; restore these afterwards.

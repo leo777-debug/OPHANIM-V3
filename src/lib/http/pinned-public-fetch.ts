@@ -54,7 +54,7 @@ export async function pinnedPublicFetch(input: string | URL, options: PinnedRequ
         else reject(new Error('Endpoint redirects are not permitted.'));
         return;
       }
-      if (Number(res.headers['content-length'] ?? 0) > maxBytes || (res.headers['content-encoding'] && res.headers['content-encoding'] !== 'identity')) {
+      if (options.method !== 'HEAD' && (Number(res.headers['content-length'] ?? 0) > maxBytes || (res.headers['content-encoding'] && res.headers['content-encoding'] !== 'identity'))) {
         res.destroy(); reject(new Error('Endpoint response exceeds the permitted format or size.')); return;
       }
       const chunks: Buffer[] = []; let bytes = 0;

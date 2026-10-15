@@ -63,5 +63,17 @@
     "Document discrepancy, Gulf signal, confirmation and decision scenes not yet included.",
     "No real customer data, API keys or live provider traffic."
   ],
-  "complete": false
+  "finalEncoding": {
+    "codec": "h264",
+    "width": 1920,
+    "height": 1080,
+    "framesPerSecond": 30,
+    "durationSeconds": 127.2,
+    "bytes": 2584303,
+    "sha256": "becdaa0bbf5f7d7becb5ce23df865a0b0eaf4cf5ad2c755074fb3913662c7fce",
+    "audio": false,
+    "review": "STRESS_TEST/VIDEO_REVIEW.md",
+    "scope": "Video deliverable only; not overall application acceptance. Earlier recording duration excludes title/closing cards."
+  },
+  "complete": true
 }

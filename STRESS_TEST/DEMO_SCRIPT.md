@@ -1,7 +1,8 @@
 # Ophanim: three-minute presentation
 
 Use only the labelled synthetic organization. The recorded video is the reliable
-presentation path until the outstanding offline-basemap and cold-start checks pass.
+presentation path while cold-start, full offline-workflow and security gates remain.
+The bundled fallback globe has passed nonblank-pixel and interaction checks.
 Do not describe a replay as current/live intelligence.
 
 | Time | Screen / action | Say |

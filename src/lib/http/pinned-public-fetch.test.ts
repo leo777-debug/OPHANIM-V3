@@ -61,4 +61,18 @@ describe('pinned public endpoint transport', () => {
     });
     await expect(pinnedPublicFetch('https://example.com', { maxResponseBytes: 10 })).rejects.toThrow('size');
   });
+  it('preserves HEAD headers without treating the advertised resource size as a body', async () => {
+    mocks.send.mockImplementation((_url, _options, receive) => {
+      const req = new EventEmitter() as EventEmitter & { end: () => void };
+      req.end = () => {
+        const res = new EventEmitter() as EventEmitter & { statusCode: number; headers: object };
+        Object.assign(res, { statusCode: 200, headers: { 'content-length': '100000000', server: 'synthetic-server' } });
+        receive(res); queueMicrotask(() => res.emit('end'));
+      };
+      return req;
+    });
+    const response = await pinnedPublicFetch('https://example.com', { method: 'HEAD', maxResponseBytes: 10 });
+    expect(response.headers.get('server')).toBe('synthetic-server');
+    expect(await response.text()).toBe('');
+  });
 });

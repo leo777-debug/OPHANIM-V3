@@ -1,0 +1,9 @@
+{
+  "checkedAt": "2026-10-14T16:56:39.437Z",
+  "pass": true,
+  "syntheticOnly": true,
+  "shipmentCreated": true,
+  "destinationPortMatched": true,
+  "loginWorks": true,
+  "limitation": "Port matching only; no fabricated document discrepancy, GPS or confirmation features."
+}

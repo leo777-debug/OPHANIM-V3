@@ -8,6 +8,7 @@ import type { ProviderMapLayer } from '@/lib/providers';
 import type { MapViewport } from '@/lib/map-workspaces';
 import { safePopupUrl } from '@/lib/map-popup-safety';
 import { offlineBasemap } from '@/lib/offline-basemap';
+import { sanitizePopupHtml, bindPopupActions } from '@/lib/map-popup-html';
 
 interface OphanimMapProps {
   data: any;
@@ -722,9 +723,13 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     });
 
     // ── POPUP HELPER ──
-    const popup = (coords: any, html: string) => {
+    const popup = (coords: any, html: string, deepDive?: Record<string, unknown>) => {
       popupRef.current?.remove();
-      popupRef.current = new maplibregl.Popup({ closeButton: true, maxWidth: '420px', offset: 14 }).setLngLat(coords).setHTML(html).addTo(map);
+      popupRef.current = new maplibregl.Popup({ closeButton: true, maxWidth: '420px', offset: 14 }).setLngLat(coords).setHTML(sanitizePopupHtml(html)).addTo(map);
+      bindPopupActions(popupRef.current.getElement(), deepDive ? () => {
+        const target = window as unknown as { openOphanimIntel?: (entity: Record<string, unknown>) => void };
+        target.openOphanimIntel?.(deepDive);
+      } : undefined);
     };
     const pStyle = `background:rgba(12,14,26,0.95);backdrop-filter:blur(16px);border-radius:10px;padding:16px;font-family:'IBM Plex Mono',monospace;`;
     const linkStyle = `display:inline-block;margin-top:8px;padding:5px 12px;font-size:10px;letter-spacing:0.12em;text-decoration:none;border-radius:5px;font-family:'IBM Plex Mono',monospace;`;
@@ -781,8 +786,8 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
             <a href="https://globe.adsbexchange.com/?icao=${encodeURIComponent(p.icao24||'')}" target="_blank" style="${linkStyle}color:#5BB6FF;border:1px solid rgba(137,118,255,0.4);background:rgba(137,118,255,0.1);">📡 ADS-B</a>
             <a href="https://www.radarbox.com/data/flights/${encodeURIComponent(cs)}" target="_blank" style="${linkStyle}color:#FF69B4;border:1px solid rgba(255,105,180,0.4);background:rgba(255,105,180,0.1);">📍 RADARBOX</a>
           </div>
-          <button onclick="window.openOphanimIntel({ callsign: '${idSafe(cs)}', icao24: '${idSafe(p.icao24||'')}', model: '${idSafe(p.model||'')}', registration: '${idSafe(p.registration||'')}' })" style="width:100%;margin-top:8px;padding:6px 12px;background:rgba(124,255,203,0.15);border:1px solid rgba(124,255,203,0.5);color:#7CFFCB;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:bold;letter-spacing:0.1em;border-radius:4px;cursor:pointer;">[ DEEP DIVE INTEL ]</button>
-        </div>`);
+          <button data-ophanim-intel="true" style="width:100%;margin-top:8px;padding:6px 12px;background:rgba(124,255,203,0.15);border:1px solid rgba(124,255,203,0.5);color:#7CFFCB;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:bold;letter-spacing:0.1em;border-radius:4px;cursor:pointer;">[ DEEP DIVE INTEL ]</button>
+        </div>`, { callsign: cs, icao24: p.icao24 || '', model: p.model || '', registration: p.registration || '' });
       });
     });
 
@@ -890,8 +895,8 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
         <div style="display:flex;gap:6px;">
           <a href="${idSafe(ref)}" target="_blank" style="${linkStyle}flex:1;text-align:center;color:#E8E6E0;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.05);">ABUSE.CH RECORD ↗</a>
         </div>
-        <button onclick="window.openOphanimIntel({ type: 'ip', ip: '${idSafe(p.ip)}', threat_type: '${idSafe(p.malware || p.threat_type || '')}', status: '${idSafe(p.status || '')}' })" style="width:100%;margin-top:8px;padding:8px 12px;background:linear-gradient(90deg, ${accent}1a 0%, ${accent}33 100%);border:1px solid ${accent}99;color:${accent};font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:bold;letter-spacing:0.15em;border-radius:4px;cursor:pointer;transition:all 0.2s;">DEEP DIVE ANALYTICS</button>
-      </div>`);
+        <button data-ophanim-intel="true" style="width:100%;margin-top:8px;padding:8px 12px;background:linear-gradient(90deg, ${accent}1a 0%, ${accent}33 100%);border:1px solid ${accent}99;color:${accent};font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:bold;letter-spacing:0.15em;border-radius:4px;cursor:pointer;transition:all 0.2s;">DEEP DIVE ANALYTICS</button>
+      </div>`, { type: 'ip', ip: p.ip, threat_type: p.malware || p.threat_type || '', status: p.status || '' });
     });
 
 
@@ -988,8 +993,8 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
           <div><span style="color:#5C5A54;">TYPE</span><br/><span style="color:#5BB6FF;">${(p.type || 'UNKNOWN').toUpperCase()}</span></div>
           <div><span style="color:#5C5A54;">COORDS</span><br/><span style="color:#E8E6E0;">${coords[1].toFixed(3)}°, ${coords[0].toFixed(3)}°</span></div>
         </div>
-        <button onclick="window.openOphanimIntel({ type: 'ip', ip: '${idSafe(p.id)}' })" style="width:100%;margin-top:8px;padding:6px 12px;background:rgba(255,109,0,0.15);border:1px solid rgba(255,109,0,0.5);color:#FF6D00;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:bold;letter-spacing:0.1em;border-radius:4px;cursor:pointer;">[ IP INTEL DEEP DIVE ]</button>
-      </div>`);
+        <button data-ophanim-intel="true" style="width:100%;margin-top:8px;padding:6px 12px;background:rgba(255,109,0,0.15);border:1px solid rgba(255,109,0,0.5);color:#FF6D00;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:bold;letter-spacing:0.1em;border-radius:4px;cursor:pointer;">[ IP INTEL DEEP DIVE ]</button>
+      </div>`, { type: 'ip', ip: p.id });
     });
 
     // ── SCM Suppliers ──
@@ -1036,8 +1041,8 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
         </div>
         <div style="font-size:9px;color:#8A8880;margin-bottom:6px;">Open: ${ports.slice(0, 12).join(', ')}${ports.length > 12 ? ' ...' : ''}</div>
         ${vulns.length > 0 ? `<div style="font-size:9px;color:#FF3D3D;margin-bottom:6px;">⚠ CVEs: ${vulns.slice(0, 5).join(', ')}${vulns.length > 5 ? ` +${vulns.length - 5} more` : ''}</div>` : ''}
-        <button onclick="window.openOphanimIntel({ type: 'ip', ip: '${p.ip}' })" style="width:100%;margin-top:6px;padding:6px 12px;background:rgba(255,109,0,0.15);border:1px solid rgba(255,109,0,0.5);color:#FF6D00;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:bold;letter-spacing:0.1em;border-radius:4px;cursor:pointer;">[ IP INTEL DEEP DIVE ]</button>
-      </div>`);
+        <button data-ophanim-intel="true" style="width:100%;margin-top:6px;padding:6px 12px;background:rgba(255,109,0,0.15);border:1px solid rgba(255,109,0,0.5);color:#FF6D00;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:bold;letter-spacing:0.1em;border-radius:4px;cursor:pointer;">[ IP INTEL DEEP DIVE ]</button>
+      </div>`, { type: 'ip', ip: p.ip });
     });
 
     // ── Balloons / Sondes ──

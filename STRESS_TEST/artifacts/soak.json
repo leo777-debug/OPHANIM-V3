@@ -1,8 +1,7 @@
 {
-  "startedAt": "2026-10-14T15:44:17.593Z",
-  "elapsedSeconds": 2043,
+  "elapsedSeconds": 3601,
   "requestedSeconds": 3600,
-  "finished": false,
+  "finished": true,
   "samples": [
     {
       "elapsedSeconds": 4,
@@ -693,6 +692,523 @@
         "WorkingSet64": 151461888,
         "PrivateMemorySize64": 147181568
       }
+    },
+    {
+      "elapsedSeconds": 2071,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151646208,
+        "PrivateMemorySize64": 147410944
+      }
+    },
+    {
+      "elapsedSeconds": 2101,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151674880,
+        "PrivateMemorySize64": 147410944
+      }
+    },
+    {
+      "elapsedSeconds": 2131,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151691264,
+        "PrivateMemorySize64": 147443712
+      }
+    },
+    {
+      "elapsedSeconds": 2161,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151224320,
+        "PrivateMemorySize64": 146694144
+      }
+    },
+    {
+      "elapsedSeconds": 2192,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 150683648,
+        "PrivateMemorySize64": 145952768
+      }
+    },
+    {
+      "elapsedSeconds": 2221,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151097344,
+        "PrivateMemorySize64": 146542592
+      }
+    },
+    {
+      "elapsedSeconds": 2251,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151097344,
+        "PrivateMemorySize64": 146542592
+      }
+    },
+    {
+      "elapsedSeconds": 2281,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151097344,
+        "PrivateMemorySize64": 146542592
+      }
+    },
+    {
+      "elapsedSeconds": 2311,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151105536,
+        "PrivateMemorySize64": 146542592
+      }
+    },
+    {
+      "elapsedSeconds": 2341,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151117824,
+        "PrivateMemorySize64": 146542592
+      }
+    },
+    {
+      "elapsedSeconds": 2372,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151126016,
+        "PrivateMemorySize64": 146542592
+      }
+    },
+    {
+      "elapsedSeconds": 2402,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151126016,
+        "PrivateMemorySize64": 146542592
+      }
+    },
+    {
+      "elapsedSeconds": 2431,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151146496,
+        "PrivateMemorySize64": 146542592
+      }
+    },
+    {
+      "elapsedSeconds": 2461,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151162880,
+        "PrivateMemorySize64": 146542592
+      }
+    },
+    {
+      "elapsedSeconds": 2491,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151187456,
+        "PrivateMemorySize64": 146542592
+      }
+    },
+    {
+      "elapsedSeconds": 2521,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151359488,
+        "PrivateMemorySize64": 147148800
+      }
+    },
+    {
+      "elapsedSeconds": 2551,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151416832,
+        "PrivateMemorySize64": 147210240
+      }
+    },
+    {
+      "elapsedSeconds": 2581,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151650304,
+        "PrivateMemorySize64": 147517440
+      }
+    },
+    {
+      "elapsedSeconds": 2611,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151687168,
+        "PrivateMemorySize64": 147517440
+      }
+    },
+    {
+      "elapsedSeconds": 2641,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151150592,
+        "PrivateMemorySize64": 146952192
+      }
+    },
+    {
+      "elapsedSeconds": 2671,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151273472,
+        "PrivateMemorySize64": 146993152
+      }
+    },
+    {
+      "elapsedSeconds": 2701,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151298048,
+        "PrivateMemorySize64": 147001344
+      }
+    },
+    {
+      "elapsedSeconds": 2731,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151744512,
+        "PrivateMemorySize64": 147558400
+      }
+    },
+    {
+      "elapsedSeconds": 2761,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151748608,
+        "PrivateMemorySize64": 147558400
+      }
+    },
+    {
+      "elapsedSeconds": 2791,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151748608,
+        "PrivateMemorySize64": 147558400
+      }
+    },
+    {
+      "elapsedSeconds": 2821,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151752704,
+        "PrivateMemorySize64": 147558400
+      }
+    },
+    {
+      "elapsedSeconds": 2851,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151752704,
+        "PrivateMemorySize64": 147558400
+      }
+    },
+    {
+      "elapsedSeconds": 2881,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151756800,
+        "PrivateMemorySize64": 147558400
+      }
+    },
+    {
+      "elapsedSeconds": 2911,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151756800,
+        "PrivateMemorySize64": 147558400
+      }
+    },
+    {
+      "elapsedSeconds": 2941,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151187456,
+        "PrivateMemorySize64": 146903040
+      }
+    },
+    {
+      "elapsedSeconds": 2971,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151199744,
+        "PrivateMemorySize64": 146903040
+      }
+    },
+    {
+      "elapsedSeconds": 3001,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151437312,
+        "PrivateMemorySize64": 147124224
+      }
+    },
+    {
+      "elapsedSeconds": 3031,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151453696,
+        "PrivateMemorySize64": 147124224
+      }
+    },
+    {
+      "elapsedSeconds": 3061,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151638016,
+        "PrivateMemorySize64": 147460096
+      }
+    },
+    {
+      "elapsedSeconds": 3091,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151805952,
+        "PrivateMemorySize64": 147460096
+      }
+    },
+    {
+      "elapsedSeconds": 3121,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151834624,
+        "PrivateMemorySize64": 147460096
+      }
+    },
+    {
+      "elapsedSeconds": 3151,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151834624,
+        "PrivateMemorySize64": 147460096
+      }
+    },
+    {
+      "elapsedSeconds": 3181,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151449600,
+        "PrivateMemorySize64": 147460096
+      }
+    },
+    {
+      "elapsedSeconds": 3211,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151449600,
+        "PrivateMemorySize64": 147460096
+      }
+    },
+    {
+      "elapsedSeconds": 3241,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151453696,
+        "PrivateMemorySize64": 147460096
+      }
+    },
+    {
+      "elapsedSeconds": 3271,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151502848,
+        "PrivateMemorySize64": 147460096
+      }
+    },
+    {
+      "elapsedSeconds": 3301,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151543808,
+        "PrivateMemorySize64": 147652608
+      }
+    },
+    {
+      "elapsedSeconds": 3331,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151543808,
+        "PrivateMemorySize64": 147652608
+      }
+    },
+    {
+      "elapsedSeconds": 3361,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151547904,
+        "PrivateMemorySize64": 147652608
+      }
+    },
+    {
+      "elapsedSeconds": 3391,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151552000,
+        "PrivateMemorySize64": 147652608
+      }
+    },
+    {
+      "elapsedSeconds": 3421,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 151552000,
+        "PrivateMemorySize64": 147652608
+      }
+    },
+    {
+      "elapsedSeconds": 3451,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 150155264,
+        "PrivateMemorySize64": 145977344
+      }
+    },
+    {
+      "elapsedSeconds": 3481,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 150192128,
+        "PrivateMemorySize64": 145989632
+      }
+    },
+    {
+      "elapsedSeconds": 3511,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 150224896,
+        "PrivateMemorySize64": 146083840
+      }
+    },
+    {
+      "elapsedSeconds": 3541,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 150274048,
+        "PrivateMemorySize64": 146341888
+      }
+    },
+    {
+      "elapsedSeconds": 3571,
+      "health": 200,
+      "shipments": 200,
+      "worker": 200,
+      "memory": {
+        "WorkingSet64": 150372352,
+        "PrivateMemorySize64": 146558976
+      }
     }
-  ]
+  ],
+  "import": {
+    "status": "completed",
+    "imported_rows": 5000,
+    "failed_rows": 0
+  },
+  "pendingJobs": 0,
+  "pass": true
 }

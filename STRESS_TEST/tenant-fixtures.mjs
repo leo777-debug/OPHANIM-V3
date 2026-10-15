@@ -2,7 +2,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
-export async function seedTenantFixtures(database, first) {
+export async function seedTenantFixtures(database, first, options = {}) {
   const tenants = [{ ...first, marker: 'TENANT_A_SYNTHETIC_PRIVATE' }];
   const second = { organizationId: randomUUID(), userId: randomUUID(), token: 'synthetic-tenant-b-session', marker: 'TENANT_B_SYNTHETIC_PRIVATE' };
   await database.query('insert into ophanim_organizations(id,name,slug) values($1,$2,$3)', [second.organizationId, 'DEMO ONLY - Tenant B', 'competition-demo-b']);
@@ -34,12 +34,14 @@ export async function seedTenantFixtures(database, first) {
     await add('case', 'ophanim_cases', ['title'], [tenant.marker]);
     await add('event', 'ophanim_events', ['event_type', 'title', 'summary'], ['weather', tenant.marker, 'Synthetic isolation fixture only']);
     await add('evidence', 'ophanim_evidence', ['evidence_type', 'title'], ['manual', tenant.marker]);
+    if (options.knowledge !== false) {
     const storagePath = `${tenant.organizationId}/synthetic/private.txt`;
     await add('document', 'ophanim_knowledge_documents', ['created_by_user_id', 'file_name', 'storage_path', 'mime_type', 'file_size_bytes', 'content_hash', 'status'], [tenant.userId, `${tenant.marker}.txt`, storagePath, 'text/plain', tenant.marker.length, createHash('sha256').update(tenant.marker).digest('hex'), 'ready']);
     await database.query("insert into ophanim_knowledge_chunks(organization_id,document_id,ordinal,content,content_hash,source_file,document_type,language) values($1,$2,0,$3,$4,'private.txt','other','en')", [tenant.organizationId, tenant.records.document, tenant.marker, createHash('sha256').update(tenant.marker).digest('hex')]);
     const file = resolve('STRESS_TEST/runtime/private-files', storagePath);
     await mkdir(resolve(file, '..'), { recursive: true });
     await writeFile(file, tenant.marker);
+    }
     tenant.records.verify = randomUUID();
     const recordedAt = '2026-10-01T00:00:00.000Z';
     const result = {

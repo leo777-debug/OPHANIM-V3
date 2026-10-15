@@ -72,6 +72,11 @@ try {
   await client.query('insert into ophanim_users(id,email,display_name,password_hash) values($1,$2,$3,$4)', [user, 'presenter@example.test', 'Demo Presenter', await hashPassword('Synthetic-Demo-Only-2026')]);
   await client.query("insert into ophanim_organization_memberships(organization_id,user_id,role) values($1,$2,'owner')", [org, user]);
   await client.query("insert into ophanim_sessions(user_id,organization_id,token_hash,expires_at) values($1,$2,$3,now()+interval '1 day')", [user, org, createHash('sha256').update(token).digest('hex')]);
+  if (process.argv.includes('--tenant-fixtures')) {
+    const { seedTenantFixtures } = await import('./tenant-fixtures.mjs');
+    const tenants = await seedTenantFixtures(client, { organizationId: org, userId: user, token }, { knowledge: false });
+    await writeFile(resolve(root, 'STRESS_TEST/runtime/tenant-context.json'), JSON.stringify(tenants, null, 2));
+  }
   if (process.argv.includes('--large')) {
     await client.query("insert into ophanim_shipments(organization_id,shipment_reference) select $1,'SYNTHETIC-' || n from generate_series(1,10000) n", [org]);
     await client.query("insert into ophanim_events(organization_id,event_type,title,summary) select $1,'weather','Synthetic event ' || n,'Synthetic scale test only' from generate_series(1,100000) n", [org]);

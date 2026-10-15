@@ -1,6 +1,91 @@
 # Stress Test Report (In Progress)
 
-**Not competition-ready yet.** This is a checkpoint, not a final certification. Full tenant/API, browser, load, chaos, demo and video acceptance work remains.
+**Not fully competition-certified yet.** This is a checkpoint, not an exhaustive
+security certification. The results immediately below supersede historical
+checkpoints later in this document. Updated 15 October 2026, Asia/Dubai.
+
+## Current Verified Results
+
+| Check | Latest result | Scope / caveat |
+| --- | --- | --- |
+| Full unit/integration suite | 576 passed, 7 opt-in skipped | 93 passing files, 2 skipped; isolated one-worker run, 129.42 seconds |
+| Build | Passed, Next 16.3.8 | Alternate isolated output `.next-stress-final`; fresh standalone package passes five HTTP checks |
+| TypeScript / focused lint | Passed on current source | Legacy lint deliberately retained; no new rule disabled |
+| SQL/RLS | Six passing embedded PostgreSQL tests, 29.02 seconds | Rerun with migration 028; native Windows PostgreSQL lacks pgvector |
+| Tenant HTTP | 72 checks pass | Own positive controls and foreign reads/writes, private file download, Verify history and legacy sessions; not all 194 routes |
+| Native roles/alerts/bursts | 24 checks pass | Four roles; alert ownership; 100 notifications, not 100 generated alerts; Verify 10x200/20x429 |
+| Generated intelligence alerts | Four additional checks pass | Four concurrent actual reconciliations: 100 alerts / 100 assessments / 100 tasks, no duplicates, tenant-isolated; 1,691 ms |
+| Browser matrix | 45 pass / 0 fail on fresh standalone package | Chromium/Firefox/WebKit x 390/820/1920px; pre-fix cold timeout retained separately |
+| Map acceptance | Nonblank land/ocean pixels plus drag changes | All nine browser/viewport combinations; bundled real static geography, external tiles deliberately blocked |
+| One-hour soak | PASS: 3,601 seconds / 120 samples | Health, shipments, worker all 200; 5,000 imported, zero failed/pending; private memory stable about 146-148 MB after warmup |
+| AI failures | 12 real HTTP checks pass | Owned mock only; full 120,044 ms timeout, malformed/empty JSON, 503, delay, unreachable; deterministic shipments survive |
+| Knowledge scale | Three checks pass, 1,000 files/documents/chunks | List 639 ms, download exact, no-embedding retrieval 350 ms; post-extraction fixtures, not 1,000 extraction jobs |
+| Demo reset | Real workflow check passes | Fresh disposable organization, login, DXB-291, destination-port advisory match; no production database |
+| Video | Recorded and inspected | H.264 1080p/30fps, 127.2 seconds, synthetic labels, title/captions/closing; see VIDEO_REVIEW.md |
+
+### Changes Since The Last Pushed Checkpoint
+
+- Shared authenticated-route guard rejects explicit cross-origin mutations before
+  authentication or writes. Own-origin/browser and CLI positive controls retained.
+- Remote embeddings now use pinned transport too. Existing safeFetch re-checks and
+  pins each redirect, removes credentials across origins and preserves HEAD behavior.
+- All central MapLibre popup HTML passes through DOMPurify. Inline handlers were
+  replaced with explicit event binding, preserving deep-dive actions without eval.
+- New CSV prefix, embedding transport, popup DOM and authentication regressions.
+- Disabled documented eager route preloading. Fresh generated standalone now serves
+  health, authorized/unauthorized shipment requests, Verify and Atlas without a
+  generated-file patch. Cold health is still 7.8 seconds, not a speed-budget pass.
+- Real private-file scale, role/alert/burst, safe demo-reset and final video artifacts.
+
+DOMPurify 3.4.17 is a production dependency (Apache-2.0 option of its dual licence);
+jsdom 30.1.2 is test-only. The runtime is Node 24.19. No new live data provider,
+paid subscription, production migration, deployment or active scan was introduced.
+
+### Still Open
+
+- Exhaustive endpoint/child-link/role review, Supabase runtime sessions, full log,
+  malicious-PDF and provider-specific failure matrices are not certified.
+- Per-process abuse budgets are not distributed cost quotas. CSP still permits
+  broad sources/inline behavior and needs a separate compatibility-focused pass.
+- Document list is capped at 500 without continuation UI (P2).
+- Generated intelligence-alert burst is now separately tested; neither test contacts
+  a real dark-web provider, AI model or email service.
+- 200-connection p95 is 3.90 seconds; cold-start/one-second interaction goals are not
+  met merely because the prewarmed video looks smooth.
+- Fresh Windows standalone passes five HTTP and all 45 browser checks. No
+  Linux/Render deployment validation was attempted.
+- Forecast-cone/ETA-window matching, Last Safe Move, document 50-vs-48 comparison,
+  GPS-interference and confirmation/reply stories were not fabricated for the video.
+- Historical FIRMS credentials still require founder rotation; no history rewrite.
+- D: is not mounted in the current session. An earlier copy was recorded there;
+  only the worktree MP4 is currently verifiable. Its SHA256 is
+  `becdaa0bbf5f7d7becb5ce23df865a0b0eaf4cf5ad2c755074fb3913662c7fce`.
+- Fresh production audit attempt on 15 October failed with npm registry ECONNRESET;
+  prior clean production / eight development advisories are historical, not a new pass.
+- Concurrent build/test attempt hit a 10-second PGlite setup timeout and a Vitest
+  worker-start failure. Re-running alone with one worker passes all 571 tests
+  without weakening assertions or increasing timeouts. Parallel-run reliability
+  remains a limitation on this laptop, not an application test success.
+- After adding migration regressions, one complete run reported 575 passes and
+  one authorization-test timeout during dynamic route import (190 seconds of
+  transform time). All 110 protected-handler checks pass alone in 7.74 seconds.
+  The fresh whole-suite rerun passes all 576 tests in 129.42 seconds. Earlier
+  transform/worker failures are retained here rather than erased.
+
+### Checkpoint Hygiene
+
+Gitleaks scanned the final compiled browser assets (9.20 MB) and the nonempty
+staged patch (119.36 KB), fully redacted, with no findings. An earlier staging
+attempt was blocked by a stale lock and scanned zero bytes; that zero-byte result
+was not counted. The empty worktree index lock dated the previous evening was
+removed only after confirming its exact Git path, age and an idle window with no
+Git processes. No Git packs, history, branches or user source changes were removed.
+
+## Historical Checkpoints
+
+The following entries preserve earlier failures and measurements. Stale phrases
+such as "soak running", "video draft" and "map validation pending" describe those
+earlier checkpoints, not the current verified results above.
 
 Latest source checkpoint: **547 tests passed, seven opt-in tests skipped**, typecheck
 and focused new-file lint pass. Real queued-import SQL failed during the first soak;
@@ -38,6 +123,9 @@ See BASELINE.md. TypeScript and production build passed; 311 tests passed, five 
 | SEC-011 | P1 | Webhook forwarding | Signed forwarding request has no timeout, byte cap or redirect/address restriction and logs raw failures | Fixed; seven mocked regressions pass | github-webhook/route.test.ts; bounded signed body, HTTPS-only pinned destination, no credential-bearing logs |
 | APP-004 | P1 | Provider failure | A provider ignoring AbortSignal can hang the whole event ingestion batch | Fixed; mixed healthy/empty/malformed/hung-source regression passes | event-provider-registry.test.ts; enforced deadline and sanitized error diagnostics |
 | MAP-001 | P1 | Map availability | Failure to load external basemap leaves initialization/overlays unavailable | Bundled fallback implemented; browser pixel/interaction validation pending | offline-basemap.test.ts; Natural Earth country geometry, original online style retained |
+| SEC-012 | P1 | Cross-origin writes | Shared authenticated endpoints did not consistently reject an explicit foreign Origin | Fixed on shared guard; four actual browser controls and eight auth tests pass | auth/actor.test.ts; artifacts/browser-security.json; own-origin POST remains 201 |
+| SEC-013 | P1 | Raw feed popup HTML | String-built feed popup could retain executable markup beyond the previously fixed URL attribute case | Fixed at central DOMPurify boundary; seven DOM/action regressions | map-popup-html.test.ts; scripts/events/unsafe links removed, explicit deep-dive click retained |
+| APP-005 | P1 | Vessel identifiers | Legacy SQL double-escaped digit classes, rejecting seven-digit IMO and nine-digit MMSI values on shipments/routes | Corrective migration 028; five executable SQL regressions pass | Actual native HTTP POST failed before fix; vessel-identifiers.test.ts proves legacy rejection, corrected writes, malformed rejection, retained rows and RLS |
 
 P0 findings confirmed so far: one, fixed in this branch. Exhaustive tenant isolation is still pending; passing core HTTP checks is not certification of every route.
 
@@ -101,6 +189,18 @@ The earlier checkpoints above are chronological, not the final status. Measured 
 1. Rotate/revoke any old FIRMS keys corresponding to the historical locations above.
 2. Do not merge this branch as competition-ready until the remaining acceptance work and final checks are complete.
 3. Enable the scheduled resume manually only using RESUME_SETUP.md; no scheduled task was registered by the agent.
+
+## Vessel Constraint Correction
+
+`028_vessel_identifier_constraints.sql` is a new forward migration, not an edit
+of applied history. It replaces four broken checks on existing shipment/route
+columns with explicit ASCII digit classes. No table, row, column or RLS policy is
+removed. Checks are NOT VALID to avoid scanning or rewriting historical rows;
+new writes are checked. Operators should review any historical malformed IDs
+before separately validating the constraints. No production migration was run.
+The SQL semantics were checked against the [PostgreSQL pattern-matching documentation](https://www.postgresql.org/docs/current/functions-matching.html).
+The Supabase Markdown changelog could not be fetched by the documentation tool;
+this change uses ordinary PostgreSQL constraints, not a changed Supabase API.
 
 ## Bundled Map Source
 

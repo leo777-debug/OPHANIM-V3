@@ -5,7 +5,7 @@ vi.mock('@/lib/supabase/server', () => ({ createSupabaseServerClient: vi.fn() })
 vi.mock('@/lib/watchlists/db', () => ({ db: vi.fn(() => ({ query: vi.fn() })) }));
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { db } from '@/lib/watchlists/db';
-import { getAuthenticatedActor } from './actor';
+import { getAuthenticatedActor, requireAuthenticatedActor } from './actor';
 
 describe('legacy sessions cannot bypass configured Supabase authentication', () => {
   const request = () => new NextRequest('http://localhost/api/logistics/shipments', { headers: { cookie: 'ophanim_session=synthetic-old-token' } });
@@ -33,5 +33,24 @@ describe('legacy sessions cannot bypass configured Supabase authentication', () 
     expect(query.mock.calls[0][0]).toContain('s.revoked_at is null and s.expires_at > now()');
     expect(query.mock.calls[0][0]).toContain('m.user_id = s.user_id');
     expect(query.mock.calls[0][1][0]).not.toBe('synthetic-old-token');
+  });
+});
+
+describe('authenticated mutation origin boundary', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(createSupabaseServerClient).mockResolvedValue(null);
+    const query = vi.fn().mockResolvedValue({ rows: [{ user_id: 'fixture-user', organization_id: 'fixture-org', role: 'owner', email: '', display_name: null }] });
+    vi.mocked(db).mockReturnValue({ query } as unknown as ReturnType<typeof db>);
+  });
+  it.each(['POST', 'PUT', 'PATCH', 'DELETE'])('rejects a foreign Origin on %s even with a valid session', async (method) => {
+    const request = new NextRequest('http://localhost/api/logistics/shipments', { method, headers: { cookie: 'ophanim_session=synthetic-old-token', Origin: 'https://attacker.example' } });
+    await expect(requireAuthenticatedActor(request)).rejects.toThrow('Cross-origin');
+  });
+  it('preserves same-origin mutations and non-browser API clients', async () => {
+    for (const origin of ['http://localhost', undefined]) {
+      const headers = { cookie: 'ophanim_session=synthetic-old-token', ...(origin ? { Origin: origin } : {}) };
+      expect((await requireAuthenticatedActor(new NextRequest('http://localhost/api/logistics/shipments', { method: 'POST', headers }))).userId).toBe('fixture-user');
+    }
   });
 });
