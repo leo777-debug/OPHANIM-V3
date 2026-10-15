@@ -1,7 +1,8 @@
 import { chromium } from '@playwright/test';
 import { mkdir, readFile, writeFile, copyFile, stat } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { spawn } from 'node:child_process';
+import { spawn,execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { zipSync, strToU8 } from 'fflate';
 import { withIsolatedApp } from './harness.mjs';
 
@@ -138,14 +139,26 @@ const stamp = (seconds) => `${Math.floor(seconds / 3600)}:${String(Math.floor(se
 const header = '[Script Info]\nScriptType: v4.00+\nPlayResX: 1920\nPlayResY: 1080\n[V4+ Styles]\nFormat: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding\nStyle: Default,Arial,30,&H00FFFFFF,&H00FFFFFF,&H80000000,&H80000000,0,0,0,0,100,100,0,0,3,2,0,2,60,60,32,1\nStyle: Replay,Arial,22,&H00FFFFFF,&H00FFFFFF,&H80000000,&H80000000,0,0,0,0,100,100,0,0,3,2,0,8,40,40,8,1\n[Events]\nFormat: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text\n';
 await writeFile(resolve(out, 'raw/captions.ass'), header + `Dialogue: 1,${stamp(0)},${stamp(duration)},Replay,,0,0,0,,SYNTHETIC DEMO ONLY - recorded test fixtures, not live intelligence\n` + captions.map((caption, index) => `Dialogue: 0,${stamp(caption.start)},${stamp(captions[index + 1]?.start ?? duration)},Default,,0,0,0,,${caption.text}\n`).join(''));
 const file = resolve(out, 'Ophanim-Demo-2026-10.mp4');
+const backupStamp=new Date().toISOString().replace(/[:.]/g,'-');
+if(await stat(file).then(item=>item.isFile()).catch(()=>false))await copyFile(file,resolve(out,'raw',`Ophanim-Demo-before-${backupStamp}.mp4`));
 await copyFile(process.env.OPHANIM_DEMO_FONT ?? resolve(process.env.WINDIR ?? 'C:/Windows', 'Fonts/arial.ttf'), resolve(out, 'raw/presentation-font.ttf'));
 await new Promise((resolve, reject) => {
   const cards = (heading, subheading) => `drawtext=fontfile=raw/presentation-font.ttf:text='${heading}':fontcolor=white:fontsize=64:x=(w-tw)/2:y=(h-th)/2-50,drawtext=fontfile=raw/presentation-font.ttf:text='${subheading}':fontcolor=0x8BD5CE:fontsize=34:x=(w-tw)/2:y=(h-th)/2+45,drawtext=fontfile=raw/presentation-font.ttf:text='SYNTHETIC DEMO - NOT LIVE DATA':fontcolor=white:fontsize=22:x=(w-tw)/2:y=h-80`;
-  const filter = `[1:v]${cards('Ophanim', 'Watches the world for your freight')}[intro];[0:v]subtitles=raw/captions.ass,fps=30,setpts=PTS-STARTPTS[body];[2:v]${cards('Ophanim', 'Evidence for the decisions that move your freight')}[outro];[intro][body][outro]concat=n=3:v=1:a=0[out]`;
+  // Dedicated caption bands keep replay labels and subtitles off actual controls.
+  const filter = `[1:v]${cards('Ophanim', 'Watches the world for your freight')}[intro];[0:v]scale=1728:972,pad=1920:1080:96:36:color=0x101518,subtitles=raw/captions.ass,fps=30,setpts=PTS-STARTPTS[body];[2:v]${cards('Ophanim', 'Evidence for the decisions that move your freight')}[outro];[intro][body][outro]concat=n=3:v=1:a=0[out]`;
   const child = spawn('ffmpeg', ['-y', '-i', 'raw/verified-demo.webm', '-f', 'lavfi', '-i', 'color=c=0x101518:s=1920x1080:r=30:d=3', '-f', 'lavfi', '-i', 'color=c=0x101518:s=1920x1080:r=30:d=3', '-filter_complex', filter, '-map', '[out]', '-r', '30', '-c:v', 'libx264', '-preset', 'fast', '-crf', '22', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', file], { cwd: out, windowsHide: true, stdio: ['ignore', 'ignore', 'pipe'] });
   let output = ''; child.stderr.on('data', (chunk) => { output = (output + chunk).slice(-3000); }); child.once('error', reject); child.once('exit', (code) => code === 0 ? resolve() : reject(new Error(output)));
 });
 const copy = 'D:/OPHANIM/Documentation';
-if (await stat(copy).then((item) => item.isDirectory()).catch(() => false)) await copyFile(file, resolve(copy, 'Ophanim-Demo-2026-10.mp4'));
-await writeFile(resolve(root, 'STRESS_TEST/artifacts/video.json'), JSON.stringify({ file, recording, captions, limitations: ['Existing import, shipment, actual port-match, operator decision log and Verify workflows recorded.', 'This matcher shows a port match, not a validated forecast-cone/time-window engine. The operator note does not change a carrier booking.', 'Document discrepancy, Gulf signal and confirmation scenes not yet included.', 'No real customer data, API keys or live provider traffic.'], complete: false }, null, 2));
+const digest=createHash('sha256').update(await readFile(file)).digest('hex');
+const media=JSON.parse(execFileSync('ffprobe',['-v','error','-show_entries','stream=codec_name,width,height,r_frame_rate:format=duration,size','-of','json',file],{encoding:'utf8',windowsHide:true}));
+let copied=false;
+if (await stat(copy).then((item) => item.isDirectory()).catch(() => false)) {
+  const target=resolve(copy,'Ophanim-Demo-2026-10.mp4');
+  if(await stat(target).then(item=>item.isFile()).catch(()=>false))await copyFile(target,resolve(copy,`Ophanim-Demo-before-${backupStamp}.mp4`));
+  await copyFile(file,target);
+  copied=createHash('sha256').update(await readFile(target)).digest('hex')===digest;
+  if(!copied)throw new Error('Documentation video copy checksum differs.');
+}
+await writeFile(resolve(root, 'STRESS_TEST/artifacts/video.json'), JSON.stringify({ file, recording, captions,media,sha256:digest,checkedAt:new Date().toISOString(),documentationCopyVerified:copied,limitations: ['Existing import, shipment, actual port-match, operator decision log and Verify workflows recorded.', 'This matcher shows a port match, not a validated forecast-cone/time-window engine. The operator note does not change a carrier booking.', 'Document discrepancy, Gulf signal and confirmation scenes not yet included.', 'No real customer data, API keys or live provider traffic.'], recordingComplete: true,wholeProductCertified:false }, null, 2));
 console.log(`Recorded H.264 demo: ${file}`);

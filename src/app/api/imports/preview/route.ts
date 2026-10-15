@@ -7,7 +7,7 @@ import { previewImportRows } from '@/lib/imports/pipeline';
 import { persistImportPreview } from '@/lib/imports/repository';
 import { IMPORT_TYPES, type ImportColumnMapping, type ImportType } from '@/lib/imports/types';
 import { OrganizationAccessError } from '@/lib/operations/authorization';
-import { getClientIp, isRateLimited } from '@/lib/ssrf-guard';
+import { importPreviewLimited } from '@/lib/imports/intake';
 import { MAX_IMPORT_BYTES } from '@/lib/imports/csv';
 import { limitedFormData, RequestBodyLimitError } from '@/lib/http/limited-form-data';
 
@@ -16,7 +16,7 @@ function hasImportType(value: unknown): value is ImportType { return typeof valu
 export async function POST(request: NextRequest) {
   try {
     const actor = await requireAuthenticatedActor(request, 'import:write');
-    if (isRateLimited(`import:user:${actor.userId}`, 20, 60_000) || isRateLimited(`import:ip:${getClientIp(request)}`, 40, 60_000)) {
+    if (importPreviewLimited(request,actor)) {
       return NextResponse.json({ error: 'Too many import previews. Wait a moment and try again.' }, { status: 429 });
     }
     const form = await limitedFormData(request, MAX_IMPORT_BYTES + 256 * 1024);

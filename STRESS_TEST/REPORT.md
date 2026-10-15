@@ -8,8 +8,8 @@ checkpoints later in this document. Updated 15 October 2026, Asia/Dubai.
 
 Working revision after e274d16: Knowledge, SDK, signed webhooks, bootstrap,
 production CSP, API error/log redaction and timestamped replay labels are built
-and regression-tested. Final whole-suite run: **765 passed, seven opt-in skips**
-(76.69 seconds). Six explicit database/RLS tests pass (15.88 seconds). This is
+and regression-tested. Final whole-suite run: **782 passed, seven opt-in skips**
+(58.81 seconds). Six explicit database/RLS tests pass (14.47 seconds). This is
 measured local coverage, not exhaustive security or live Supabase certification.
 The final browser rerun passes all 45 checks after moving the offline-basemap
 label clear of the mobile toolbar. No new focused lint findings were introduced:
@@ -17,14 +17,15 @@ changed-file baseline 204 errors/33 warnings, current 202/32 across 140 files.
 
 | Check | Latest result | Scope / caveat |
 | --- | --- | --- |
-| Full unit/integration suite | 765 passed, 7 opt-in skipped | 106 passing files, 2 skipped; default one-worker run, 76.69 seconds |
+| Full unit/integration suite | 782 passed, 7 opt-in skipped | 109 passing files, 2 skipped; default one-worker run, 58.81 seconds |
 | Build | Passed, Next 16.3.8 | Rebuilt `.next-stress-final`; five generated-standalone HTTP checks pass |
 | TypeScript / focused lint | Passed on current source | Legacy lint deliberately retained; no new rule disabled |
-| SQL/RLS | Six passing embedded PostgreSQL tests, 15.88 seconds | Own-link controls and foreign/shared Knowledge shipment-link denials included; native Windows PostgreSQL lacks pgvector |
+| SQL/RLS | Six passing embedded PostgreSQL tests, 14.47 seconds | Own-link controls and foreign/shared Knowledge shipment-link denials included; native Windows PostgreSQL lacks pgvector |
 | Tenant HTTP | 72 checks pass | Own positive controls and foreign reads/writes, private file download, Verify history and legacy sessions; not all 194 routes |
 | Rescue workflow HTTP | 36 additional native checks pass | Own case/action/decision/evidence controls; foreign parent/child writes denied; database unchanged; viewer/anonymous approval denials |
 | Cyber workflow boundaries | 72 native checks pass | Also covers client/member links and vendor dependencies; own positive controls, foreign denials, authenticated database-role controls and unchanged records |
 | SDK tenant boundaries | Eight actual HTTP/SSE checks pass | Anonymous denied, configured service ownership, member-scoped counts/updates, no organization override; four unit lifecycle regressions |
+| Extension / import aliases | Nine extension plus 12 import HTTP checks pass | Exact configured origin plus membership; foreign context excluded; foreign confirmations denied and own reviewed import persists exactly once |
 | Native roles/alerts/bursts | 24 checks pass | Four roles; alert ownership; 100 notifications, not 100 generated alerts; Verify 10x200/20x429 |
 | Generated intelligence alerts | Four additional checks pass | Four concurrent actual reconciliations: 100 alerts / 100 assessments / 100 tasks, no duplicates, tenant-isolated; 1,691 ms |
 | Browser matrix | 45 pass / 0 fail on final package | Chromium/Firefox/WebKit x 390/820/1920px; map, page exceptions, overflow, offline/reconnect; login additionally verified in Chromium; pre-fix cold timeout retained |
@@ -39,7 +40,7 @@ changed-file baseline 204 errors/33 warnings, current 202/32 across 140 files.
 | Dependency audit | Production zero; development five high/three moderate | Fresh 15 October audit completed; proposed breaking tool downgrades not applied |
 | Demo reset | Real workflow check passes | Fresh disposable organization, login, DXB-291, destination-port advisory match; no production database |
 | Extractor safety | Ten bounded synthetic checks pass | Text/Office/PDF/image guards, network blocked; bundled parsers differ from deployment pins; no OCR/resource sandbox certification |
-| Video | Updated, recorded and inspected | H.264 1080p/30fps, 143.17 seconds, real UI-entered operator note, synthetic labels; see VIDEO_REVIEW.md |
+| Video | Re-recorded and inspected | H.264 1080p/30fps, 139.8 seconds, real UI-entered operator note, dedicated caption bands, synthetic labels and verified D: copy; see VIDEO_REVIEW.md and artifacts/video.json |
 
 ### Changes Since The Last Pushed Checkpoint
 
@@ -61,6 +62,18 @@ changed-file baseline 204 errors/33 warnings, current 202/32 across 140 files.
 - Sign-in now rejects explicit foreign browser origins, bounds JSON before parsing
   and shares an account attempt budget across forwarded-IP/organization changes.
   The account key is hashed, and no password/session is written to test artifacts.
+- Import compatibility aliases now share the main preview budget and bound actual
+  JSON/multipart bytes before parsing or persistence. Five failing regressions
+  before the fix now pass, as do 12 actual import tenant/confirmation checks.
+- The extension context endpoint allows only explicitly configured extension IDs,
+  plus an authenticated membership, through a read-only exception. The global
+  mutation guard stays strict. Eight route tests and nine actual HTTP checks pass.
+- Verify's shared error formatter, import job errors and notification delivery
+  logs no longer expose arbitrary exceptions. Typed safe validation messages,
+  including refusal of private-person claims, remain visible. Three disclosure
+  regressions reproduced the problem before the fix.
+
+Detailed test-to-surface mapping and remaining gaps: [SECURITY_COVERAGE.md](SECURITY_COVERAGE.md).
 
 DOMPurify 3.4.17 is a production dependency (Apache-2.0 option of its dual licence);
 jsdom 30.1.2 is test-only. The runtime is Node 24.19. No new live data provider,
@@ -86,10 +99,9 @@ paid subscription, production migration, deployment or active scan was introduce
   GPS-interference and confirmation/reply stories were not fabricated. The updated
   video now includes a genuine decision note, independently read back through the API.
 - Historical FIRMS credentials still require founder rotation; no history rewrite.
-- D: became available after the earlier checkpoint. The current 143-second video
-  is copied and SHA256-verified there; the old copy was preserved under a backup
-  name. See artifacts/video-copy.json. Both current copies have SHA256
-  `ff15b73b72880adcae5b5559f0c5a57f887f787597c69683db659b61c151fffc`.
+- The refreshed 139.8-second video is copied and SHA256-verified on D:, with prior
+  copies preserved. The authoritative current digest and media probe are in
+  artifacts/video.json; video-copy.json records the historical 143-second copy.
 - Earlier audit attempts failed with registry ECONNRESET. A fresh later 15 October
   audit succeeded: zero production and eight development advisories.
 - Concurrent build/test attempt hit a 10-second PGlite setup timeout and a Vitest
@@ -171,6 +183,8 @@ See BASELINE.md. TypeScript and production build passed; 311 tests passed, five 
 | SEC-020 | P1 | API diagnostics | Generic exception responses and dynamic console payloads could disclose provider credentials, paths or personal data | Fixed on reviewed API surfaces; regression and AST audits pass | 60 console calls reviewed, 53 dynamic payloads removed; 64 generic raw-error branches removed; typed Shodan guidance retained. Dependency logs not certified |
 | APP-006 | P1 | Cyber inventory creation | Missing environment defaults to unknown, rejected by the existing database constraint | Fixed; two actual HTTP failures before, all 72 cyber checks after | Three new validation regressions; missing environment uses other, invalid explicit values rejected; database constraints unchanged |
 | APP-007 | P2 | Document access | Hard 500-row list cap made later records unreachable | Fixed; all 1,001 records reached, mobile/desktop pagination verified | documents-page.test.ts; knowledge-scale-paginated.json; stale range-label browser failure reproduced and fixed |
+| SEC-021 | P1 | Import compatibility aliases | Legacy JSON and platform multipart preview routes bypassed the main uploader's user budget and transport byte cap | Fixed; five pre-fix failures, full suite/build and 12 import HTTP checks pass | aliases.test.ts; shared imports/intake.ts; actual body bounded before parse, cross-alias/rotated-IP budget retained |
+| APP-008 | P2 | Extension context | CORS permitted a configured extension but the global mutation guard rejected its authenticated read-only request | Fixed; eight route and nine actual HTTP checks pass | Exact ID/origin validation, membership and scoped reads; no broad mutation exception, no anonymous access |
 | APP-005 | P1 | Vessel identifiers | Legacy SQL double-escaped digit classes, rejecting seven-digit IMO and nine-digit MMSI values on shipments/routes | Corrective migration 028; five executable SQL regressions pass | Actual native HTTP POST failed before fix; vessel-identifiers.test.ts proves legacy rejection, corrected writes, malformed rejection, retained rows and RLS |
 | DEMO-001 | P2 | Reset fixture | Demo reset used originPort/destinationPort instead of the persisted Name fields, silently omitting names | Fixed and verified | demo:reset -- --check now asserts both returned names and stores a genuine operator note |
 
@@ -241,6 +255,19 @@ The earlier checkpoints above are chronological, not the final status. Measured 
 4. Before enabling optional ingestion/webhooks, configure SDK_INGEST_ORGANIZATION_ID
    with SDK_INGEST_KEY and configure RESEND_WEBHOOK_SECRET. Unconfigured services
    fail closed. No production configuration was changed by these tests.
+5. Configure explicit OPHANIM_EXTENSION_IDS when using the optional extension,
+   including development. A real installed-extension browser session has not
+   been certified by the loopback HTTP tests.
+
+## Handoff Status
+
+The verified fixes, source checks, measured load/failure evidence and refreshed
+video are delivered on stress-test/competition. Remaining full endpoint/role/
+parent-link permutations, live Supabase session behavior, legacy provider URL/
+failure coverage and speed goals are explicitly unfinished in state.json.
+Any review PR must remain draft until those gates are resolved or the founder
+explicitly narrows the acceptance scope. No overall completion or production
+readiness claim is made merely because the local regression suite passes.
 
 ## Vessel Constraint Correction
 

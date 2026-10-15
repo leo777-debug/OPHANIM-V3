@@ -1,0 +1,42 @@
+{
+  "checkedAt": "2026-10-15T13:47:43.447Z",
+  "scope": "Actual loopback HTTP and two synthetic organizations; not an installed Chrome extension integration test.",
+  "checks": [
+    {
+      "check": "configured extension preflight",
+      "pass": true
+    },
+    {
+      "check": "authenticated own shipment matches in configured extension",
+      "pass": true
+    },
+    {
+      "check": "foreign reference returns no private shipment or impact",
+      "pass": true
+    },
+    {
+      "check": "unlisted extension cannot read authenticated private context",
+      "pass": true
+    },
+    {
+      "check": "authenticated own shipment matches in configured extension",
+      "pass": true
+    },
+    {
+      "check": "foreign reference returns no private shipment or impact",
+      "pass": true
+    },
+    {
+      "check": "unlisted extension cannot read authenticated private context",
+      "pass": true
+    },
+    {
+      "check": "listed extension still requires login",
+      "pass": true
+    },
+    {
+      "check": "ordinary cross-site page rejected",
+      "pass": true
+    }
+  ]
+}

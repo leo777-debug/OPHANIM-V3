@@ -1,116 +1,116 @@
 {
-  "checkedAt": "2026-10-14T16:50:11.289Z",
+  "checkedAt": "2026-10-15T17:56:04.691Z",
   "database": "embedded PostgreSQL socket; sequential HTTP, not native concurrency",
   "coverage": "core records, private knowledge documents/download/delete, Verify history/recheck/share ownership, legacy logout; alerts, other files/child links and complete role coverage still pending",
   "checks": [
     {
       "check": "positive control: own record",
-      "path": "/api/logistics/shipments/487f0be0-9339-4fb2-b641-78008aae7bfa",
+      "path": "/api/logistics/shipments/1c48b6c8-d332-4e78-be56-85c04959354a",
       "status": 200,
       "pass": true
     },
     {
       "check": "positive control: own record",
-      "path": "/api/imports/7c1608f8-6b3d-4a7b-a663-6aca7a6cd032",
+      "path": "/api/imports/bf495b91-4b7e-4592-ac3f-682293f75708",
       "status": 200,
       "pass": true
     },
     {
       "check": "positive control: own record",
-      "path": "/api/imports/7c1608f8-6b3d-4a7b-a663-6aca7a6cd032/error-report",
+      "path": "/api/imports/bf495b91-4b7e-4592-ac3f-682293f75708/error-report",
       "status": 200,
       "pass": true
     },
     {
       "check": "positive control: own record",
-      "path": "/api/platform/entities/ea2a37bf-6090-4057-801d-1173eba26b00",
+      "path": "/api/platform/entities/c4934257-33db-41a7-837b-948b50ba9dca",
       "status": 200,
       "pass": true
     },
     {
       "check": "positive control: own record",
-      "path": "/api/platform/cases/10135bf9-be3e-4597-a982-e50466b624b1",
+      "path": "/api/platform/cases/1f1a6b8d-f7db-40ff-a7b2-9a72ab9aa9a6",
       "status": 200,
       "pass": true
     },
     {
       "check": "positive control: own record",
-      "path": "/api/knowledge/documents/00f58e35-b187-4438-850b-13fdb2d9d712",
+      "path": "/api/knowledge/documents/1c08cc81-f3b4-4d0a-b80c-ed338d205806",
       "status": 200,
       "pass": true
     },
     {
       "check": "positive control: own record",
-      "path": "/api/knowledge/documents/00f58e35-b187-4438-850b-13fdb2d9d712?download=1",
+      "path": "/api/knowledge/documents/1c08cc81-f3b4-4d0a-b80c-ed338d205806?download=1",
       "status": 200,
       "pass": true
     },
     {
       "check": "other tenant read",
-      "path": "/api/logistics/shipments/78effc7c-b602-4057-951f-b41280b9a876",
+      "path": "/api/logistics/shipments/d1892ff9-7c4b-4fd0-8e2d-646e31968cda",
       "status": 404,
       "pass": true
     },
     {
       "check": "other tenant read",
-      "path": "/api/imports/846cf32f-4f28-4e7d-bf28-71fa3d2f40fe",
+      "path": "/api/imports/c8ffc306-4b97-4d36-b70c-aaf688f3db7d",
       "status": 404,
       "pass": true
     },
     {
       "check": "other tenant read",
-      "path": "/api/imports/846cf32f-4f28-4e7d-bf28-71fa3d2f40fe/error-report",
+      "path": "/api/imports/c8ffc306-4b97-4d36-b70c-aaf688f3db7d/error-report",
       "status": 404,
       "pass": true
     },
     {
       "check": "other tenant read",
-      "path": "/api/platform/entities/c84a583c-9656-4c59-b839-b075a4644ed3",
+      "path": "/api/platform/entities/ec3a0b7e-52c3-472a-a576-7cb32a4162f1",
       "status": 404,
       "pass": true
     },
     {
       "check": "other tenant read",
-      "path": "/api/platform/cases/2bb3b4cc-972f-4346-af72-350df4134ac5",
+      "path": "/api/platform/cases/f9b97c67-a887-4d6b-8f74-9b5fdb290aa1",
       "status": 404,
       "pass": true
     },
     {
       "check": "other tenant read",
-      "path": "/api/knowledge/documents/c731d552-2002-463b-bade-1be7c1973495",
+      "path": "/api/knowledge/documents/2d2df9cc-30a1-4e0a-b1b4-3668cba28527",
       "status": 404,
       "pass": true
     },
     {
       "check": "other tenant read",
-      "path": "/api/knowledge/documents/c731d552-2002-463b-bade-1be7c1973495?download=1",
+      "path": "/api/knowledge/documents/2d2df9cc-30a1-4e0a-b1b4-3668cba28527?download=1",
       "status": 404,
       "pass": true
     },
     {
       "check": "other tenant mutation",
-      "path": "/api/logistics/shipments/78effc7c-b602-4057-951f-b41280b9a876",
+      "path": "/api/logistics/shipments/d1892ff9-7c4b-4fd0-8e2d-646e31968cda",
       "method": "PATCH",
       "status": 404,
       "pass": true
     },
     {
       "check": "other tenant mutation",
-      "path": "/api/logistics/shipments/78effc7c-b602-4057-951f-b41280b9a876",
+      "path": "/api/logistics/shipments/d1892ff9-7c4b-4fd0-8e2d-646e31968cda",
       "method": "DELETE",
       "status": 404,
       "pass": true
     },
     {
       "check": "other tenant mutation",
-      "path": "/api/imports/846cf32f-4f28-4e7d-bf28-71fa3d2f40fe/confirm",
+      "path": "/api/imports/c8ffc306-4b97-4d36-b70c-aaf688f3db7d/confirm",
       "method": "POST",
       "status": 400,
       "pass": true
     },
     {
       "check": "other tenant mutation",
-      "path": "/api/knowledge/documents/c731d552-2002-463b-bade-1be7c1973495",
+      "path": "/api/knowledge/documents/2d2df9cc-30a1-4e0a-b1b4-3668cba28527",
       "method": "DELETE",
       "status": 400,
       "pass": true
@@ -191,112 +191,112 @@
     },
     {
       "check": "positive control: own record",
-      "path": "/api/logistics/shipments/78effc7c-b602-4057-951f-b41280b9a876",
+      "path": "/api/logistics/shipments/d1892ff9-7c4b-4fd0-8e2d-646e31968cda",
       "status": 200,
       "pass": true
     },
     {
       "check": "positive control: own record",
-      "path": "/api/imports/846cf32f-4f28-4e7d-bf28-71fa3d2f40fe",
+      "path": "/api/imports/c8ffc306-4b97-4d36-b70c-aaf688f3db7d",
       "status": 200,
       "pass": true
     },
     {
       "check": "positive control: own record",
-      "path": "/api/imports/846cf32f-4f28-4e7d-bf28-71fa3d2f40fe/error-report",
+      "path": "/api/imports/c8ffc306-4b97-4d36-b70c-aaf688f3db7d/error-report",
       "status": 200,
       "pass": true
     },
     {
       "check": "positive control: own record",
-      "path": "/api/platform/entities/c84a583c-9656-4c59-b839-b075a4644ed3",
+      "path": "/api/platform/entities/ec3a0b7e-52c3-472a-a576-7cb32a4162f1",
       "status": 200,
       "pass": true
     },
     {
       "check": "positive control: own record",
-      "path": "/api/platform/cases/2bb3b4cc-972f-4346-af72-350df4134ac5",
+      "path": "/api/platform/cases/f9b97c67-a887-4d6b-8f74-9b5fdb290aa1",
       "status": 200,
       "pass": true
     },
     {
       "check": "positive control: own record",
-      "path": "/api/knowledge/documents/c731d552-2002-463b-bade-1be7c1973495",
+      "path": "/api/knowledge/documents/2d2df9cc-30a1-4e0a-b1b4-3668cba28527",
       "status": 200,
       "pass": true
     },
     {
       "check": "positive control: own record",
-      "path": "/api/knowledge/documents/c731d552-2002-463b-bade-1be7c1973495?download=1",
+      "path": "/api/knowledge/documents/2d2df9cc-30a1-4e0a-b1b4-3668cba28527?download=1",
       "status": 200,
       "pass": true
     },
     {
       "check": "other tenant read",
-      "path": "/api/logistics/shipments/487f0be0-9339-4fb2-b641-78008aae7bfa",
+      "path": "/api/logistics/shipments/1c48b6c8-d332-4e78-be56-85c04959354a",
       "status": 404,
       "pass": true
     },
     {
       "check": "other tenant read",
-      "path": "/api/imports/7c1608f8-6b3d-4a7b-a663-6aca7a6cd032",
+      "path": "/api/imports/bf495b91-4b7e-4592-ac3f-682293f75708",
       "status": 404,
       "pass": true
     },
     {
       "check": "other tenant read",
-      "path": "/api/imports/7c1608f8-6b3d-4a7b-a663-6aca7a6cd032/error-report",
+      "path": "/api/imports/bf495b91-4b7e-4592-ac3f-682293f75708/error-report",
       "status": 404,
       "pass": true
     },
     {
       "check": "other tenant read",
-      "path": "/api/platform/entities/ea2a37bf-6090-4057-801d-1173eba26b00",
+      "path": "/api/platform/entities/c4934257-33db-41a7-837b-948b50ba9dca",
       "status": 404,
       "pass": true
     },
     {
       "check": "other tenant read",
-      "path": "/api/platform/cases/10135bf9-be3e-4597-a982-e50466b624b1",
+      "path": "/api/platform/cases/1f1a6b8d-f7db-40ff-a7b2-9a72ab9aa9a6",
       "status": 404,
       "pass": true
     },
     {
       "check": "other tenant read",
-      "path": "/api/knowledge/documents/00f58e35-b187-4438-850b-13fdb2d9d712",
+      "path": "/api/knowledge/documents/1c08cc81-f3b4-4d0a-b80c-ed338d205806",
       "status": 404,
       "pass": true
     },
     {
       "check": "other tenant read",
-      "path": "/api/knowledge/documents/00f58e35-b187-4438-850b-13fdb2d9d712?download=1",
+      "path": "/api/knowledge/documents/1c08cc81-f3b4-4d0a-b80c-ed338d205806?download=1",
       "status": 404,
       "pass": true
     },
     {
       "check": "other tenant mutation",
-      "path": "/api/logistics/shipments/487f0be0-9339-4fb2-b641-78008aae7bfa",
+      "path": "/api/logistics/shipments/1c48b6c8-d332-4e78-be56-85c04959354a",
       "method": "PATCH",
       "status": 404,
       "pass": true
     },
     {
       "check": "other tenant mutation",
-      "path": "/api/logistics/shipments/487f0be0-9339-4fb2-b641-78008aae7bfa",
+      "path": "/api/logistics/shipments/1c48b6c8-d332-4e78-be56-85c04959354a",
       "method": "DELETE",
       "status": 404,
       "pass": true
     },
     {
       "check": "other tenant mutation",
-      "path": "/api/imports/7c1608f8-6b3d-4a7b-a663-6aca7a6cd032/confirm",
+      "path": "/api/imports/bf495b91-4b7e-4592-ac3f-682293f75708/confirm",
       "method": "POST",
       "status": 400,
       "pass": true
     },
     {
       "check": "other tenant mutation",
-      "path": "/api/knowledge/documents/00f58e35-b187-4438-850b-13fdb2d9d712",
+      "path": "/api/knowledge/documents/1c08cc81-f3b4-4d0a-b80c-ed338d205806",
       "method": "DELETE",
       "status": 400,
       "pass": true
@@ -399,14 +399,14 @@
     },
     {
       "check": "viewer cannot mutate or administer",
-      "path": "/api/logistics/shipments/487f0be0-9339-4fb2-b641-78008aae7bfa",
+      "path": "/api/logistics/shipments/1c48b6c8-d332-4e78-be56-85c04959354a",
       "method": "DELETE",
       "status": 401,
       "pass": true
     },
     {
       "check": "viewer cannot mutate or administer",
-      "path": "/api/knowledge/documents/00f58e35-b187-4438-850b-13fdb2d9d712",
+      "path": "/api/knowledge/documents/1c08cc81-f3b4-4d0a-b80c-ed338d205806",
       "method": "DELETE",
       "status": 403,
       "pass": true

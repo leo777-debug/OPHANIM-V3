@@ -1,14 +1,14 @@
 {
-  "checkedAt": "2026-10-15T13:41:28.914Z",
+  "checkedAt": "2026-10-15T17:56:10.416Z",
   "comparison": "HEAD versus working revision; diagnostic/rule multiplicity and flagged expressions retained, surrounding code-frame context/line numbers excluded",
-  "files": 140,
+  "files": 21,
   "baseline": {
-    "errors": 204,
-    "warnings": 33
+    "errors": 2,
+    "warnings": 0
   },
   "current": {
-    "errors": 202,
-    "warnings": 32
+    "errors": 2,
+    "warnings": 0
   },
   "introduced": []
 }

@@ -29,6 +29,7 @@ export function startTestApp(stdio = 'inherit', standalone = process.argv.includ
   const childEnv = { ...env, NEXT_DEV_DIST_DIR: buildDirectory, PORT: String(port), APP_URL: `http://127.0.0.1:${port}` };
   const replayContext=JSON.parse(readFileSync(resolve(root,'STRESS_TEST/runtime/demo-context.json'),'utf8'));
   childEnv.OPHANIM_DEMO_REPLAY_CREATED_AT=replayContext.createdAt ?? new Date().toISOString();
+  if(process.argv.includes('--extension-fixture'))childEnv.OPHANIM_EXTENSION_IDS='a'.repeat(32);
   if(process.argv.includes('--sdk-fixture')) {
     const demo=JSON.parse(readFileSync(resolve(root,'STRESS_TEST/runtime/demo-context.json'),'utf8'));
     childEnv.SDK_INGEST_KEY='synthetic-owned-sdk-fixture-only';

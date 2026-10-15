@@ -122,6 +122,11 @@ same loopback ports and refuse occupied services):
 
 - `node STRESS_TEST/sdk-tenants.mjs`: real authenticated SDK status/SSE isolation,
   trusted service ownership, anonymous denials and no member-key substitution.
+- `node STRESS_TEST/extension-tenants.mjs`: exact configured extension origin,
+  login, own shipment match and exclusion of foreign context. This is an actual
+  HTTP test, not an installed Chrome/Edge extension certification.
+- `node STRESS_TEST/import-tenants.mjs`: compatibility preview/review/confirmation,
+  no pre-confirmation writes, denied foreign aliases and exact own persistence.
 - `node STRESS_TEST/knowledge-scale.mjs`: 1,001 private documents across 11 bounded
   pages, exact file download, lexical search, and real mobile/desktop pagination.
   These are post-extraction fixtures, not 1,000 simultaneous extraction jobs.

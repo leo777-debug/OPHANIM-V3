@@ -4,6 +4,7 @@ import { getAuthenticatedActor } from '@/lib/auth/actor';
 import { getClientIp, isRateLimited } from '@/lib/ssrf-guard';
 import { VERIFY_CONFIG } from './types';
 import { trustedRequestOrigin } from '@/lib/http/request-origin';
+import { VerifyInputError } from './errors';
 
 export const SESSION_COOKIE = 'ophanim_verify_session';
 export class VerifyHttpError extends Error { constructor(message: string, readonly status: number) { super(message); } }
@@ -34,5 +35,5 @@ export async function readBody(request: Request): Promise<Record<string, unknown
   return body as Record<string, unknown>;
 }
 export function errorResponse(error: unknown) {
-  return NextResponse.json({ error: error instanceof Error ? error.message : 'Check unavailable.' }, { status: error instanceof VerifyHttpError ? error.status : 400, headers: { 'Cache-Control': 'no-store' } });
+  return NextResponse.json({ error: error instanceof VerifyHttpError || error instanceof VerifyInputError ? error.message : error instanceof SyntaxError ? 'Invalid JSON.' : 'Check unavailable. Please try again.' }, { status: error instanceof VerifyHttpError ? error.status : 400, headers: { 'Cache-Control': 'no-store' } });
 }

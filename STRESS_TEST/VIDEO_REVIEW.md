@@ -6,25 +6,29 @@ application's production or competition readiness.
 ## Output
 
 - `STRESS_TEST/video/Ophanim-Demo-2026-10.mp4`
-- Current 143-second version copied and SHA256-verified at
-  `D:/OPHANIM/Documentation/Ophanim-Demo-2026-10.mp4` on 15 October at 16:27 Dubai time.
-  The drive became available after the earlier checkpoint. Its old 127-second copy
-  was preserved as `Ophanim-Demo-before-20261015-1627.mp4`. See artifacts/video-copy.json.
-- Current video: H.264, 1920x1080, 30 fps, 143.166667 seconds, 2,960,851 bytes.
+- Re-recorded from the latest package on 15 October. Current video: H.264,
+  1920x1080, 30 fps, 139.8 seconds, no uncaught exceptions on the recorded path.
+  The refreshed copy is SHA256-verified at
+  `D:/OPHANIM/Documentation/Ophanim-Demo-2026-10.mp4`. Previous local and D: copies
+  are backed up before replacement. Current digest/size/copy proof are generated
+  in `artifacts/video.json`; `video-copy.json` preserves the earlier 16:27 copy.
 - No audio, voice-over or music. MP4 and raw capture are ignored by Git.
-- Verified worktree SHA256:
-  `ff15b73b72880adcae5b5559f0c5a57f887f787597c69683db659b61c151fffc`.
+- Encoding reserves separate bands for captions and replay labels, keeping them
+  clear of the actual application controls and native replay timestamp.
 - Re-record: `npm run demo:video`; re-encode existing capture with
   `node STRESS_TEST/demo-video.mjs --encode-only`.
 
 ## Inspected
 
-The updated title and persisted operator-note frames were viewed at full resolution.
+The refreshed title and persisted operator-note frames were viewed at full resolution.
 The previous weather/share review is supplemented by a refreshed contact sheet
 sampling the new final encoding every ten seconds:
 `artifacts/video-final-contact-sheet.png`. Empty unused contact-sheet slots are
 not frames from the video. The earlier draft's white opening was rejected; the
 final recording prewarms pages and includes three-second title/closing cards.
+
+The overview/Today scene is not included in this recording. It starts with the
+genuine import/review workflow; no missing dashboard work queue is simulated.
 
 All captured workflows use the labelled synthetic organization on loopback.
 External provider traffic is blocked, no real customer records or provider keys

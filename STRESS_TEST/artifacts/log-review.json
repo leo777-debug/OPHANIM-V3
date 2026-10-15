@@ -1,7 +1,15 @@
 {
-  "checkedAt": "2026-10-15T13:31:31.633Z",
-  "scope": "AST review of application API console calls, not framework/dependency logs",
-  "calls": 60,
+  "checkedAt": "2026-10-15T13:57:35.921Z",
+  "scope": "API and server-library console calls, excluding test helpers and framework/dependencies; exact structured scan audit intentionally retained (actor IDs, scan ID, authorized targets; no credentials)",
+  "calls": 61,
+  "reviewedScanAudits": [
+    {
+      "file": "src/lib/shodan/scans.ts",
+      "line": 40,
+      "staticOnly": false,
+      "reviewedScanAudit": true
+    }
+  ],
   "unsafe": [],
   "pass": true
 }

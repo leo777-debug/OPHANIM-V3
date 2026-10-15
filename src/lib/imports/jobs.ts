@@ -34,7 +34,7 @@ function isUniqueConflict(error: unknown): boolean {
 }
 
 function errorMessage(error: unknown): string {
-  const message = error instanceof Error ? error.message : 'Unable to import this row.';
+  const message = error instanceof ImportError ? error.message : 'Unable to import this row. Review the row and retry.';
   return message.slice(0, 500);
 }
 

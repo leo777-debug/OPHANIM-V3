@@ -32,10 +32,10 @@ export async function sendPendingNotifications() {
       await db().query(`update ophanim_notifications set status='sent',attempts=attempts+1,resend_id=$2,sent_at=now() where id=$1`, [item.id, response.data?.id]);
       if (item.kind === 'digest') await db().query(`update ophanim_email_subscriptions set next_digest_at=now()+(digest_minutes||' minutes')::interval where id=$1`, [item.subscription_id]);
       sent += 1;
-    } catch (error) {
+    } catch {
       const attempts = Number(item.attempts) + 1;
       const terminal = attempts >= 5;
-      await db().query(`update ophanim_notifications set attempts=$2,status=$3,error=$4,next_attempt_at=now()+($5||' minutes')::interval where id=$1`, [item.id, attempts, terminal ? 'failed' : 'pending', error instanceof Error ? error.message : 'Send failed', String(Math.min(360, 5 * 2 ** attempts))]);
+      await db().query(`update ophanim_notifications set attempts=$2,status=$3,error=$4,next_attempt_at=now()+($5||' minutes')::interval where id=$1`, [item.id, attempts, terminal ? 'failed' : 'pending', 'Notification delivery failed. Check provider configuration and retry.', String(Math.min(360, 5 * 2 ** attempts))]);
     }
   }
 
