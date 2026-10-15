@@ -3,9 +3,9 @@
   "branch": "stress-test/competition",
   "current_phase": 2,
   "current_task": "p2.tenant",
-  "last_commit_hash": "3b4532aa57579d99dcbd427b44c797b45dc9aab4",
+  "last_commit_hash": "62b81541ecdb8df463f89ed1a53ecea979465cdb",
   "started_at": "2026-10-13T22:10:00+04:00",
-  "updated_at": "2026-10-15T16:25:00+04:00",
+  "updated_at": "2026-10-15T16:27:26+04:00",
   "finished": false,
   "tasks": [
     {"id":"p1.resume","phase":1,"title":"Branch isolation, full prompt, progress and safe resume helper","status":"done"},
@@ -72,7 +72,7 @@
     {"id":"p5.recording-script","phase":5,"title":"Rerunnable Playwright recording through real demo workflows","status":"done","notes":"npm run demo:video records real Excel review/import, destination-port weather match, Verify/share/history with all external traffic blocked."},
     {"id":"p5.video","phase":5,"title":"1920x1080, 2-3 minute captioned H264 demo; no copyrighted music","status":"done","notes":"Updated H264 1920x1080, 143.166667 seconds, 30fps, 2960851 bytes; actual operator-note scene, title/closing/captions, no audio. Codec and SHA256 verified. Previous video backed up locally. Not whole-product readiness."},
     {"id":"p5.video-safety","phase":5,"title":"Inspect video for secrets, personal data and fabricated features","status":"done","notes":"Updated title and stored decision frame inspected at full resolution; refreshed 10-second contact sheet covers import/weather/decision/Verify/share/history. Synthetic-only, persistent labels, no provider keys. Missing scenarios explicitly omitted. See VIDEO_REVIEW.md."},
-    {"id":"p5.video-copy","phase":5,"title":"Copy MP4 to requested local documentation folder if present","status":"done","notes":"Earlier 127-second copy at D:/OPHANIM/Documentation/Ophanim-Demo-2026-10.mp4 is not the current 143-second revision. D: is unmounted; current worktree MP4 verified by SHA256 and cannot now be copied there. Conditional folder-copy step skipped honestly."},
+    {"id":"p5.video-copy","phase":5,"title":"Copy MP4 to requested local documentation folder if present","status":"done","notes":"D: became available at 16:27 Dubai time on 15 October. Current 143-second MP4 copied to D:/OPHANIM/Documentation/Ophanim-Demo-2026-10.mp4, both SHA256 verified. Previous 127-second copy preserved as Ophanim-Demo-before-20261015-1627.mp4. See artifacts/video-copy.json."},
     {"id":"final.report","phase":6,"title":"Severity/coverage/performance/readiness/founder-actions report","status":"doing","notes":"Current checkpoint report, failure history, video review and remaining gaps recorded. Not final certification; exhaustive security and speed/offline gates still open."},
     {"id":"final.checks","phase":6,"title":"Final typecheck/tests/build/RLS on final candidate","status":"doing","notes":"Current candidate: full 605 pass/7 skipped (95.85s), six opt-in RLS pass (38.87s), TypeScript/build/focused lint pass, seven actual login HTTP/browser checks and five fresh standalone packaging checks pass. Prior 16 AI-failure and 45 UI browser checks retained. Rebuilt client Gitleaks 9.20MB clean. Fresh npm audit blocked by registry ECONNRESET twice. Re-run after future source edits."},
     {"id":"final.push-pr","phase":6,"title":"Push stress branch and create requested PR; do not merge","status":"todo"}

@@ -6,8 +6,10 @@ application's production or competition readiness.
 ## Output
 
 - `STRESS_TEST/video/Ophanim-Demo-2026-10.mp4`
-- Earlier 127-second version copied to `D:/OPHANIM/Documentation/Ophanim-Demo-2026-10.mp4`.
-  D: is not mounted now; the updated video cannot be copied or reverified there.
+- Current 143-second version copied and SHA256-verified at
+  `D:/OPHANIM/Documentation/Ophanim-Demo-2026-10.mp4` on 15 October at 16:27 Dubai time.
+  The drive became available after the earlier checkpoint. Its old 127-second copy
+  was preserved as `Ophanim-Demo-before-20261015-1627.mp4`. See artifacts/video-copy.json.
 - Current video: H.264, 1920x1080, 30 fps, 143.166667 seconds, 2,960,851 bytes.
 - No audio, voice-over or music. MP4 and raw capture are ignored by Git.
 - Verified worktree SHA256:

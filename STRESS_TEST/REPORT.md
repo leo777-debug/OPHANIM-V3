@@ -71,8 +71,9 @@ paid subscription, production migration, deployment or active scan was introduce
   GPS-interference and confirmation/reply stories were not fabricated. The updated
   video now includes a genuine decision note, independently read back through the API.
 - Historical FIRMS credentials still require founder rotation; no history rewrite.
-- D: is not mounted. Its earlier 127-second copy is not the current 143-second
-  revision. The current worktree MP4 SHA256 is
+- D: became available after the earlier checkpoint. The current 143-second video
+  is copied and SHA256-verified there; the old copy was preserved under a backup
+  name. See artifacts/video-copy.json. Both current copies have SHA256
   `ff15b73b72880adcae5b5559f0c5a57f887f787597c69683db659b61c151fffc`.
 - Fresh production audit attempt on 15 October failed with npm registry ECONNRESET;
   prior clean production / eight development advisories are historical, not a new pass.
@@ -100,6 +101,7 @@ After the login changes, the fresh compiled browser assets were scanned again:
 9.20 MB, no findings. A detached/interrupted build result was not assumed to pass;
 a fresh production rebuild completed successfully before actual HTTP/browser checks.
 No deployment, production setting or upstream Auth configuration was changed.
+The login checkpoint also scanned 43.03 KB of staged changes, with no findings.
 
 ## Historical Checkpoints
 

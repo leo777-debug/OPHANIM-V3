@@ -6,7 +6,7 @@ Branch: `stress-test/competition`. Finished: **no**.
 ## Current Checkpoint
 - [x] Latest full source checks: 605 tests pass, seven database-opt-in tests skip (95.85s). TypeScript, focused lint and production rebuild pass; six opt-in RLS checks pass in 38.87s. Previous setup/import timeouts retained.
 - [x] Native PostgreSQL load/restart tests and 20 concurrent 5,000-row import previews recorded.
-- [x] Updated 143.17-second H.264 video includes a genuine UI-entered operator note; title, decision frame and refreshed contact sheet inspected. Earlier 127-second D: copy is not current; drive is unavailable now.
+- [x] Updated 143.17-second H.264 video includes a genuine UI-entered operator note; title, decision frame and refreshed contact sheet inspected. D: became available at 16:27; current copy SHA256-verified there, older 127-second copy backed up.
 - [x] One-hour native PostgreSQL soak: 3,601 seconds, 120 successful samples, 5,000 imported rows, zero failures/pending jobs; failed pre-fix run retained.
 - [x] 72 tenant HTTP checks, 24 native role/alert/notification/Verify checks, three 1,000-document scale checks, 12 real AI failure checks, six embedded RLS tests.
 - [x] Fresh generated standalone passes all 45 browser checks, including nonblank map pixels and drag changes at nine browser/viewport combinations. Previous cold timeout retained.
@@ -21,6 +21,7 @@ Branch: `stress-test/competition`. Finished: **no**.
 - [x] Rebuilt standalone passes all five HTTP packaging checks. Cold health is 7.85s, Verify HTML 787ms, Atlas HTML 254ms; first-screen speed budget remains unmet.
 - [x] SEC-015 reproduced six login failures. Thirteen focused plus seven actual HTTP/browser checks pass: origin denial, bounded JSON, normalized-account/IP budgets, cooldown, secure-cookie session and real Chromium form sign-in. Per-process limits only.
 - [x] Fresh compiled browser assets: Gitleaks 9.20MB, no findings. Model-transport staged checkpoint: 46.02KB, no findings. No actual provider/Auth service, production migration or deployment contacted.
+- [x] Login checkpoint staged Gitleaks: 43.03KB, no findings. Both security fixes pushed on stress-test/competition; no merge or deployment.
 - [x] Ten bounded extractor safety probes pass using bundled Python 3.12.14 / pypdf 6.10.0 / Pillow 12.3.0. Deployment-pinned parsers, OCR and arbitrary hostile-PDF resource isolation remain unverified.
 - [x] Fetch origin and create an isolated branch from the remote default.
 - [x] Merge already-built Verify/RAG foundation without changing the original checkout.
