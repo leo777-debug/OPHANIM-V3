@@ -8,20 +8,21 @@ checkpoints later in this document. Updated 15 October 2026, Asia/Dubai.
 
 | Check | Latest result | Scope / caveat |
 | --- | --- | --- |
-| Full unit/integration suite | 592 passed, 7 opt-in skipped | 94 passing files, 2 skipped; isolated one-worker run, 96.66 seconds |
+| Full unit/integration suite | 605 passed, 7 opt-in skipped | 95 passing files, 2 skipped; isolated one-worker run, 95.85 seconds |
 | Build | Passed, Next 16.3.8 | Rebuilt `.next-stress-final`; five generated-standalone HTTP checks pass |
 | TypeScript / focused lint | Passed on current source | Legacy lint deliberately retained; no new rule disabled |
-| SQL/RLS | Six passing embedded PostgreSQL tests, 38.92 seconds | Current source; native Windows PostgreSQL lacks pgvector |
+| SQL/RLS | Six passing embedded PostgreSQL tests, 38.87 seconds | Current source; native Windows PostgreSQL lacks pgvector |
 | Tenant HTTP | 72 checks pass | Own positive controls and foreign reads/writes, private file download, Verify history and legacy sessions; not all 194 routes |
 | Rescue workflow HTTP | 36 additional native checks pass | Own case/action/decision/evidence controls; foreign parent/child writes denied; database unchanged; viewer/anonymous approval denials |
 | Cyber workflow boundaries | 54 additional native checks pass | Roll calls, assets, assessments, decisions/evidence, remediation and tasks; authenticated database-role positive control and deny-by-default Data API writes |
 | Native roles/alerts/bursts | 24 checks pass | Four roles; alert ownership; 100 notifications, not 100 generated alerts; Verify 10x200/20x429 |
 | Generated intelligence alerts | Four additional checks pass | Four concurrent actual reconciliations: 100 alerts / 100 assessments / 100 tasks, no duplicates, tenant-isolated; 1,691 ms |
-| Browser matrix | 45 pass / 0 fail on fresh standalone package | Chromium/Firefox/WebKit x 390/820/1920px; pre-fix cold timeout retained separately |
+| Browser matrix | 45 pass / 0 fail at prior UI checkpoint | Chromium/Firefox/WebKit x 390/820/1920px; latest login additionally verified in Chromium; pre-fix cold timeout retained separately |
 | Map acceptance | Nonblank land/ocean pixels plus drag changes | All nine browser/viewport combinations; bundled real static geography, external tiles deliberately blocked |
 | One-hour soak | PASS: 3,601 seconds / 120 samples | Health, shipments, worker all 200; 5,000 imported, zero failed/pending; private memory stable about 146-148 MB after warmup |
 | AI failures | 16 expanded real HTTP checks pass | Owned mock only; oversized/chunked bodies, full 120,083 ms post-header timeout, malformed/empty JSON, 503, delay, unreachable; shipments survive. Earlier 12-check artifact retained |
 | AI status/transport regressions | 19 focused checks pass | Six failures before fix; metadata uses pinned transport, bounded local bodies, caller cancellation/deadline and safe errors |
+| Login boundary regressions | 13 focused plus seven actual HTTP/browser checks pass | Six failures before fix; explicit foreign-origin denial, 8 KiB actual body cap, account/IP budgets, cooldown, usable session and successful Chromium form login |
 | Knowledge scale | Three checks pass, 1,000 files/documents/chunks | List 639 ms, download exact, no-embedding retrieval 350 ms; post-extraction fixtures, not 1,000 extraction jobs |
 | Demo reset | Real workflow check passes | Fresh disposable organization, login, DXB-291, destination-port advisory match; no production database |
 | Extractor safety | Ten bounded synthetic checks pass | Text/Office/PDF/image guards, network blocked; bundled parsers differ from deployment pins; no OCR/resource sandbox certification |
@@ -44,6 +45,9 @@ checkpoints later in this document. Updated 15 October 2026, Asia/Dubai.
   issuing an unpinned fetch. Local responses are bounded even with dishonest length
   headers; caller cancellation and deadlines remain active while reading the body.
   Safe setup/checksum messages remain useful without echoing raw runtime errors.
+- Sign-in now rejects explicit foreign browser origins, bounds JSON before parsing
+  and shares an account attempt budget across forwarded-IP/organization changes.
+  The account key is hashed, and no password/session is written to test artifacts.
 
 DOMPurify 3.4.17 is a production dependency (Apache-2.0 option of its dual licence);
 jsdom 30.1.2 is test-only. The runtime is Node 24.19. No new live data provider,
@@ -60,7 +64,7 @@ paid subscription, production migration, deployment or active scan was introduce
   a real dark-web provider, AI model or email service.
 - 200-connection p95 is 3.90 seconds; cold-start/one-second interaction goals are not
   met merely because the prewarmed video looks smooth. Latest standalone cold health
-  is 8.81 seconds, Verify HTML 1.10 seconds and Atlas HTML 289 ms (not rendered timings).
+  is 7.85 seconds, Verify HTML 787 ms and Atlas HTML 254 ms (not rendered timings).
 - Fresh Windows standalone passes five HTTP and all 45 browser checks. No
   Linux/Render deployment validation was attempted.
 - Forecast-cone/ETA-window matching, Last Safe Move, document 50-vs-48 comparison,
@@ -91,6 +95,12 @@ was not counted. The empty worktree index lock dated the previous evening was
 removed only after confirming its exact Git path, age and an idle window with no
 Git processes. No Git packs, history, branches or user source changes were removed.
 
+The model-transport checkpoint scanned 46.02 KB of staged changes without findings.
+After the login changes, the fresh compiled browser assets were scanned again:
+9.20 MB, no findings. A detached/interrupted build result was not assumed to pass;
+a fresh production rebuild completed successfully before actual HTTP/browser checks.
+No deployment, production setting or upstream Auth configuration was changed.
+
 ## Historical Checkpoints
 
 The following entries preserve earlier failures and measurements. Stale phrases
@@ -112,12 +122,12 @@ See BASELINE.md. TypeScript and production build passed; 311 tests passed, five 
 
 | ID | Severity | Area | Description | Status | Test / Evidence |
 | --- | --- | --- | --- | --- | --- |
-| SEC-001 | P1 | AI | Anonymous model generation can consume configured server credentials; five AI endpoints lack a session gate, Verify optional AI has the same boundary | Fixed in working tree; validation in progress | src/lib/ai/access.test.ts: five failing tests before fix, 13 passing after; plus four existing Verify HTTP tests |
+| SEC-001 | P1 | AI | Anonymous model generation can consume configured server credentials; five AI endpoints lack a session gate, Verify optional AI has the same boundary | Fixed; full suite and actual model-failure HTTP checks pass | src/lib/ai/access.test.ts: five failing tests before fix, 13 passing after; actual providers remain mocked |
 | SEC-002 | P1 | Secrets | Historical FIRMS credentials in two commits | Open: rotation required | Gitleaks 8.30.1 scanned 314 commits; paths below, values never published |
-| DEP-001 | P1 | Dependencies | npm audit baseline: two critical, nine high, one moderate advisories | Patch upgrades and MapLibre security update under validation | audit baseline; final audit pending |
-| OPS-001 | P2 | Local test environment | Docker Linux daemon fails at startup | Open; embedded PostgreSQL fallback being prepared | Docker startup log: inaccessible sailor-ingest.sock; no reset performed |
+| DEP-001 | P1 | Dependencies | npm audit baseline: two critical, nine high, one moderate advisories | Patched runtime dependencies; latest registry audit blocked; dev advisories open | Prior production audit zero; eight development advisories retained; fresh audit ECONNRESET, no forced downgrade |
+| OPS-001 | P2 | Local test environment | Docker Linux daemon fails at startup | Mitigated for tests, Docker not repaired | Embedded PostgreSQL/RLS and native PostgreSQL 18 load/restart/soak now pass; no reset performed |
 | SEC-003 | P1 | Authentication | Configured Supabase rejecting a token/membership could fall back to a legacy session cookie | Fixed; three regression tests pass | src/lib/auth/actor.test.ts: two failures reproduced before fix; legacy-only configuration still works |
-| OPS-002 | P1 | Test runtime / packaging | Isolated packaged standalone health request times out; Next production CLI succeeds with the same fixture database/guard | Open; root cause unconfirmed | node STRESS_TEST/smoke.mjs --standalone vs node STRESS_TEST/smoke.mjs |
+| OPS-002 | P1 | Test runtime / packaging | Isolated packaged standalone health request times out; Next production CLI succeeds with the same fixture database/guard | Fixed by documented preload setting; cold-start speed budget still open | Five fresh generated-standalone HTTP checks pass; previous UI checkpoint 45 browser checks pass |
 | APP-001 | P1 | Imports | Malformed UUID regex rejects canonical import IDs, blocking review, confirmation and error reports; route intelligence has the same defect | Fixed; full suite/build pass | src/app/api/imports/import-id.test.ts; src/lib/route-intelligence/validation.test.ts |
 | SEC-004 | P1 | Map popup | An untrusted HTTP URL containing quotes can inject HTML attributes into popup links | Fixed; regression reproduced before fix | src/lib/map-popup-safety.test.ts: seven cases, including actual HTML attribute parsing |
 | SEC-005 | P1 | Legacy scanner | Configured scanner permits anonymous GET-triggered live-host contact without owned-target approval or audit | Fixed; eighteen mock regression tests pass | src/app/api/scanner/route.test.ts; owner permission, confirmed POST, workspace allowlist, literal IP, pre-call audit, redirect rejection, credential redaction |
@@ -132,10 +142,11 @@ See BASELINE.md. TypeScript and production build passed; 311 tests passed, five 
 | SEC-010 | P1 | SSRF | Uncompressed reserved IPv6 and a second DNS lookup can bypass address checks for remote AI/extractor requests | Fixed; literal/DNS/pinned-lookup regressions pass | ssrf-guard.test.ts; pinned-public-fetch.test.ts; existing safeFetch callers now pin each redirect hop |
 | SEC-011 | P1 | Webhook forwarding | Signed forwarding request has no timeout, byte cap or redirect/address restriction and logs raw failures | Fixed; seven mocked regressions pass | github-webhook/route.test.ts; bounded signed body, HTTPS-only pinned destination, no credential-bearing logs |
 | APP-004 | P1 | Provider failure | A provider ignoring AbortSignal can hang the whole event ingestion batch | Fixed; mixed healthy/empty/malformed/hung-source regression passes | event-provider-registry.test.ts; enforced deadline and sanitized error diagnostics |
-| MAP-001 | P1 | Map availability | Failure to load external basemap leaves initialization/overlays unavailable | Bundled fallback implemented; browser pixel/interaction validation pending | offline-basemap.test.ts; Natural Earth country geometry, original online style retained |
+| MAP-001 | P1 | Map availability | Failure to load external basemap leaves initialization/overlays unavailable | Fixed; nonblank land/ocean pixels and drag changes at nine browser/viewport combinations | offline-basemap.test.ts; browser-matrix.json; Natural Earth country geometry, original online style retained |
 | SEC-012 | P1 | Cross-origin writes | Shared authenticated endpoints did not consistently reject an explicit foreign Origin | Fixed on shared guard; four actual browser controls and eight auth tests pass | auth/actor.test.ts; artifacts/browser-security.json; own-origin POST remains 201 |
 | SEC-013 | P1 | Raw feed popup HTML | String-built feed popup could retain executable markup beyond the previously fixed URL attribute case | Fixed at central DOMPurify boundary; seven DOM/action regressions | map-popup-html.test.ts; scripts/events/unsafe links removed, explicit deep-dive click retained |
 | SEC-014 | P1 | Local AI status/transport | Model-status used plain fetch after validation and returned raw errors; explicitly allowlisted model responses ignored byte caps and caller cancellation | Fixed; six mocked pre-fix failures, 19 focused checks pass | local-model.test.ts; openai-compatible-provider.test.ts; full suite 592 pass; 16 actual loopback HTTP checks in ai-failure-bounded.json. No live SSRF attack or provider contact |
+| SEC-015 | P1 | Sign-in abuse / browser origin | Forwarded-IP rotation bypassed sign-in budget; explicit cross-site attempts reached credential verification; oversized JSON unbounded and null JSON threw | Fixed; six pre-fix failures, 13 focused checks, full suite/build and seven actual HTTP/browser checks pass | api/auth/login/route.test.ts; login-security.json; account key hashes normalized email, excludes organization slug; IP budget retained. Per-process, not distributed |
 | APP-005 | P1 | Vessel identifiers | Legacy SQL double-escaped digit classes, rejecting seven-digit IMO and nine-digit MMSI values on shipments/routes | Corrective migration 028; five executable SQL regressions pass | Actual native HTTP POST failed before fix; vessel-identifiers.test.ts proves legacy rejection, corrected writes, malformed rejection, retained rows and RLS |
 | DEMO-001 | P2 | Reset fixture | Demo reset used originPort/destinationPort instead of the persisted Name fields, silently omitting names | Fixed and verified | demo:reset -- --check now asserts both returned names and stores a genuine operator note |
 

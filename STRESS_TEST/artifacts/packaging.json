@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-10-15T08:45:24.575Z",
+  "checkedAt": "2026-10-15T12:24:25.317Z",
   "package": "fresh generated standalone server; no generated-file patch",
   "externalTraffic": "blocked by fetch, socket and DNS guards",
   "checks": [
@@ -7,35 +7,35 @@
       "path": "/api/health",
       "authenticated": false,
       "status": 200,
-      "elapsedMs": 8811,
+      "elapsedMs": 7854,
       "pass": true
     },
     {
       "path": "/api/logistics/shipments",
       "authenticated": false,
       "status": 401,
-      "elapsedMs": 697,
+      "elapsedMs": 763,
       "pass": true
     },
     {
       "path": "/api/logistics/shipments",
       "authenticated": true,
       "status": 200,
-      "elapsedMs": 185,
+      "elapsedMs": 222,
       "pass": true
     },
     {
       "path": "/verify",
       "authenticated": false,
       "status": 200,
-      "elapsedMs": 1097,
+      "elapsedMs": 787,
       "pass": true
     },
     {
       "path": "/atlas",
       "authenticated": false,
       "status": 200,
-      "elapsedMs": 289,
+      "elapsedMs": 254,
       "pass": true
     }
   ]

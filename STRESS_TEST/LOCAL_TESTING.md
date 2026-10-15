@@ -79,6 +79,13 @@ Do not delete packs, factory-reset Docker, force-push history or move the origin
 
 ## Additional Security Probes
 
+After rebuilding, `node STRESS_TEST/login-security.mjs` checks actual valid login,
+protected session use and production cookie flags, explicit foreign-site denial,
+null/oversized JSON and an account-budget bypass attempt with changing forwarded
+IPs, email case and organization slugs. It saves only statuses/check names, never
+the passwords or returned session cookies. Uses a fresh labelled demo organization;
+not a live Supabase Auth test. Both account and IP budgets are per process.
+
 After building, `node STRESS_TEST/ai-failure.mjs --bounded` exercises actual
 authenticated AI requests against an owned loopback mock. It adds declared and
 chunked oversized responses and a full 120-second stalled-body deadline after

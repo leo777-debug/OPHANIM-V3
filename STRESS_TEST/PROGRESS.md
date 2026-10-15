@@ -4,7 +4,7 @@ Competition: 17 October 2026. Code freeze: end of 16 October, Asia/Dubai.
 Branch: `stress-test/competition`. Finished: **no**.
 
 ## Current Checkpoint
-- [x] Latest full source checks: 592 tests pass, seven database-opt-in tests skip (96.66s). TypeScript, focused lint and production rebuild pass; six opt-in RLS checks pass in 38.92s. Previous setup/import timeouts retained.
+- [x] Latest full source checks: 605 tests pass, seven database-opt-in tests skip (95.85s). TypeScript, focused lint and production rebuild pass; six opt-in RLS checks pass in 38.87s. Previous setup/import timeouts retained.
 - [x] Native PostgreSQL load/restart tests and 20 concurrent 5,000-row import previews recorded.
 - [x] Updated 143.17-second H.264 video includes a genuine UI-entered operator note; title, decision frame and refreshed contact sheet inspected. Earlier 127-second D: copy is not current; drive is unavailable now.
 - [x] One-hour native PostgreSQL soak: 3,601 seconds, 120 successful samples, 5,000 imported rows, zero failures/pending jobs; failed pre-fix run retained.
@@ -18,7 +18,9 @@ Branch: `stress-test/competition`. Finished: **no**.
 - [x] 36 additional native HTTP rescue/action/decision/evidence tests pass, including foreign child links, viewer/anonymous denials and database unchanged proofs.
 - [x] 54 native roll-call/remediation/task checks pass, including cross-organization asset/assessment links and authenticated-role identity controls. Roll-call Data API writes stay deny-by-default; no grants were broadened.
 - [x] SEC-014: six mocked failures reproduced the unpinned model-status probe, raw error disclosure, and unbounded/uncancellable local responses. Central transport/status fixes pass 19 focused checks. All 16 expanded actual HTTP checks pass, including oversized/chunked bodies, a 120.08s post-header timeout and usable deterministic shipment API.
-- [x] Rebuilt standalone passes all five HTTP packaging checks. Cold health is 8.81s and Verify HTML 1.10s, so presentation speed budgets remain unmet.
+- [x] Rebuilt standalone passes all five HTTP packaging checks. Cold health is 7.85s, Verify HTML 787ms, Atlas HTML 254ms; first-screen speed budget remains unmet.
+- [x] SEC-015 reproduced six login failures. Thirteen focused plus seven actual HTTP/browser checks pass: origin denial, bounded JSON, normalized-account/IP budgets, cooldown, secure-cookie session and real Chromium form sign-in. Per-process limits only.
+- [x] Fresh compiled browser assets: Gitleaks 9.20MB, no findings. Model-transport staged checkpoint: 46.02KB, no findings. No actual provider/Auth service, production migration or deployment contacted.
 - [x] Ten bounded extractor safety probes pass using bundled Python 3.12.14 / pypdf 6.10.0 / Pillow 12.3.0. Deployment-pinned parsers, OCR and arbitrary hostile-PDF resource isolation remain unverified.
 - [x] Fetch origin and create an isolated branch from the remote default.
 - [x] Merge already-built Verify/RAG foundation without changing the original checkout.

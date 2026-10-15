@@ -2,10 +2,10 @@
   "version": 1,
   "branch": "stress-test/competition",
   "current_phase": 2,
-  "current_task": "p2.abuse",
-  "last_commit_hash": "f526ddae631d1a50f87b048a15b607c38dc881f8",
+  "current_task": "p2.tenant",
+  "last_commit_hash": "3b4532aa57579d99dcbd427b44c797b45dc9aab4",
   "started_at": "2026-10-13T22:10:00+04:00",
-  "updated_at": "2026-10-15T12:46:00+04:00",
+  "updated_at": "2026-10-15T16:25:00+04:00",
   "finished": false,
   "tasks": [
     {"id":"p1.resume","phase":1,"title":"Branch isolation, full prompt, progress and safe resume helper","status":"done"},
@@ -39,7 +39,8 @@
     {"id":"p2.ssrf","phase":2,"title":"URL, redirect, DNS and private-address SSRF boundaries","status":"doing","notes":"Public AI, embeddings, extractors, safeFetch and signed forwarding use pinned address checks, deadlines and bounded bodies; IPv6/redirect regressions pass. Explicit admin local-model origins remain intentional. Complete provider audit remains."},
     {"id":"p2.local-ai-transport","phase":2,"title":"Model status uses pinned transport; local bodies bounded and cancellable","status":"done","notes":"Six failing regressions before fix; 19 focused checks and full 592-test suite pass, seven opt-in skips. TypeScript/build/focused lint pass. 16 expanded actual HTTP checks pass: oversized/chunked bodies and post-header 120083ms timeout; deterministic shipments remain usable. Five standalone packaging checks and six opt-in RLS checks pass."},
     {"id":"p2.ai-injection","phase":2,"title":"Untrusted document/news/claim prompt injection","status":"doing","notes":"Verify AI cannot select providers or alter deterministic verdict/evidence; invalid models fall back. Comprehensive RAG cross-tenant/prompt-exfiltration coverage remains."},
-    {"id":"p2.abuse","phase":2,"title":"Login, Verify, imports, AI limits and provider-cost abuse","status":"doing","notes":"AI/import/Verify user-budget checks pass. Next: login origin/forwarded-IP and account-budget regression coverage; distributed quotas remain outside current in-memory proof."},
+    {"id":"p2.abuse","phase":2,"title":"Login, Verify, imports, AI limits and provider-cost abuse","status":"doing","notes":"AI/import/Verify user-budget checks pass. Sign-in origin, IP/account cooldown and actual browser/session tests pass. Remaining bootstrap/Knowledge cost surfaces and distributed quotas not certified."},
+    {"id":"p2.login-boundary","phase":2,"title":"Sign-in origin, bounded body and account-based abuse regression","status":"done","notes":"Six failures before fix, 13 focused plus seven actual HTTP/browser checks pass, including Chromium form sign-in and usable secure-cookie session. TypeScript/build/focused lint and full 605-test suite pass; seven opt-in skips, six explicit RLS tests pass. Per-process only, no live Supabase certification."},
     {"id":"p2.headers","phase":2,"title":"CSP, cookies, CORS and production debug surfaces","status":"todo"},
     {"id":"p2.dependencies","phase":2,"title":"npm audit; safe critical/high dependency fixes","status":"done","notes":"Zero production vulnerabilities. Full dev audit: five high, three moderate, zero critical; no unsafe forced downgrade. MapLibre patched; render validation pending."},
     {"id":"p3.fixture-isolation","phase":3,"title":"Prove load-test traffic cannot reach external APIs","status":"done","notes":"Isolated server fetch/socket/DNS guard plus browser request blocking; synthetic credentials only."},
@@ -73,7 +74,7 @@
     {"id":"p5.video-safety","phase":5,"title":"Inspect video for secrets, personal data and fabricated features","status":"done","notes":"Updated title and stored decision frame inspected at full resolution; refreshed 10-second contact sheet covers import/weather/decision/Verify/share/history. Synthetic-only, persistent labels, no provider keys. Missing scenarios explicitly omitted. See VIDEO_REVIEW.md."},
     {"id":"p5.video-copy","phase":5,"title":"Copy MP4 to requested local documentation folder if present","status":"done","notes":"Earlier 127-second copy at D:/OPHANIM/Documentation/Ophanim-Demo-2026-10.mp4 is not the current 143-second revision. D: is unmounted; current worktree MP4 verified by SHA256 and cannot now be copied there. Conditional folder-copy step skipped honestly."},
     {"id":"final.report","phase":6,"title":"Severity/coverage/performance/readiness/founder-actions report","status":"doing","notes":"Current checkpoint report, failure history, video review and remaining gaps recorded. Not final certification; exhaustive security and speed/offline gates still open."},
-    {"id":"final.checks","phase":6,"title":"Final typecheck/tests/build/RLS on final candidate","status":"doing","notes":"Current candidate: full 592 pass/7 skipped, six opt-in RLS pass (38.92s), TypeScript/build/focused lint pass, 16 actual AI failure and five standalone packaging checks pass. Prior UI browser matrix 45 passes retained. Fresh npm audit blocked by registry ECONNRESET twice. Re-run after future source edits."},
+    {"id":"final.checks","phase":6,"title":"Final typecheck/tests/build/RLS on final candidate","status":"doing","notes":"Current candidate: full 605 pass/7 skipped (95.85s), six opt-in RLS pass (38.87s), TypeScript/build/focused lint pass, seven actual login HTTP/browser checks and five fresh standalone packaging checks pass. Prior 16 AI-failure and 45 UI browser checks retained. Rebuilt client Gitleaks 9.20MB clean. Fresh npm audit blocked by registry ECONNRESET twice. Re-run after future source edits."},
     {"id":"final.push-pr","phase":6,"title":"Push stress branch and create requested PR; do not merge","status":"todo"}
   ],
   "notes": [

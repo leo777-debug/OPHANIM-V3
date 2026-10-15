@@ -202,6 +202,12 @@ Open the globe at [http://localhost:3000/atlas](http://localhost:3000/atlas).
 Configure database/authentication before using protected operational workflows.
 Keep secrets in uncommitted environment files, never in browser-exposed variables.
 
+Sign-in rejects explicit cross-site browser requests and caps the actual JSON body
+at 8 KiB. Per-process limits allow ten attempts per minute per IP and per normalized
+account; changing forwarded headers or organization slugs does not reset the account
+budget. A 429 response includes `Retry-After: 60`. Configure shared deployment-wide
+abuse protection separately; these in-memory limits are not a distributed quota.
+
 ### Deployment
 
 Ophanim runs as one Next.js application with PostgreSQL for persisted workflows.

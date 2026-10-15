@@ -1,0 +1,35 @@
+{
+  "checkedAt": "2026-10-15T12:22:03.807Z",
+  "scope": "owned isolated application/database; synthetic demo only; no external Auth service",
+  "limitations": "Per-process budget, not a distributed quota or live Supabase session certification.",
+  "checks": [
+    {
+      "name": "own-origin valid login creates a usable protected session with secure cookies",
+      "pass": true
+    },
+    {
+      "name": "foreign origin rejected even with valid demo credentials and no cookies issued",
+      "pass": true
+    },
+    {
+      "name": "cross-site browser context rejected without Origin too",
+      "pass": true
+    },
+    {
+      "name": "null JSON rejected without runtime error",
+      "pass": true
+    },
+    {
+      "name": "oversized actual body rejected",
+      "pass": true
+    },
+    {
+      "name": "rotating IP headers, email case and organization slugs cannot reset account budget",
+      "pass": true
+    },
+    {
+      "name": "Chromium form sign-in reaches the protected app with its real browser session",
+      "pass": true
+    }
+  ]
+}
