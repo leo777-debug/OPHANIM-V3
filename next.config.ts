@@ -3,7 +3,8 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // Lets a local recovery server run independently from a stale development process.
   distDir: process.env.NEXT_DEV_DIST_DIR || '.next',
-  output: 'standalone',
+  // Vercel's adapter generates its own output; Docker needs the standalone server.
+  output: process.env.VERCEL ? undefined : 'standalone',
   serverExternalPackages: ['ws'],
   transpilePackages: ['react-map-gl', 'mapbox-gl', 'maplibre-gl'],
   experimental: {
