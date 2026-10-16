@@ -34,6 +34,16 @@ export function publicTime(value: unknown): string | null {
   const time = new Date(value).getTime();
   return Number.isFinite(time) && time>0 ? new Date(time).toISOString() : null;
 }
+function fireObservationTime(item: Record<string, unknown>): string | null {
+  if (item.observedAt != null || item.timestamp != null) return publicTime(item.observedAt ?? item.timestamp);
+  if (typeof item.date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(item.date)) return null;
+  const clock = String(item.time ?? '').trim();
+  if (!clock) return publicTime(item.date);
+  if (!/^\d{1,4}$/.test(clock)) return null;
+  const hhmm = clock.padStart(4, '0');
+  if (Number(hhmm.slice(0, 2)) > 23 || Number(hhmm.slice(2)) > 59) return null;
+  return publicTime(`${item.date}T${hhmm.slice(0, 2)}:${hhmm.slice(2)}:00Z`);
+}
 export function publicUrl(value: unknown): string {
   const safe=safeSourceUrl(value);
   if (!safe) return '';
@@ -90,7 +100,7 @@ export function normalizePublicFeed(id: FeedId, raw: unknown, fetchedAt = new Da
     if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat)>90 || Math.abs(lng)>180 || item.lat===null || item.lng===null) continue;
     // Legacy aviation/AIS adapters stamp `timestamp` at fetch/receipt time.
     // Do not relabel that timestamp as the source's position observation time.
-    const observedAt=definition.reference?null:publicTime(item.observedAt ?? (id==='flights'||id==='maritime'||id==='cameras' ? undefined : item.timestamp ?? item.time ?? item.date ?? item.updated_at));
+    const observedAt=definition.reference?null:id==='fires'?fireObservationTime(item):publicTime(item.observedAt ?? (id==='flights'||id==='maritime'||id==='cameras' ? undefined : item.timestamp ?? item.time ?? item.date ?? item.updated_at));
     const name=text(item.name ?? item.label ?? item.callsign ?? item.title ?? item.place ?? item.malware ?? item.id,`${definition.name} ${index+1}`);
     const properties:Record<string,unknown>={id:text(item.id ?? item.icao24 ?? item.mmsi,`${id}-${index}`),name,type:text(item.type,id),source:text(item.source,definition.source),sourceUrl:publicUrl(item.sourceUrl ?? item.external_url ?? item.url ?? item.reference ?? item.feed_url) || definition.url,observedAt,lat,lng,reference:result.reference};
     for (const key of ['mmsi','imo','registration','icao24','model','callsign','category','aircraft_category','heading','speed','speed_knots','alt','magnitude','depth','severity','country','city','destination','color','noradId','mission','brightness','ip','malware','status','threat_type','operational_category','vessel','classification','port']) {

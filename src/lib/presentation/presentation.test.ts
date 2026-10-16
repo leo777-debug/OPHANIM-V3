@@ -49,6 +49,17 @@ describe('public normalization never projects organization data',()=>{
     expect(publicTime('not-a-date')).toBeNull();expect(publicTime(0)).toBeNull();
     expect(publicTime('2026-10-16T00:00:00Z')).toBe('2026-10-16T00:00:00.000Z');
   });
+  it.each([
+    ['2026-10-15','2333','2026-10-15T23:33:00.000Z'],
+    ['2026-10-16','43','2026-10-16T00:43:00.000Z'],
+    ['2026-10-16','','2026-10-16T00:00:00.000Z'],
+    ['2026-10-16','2460',null],
+    ['', '2333',null],
+  ])('combines FIRMS date %s and UTC acquisition time %s without inventing a year', (date,time,expected)=>{
+    const feed=normalizePublicFeed('fires',{fires:[{lat:24,lng:54,date,time}]});
+    expect(feed.features[0].properties?.observedAt).toBe(expected);
+    expect(feed.observedAt).toBe(expected);
+  });
   it('rejects unusable positions instead of claiming global zero activity',()=>{
     expect(()=>normalizePublicFeed('flights',{commercial_flights:[{lat:999,lng:24}]})).toThrow();
     expect(()=>normalizePublicFeed('maritime',{ships:[]})).toThrow();

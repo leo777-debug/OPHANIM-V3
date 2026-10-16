@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-10-16T13:59:33.524Z",
+  "checkedAt": "2026-10-16T14:24:25.063Z",
   "checks": [
     {
       "name": "Disposable local database: full migration chain, external APIs blocked"
@@ -12,6 +12,9 @@
     },
     {
       "name": "All original Atlas tool panels open; vessels/aircraft layers and return destination are retained"
+    },
+    {
+      "name": "Ophanim live map-only fullscreen hides outer navigation, preserves layers, resizes the globe and exits by button/Escape at desktop and laptop sizes"
     },
     {
       "name": "No uncaught errors opening Atlas tools; no live scan submitted"

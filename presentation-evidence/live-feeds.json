@@ -1,26 +1,26 @@
 {
-  "checkedAt": "2026-10-16T12:11:48.541Z",
+  "checkedAt": "2026-10-16T14:25:18.324Z",
   "liveSourceCheck": true,
   "syntheticFixtures": false,
   "feeds": [
     {
       "id": "flights",
       "state": "live",
-      "markers": 10597,
+      "markers": 12466,
       "news": 0,
       "reference": false,
       "observedAt": null,
-      "fetchedAt": "2026-10-16T12:11:43.376Z",
+      "fetchedAt": "2026-10-16T14:25:14.734Z",
       "note": ""
     },
     {
       "id": "maritime",
       "state": "live",
-      "markers": 1163,
+      "markers": 1114,
       "news": 0,
       "reference": false,
       "observedAt": null,
-      "fetchedAt": "2026-10-16T12:11:40.750Z",
+      "fetchedAt": "2026-10-16T14:25:13.730Z",
       "note": ""
     },
     {
@@ -30,7 +30,7 @@
       "news": 0,
       "reference": true,
       "observedAt": null,
-      "fetchedAt": "2026-10-16T12:09:39.871Z",
+      "fetchedAt": "2026-10-16T14:25:13.735Z",
       "note": "Reference locations, not live congestion measurements or AIS positions."
     },
     {
@@ -40,17 +40,17 @@
       "news": 0,
       "reference": true,
       "observedAt": null,
-      "fetchedAt": "2026-10-16T12:09:39.872Z",
+      "fetchedAt": "2026-10-16T14:25:13.736Z",
       "note": "Reference locations, not live congestion measurements or AIS positions."
     },
     {
       "id": "cameras",
       "state": "live",
-      "markers": 8374,
+      "markers": 4,
       "news": 0,
       "reference": false,
       "observedAt": null,
-      "fetchedAt": "2026-10-16T12:10:56.335Z",
+      "fetchedAt": "2026-10-16T14:25:12.707Z",
       "note": "Public camera locations; stream availability is checked by the original source, not guaranteed by a map marker."
     },
     {
@@ -60,7 +60,7 @@
       "news": 0,
       "reference": true,
       "observedAt": null,
-      "fetchedAt": "2026-10-16T12:09:38.775Z",
+      "fetchedAt": "2026-10-16T14:25:12.715Z",
       "note": "Broadcaster studio/reference locations, not verified live broadcasts or event locations."
     },
     {
@@ -70,7 +70,7 @@
       "news": 0,
       "reference": true,
       "observedAt": null,
-      "fetchedAt": "2026-10-16T12:09:39.832Z",
+      "fetchedAt": "2026-10-16T14:25:13.657Z",
       "note": "Curated regional anchors, not verified current frontlines or pinpoint incident locations. Unverified RSS coordinate offsets are not plotted."
     },
     {
@@ -80,7 +80,7 @@
       "news": 0,
       "reference": true,
       "observedAt": null,
-      "fetchedAt": "2026-10-16T12:09:39.120Z",
+      "fetchedAt": "2026-10-16T14:25:13.490Z",
       "note": ""
     },
     {
@@ -90,17 +90,17 @@
       "news": 0,
       "reference": true,
       "observedAt": null,
-      "fetchedAt": "2026-10-16T12:09:42.835Z",
+      "fetchedAt": "2026-10-16T14:25:13.420Z",
       "note": "Source-listed vessel-associated ports, not current vessel positions."
     },
     {
       "id": "earthquakes",
       "state": "live",
-      "markers": 46,
+      "markers": 44,
       "news": 0,
       "reference": false,
-      "observedAt": "2026-10-16T11:39:44.878Z",
-      "fetchedAt": "2026-10-16T12:11:42.103Z",
+      "observedAt": "2026-10-16T13:28:16.970Z",
+      "fetchedAt": "2026-10-16T14:25:13.514Z",
       "note": ""
     },
     {
@@ -109,18 +109,18 @@
       "markers": 1991,
       "news": 0,
       "reference": false,
-      "observedAt": "2333-01-01T00:00:00.000Z",
-      "fetchedAt": "2026-10-16T12:11:46.991Z",
+      "observedAt": "2026-10-16T10:41:00.000Z",
+      "fetchedAt": "2026-10-16T14:25:18.280Z",
       "note": ""
     },
     {
       "id": "weather",
       "state": "live",
-      "markers": 46,
+      "markers": 48,
       "news": 0,
       "reference": false,
-      "observedAt": "2026-10-16T12:08:00.000Z",
-      "fetchedAt": "2026-10-16T12:11:47.164Z",
+      "observedAt": "2026-10-16T14:10:00.000Z",
+      "fetchedAt": "2026-10-16T14:25:17.850Z",
       "note": ""
     },
     {
@@ -130,7 +130,7 @@
       "news": 0,
       "reference": false,
       "observedAt": null,
-      "fetchedAt": "2026-10-16T12:11:40.994Z",
+      "fetchedAt": "2026-10-16T14:25:12.715Z",
       "note": "Calculated from public orbital elements; not live satellite telemetry."
     },
     {
@@ -140,7 +140,7 @@
       "news": 0,
       "reference": true,
       "observedAt": null,
-      "fetchedAt": "2026-10-16T12:09:38.820Z",
+      "fetchedAt": "2026-10-16T14:25:12.810Z",
       "note": ""
     },
     {
@@ -150,7 +150,7 @@
       "news": 0,
       "reference": false,
       "observedAt": null,
-      "fetchedAt": "2026-10-16T12:11:41.081Z",
+      "fetchedAt": "2026-10-16T14:25:12.954Z",
       "note": ""
     },
     {
@@ -160,7 +160,7 @@
       "news": 0,
       "reference": false,
       "observedAt": null,
-      "fetchedAt": "2026-10-16T12:11:41.090Z",
+      "fetchedAt": "2026-10-16T14:25:14.952Z",
       "note": ""
     },
     {
@@ -169,8 +169,8 @@
       "markers": 36,
       "news": 140,
       "reference": false,
-      "observedAt": "2026-10-16T11:41:58.000Z",
-      "fetchedAt": "2026-10-16T12:11:41.448Z",
+      "observedAt": "2026-10-16T14:02:24.000Z",
+      "fetchedAt": "2026-10-16T14:25:13.352Z",
       "note": "News markers are story-associated locations, not verified incident coordinates."
     },
     {
@@ -179,9 +179,9 @@
       "markers": 0,
       "news": 0,
       "reference": false,
-      "observedAt": "2026-10-16T08:03:00.000Z",
-      "fetchedAt": "2026-10-16T12:11:42.100Z",
-      "note": "Kp 0 / Quiet"
+      "observedAt": "2026-10-16T10:21:00.000Z",
+      "fetchedAt": "2026-10-16T14:25:13.774Z",
+      "note": "Kp 1 / Quiet"
     }
   ]
 }

@@ -67,6 +67,12 @@ The **Fullscreen** button beside the tools menu expands the entire application;
 press it again or Escape to leave fullscreen. Small screens retain the expand
 icon. A browser that blocks fullscreen shows a dismissible message.
 
+For **only the embedded map**, open Full platform > Operational map > Ophanim
+live, then use **Fullscreen map** beside the region selector. This expands just
+the map workspace, including its layer rail. The outer workspace sidebar, app
+header and presentation bar are not included. **Exit fullscreen** or Escape
+returns to the surrounding Full platform page without resetting the map.
+
 Opening a tool enters Full platform through the same optional switch PIN. It
 does not sign in a visitor or unlock private APIs. The selected tool is retained
 after PIN entry, and Back to map / Full platform remembers its URL in this
@@ -96,6 +102,23 @@ redirects, quick-switch controls and the shortcut disappear. The admin settings
 page remains available to turn it on again.
 
 ## Replay And Plan B
+
+### Real Data Versus Live Data
+
+These are different properties. The public preview uses real provider responses,
+not the synthetic browser-test fixtures. Aircraft, vessels, earthquakes, fire
+detections, weather/disasters, cyber indicators, news and space weather refresh
+from their providers, subject to each provider's delays, caching and coverage.
+A successful fetch is not proof every observation is current or from today.
+Several legacy position adapters do not supply a reliable observation timestamp;
+the UI must not replace that missing time with the time of retrieval.
+
+Ports, chokepoints, cables, infrastructure, broadcaster locations, conflict-region
+anchors and vessel-associated sanctions ports are **reference locations**. They
+are not live port congestion, current frontlines or sanctioned-vessel positions.
+Satellite positions are **calculated** from orbital elements, not telemetry.
+Camera-directory markers do not guarantee each image/video stream is online.
+Saved snapshots are shown as **Replay** with the recording time.
 
 - **Auto:** live data first; a failed source uses its own last saved snapshot.
 - **On:** recorded feeds only. This does not make requests to live providers.

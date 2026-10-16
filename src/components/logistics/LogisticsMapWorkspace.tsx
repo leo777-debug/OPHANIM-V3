@@ -17,7 +17,8 @@ import {
   ShieldCheck,
   X,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import FullscreenButton from "@/components/FullscreenButton";
 import type { ProviderMapLayer } from "@/lib/providers";
 import type { DisruptionRecord } from "@/lib/logistics/disruptions";
 import type { ShipmentRecord } from "@/lib/logistics/shipments";
@@ -231,6 +232,7 @@ const LOCAL_FEEDS = [
 ] as const;
 
 export default function LogisticsMapWorkspace() {
+  const mapWorkspaceRef = useRef<HTMLElement>(null);
   const query = useSearchParams();
   const [mode, setMode] = useState<MonitorMode>("worldmonitor");
   const [regionKey, setRegionKey] = useState("global");
@@ -397,7 +399,7 @@ export default function LogisticsMapWorkspace() {
     "Map detail";
 
   return (
-    <main className="world-map-workspace">
+    <main ref={mapWorkspaceRef} className="world-map-workspace" data-testid="operational-map-workspace">
       <header className="world-map-toolbar">
         <div className="world-map-title">
           <span aria-hidden="true">
@@ -439,6 +441,7 @@ export default function LogisticsMapWorkspace() {
         </div>
 
         <div className="world-map-actions">
+          {mode === "ophanim" && <FullscreenButton targetRef={mapWorkspaceRef} label="Fullscreen map" />}
           <label>
             <span className="sr-only">Map region</span>
             <MapPinned aria-hidden="true" size={14} />

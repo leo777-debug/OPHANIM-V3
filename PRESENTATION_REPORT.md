@@ -14,6 +14,19 @@ is no new platform-admin role, allowlist or company-management workflow.
 
 ### Tool Discovery And Fullscreen Follow-Up
 
+The Full platform operational map now also has its own **Fullscreen map**
+control inside the **Ophanim live** toolbar. It requests fullscreen on only the
+map workspace element, excluding the enclosing sidebar, app header and
+presentation bar. Layer controls, region selection and exit remain inside the
+fullscreen workspace. A resize notification keeps the MapLibre canvas fitted.
+Browser coverage checks 1920x1080 and 1366x768, geographic pixels, button exit
+and Escape. The normal whole-page fullscreen controls are still separate.
+
+Live-source verification exposed a FIRMS acquisition-time parsing bug: a value
+such as `2333` was treated as a year. Fire observations now combine the source
+date with its UTC HHMM time. Five regression cases cover padded times, date-only
+volcano records and malformed/missing dates or times.
+
 - Added a labelled fullscreen control in Map view and the Full platform presenter
   bar, including exit state and a dismissible browser-rejection message.
 - Added an Intelligence tools menu in both headers. It opens the existing Atlas
@@ -198,12 +211,13 @@ Final checks on 16 October 2026:
 | Check | Result |
 | --- | --- |
 | TypeScript / production build | PASS |
-| Unit and database tests | 267 passed, one pre-existing opt-in live test skipped; 59 files |
+| Unit and database tests | 272 passed, one pre-existing opt-in live test skipped; 59 files |
 | Focused ESLint on presentation code | PASS, zero errors or warnings |
 | Shared legacy map lint baseline | Unchanged: 96 existing errors, 10 existing warnings; unrelated cleanup excluded |
 | Shared Atlas / Recon lint baseline | Unchanged: Atlas 57 errors / 16 warnings; Recon 27 errors / 7 warnings |
 | Local migration chain / actual RLS checks | PASS |
 | Browser integration scenarios | 20 PASS; zero uncaught errors on map/tool navigation and zero console errors on map/switch path; at least 14 enabled populated layers |
+| Map-only fullscreen follow-up | 6 focused browser checks PASS on the new build, including scoped fullscreen at 1920x1080 and 1366x768, rendered geography, button/Escape exit and retained layers; `tools-results.json` |
 | Geographic starter + panel shell under 2 seconds | PASS: 0.407 / 0.650 / 1.438 s |
 | Fully interactive WebGL under 2 seconds | NOT MET: approximately 7.1-8.7 seconds in latest local run |
 
@@ -219,6 +233,16 @@ ON/OFF propagation was measured at 37 ms in the final integration run. The tool
 follow-up also has a repeatable focused run: `node tools/presentation/check.mjs
 --tools-only`, recorded in `presentation-evidence/tools-results.json`. Its Shodan
 image uses a reserved test IP and mocked response, not a live customer lookup.
+
+The later real-provider probe (`live-feeds.json`, 14:25 UTC) received responses
+for all 18 public feeds with no synthetic fixtures or replay. In that probe,
+fire observation time was 10:41 UTC on 16 October after the HHMM parsing fix,
+weather 14:10 UTC, news 14:02 UTC and space weather 10:21 UTC. Aviation/AIS
+adapters did not supply reliable observation timestamps, so same-day position
+freshness cannot be certified from retrieval time alone. Camera directories
+warm progressively after startup (four markers on this cold-start probe, versus
+thousands in the prior warm probe). No claim is made that every camera stream
+plays or that every reference record is live.
 
 Screenshots (all use labelled synthetic replay, no real customer records):
 
