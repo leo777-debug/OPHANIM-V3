@@ -255,3 +255,18 @@ news markers and cable routes. Missing sources stay listed as unavailable rather
 than silently disappearing. Reference locations are not counted as live events.
 GPS-jamming, balloon and radiation endpoints absent from this branch are not faked;
 private SDK entities remain private. The day/night control is a calculated overlay.
+
+### Vercel Database Connections
+
+On Vercel, the PostgreSQL client uses at most two connections per function and
+releases idle connections after five seconds. A Supabase shared session-pooler
+URL (host ending in `.pooler.supabase.com`, port 5432) is used with the same
+credentials and database on transaction-pooler port 6543 at runtime. Other hosts,
+explicit transaction URLs, and Docker/local connections are unchanged. Migrations
+continue to use the configured session/direct connection, not this runtime override.
+The driver uses unnamed queries; session-scoped database features are not suitable
+for the transaction pooler.
+
+Presentation settings allow up to ten seconds for a cold database connection and
+query. A failed fresh read still reports an error, rather than reusing stale mode
+or PIN settings. No database passwords need to be changed for this behavior.
