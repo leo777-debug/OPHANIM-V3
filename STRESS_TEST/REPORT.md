@@ -67,6 +67,11 @@ The broader original gates (arbitrary hostile-parser isolation, distributed
 quotas, remaining valid-payload/role combinations, founder credential rotation)
 are not silently certified by this targeted follow-up. The PR stays draft.
 
+Verified source commit: **aca8004**, pushed only to stress-test/competition.
+Redacted Gitleaks scans found no leaks in the 259.66KB staged patch or 9.20MB
+rebuilt browser assets. Historical exposed-key rotation still belongs to the
+founder. No deployment, production migration, merge or default-branch push.
+
 ## Current Verified Results
 
 Working revision after e274d16: Knowledge, SDK, signed webhooks, bootstrap,

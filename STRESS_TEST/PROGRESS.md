@@ -13,7 +13,7 @@ Branch: `stress-test/competition`. Finished: **no**.
 - [x] Supabase actor requires the signed subject's active, unexpired auth.sessions row. Actual PostgreSQL tests cover ownership, role changes, expiry and deletion; logout no longer reports success on Auth failure. These are not live Auth-server results.
 - [ ] Real Supabase signup/refresh/logout/replay tests blocked: Docker Desktop's local sailor-ingest.sock is inaccessible and its Linux engine cannot start. No destructive repair or hosted account used. See LIVE_SUPABASE.md for the bounded loopback-only suite and exact setup.
 - [x] Fresh production build, standalone typecheck, 187/224 package sweeps and three independent timing launches pass. All 33 timing checks meet budgets (first HTTP 1758/357/345ms; shell labels <=1009ms; replay interactions <=258ms). Rebuilt-package load repeat p95 242/927ms at 50/200 connections, zero errors/timeouts. OS cache is not flushed; earlier contended failures remain recorded.
-- [ ] Final commit/push being recorded. Do not mark the entire original mission finished while the live Auth and broader coverage gates remain open.
+- [x] Verified application commit aca8004 pushed to stress-test/competition. Redacted Gitleaks: staged 259.66KB and browser assets 9.20MB, no findings. PR #16 remains draft. Do not mark the entire original mission finished while the live Auth and broader coverage gates remain open.
 
 ### Previous Pushed Checkpoint
 - [x] Latest application-source commit d933c68 pushed. Draft PR: https://github.com/leo777-debug/OPHANIM-V3/pull/16. No merge or deployment. Overall finished remains false because the coverage ledger lists required work still open.
