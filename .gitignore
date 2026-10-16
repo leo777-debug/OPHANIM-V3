@@ -77,3 +77,4 @@ scanner_backend_backup.js
 /presentation-evidence/debug-dom.html
 /presentation-evidence/screenshots/failed-check.png
 /presentation-evidence/preview*.log
+/presentation-evidence/reference-video*.png

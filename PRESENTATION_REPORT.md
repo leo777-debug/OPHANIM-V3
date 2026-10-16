@@ -66,7 +66,16 @@ URL is configured, while the anonymous presentation projection excludes those
 positions entirely. Public-only maritime configuration keeps its normal access.
 
 No World Monitor code, styles, branding, API, data relay or embed is used. The map
-reuses Ophanim's MapLibre engine and `DynamicProviderLayers`; the Intelligence
+reuses the original `OphanimMap` renderer, not a replacement circle-only globe;
+its aircraft silhouettes, close-zoom vessel hulls, event markers and blue cable
+layers are preserved. Night/Earth/Satellite and 2D/3D controls are restored,
+along with the original Ophanim eye/orbit mark and teal/pink layer styling.
+Public object picking uses original observation screen positions and the map's
+occlusion check, rather than MapLibre's failing symbol-index decoder. Hidden
+layers and locations behind the globe are excluded; details retain original
+source records and observation coordinates. The browser regression exercises
+an actual rendered aircraft click, not a mocked detail-card state.
+The Intelligence
 Desk reuses `IntelligenceExplorer` and existing news models/helpers. Its new
 public-feed projection cannot include tenant payloads or arbitrary provider URLs.
 
@@ -103,18 +112,27 @@ Verify button remains disabled because Verify is absent from this default branch
 
 ## Basemap
 
-Presentation has no remote tile, style, sprite or glyph URL and no API key. It
-uses bundled 1:110m country geometry from [Natural Earth](https://www.naturalearthdata.com/about/),
-which states its map data are public domain. The explicit on-map link says
-"Made with Natural Earth". Source/provenance is in
-`public/presentation/ATTRIBUTION.md`. Normal atlas basemaps are unchanged when OFF.
+Following the founder's uploaded August recording, presentation now uses the
+original atlas renderer and its night palette. The key-free night style is
+`https://tiles.openfreemap.org/styles/dark`, documented by
+[OpenFreeMap](https://openfreemap.org/quick_start/). It supplies its own tile,
+sprite and glyph URLs. Explicit attribution links credit OpenFreeMap,
+OpenMapTiles and OpenStreetMap. This avoids the old CARTO API-key requirement
+without replacing the original Ophanim symbols with generic circles.
+
+If the style is unavailable within 1.8 seconds, bundled public-domain Natural
+Earth geometry is the labelled overview fallback, using dark land and grey-blue
+water. The original Earth and satellite overlays use Esri's World_Topo_Map and
+World_Imagery MapServer tile endpoints, with Esri/contributor attribution. They
+need internet. Original atlas defaults remain unchanged when presentation is OFF.
 
 Browser testing caught and fixed the lazy-loaded MapLibre CSS overriding the
 map container's absolute positioning, which clipped the globe to zero height.
 It also caught layer initialization during projection changes and a stale-path
-keyboard-switch race. The current descriptors retry after style readiness;
+keyboard-switch race. The restored atlas initializes its existing data sources;
 rotation is throttled, pauses on interaction, resumes after 60 seconds and
-respects reduced-motion preference. No remote tiles are reloaded on view changes.
+respects reduced-motion preference. Changing basemap overlay visibility does not
+recreate the map or discard its feed layers.
 
 ## Verification
 
@@ -137,22 +155,23 @@ Final checks on 16 October 2026:
 | Check | Result |
 | --- | --- |
 | TypeScript / production build | PASS |
-| Unit and database tests | 229 passed, one pre-existing opt-in live test skipped; 54 files |
-| Focused ESLint on every changed/new code file | PASS, zero errors or warnings |
+| Unit and database tests | 237 passed, one pre-existing opt-in live test skipped; 55 files |
+| Focused ESLint on presentation code | PASS, zero errors or warnings |
+| Shared legacy map lint baseline | Unchanged: 96 existing errors, 10 existing warnings; unrelated cleanup excluded |
 | Local migration chain / actual RLS checks | PASS |
-| Browser integration scenarios | 14 PASS; zero uncaught errors and zero console errors |
-| Geographic starter + panel shell under 2 seconds | PASS: 0.516 / 0.648 / 0.560 s |
-| Fully interactive WebGL under 2 seconds | NOT MET: approximately 4.4-6.5 seconds locally |
+| Browser integration scenarios | 15 PASS; zero uncaught errors and zero console errors |
+| Geographic starter + panel shell under 2 seconds | PASS: 0.377 / 0.931 / 0.667 s |
+| Fully interactive WebGL under 2 seconds | NOT MET: approximately 5.2-6.3 seconds locally |
 
 The browser's default GPU path measured the geographic starter and panel shell
-at **0.516 s (1920x1080), 0.648 s (1366x768), 0.560 s (390x844)**. This is an
+at **0.377 s (1920x1080), 0.931 s (1366x768), 0.667 s (390x844)**. This is an
 actual render of the bundled geography, labelled while loading, with no fake live
-markers. Full interactive globe readiness took **6.457 / 4.397 / 4.750 s**.
+markers. Full interactive globe readiness took **5.162 / 6.330 / 5.729 s**.
 PNG/pixel readback is measured separately in the results file. Forced SwiftShader
 was substantially slower. These are local PGlite/headless measurements, not a
 hosted PostgreSQL or projector-device benchmark. Fully interactive startup under
 two seconds remains an open performance limitation, not a claimed pass. Runtime
-ON/OFF propagation was measured at 78 ms in the final integration run.
+ON/OFF propagation was measured at 30 ms in the final integration run.
 
 Screenshots (all use labelled synthetic replay, no real customer records):
 
@@ -175,7 +194,8 @@ Screenshots (all use labelled synthetic replay, no real customer records):
   the globe or other sources. Venue performance is not guaranteed by local tests.
 - Replay is a server/database fallback, not an offline copy of the hosted site.
   Local offline presentation requires a local database and previously saved data.
-- Natural Earth is an overview basemap, not a street-level navigation product.
+- Natural Earth fallback is an overview basemap, not a street-level navigation
+  product. Detailed OpenFreeMap tiles and original Esri overlays need internet.
 - This presentation-only installation uses existing owner authorization. Revisit
   the global write policy before offering independent companies a shared host.
 - Hosted Supabase sessions and real provider availability were not exercised with

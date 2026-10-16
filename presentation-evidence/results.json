@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-10-16T09:17:44.072Z",
+  "checkedAt": "2026-10-16T09:54:52.456Z",
   "checks": [
     {
       "name": "Disposable local database: full migration chain, external APIs blocked"
@@ -27,7 +27,7 @@
     },
     {
       "name": "Runtime database switch without redeploy",
-      "applyMilliseconds": 78
+      "applyMilliseconds": 30
     },
     {
       "name": "Real WebGL globe, >=3 layers, news, moving ticker and responsive screenshots",
@@ -37,32 +37,35 @@
             "width": 1920,
             "height": 1080
           },
-          "shellReadyMilliseconds": 516,
-          "readyMilliseconds": 6457,
-          "pixelCheckedMilliseconds": 13519
+          "shellReadyMilliseconds": 377,
+          "readyMilliseconds": 5162,
+          "pixelCheckedMilliseconds": 10377
         },
         {
           "viewport": {
             "width": 1366,
             "height": 768
           },
-          "shellReadyMilliseconds": 648,
-          "readyMilliseconds": 4397,
-          "pixelCheckedMilliseconds": 9812
+          "shellReadyMilliseconds": 931,
+          "readyMilliseconds": 6330,
+          "pixelCheckedMilliseconds": 12201
         },
         {
           "viewport": {
             "width": 390,
             "height": 844
           },
-          "shellReadyMilliseconds": 560,
-          "readyMilliseconds": 4750,
-          "pixelCheckedMilliseconds": 8725
+          "shellReadyMilliseconds": 667,
+          "readyMilliseconds": 5729,
+          "pixelCheckedMilliseconds": 10812
         }
       ]
     },
     {
       "name": "Clicking a rendered observation opens its source, time and coordinates"
+    },
+    {
+      "name": "Original Ophanim renderer, Night/Earth/Satellite and 2D/3D controls restored"
     },
     {
       "name": "Quick switch and Ctrl+Shift+P both work in both directions"

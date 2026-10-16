@@ -87,10 +87,14 @@ page remains available to turn it on again.
   local database that already has migrations and public snapshots. Use the local
   admin page to turn mode ON. A laptop with no database or no saved snapshot
   cannot conjure an offline replay from the remote deployment.
-- The map uses bundled Natural Earth geography; no map API key, remote tile
-  service, CARTO watermark or external font download is required by Map view.
+- The map is the original Ophanim atlas renderer, with its aircraft symbols,
+  heading-aware vessel hulls at close zoom, blue cable routes and event markers.
+  Use the controls below the layer panel for **Night / Earth / Sat** and **2D / 3D**.
+  The night basemap uses key-free OpenFreeMap Dark; if its style cannot load,
+  bundled Natural Earth geography uses the same dark land/ocean palette.
+  Earth and satellite use the original Esri overlays and require internet.
   A geographic starter view appears while WebGL initializes, labelled
-  "Starting interactive map". It contains no fake live markers.
+  "Starting Ophanim map". It contains no fake live markers.
 - Verify has not been merged into the current default branch. Its button is
   disabled in settings and hidden from Map view rather than linking to a 404.
 

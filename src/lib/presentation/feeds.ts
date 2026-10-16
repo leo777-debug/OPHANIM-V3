@@ -56,7 +56,7 @@ export function normalizePublicFeed(id: FeedId, raw: unknown, fetchedAt = new Da
     result.note=`Kp ${data.kp_index} / ${text(data.storm_level,'Observation available')}`;
     return result;
   }
-  const rows=id==='flights' ? ['commercial_flights','private_flights','private_jets','military_flights'].flatMap(key=>list(data[key]))
+  const rows=id==='flights' ? ['commercial_flights','private_flights','private_jets','military_flights'].flatMap((key,index)=>list(data[key]).map(value=>({...record(value),aircraft_category:['commercial','private','jet','military'][index]})))
     : id==='maritime' ? list(data.ships) : id==='earthquakes' ? list(data.earthquakes) : id==='fires' ? list(data.fires)
     : id==='weather' ? list(data.events ?? data.weather) : id==='satellites' ? list(data.satellites)
     : id==='incidents' ? list(data.events) : id==='cyber' ? list(data.threats) : list(data.features);
@@ -79,7 +79,7 @@ export function normalizePublicFeed(id: FeedId, raw: unknown, fetchedAt = new Da
     const observedAt=publicTime(item.observedAt ?? (id==='flights'||id==='maritime' ? undefined : item.timestamp ?? item.time ?? item.date ?? item.updated_at));
     const name=text(item.name ?? item.callsign ?? item.title ?? item.place ?? item.malware ?? item.id,`${definition.name} ${index+1}`);
     const properties:Record<string,unknown>={id:text(item.id ?? item.icao24 ?? item.mmsi,`${id}-${index}`),name,type:text(item.type,id),source:text(item.source,definition.source),sourceUrl:publicUrl(item.url ?? item.reference) || definition.url,observedAt,lat,lng};
-    for (const key of ['mmsi','imo','registration','icao24','model','heading','speed','speed_knots','alt','magnitude','depth','severity','country','destination']) {
+    for (const key of ['mmsi','imo','registration','icao24','model','callsign','category','aircraft_category','heading','speed','speed_knots','alt','magnitude','depth','severity','country','destination','color','noradId','mission','brightness','ip','malware','status','threat_type']) {
       if (typeof item[key]==='string') properties[key]=text(item[key]);
       else if (typeof item[key]==='number' && Number.isFinite(item[key])) properties[key]=item[key];
     }

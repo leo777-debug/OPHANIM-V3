@@ -46,9 +46,12 @@ export async function seedReplay(db) {
     weather:[['TEST weather advisory',53,26]],incidents:[['TEST incident marker',40,28]],
   };
   for(const [id,items] of Object.entries(rows)) {
-    const feed={...common,id,features:items.map(([name,lng,lat],index)=>({type:'Feature',geometry:{type:'Point',coordinates:[lng,lat]},properties:{id:`${id}-${index}`,name,lat,lng,magnitude:id==='earthquakes'?4.2:undefined,source:common.source,sourceUrl:common.sourceUrl,observedAt:now}}))};
+    const feed={...common,id,features:items.map(([name,lng,lat],index)=>({type:'Feature',geometry:{type:'Point',coordinates:[lng,lat]},properties:{id:`${id}-${index}`,name,lat,lng,type:id==='maritime'?'cargo':id,heading:75,aircraft_category:id==='flights'?'commercial':undefined,magnitude:id==='earthquakes'?4.2:undefined,source:common.source,sourceUrl:common.sourceUrl,observedAt:now}}))};
     await db.query('insert into ophanim_presentation_snapshots(feed_id,payload,item_count,recorded_at) values($1,$2,$3,$4) on conflict(feed_id) do update set payload=excluded.payload,item_count=excluded.item_count,recorded_at=excluded.recorded_at',[id,JSON.stringify(feed),items.length,now]);
   }
   const feed={...common,id:'news',news:[['Gulf','Oman port weather advisory: test replay'],['Europe','Europe cargo routes: test replay'],['Asia','Singapore terminal update: test replay']].map(([region,title],index)=>({id:`news-${index}`,title,description:'Synthetic test evidence only',source:'Synthetic test newsroom',published:now,link:'https://example.invalid/story',risk_score:0,coords:[25+index,50+index],coords_default:true,region})),sources:[]};
   await db.query("insert into ophanim_presentation_snapshots values('news',$1,3,$2) on conflict(feed_id) do update set payload=excluded.payload,recorded_at=excluded.recorded_at",[JSON.stringify(feed),now]);
+  const cables=JSON.parse(await readFile('public/data/submarine-cables.json','utf8'));
+  const reference={...common,id:'cables',reference:true,features:cables.features};
+  await db.query("insert into ophanim_presentation_snapshots values('cables',$1,$2,$3) on conflict(feed_id) do update set payload=excluded.payload,item_count=excluded.item_count,recorded_at=excluded.recorded_at",[JSON.stringify(reference),cables.features.length,now]);
 }

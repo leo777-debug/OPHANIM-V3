@@ -23,6 +23,7 @@ interface OphanimMapProps {
   demoMode?: boolean;
   theme?: 'core' | 'ghost';
   providerLayers?: ProviderMapLayer[];
+  publicPresentation?: { style: maplibregl.StyleSpecification; onReady: (map: maplibregl.Map) => void };
 }
 
 function computeSolarTerminator(): [number, number][] {
@@ -55,7 +56,7 @@ function isExpectedMapTileAbort(error: unknown): boolean {
     && /signal timed out|request was aborted|signal is aborted without reason/i.test(message);
 }
 
-function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightClick, onViewStateChange, initialView, flyToLocation, projection = 'globe', mapStyle = 'dark', sweepData, scanTargets = [], demoMode = false, theme = 'core', providerLayers = [] }: OphanimMapProps) {
+function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightClick, onViewStateChange, initialView, flyToLocation, projection = 'globe', mapStyle = 'dark', sweepData, scanTargets = [], demoMode = false, theme = 'core', providerLayers = [], publicPresentation }: OphanimMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const popupRef = useRef<maplibregl.Popup | null>(null);
@@ -181,10 +182,10 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
 
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: styleUrl,
+      style: publicPresentation?.style ?? styleUrl,
       center: [initialView?.longitude ?? 25.48, initialView?.latitude ?? 42.70],
       zoom: initialView?.zoom ?? 6.5,
-      minZoom: 1.5,
+      minZoom: publicPresentation ? .5 : 1.5,
       maxZoom: 18,
       attributionControl: false,
       maxPitch: 85,
@@ -690,6 +691,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
       }, paint: { 'text-color': '#CFD8DC', 'text-halo-color': '#00121a', 'text-halo-width': 1.2 }});
 
       setMapReady(true);
+      publicPresentation?.onReady(map);
     });
 
     // Events
@@ -707,6 +709,9 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
       onViewStateChange?.({ zoom: map.getZoom(), latitude: c.lat, longitude: c.lng });
     });
 
+    // The public presentation uses its React evidence card, not tenant actions
+    // or legacy inline popup handlers. The map renderer and symbols stay shared.
+    if (!publicPresentation) {
     // ── POPUP HELPER ──
     const popup = (coords: any, html: string) => {
       popupRef.current?.remove();
@@ -1200,6 +1205,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
       });
     });
 
+    }
     return () => { map.remove(); mapRef.current = null; };
   }, []);
 
@@ -1256,11 +1262,11 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
         },
       }));
     };
-    setGeo('flights', activeLayers.flights ? toFeatures(data.commercial_flights, 10) : []);
-    setGeo('private-fl', activeLayers.private ? toFeatures(data.private_flights, 2) : []);
-    setGeo('jets', activeLayers.jets ? toFeatures(data.private_jets, 2) : []);
+    setGeo('flights', activeLayers.flights ? toFeatures(data.commercial_flights, publicPresentation ? 1 : 10) : []);
+    setGeo('private-fl', activeLayers.private ? toFeatures(data.private_flights, publicPresentation ? 1 : 2) : []);
+    setGeo('jets', activeLayers.jets ? toFeatures(data.private_jets, publicPresentation ? 1 : 2) : []);
     setGeo('military', activeLayers.military ? toFeatures(data.military_flights) : []);
-  }, [mapReady, data.commercial_flights, data.private_flights, data.private_jets, data.military_flights, data.flight_source, data.flight_timestamp, activeLayers.flights, activeLayers.private, activeLayers.jets, activeLayers.military]);
+  }, [mapReady, data.commercial_flights, data.private_flights, data.private_jets, data.military_flights, data.flight_source, data.flight_timestamp, activeLayers.flights, activeLayers.private, activeLayers.jets, activeLayers.military, publicPresentation]);
 
     // Update aircraft icon colors dynamically on theme switch
     useEffect(() => {
@@ -1520,6 +1526,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
   useEffect(() => {
     if (!mapReady) return;
     // 🔴 CONFLICT ZONES - Live from /api/conflicts 🔴
+    if (publicPresentation) return;
     let cancelled = false;
     (async () => {
       try {
@@ -1576,7 +1583,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
       }
     })();
     return () => { cancelled = true; };
-  }, [mapReady, setGeo]);
+  }, [mapReady, setGeo, publicPresentation]);
 
 
   // Visibility

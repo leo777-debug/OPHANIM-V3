@@ -118,8 +118,8 @@ try {
     assert.ok((await page.getByTestId('presentation-globe').boundingBox()).height>=viewport.height-160,'Map container must retain its viewport height after MapLibre CSS loads');
     await eventually(async()=>{
       const {data,info}=await sharp(await canvas.screenshot()).raw().toBuffer({resolveWithObject:true});
-      const colors=new Set();for(let y=100;y<info.height-50;y+=20)for(let x=240;x<info.width-350;x+=20){const i=(y*info.width+x)*info.channels;colors.add(`${data[i]},${data[i+1]},${data[i+2]}`);}
-      if(viewport.width>680)assert.ok(colors.size>8,`Globe pixels must include geography, not a blank canvas (${colors.size} sampled colors)`);
+      const colors=new Set();for(let y=100;y<info.height-50;y+=20)for(let x=viewport.width>680?240:170;x<info.width-(viewport.width>680?350:70);x+=20){const i=(y*info.width+x)*info.channels;colors.add(`${data[i]},${data[i+1]},${data[i+2]}`);}
+      assert.ok(colors.size>8,`Globe pixels must include geography on desktop and mobile, not a blank canvas (${colors.size} sampled colors)`);
     },12000);
     timings.push({viewport,shellReadyMilliseconds,readyMilliseconds,pixelCheckedMilliseconds:Date.now()-begin});
     assert.ok(await page.getByRole('checkbox').count()>=3);
@@ -134,17 +134,32 @@ try {
   await page.mouse.move(700,360);await delay(400);
   const canvas=page.locator('[data-testid="presentation-globe"] canvas');
   const {data,info}=await sharp(await canvas.screenshot()).raw().toBuffer({resolveWithObject:true});
+  const aircraftPixel=i=>data[i]>70&&data[i]<110&&data[i+1]>150&&data[i+1]<195&&data[i+2]>220;
   let point;
-  for(let y=70;y<info.height-130&&!point;y++)for(let x=240;x<info.width-360;x++){const i=(y*info.width+x)*info.channels;if(data[i]>65&&data[i]<145&&data[i+1]>140&&data[i+1]<210&&data[i+2]>200){point={x,y};break;}}
+  for(let y=70;y<info.height-130&&!point;y++)for(let x=240;x<info.width-360;x++){const i=(y*info.width+x)*info.channels;if(aircraftPixel(i)){point={x,y};break;}}
   assert.ok(point,'Aircraft pixels must render');
+  console.log('Rendered aircraft pixel candidate',point);
   const nearby=[];
-  for(let y=Math.max(0,point.y-7);y<Math.min(info.height,point.y+8);y++)for(let x=Math.max(0,point.x-7);x<Math.min(info.width,point.x+8);x++){const i=(y*info.width+x)*info.channels;if(data[i]>65&&data[i]<145&&data[i+1]>140&&data[i+1]<210&&data[i+2]>200)nearby.push({x,y});}
+  for(let y=Math.max(0,point.y-7);y<Math.min(info.height,point.y+8);y++)for(let x=Math.max(0,point.x-7);x<Math.min(info.width,point.x+8);x++){const i=(y*info.width+x)*info.channels;if(aircraftPixel(i))nearby.push({x,y});}
   const center={x:nearby.reduce((sum,p)=>sum+p.x,0)/nearby.length,y:nearby.reduce((sum,p)=>sum+p.y,0)/nearby.length};
   const bounds=await canvas.boundingBox();await page.mouse.click(bounds.x+center.x,bounds.y+center.y);
   await page.getByRole('region',{name:'Object details'}).waitFor({timeout:5000});
   await page.screenshot({path:`${output}/screenshots/object-details.png`});
   await page.getByRole('button',{name:'Close details'}).click();
   pass('Clicking a rendered observation opens its source, time and coordinates');
+  assert.equal(await page.getByTestId('presentation-globe').getAttribute('data-renderer'),'ophanim-atlas');
+  await page.getByRole('button',{name:'Earth colored basemap',exact:true}).click();
+  assert.equal(await page.getByTestId('presentation-globe').getAttribute('data-map-style'),'earth');
+  assert.equal(await page.getByRole('button',{name:'Earth colored basemap',exact:true}).getAttribute('aria-pressed'),'true');
+  await page.getByRole('button',{name:'Satellite imagery',exact:true}).click();
+  assert.equal(await page.getByTestId('presentation-globe').getAttribute('data-map-style'),'satellite');
+  await page.getByRole('button',{name:'Night basemap',exact:true}).click();
+  await page.getByRole('button',{name:'Switch to 2D map',exact:true}).click();
+  assert.equal(await page.getByTestId('presentation-globe').getAttribute('data-projection'),'mercator');
+  await page.getByRole('button',{name:'Switch to 3D globe',exact:true}).click();
+  assert.equal(await page.getByTestId('presentation-globe').getAttribute('data-projection'),'globe');
+  assert.equal(await page.locator('input[placeholder*="Search IPs"]').count(),0,'No duplicate floating search box');
+  pass('Original Ophanim renderer, Night/Earth/Satellite and 2D/3D controls restored');
   await context.addCookies([{name:'ophanim_session',value:owner,url}]);
   await page.getByRole('button',{name:'Full platform',exact:true}).click();await page.waitForURL('**/operations**');
   await page.getByRole('button',{name:'Back to map',exact:true}).waitFor();

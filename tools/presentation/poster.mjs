@@ -1,6 +1,6 @@
 import { chromium } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
-import { presentationBasemap } from '../../src/lib/presentation/basemap.ts';
+import { atlasFallbackBasemap as presentationBasemap } from '../../src/lib/presentation/basemap.ts';
 
 const browser=await chromium.launch({headless:true,args:['--enable-unsafe-swiftshader']});
 try {
@@ -12,7 +12,7 @@ try {
   style.sources.countries.data=JSON.parse(await readFile('public/presentation/countries.geojson','utf8'));
   await page.evaluate(async style=>{
     const map=new window.maplibregl.Map({container:'map',style,center:[42,24],zoom:1.8,attributionControl:false,interactive:false});
-    await new Promise((resolve,reject)=>{map.on('error',event=>reject(new Error(event.error?.message)));map.on('load',()=>{map.setProjection({type:'globe'});map.once('idle',resolve);});});
+    await new Promise((resolve,reject)=>{map.on('error',event=>reject(new Error(event.error?.message)));map.on('load',()=>{map.setProjection({type:'globe'});map.setPitch(20);map.once('idle',resolve);});});
   },style);
   await page.locator('canvas').screenshot({path:'public/presentation/globe-poster.png'});
   console.log('Saved geography-only starter globe. No live data, markers or customer records are included.');
