@@ -44,9 +44,15 @@ export async function seedReplay(db) {
     maritime:[['TEST VESSEL 01',56,26],['TEST VESSEL 02',32,31],['TEST VESSEL 03',44,12]],
     earthquakes:[['TEST earthquake Oman',58,24],['TEST earthquake Turkey',36,39],['TEST earthquake Greece',23,38]],
     weather:[['TEST weather advisory',53,26]],incidents:[['TEST incident marker',40,28]],
+    ports:[['TEST reference port',55,25]],chokepoints:[['TEST reference strait',56,26]],
+    cameras:Array.from({length:180},(_,i)=>[`TEST CAMERA ${i}`,12+(i%18)*.24,45+Math.floor(i/18)*.18]),
+    broadcasts:[['TEST broadcaster',2.28,48.83]],conflicts:[['TEST REGION',31,48]],
+    infrastructure:[['TEST facility',27,43]],'war-sanctions':[['TEST vessel-associated port',37.77,44.72]],
+    satellites:[['TEST calculated orbital position',46,20]],fires:[['TEST fire observation',35,20]],cyber:[['TEST indicator',28,40]],
   };
   for(const [id,items] of Object.entries(rows)) {
-    const feed={...common,id,features:items.map(([name,lng,lat],index)=>({type:'Feature',geometry:{type:'Point',coordinates:[lng,lat]},properties:{id:`${id}-${index}`,name,lat,lng,type:id==='maritime'?'cargo':id,heading:75,aircraft_category:id==='flights'?'commercial':undefined,magnitude:id==='earthquakes'?4.2:undefined,source:common.source,sourceUrl:common.sourceUrl,observedAt:now}}))};
+    const reference=['ports','chokepoints','broadcasts','conflicts','infrastructure','war-sanctions'].includes(id);
+    const feed={...common,id,reference,features:items.map(([name,lng,lat],index)=>({type:'Feature',geometry:{type:'Point',coordinates:[lng,lat]},properties:{id:`${id}-${index}`,name,lat,lng,type:id==='maritime'?'cargo':id,heading:75,severity:id==='conflicts'?'war':undefined,color:id==='satellites'?'#b5a4f5':undefined,brightness:id==='fires'?320:undefined,aircraft_category:id==='flights'?'commercial':undefined,magnitude:id==='earthquakes'?4.2:undefined,source:common.source,sourceUrl:common.sourceUrl,reference,observedAt:reference?null:now}}))};
     await db.query('insert into ophanim_presentation_snapshots(feed_id,payload,item_count,recorded_at) values($1,$2,$3,$4) on conflict(feed_id) do update set payload=excluded.payload,item_count=excluded.item_count,recorded_at=excluded.recorded_at',[id,JSON.stringify(feed),items.length,now]);
   }
   const feed={...common,id:'news',news:[['Gulf','Oman port weather advisory: test replay'],['Europe','Europe cargo routes: test replay'],['Asia','Singapore terminal update: test replay']].map(([region,title],index)=>({id:`news-${index}`,title,description:'Synthetic test evidence only',source:'Synthetic test newsroom',published:now,link:'https://example.invalid/story',risk_score:0,coords:[25+index,50+index],coords_default:true,region})),sources:[]};

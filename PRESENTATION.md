@@ -155,9 +155,30 @@ Playwright Chromium must be installed (`npx playwright install chromium`).
 ### Isolated Local UI Preview
 
 After the build command above, `npm run presentation:preview` starts a disposable
-local preview at `http://127.0.0.1:3108/presentation`. It is explicitly labelled
-**Test replay fixture**, not live intelligence. It never reads your real env file
-or connects to a production database. Its temporary owner login details are in
+local preview at `http://127.0.0.1:3108/presentation` with **real public feeds** and
+Replay set to Auto. It does not seed synthetic signals or connect to a production
+database. Public camera regions fill progressively while their sources warm.
+Its temporary owner login details are in
 the generated, ignored `.env.presentation.local`; use `/login?admin=1` with those
 details to try the settings UI. Stop the command with Ctrl+C. A restart resets
 this disposable preview. This helper is not the production snapshot workflow.
+
+For a deterministic, network-blocked UI preview only, run
+`npm run presentation:preview -- --fixtures`. That opt-in mode is visibly labelled
+**Test replay fixture**. Automated tests always use this labelled fixture path,
+not live provider traffic.
+
+Optional live provider keys may be set in the launching process, or set
+`PRESENTATION_PROVIDER_ENV` to an existing local env-file path. The helper reads
+only AISStream/OpenSky/ThreatFox credential names from that file into the server
+process; it does not copy the file, expose values, or forward production database,
+Supabase, AI or customer/contract AIS settings. Without keys, the key-free public
+adapters still run; AIS coverage is regional rather than guaranteed global.
+
+The current layout is retained. The globe restores aircraft categories, vessels,
+ports, chokepoints, public cameras, broadcaster locations, region anchors,
+infrastructure, sanctions-associated ports, satellites, hazards, cyber indicators,
+news markers and cable routes. Missing sources stay listed as unavailable rather
+than silently disappearing. Reference locations are not counted as live events.
+GPS-jamming, balloon and radiation endpoints absent from this branch are not faked;
+private SDK entities remain private. The day/night control is a calculated overlay.

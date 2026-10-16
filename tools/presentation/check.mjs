@@ -63,7 +63,7 @@ try {
     assert.equal(response.status,200);assert.equal(feed.state,'replay');assert.equal(feed.testFixture,true);
     assert.ok(!/password_hash|organization_id|ophanim_session/.test(JSON.stringify(feed)));
   }
-  const {feed:noSnapshot}=await (await request('/api/presentation/feed/fires')).json();assert.equal(noSnapshot.state,'unavailable');
+  const {feed:noSnapshot}=await (await request('/api/presentation/feed/space-weather')).json();assert.equal(noSnapshot.state,'unavailable');
   pass('Public replay payloads contain only normalized public evidence; missing snapshots are honest');
   await save({pin:'4937'});
   await eventually(async()=>assert.equal((await request('/imports?view=full')).status,307),6000);
@@ -105,6 +105,12 @@ try {
   await page.getByRole('checkbox',{name:/Aircraft/}).waitFor();
   await page.getByTestId('replay-label').waitFor();
   assert.ok((await page.getByTestId('replay-label').textContent()).includes('Test replay fixture'));
+  for(const name of ['Public cameras','Ports & harbours','Maritime chokepoints','News broadcast locations','Conflict region markers','Infrastructure locations','War & Sanctions ports']) {
+    await page.getByRole('checkbox',{name:new RegExp(name)}).waitFor();
+    assert.equal(await page.getByRole('checkbox',{name:new RegExp(name)}).isChecked(),true,name);
+  }
+  assert.equal((await (await request('/api/presentation/feed/cameras')).json()).feed.features.length,180);
+  pass('All restored reference and signal layers enabled; dense camera fixture is not dropped');
   const timings=[];
   for(const viewport of [{width:1920,height:1080},{width:1366,height:768},{width:390,height:844}]) {
     await page.setViewportSize(viewport);
@@ -122,7 +128,7 @@ try {
       assert.ok(colors.size>8,`Globe pixels must include geography on desktop and mobile, not a blank canvas (${colors.size} sampled colors)`);
     },12000);
     timings.push({viewport,shellReadyMilliseconds,readyMilliseconds,pixelCheckedMilliseconds:Date.now()-begin});
-    assert.ok(await page.getByRole('checkbox').count()>=3);
+    assert.ok(await page.getByRole('checkbox',{checked:true}).count()>=14,'At least 14 populated layers, not disabled placeholders');
     assert.ok(await page.getByRole('article').getByRole('link',{name:'Oman port weather advisory: test replay'}).isVisible());
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
     const before=await page.getByTestId('ticker-track').evaluate(element=>getComputedStyle(element).transform);
@@ -158,6 +164,9 @@ try {
   assert.equal(await page.getByTestId('presentation-globe').getAttribute('data-projection'),'mercator');
   await page.getByRole('button',{name:'Switch to 3D globe',exact:true}).click();
   assert.equal(await page.getByTestId('presentation-globe').getAttribute('data-projection'),'globe');
+  await page.getByRole('button',{name:'Day/night overlay',exact:true}).click();
+  assert.equal(await page.getByRole('button',{name:'Day/night overlay',exact:true}).getAttribute('aria-pressed'),'true');
+  await page.getByRole('button',{name:'Day/night overlay',exact:true}).click();
   assert.equal(await page.locator('input[placeholder*="Search IPs"]').count(),0,'No duplicate floating search box');
   pass('Original Ophanim renderer, Night/Earth/Satellite and 2D/3D controls restored');
   await context.addCookies([{name:'ophanim_session',value:owner,url}]);

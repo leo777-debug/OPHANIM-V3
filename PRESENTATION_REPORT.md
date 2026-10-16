@@ -48,6 +48,11 @@ changes are transactional and logged with actor, time, old/new public values.
 PIN values, PIN hashes and grant tokens are not put into audit values or public
 API responses. Rotating/clearing the PIN invalidates existing grants.
 
+`supabase/migrations/20261016120627_presentation_public_layers.sql` expands only
+the allowed public snapshot feed IDs. It retains all existing rows, the 8 MB
+payload bound, RLS, grants and owner-only writes. A real SQL regression verifies
+new camera snapshots work while anonymous inserts remain denied.
+
 ## Runtime Behavior
 
 OFF preserves normal page routing and renders no presenter toolbar or shortcut.
@@ -91,6 +96,12 @@ observation times.
 | --- | --- |
 | Aviation | Existing ADS-B/configured providers; only received positions |
 | Maritime | Digitraffic/AISStream public positions; customer/contract AIS excluded; no static ports counted as vessels |
+| Ports / chokepoints | Restored original reference locations, separately toggled; historical volumes and inferred congestion/risk not republished as live measurements |
+| Public cameras | Existing worldwide region warmer, read progressively from completed region caches; up to 40,000 markers, not the former 5,000 cap |
+| Broadcast locations | Original broadcaster directory markers, reference only; no guarantee a channel is currently broadcasting |
+| Conflict regions | Original warning icons at curated reference anchors; synthesized RSS scatter coordinates are excluded |
+| Infrastructure | Original reference location layer |
+| War & Sanctions | Existing named provider's source-listed associated ports, not live vessel positions |
 | Earthquakes | USGS observations and source timestamps |
 | Fires/hazards | Existing NASA FIRMS/EONET adapter |
 | Weather/disasters | Existing weather/GDACS-related adapter |
@@ -103,8 +114,19 @@ observation times.
 
 Replay On makes no live-provider calls. Auto falls back independently for failed
 sources. A failed snapshot capture does not replace an older successful snapshot.
-The test/preview fixtures have a separate visible **Test replay fixture** label;
-they are not presented as recorded real-world intelligence.
+Automated test fixtures have a separate visible **Test replay fixture** label;
+they are not presented as recorded real-world intelligence. The local preview now
+defaults to real public feeds in Auto mode with an empty disposable database,
+not the tiny forced replay that previously hid most sources. Fixtures require
+`--fixtures`. Live provider credentials are allowlisted in memory; production
+database/auth/AI/customer AIS settings are never forwarded into this preview.
+
+All 18 feed groups remain discoverable, even if a source is unavailable. Flight
+and vessel projections allow up to 30,000 observations each. Public camera
+regions fill in without blocking on the slowest directory. News map pins retain
+their approximate story-location label. Day/night shading is calculated, not a
+sensor feed. Missing GPS-jamming/balloon/radiation endpoints and private SDK data
+are not fabricated to create density.
 
 Hidden from Map view: business workflows, imports, account/settings menus, AI
 configuration, tenant records, original demo banners and all public embeds. The
@@ -155,23 +177,23 @@ Final checks on 16 October 2026:
 | Check | Result |
 | --- | --- |
 | TypeScript / production build | PASS |
-| Unit and database tests | 237 passed, one pre-existing opt-in live test skipped; 55 files |
+| Unit and database tests | 251 passed, one pre-existing opt-in live test skipped; 58 files |
 | Focused ESLint on presentation code | PASS, zero errors or warnings |
 | Shared legacy map lint baseline | Unchanged: 96 existing errors, 10 existing warnings; unrelated cleanup excluded |
 | Local migration chain / actual RLS checks | PASS |
-| Browser integration scenarios | 15 PASS; zero uncaught errors and zero console errors |
-| Geographic starter + panel shell under 2 seconds | PASS: 0.377 / 0.931 / 0.667 s |
-| Fully interactive WebGL under 2 seconds | NOT MET: approximately 5.2-6.3 seconds locally |
+| Browser integration scenarios | 16 PASS; zero uncaught errors and zero console errors; at least 14 enabled populated layers |
+| Geographic starter + panel shell under 2 seconds | PASS: 0.303 / 0.576 / 0.502 s |
+| Fully interactive WebGL under 2 seconds | NOT MET: approximately 4.4-4.8 seconds locally |
 
 The browser's default GPU path measured the geographic starter and panel shell
-at **0.377 s (1920x1080), 0.931 s (1366x768), 0.667 s (390x844)**. This is an
+at **0.303 s (1920x1080), 0.576 s (1366x768), 0.502 s (390x844)**. This is an
 actual render of the bundled geography, labelled while loading, with no fake live
-markers. Full interactive globe readiness took **5.162 / 6.330 / 5.729 s**.
+markers. Full interactive globe readiness took **4.755 / 4.843 / 4.414 s**.
 PNG/pixel readback is measured separately in the results file. Forced SwiftShader
 was substantially slower. These are local PGlite/headless measurements, not a
 hosted PostgreSQL or projector-device benchmark. Fully interactive startup under
 two seconds remains an open performance limitation, not a claimed pass. Runtime
-ON/OFF propagation was measured at 30 ms in the final integration run.
+ON/OFF propagation was measured at 25 ms in the final integration run.
 
 Screenshots (all use labelled synthetic replay, no real customer records):
 
@@ -185,12 +207,37 @@ Screenshots (all use labelled synthetic replay, no real customer records):
 
 ## Limitations And Founder Actions
 
+### Restored Live-Feed Check
+
+The opt-in `node tools/presentation/check-live.mjs --live` check fetched each
+normal local public-feed endpoint once (not a load test). Its counts and times
+are in `presentation-evidence/live-feeds.json`. The live preview contains no
+seeded fixture snapshots and no network-blocking test preload.
+
+On 16 October, the live check returned approximately 10,600 aircraft, 1,163
+vessels, 8,374 public camera locations, 1,991 fire observations, 5,000 calculated
+satellite positions, 234 disaster indicators and 140 news items, plus 81 ports,
+10 chokepoints, 15 broadcast locations, 15 curated region anchors, 57 infrastructure
+locations, 402 sanctions-associated port markers and 717 cable geometries.
+These are received counts at the recorded check time, not a coverage guarantee;
+camera directories continue warming and positions change on refresh.
+
+A normal-browser live check rendered 17 populated map layers using the original
+atlas renderer, no replay label and zero uncaught page errors. Its public-data
+screenshot is [Live globe](presentation-evidence/screenshots/live-map-1920x1080.png).
+Unlike the regression screenshots above, this screenshot is a live public-data
+check, not synthetic presentation/demo evidence. The current UI layout and CSS
+were retained. No AISStream/OpenSky credentials were found in the existing local
+configuration; global AIS coverage still requires an appropriately configured
+provider. The key-free sources succeeded without those credentials.
+
 - Merge the PR and deploy once; the existing migration runner must apply the
   additive migration. The hosted site has not been changed by this work.
 - Record actual public snapshots from the owner dashboard before presenting.
   Screenshots/test fixtures prove UI behavior, not today's third-party coverage.
 - Live sources still require their existing credentials, coverage and usage
-  rights. A first cold provider fetch can take up to 14 seconds; it does not block
+  rights. Ordinary feeds are bounded at 14 seconds, camera/sanctions at 22 seconds
+  and the shared maritime request at 40 seconds; none blocks
   the globe or other sources. Venue performance is not guaranteed by local tests.
 - Replay is a server/database fallback, not an offline copy of the hosted site.
   Local offline presentation requires a local database and previously saved data.
@@ -198,9 +245,10 @@ Screenshots (all use labelled synthetic replay, no real customer records):
   product. Detailed OpenFreeMap tiles and original Esri overlays need internet.
 - This presentation-only installation uses existing owner authorization. Revisit
   the global write policy before offering independent companies a shared host.
-- Hosted Supabase sessions and real provider availability were not exercised with
-  production credentials. Database role enforcement and mocked/session-backed
-  local authorization were tested instead. No production secrets were copied.
+- Hosted Supabase sessions were not exercised with production credentials.
+  Database role enforcement and mocked/session-backed local authorization were
+  tested instead. Live public provider availability was checked separately as
+  documented above. No production secrets were copied.
 - Verify and automatic demo-account provisioning were not added or faked. Use
   your existing labelled demo account for the real presentation; keep its
   credentials in an uncommitted env file, as documented in `PRESENTATION.md`.

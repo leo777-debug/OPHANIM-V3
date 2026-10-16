@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-10-16T09:54:52.456Z",
+  "checkedAt": "2026-10-16T12:07:53.609Z",
   "checks": [
     {
       "name": "Disposable local database: full migration chain, external APIs blocked"
@@ -27,7 +27,10 @@
     },
     {
       "name": "Runtime database switch without redeploy",
-      "applyMilliseconds": 30
+      "applyMilliseconds": 25
+    },
+    {
+      "name": "All restored reference and signal layers enabled; dense camera fixture is not dropped"
     },
     {
       "name": "Real WebGL globe, >=3 layers, news, moving ticker and responsive screenshots",
@@ -37,27 +40,27 @@
             "width": 1920,
             "height": 1080
           },
-          "shellReadyMilliseconds": 377,
-          "readyMilliseconds": 5162,
-          "pixelCheckedMilliseconds": 10377
+          "shellReadyMilliseconds": 303,
+          "readyMilliseconds": 4755,
+          "pixelCheckedMilliseconds": 8006
         },
         {
           "viewport": {
             "width": 1366,
             "height": 768
           },
-          "shellReadyMilliseconds": 931,
-          "readyMilliseconds": 6330,
-          "pixelCheckedMilliseconds": 12201
+          "shellReadyMilliseconds": 576,
+          "readyMilliseconds": 4843,
+          "pixelCheckedMilliseconds": 9017
         },
         {
           "viewport": {
             "width": 390,
             "height": 844
           },
-          "shellReadyMilliseconds": 667,
-          "readyMilliseconds": 5729,
-          "pixelCheckedMilliseconds": 10812
+          "shellReadyMilliseconds": 502,
+          "readyMilliseconds": 4414,
+          "pixelCheckedMilliseconds": 7311
         }
       ]
     },

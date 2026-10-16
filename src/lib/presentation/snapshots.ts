@@ -15,9 +15,11 @@ export async function currentPublicFeed(id:FeedId):Promise<PublicFeed> {
   const work=(async()=>{
     let timer:ReturnType<typeof setTimeout>|undefined;
     try {
-      const payload=await Promise.race([loadPublicPayload(id),new Promise<never>((_,reject)=>{timer=setTimeout(()=>reject(new Error('Public feed timed out.')),14000);})]);
+      const budget=['maritime','ports','chokepoints'].includes(id)?40000:['cameras','war-sanctions'].includes(id)?22000:14000;
+      const payload=await Promise.race([loadPublicPayload(id),new Promise<never>((_,reject)=>{timer=setTimeout(()=>reject(new Error('Public feed timed out.')),budget);})]);
       const data=normalizePublicFeed(id,payload);
-      liveCache.set(id,{data,until:Date.now()+30000});
+      const ttl=id==='cameras'?60000:data.reference?300000:30000;
+      liveCache.set(id,{data,until:Date.now()+ttl});
       return data;
     }finally{if(timer)clearTimeout(timer);inFlight.delete(id);}
   })();

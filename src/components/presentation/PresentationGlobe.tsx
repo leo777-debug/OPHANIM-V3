@@ -9,11 +9,12 @@ import type { FeedId, PresentationFeed } from '@/lib/presentation/types';
 import type { MapProjection, MapStyle } from '@/lib/map-workspaces';
 import styles from './presentation.module.css';
 
-export default function PresentationGlobe({ feeds, hidden, onSelect, locate, projection, mapStyle }: {
+export default function PresentationGlobe({ feeds, hidden, onSelect, locate, projection, mapStyle, dayNight }: {
   feeds: Partial<Record<FeedId, PresentationFeed>>; hidden: ReadonlySet<FeedId>;
   onSelect: (entity: Record<string, unknown>) => void;
   locate: {lat:number;lng:number;sequence:number} | null;
   projection: MapProjection; mapStyle: MapStyle;
+  dayNight: boolean;
 }) {
   const [basemap, setBasemap] = useState<maplibregl.StyleSpecification | null>(null);
   const [map, setMap] = useState<maplibregl.Map | null>(null);
@@ -49,6 +50,7 @@ export default function PresentationGlobe({ feeds, hidden, onSelect, locate, pro
   }, [map,feeds,hidden,onSelect]);
   const publicPresentation = useMemo(() => basemap ? { style: basemap, onReady } : undefined, [basemap,onReady]);
   const atlas = useMemo(() => atlasPresentationData(feeds,hidden), [feeds,hidden]);
+  const activeLayers = useMemo(()=>({...atlas.activeLayers,day_night:dayNight}),[atlas.activeLayers,dayNight]);
   const flyTo = useMemo(() => locate ? { ...locate, ts:locate.sequence, zoom:4 } : null, [locate]);
   const initialView = useMemo(() => ({longitude:42,latitude:24,zoom:window.innerWidth<680?1.1:1.8}), []);
   useEffect(() => {
@@ -66,7 +68,7 @@ export default function PresentationGlobe({ feeds, hidden, onSelect, locate, pro
   }, [map,projection]);
   return <>
     <div className={styles.globe} aria-label="Live intelligence globe" data-testid="presentation-globe" data-ready={ready} data-renderer="ophanim-atlas" data-map-style={mapStyle} data-projection={projection}>
-      {publicPresentation && <OphanimMap data={atlas.data} activeLayers={atlas.activeLayers} initialView={initialView} projection={projection} mapStyle={mapStyle} flyToLocation={flyTo} publicPresentation={publicPresentation} />}
+      {publicPresentation && <OphanimMap data={atlas.data} activeLayers={activeLayers} initialView={initialView} projection={projection} mapStyle={mapStyle} flyToLocation={flyTo} publicPresentation={publicPresentation} />}
     </div>
     {!ready && <div className={styles.globePoster} data-testid="globe-starter"><span>Starting Ophanim map...</span></div>}
     <div className={styles.attribution}>

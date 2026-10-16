@@ -59,7 +59,7 @@ describe('public normalization never projects organization data',()=>{
     expect(()=>normalizePublicFeed('earthquakes',{error:'upstream secret'})).toThrow('Public source unavailable');
   });
   it('includes all supported feed types and marks infrastructure reference',()=>{
-    expect(feedIds).toHaveLength(11);
+    expect(feedIds).toHaveLength(18);
     expect(normalizePublicFeed('cables',{features:[]}).reference).toBe(true);
   });
   it('does not publish customer/contract AIS or tenant-owned positions',()=>{

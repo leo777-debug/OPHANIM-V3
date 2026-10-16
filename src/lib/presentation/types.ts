@@ -19,7 +19,7 @@ export const DEFAULT_PRESENTATION: PresentationSettings = {
 // Verify has not been merged into the current default branch.
 export const PRESENTATION_VERIFY_AVAILABLE = false;
 export const VIEW_COOKIE = 'ophanim_presentation_view';
-export type FeedId = 'flights' | 'maritime' | 'earthquakes' | 'fires' | 'weather' | 'satellites' | 'cables' | 'incidents' | 'cyber' | 'news' | 'space-weather';
+export type FeedId = 'flights' | 'maritime' | 'ports' | 'chokepoints' | 'cameras' | 'broadcasts' | 'conflicts' | 'infrastructure' | 'war-sanctions' | 'earthquakes' | 'fires' | 'weather' | 'satellites' | 'cables' | 'incidents' | 'cyber' | 'news' | 'space-weather';
 export interface PublicFeed {
   id: FeedId;
   features: ProviderMapFeature[];

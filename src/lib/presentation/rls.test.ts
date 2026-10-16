@@ -8,6 +8,7 @@ describe('actual presentation migration and database RLS',()=>{
     pg=new PGlite();
     await pg.exec(`create role anon;create role authenticated; create table ophanim_users(id uuid primary key);create table ophanim_organizations(id uuid primary key);`);
     await pg.exec(await readFile('supabase/migrations/20261016010656_presentation_mode.sql','utf8'));
+    await pg.exec(await readFile('supabase/migrations/20261016120627_presentation_public_layers.sql','utf8'));
   },60000);
   afterAll(async()=>{await pg.close();},30000);
   it('starts OFF without any founder configuration',async()=>{
@@ -30,5 +31,12 @@ describe('actual presentation migration and database RLS',()=>{
   it('has RLS enabled for every new table, including private audit and grants',async()=>{
     const result=await pg.query<{relrowsecurity:boolean}>("select relrowsecurity from pg_class c join pg_namespace n on n.oid=c.relnamespace where (n.nspname='ophanim_private' or c.relname like 'ophanim_presentation_%') and c.relkind='r'");
     expect(result.rows).toHaveLength(5);expect(result.rows.every(row=>row.relrowsecurity)).toBe(true);
+  });
+  it('allows new public feed snapshots without removing old rows or widening write permissions',async()=>{
+    await pg.exec("insert into ophanim_presentation_snapshots values('news','{}',0,now()); insert into ophanim_presentation_snapshots values('cameras','{}',0,now())");
+    expect((await pg.query('select feed_id from ophanim_presentation_snapshots order by feed_id')).rows).toEqual([{feed_id:'cameras'},{feed_id:'news'}]);
+    await pg.exec('set role anon');
+    try { await expect(pg.exec("insert into ophanim_presentation_snapshots values('ports','{}',0,now())")).rejects.toThrow(/permission denied/); }
+    finally { await pg.exec('reset role'); await pg.exec('delete from ophanim_presentation_snapshots'); }
   });
 });

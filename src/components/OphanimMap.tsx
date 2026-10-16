@@ -690,6 +690,13 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
         'text-offset': [0, 1.5], 'text-allow-overlap': false, 'text-optional': true,
       }, paint: { 'text-color': '#CFD8DC', 'text-halo-color': '#00121a', 'text-halo-width': 1.2 }});
 
+      if (publicPresentation) {
+        map.addSource('public-sanctions', {type:'geojson',data:EMPTY_FC});
+        map.addLayer({id:'public-sanctions-points',type:'circle',source:'public-sanctions',paint:{
+          'circle-radius':5,'circle-color':['match',['get','classification'],'Shadow Fleet','#ff4d6d','#f6c453'],
+          'circle-opacity':.86,'circle-stroke-width':1,'circle-stroke-color':'#07151b',
+        }});
+      }
       setMapReady(true);
       publicPresentation?.onReady(map);
     });
@@ -1314,6 +1321,12 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     }, [mapReady, theme]);
 
   // ── DECOUPLED LAYER RENDERERS (Performance Optimized) ──
+
+  useEffect(() => {
+    if (!mapReady || !publicPresentation) return;
+    setGeo('conflict-zones',(data.conflict_markers || []).map((p: Record<string,unknown>)=>({type:'Feature',geometry:{type:'Point',coordinates:[p.lng,p.lat]},properties:{...p,label:p.name}})));
+    setGeo('public-sanctions',(data.public_sanctions || []).map((p: Record<string,unknown>)=>({type:'Feature',geometry:{type:'Point',coordinates:[p.lng,p.lat]},properties:p})));
+  }, [mapReady,publicPresentation,data.conflict_markers,data.public_sanctions,setGeo]);
 
   useEffect(() => {
     if (!mapReady) return;

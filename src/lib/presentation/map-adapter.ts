@@ -2,7 +2,7 @@ import type { FeedId, PresentationFeed } from './types';
 
 // Only already-sanitized public feeds cross into the original atlas renderer.
 export function atlasPresentationData(feeds: Partial<Record<FeedId, PresentationFeed>>, hidden: ReadonlySet<FeedId>) {
-  const feed = (id: FeedId) => feeds[id]?.state !== 'unavailable' ? feeds[id] : undefined;
+  const feed = (id: FeedId) => !hidden.has(id) && feeds[id]?.state !== 'unavailable' ? feeds[id] : undefined;
   const rows = (id: FeedId): Record<string, unknown>[] => (feed(id)?.features ?? []).filter(f => f.geometry.type === 'Point').map(f => ({ ...f.properties }));
   const flights: Record<string, unknown>[] = rows('flights').map(p => ({ ...p, callsign: p.callsign || p.name }));
   const enabled = (id: FeedId) => Boolean(feed(id)) && !hidden.has(id);
@@ -14,6 +14,9 @@ export function atlasPresentationData(feeds: Partial<Record<FeedId, Presentation
       military_flights: flights.filter(p => p.aircraft_category === 'military'),
       flight_source: feed('flights')?.source, flight_timestamp: feed('flights')?.observedAt,
       maritime_ships: rows('maritime'), maritime_sources: feed('maritime') ? [feed('maritime')!.source] : [], maritime_timestamp: feed('maritime')?.observedAt,
+      maritime_ports: rows('ports'), maritime_chokepoints: rows('chokepoints'),
+      cameras: rows('cameras'), live_feeds: rows('broadcasts').map(p=>({...p,url:p.sourceUrl})),
+      infrastructure: rows('infrastructure'), conflict_markers: rows('conflicts'), public_sanctions: rows('war-sanctions'),
       earthquakes: rows('earthquakes').map(p => ({ ...p, place: p.name })),
       satellites: rows('satellites'), gdelt: rows('incidents'), fires: rows('fires'),
       weather_events: rows('weather').map(p => ({ ...p, title: p.name })),
@@ -22,10 +25,11 @@ export function atlasPresentationData(feeds: Partial<Record<FeedId, Presentation
     },
     activeLayers: {
       flights: enabled('flights'), private: enabled('flights'), jets: enabled('flights'), military: enabled('flights'),
-      maritime: enabled('maritime'), ship_cargo: true, ship_tanker: true, ship_passenger: true, ship_fishing: true, ship_military: true,
+      maritime: enabled('maritime') || enabled('ports') || enabled('chokepoints'), ship_cargo: true, ship_tanker: true, ship_passenger: true, ship_fishing: true, ship_military: true,
+      cctv: enabled('cameras'), live_news: enabled('broadcasts'), infrastructure: enabled('infrastructure'), war_sanctions: enabled('war-sanctions'),
       earthquakes: enabled('earthquakes'), satellites: enabled('satellites'), global_incidents: enabled('incidents'),
       fires: enabled('fires'), weather: enabled('weather'), malware: enabled('cyber'), news_intel: enabled('news'),
-      sdk_sea: enabled('cables'), sdk_air: false, sdk_naval: false, conflict_zones: false,
+      sdk_sea: enabled('cables'), sdk_air: false, sdk_naval: false, conflict_zones: enabled('conflicts'),
     },
   };
 }

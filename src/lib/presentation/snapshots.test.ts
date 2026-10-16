@@ -1,4 +1,5 @@
 import { describe,it,expect,vi,beforeEach } from 'vitest';
+import {feedIds} from './feeds';
 const mocks=vi.hoisted(()=>({load:vi.fn(),query:vi.fn(),release:vi.fn()}));
 vi.mock('./public-loaders',()=>({loadPublicPayload:mocks.load}));
 vi.mock('@/lib/db/pool',()=>({db:()=>({query:mocks.query,connect:async()=>({query:mocks.query,release:mocks.release})})}));
@@ -52,7 +53,7 @@ describe('independent feeds and honest replay',()=>{
     mocks.query.mockResolvedValue({rows:[]});
     const {recordPublicSnapshots}=await import('./snapshots');
     const result=await recordPublicSnapshots({userId:'test-user',organizationId:'test-org',role:'owner'});
-    expect(result.saved).toEqual(['earthquakes']);expect(result.unavailable).toHaveLength(10);
+    expect(result.saved).toEqual(['earthquakes']);expect(result.unavailable).toHaveLength(feedIds.length-1);
     const sql=mocks.query.mock.calls.map(call=>call[0]).join('\n');
     expect(sql).toContain('presentation_audit');expect(sql).not.toMatch(/delete from ophanim_presentation_snapshots/);
     expect(mocks.query.mock.calls.filter(call=>String(call[0]).startsWith('insert into ophanim_presentation_snapshots'))).toHaveLength(1);
