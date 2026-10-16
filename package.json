@@ -9,7 +9,11 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:live": "RUN_LIVE_TESTS=1 vitest run"
+    "test:live": "RUN_LIVE_TESTS=1 vitest run",
+    "presentation:snapshot": "node tools/presentation/snapshot.mjs",
+    "presentation:preview": "node tools/presentation/preview.mjs",
+    "presentation:poster": "node tools/presentation/poster.mjs",
+    "test:presentation": "node tools/presentation/check.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -40,6 +44,9 @@
     "ws": "^8.21.0"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "@electric-sql/pglite-socket": "^0.2.11",
+    "@playwright/test": "^1.64.0",
     "@tailwindcss/postcss": "^4",
     "@types/google-libphonenumber": "^7.4.30",
     "@types/node": "^20",

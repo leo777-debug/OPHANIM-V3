@@ -17,6 +17,16 @@ Osiris deployment is not required.
 [Operations](docs/OPERATIONS.md) |
 [World Monitor comparison and remaining gaps](docs/WORLD_MONITOR_COMPARISON.md)
 
+### Presentation Mode
+
+The existing owner can turn presentation mode on/off at `/admin/presentation`
+without redeploying. It starts OFF. Map view uses a key-free globe, public layers,
+news, timeline, source freshness and world clocks; the presenter can return to
+the original app using the view switch or Ctrl+Shift+P. Optional PIN protection
+does not replace login. Public snapshots provide a labelled replay fallback.
+See [presenter instructions](PRESENTATION.md) and the
+[implementation and verification report](PRESENTATION_REPORT.md).
+
 ## Features
 
 ### Atlas and Map Workspaces

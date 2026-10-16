@@ -1,8 +1,50 @@
 import type { NextFetchEvent, NextRequest } from 'next/server';
 import { refreshSupabaseSession } from '@/lib/supabase/proxy';
+import { NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { getSupabasePublicConfig } from '@/lib/supabase/config';
+import { getAuthenticatedActor } from '@/lib/auth/actor';
+import { presentationSettingsOrOff,fullViewUnlocked } from '@/lib/presentation/settings';
+import { presentationDestination,resolvePresentationView,protectedPresentationApi } from '@/lib/presentation/policy';
+import { sameOrigin } from '@/lib/presentation/http';
+import { VIEW_COOKIE } from '@/lib/presentation/types';
 
 export async function proxy(request: NextRequest, event: NextFetchEvent) {
   const response = await refreshSupabaseSession(request);
+  const path=request.nextUrl.pathname;
+  if(protectedPresentationApi(path,request.method,Boolean(process.env.CUSTOMER_AIS_API_URL || process.env.MARINETRAFFIC_AIS_API_URL))) {
+    try {
+      const config=getSupabasePublicConfig();
+      const auth=config?createServerClient(config.url,config.publishableKey,{cookies:{getAll:()=>request.cookies.getAll(),setAll:()=>{}}}):null;
+      if(!await getAuthenticatedActor(request,auth))return NextResponse.json({error:'Authentication is required.'},{status:401});
+      if(!['GET','HEAD','OPTIONS'].includes(request.method) && !sameOrigin(request))return NextResponse.json({error:'Cross-origin changes are not permitted.'},{status:403});
+    }catch{return NextResponse.json({error:'Authentication is unavailable.'},{status:503});}
+  }
+  // Presentation redirects apply only to pages, never to authenticated APIs.
+  if(!path.startsWith('/api/') && !path.startsWith('/admin') && !/\.[a-z0-9]+$/i.test(path)) {
+    // Both sides of a redirect must read the current revision. Independent
+    // cached ON/OFF values in proxy and page render can otherwise form a loop.
+    const settings=await presentationSettingsOrOff(true);
+    if(!settings.enabled && path==='/presentation')return NextResponse.redirect(new URL('/',request.url));
+    if(settings.enabled) {
+      const cookie=request.cookies.get(VIEW_COOKIE)?.value;
+      let unlocked=false;
+      try{unlocked=await fullViewUnlocked(cookie,settings);}catch{}
+      const requested=request.nextUrl.searchParams.get('view');
+      const view=resolvePresentationView(settings,requested,cookie,unlocked);
+      const destination=presentationDestination(path,settings,view,request.nextUrl.searchParams.get('admin')==='1');
+      if(destination) {
+        const target=new URL(destination,request.url);
+        if(requested==='full' && view==='map')target.searchParams.set('unlock','1');
+        const redirect=NextResponse.redirect(target);
+        for(const item of response.cookies.getAll())redirect.cookies.set(item);
+        redirect.headers.set('Cache-Control','no-store');
+        return redirect;
+      }
+      response.headers.set('Cache-Control','no-store');
+      if(requested==='map' || (requested==='full' && !settings.pinRequired))response.cookies.set(VIEW_COOKIE,view,{httpOnly:true,secure:process.env.NODE_ENV==='production',sameSite:'lax',path:'/',maxAge:4*3600});
+    }
+  }
   const endpoint = process.env.UMAMI_ENDPOINT;
   const website = process.env.UMAMI_WEBSITE_ID;
 

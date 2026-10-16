@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import LogisticsTopBar from "./LogisticsTopBar";
+import AdminEntry from '@/components/presentation/AdminEntry';
 
 const navigation = [
   {
@@ -122,6 +123,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
           ))}
         </nav>
         <div className="ops-sidebar__footer">
+          <AdminEntry />
           <SlidersHorizontal aria-hidden="true" size={15} />
           <span>Evidence-first monitoring</span>
         </div>

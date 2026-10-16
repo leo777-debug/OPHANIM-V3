@@ -1,0 +1,80 @@
+{
+  "checkedAt": "2026-10-16T09:17:44.072Z",
+  "checks": [
+    {
+      "name": "Disposable local database: full migration chain, external APIs blocked"
+    },
+    {
+      "name": "OFF keeps original pages reachable, presentation page redirects home"
+    },
+    {
+      "name": "Anonymous private APIs and viewer settings access rejected in OFF and ON"
+    },
+    {
+      "name": "Foreign-origin settings mutations rejected"
+    },
+    {
+      "name": "ON map hides business pages; owner settings and owner login remain reachable"
+    },
+    {
+      "name": "Public replay payloads contain only normalized public evidence; missing snapshots are honest"
+    },
+    {
+      "name": "PIN hashed and rate-limited; rotation revokes grants; PIN never bypasses login; audit contains no PIN"
+    },
+    {
+      "name": "Manual-equivalent OFF browser check: original landing page, no controls or keyboard shortcut"
+    },
+    {
+      "name": "Runtime database switch without redeploy",
+      "applyMilliseconds": 78
+    },
+    {
+      "name": "Real WebGL globe, >=3 layers, news, moving ticker and responsive screenshots",
+      "timings": [
+        {
+          "viewport": {
+            "width": 1920,
+            "height": 1080
+          },
+          "shellReadyMilliseconds": 516,
+          "readyMilliseconds": 6457,
+          "pixelCheckedMilliseconds": 13519
+        },
+        {
+          "viewport": {
+            "width": 1366,
+            "height": 768
+          },
+          "shellReadyMilliseconds": 648,
+          "readyMilliseconds": 4397,
+          "pixelCheckedMilliseconds": 9812
+        },
+        {
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "shellReadyMilliseconds": 560,
+          "readyMilliseconds": 4750,
+          "pixelCheckedMilliseconds": 8725
+        }
+      ]
+    },
+    {
+      "name": "Clicking a rendered observation opens its source, time and coordinates"
+    },
+    {
+      "name": "Quick switch and Ctrl+Shift+P both work in both directions"
+    },
+    {
+      "name": "Owner dashboard turns OFF without redeploy; normal site returns and controls disappear"
+    },
+    {
+      "name": "No uncaught or console browser errors on map and switch path"
+    }
+  ],
+  "browserErrors": [],
+  "consoleErrors": [],
+  "syntheticFixturesOnly": true
+}

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import PresentationBoundary from "@/components/presentation/PresentationBoundary";
 import "./globals.css";
 
 const SITE_URL = "https://ophanim.live";
@@ -158,7 +159,7 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased" suppressHydrationWarning>
-        <ErrorBoundary name="Ophanim Core">{children}</ErrorBoundary>
+        <ErrorBoundary name="Ophanim Core"><PresentationBoundary>{children}</PresentationBoundary></ErrorBoundary>
       </body>
     </html>
   );
