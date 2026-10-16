@@ -2,7 +2,70 @@
 
 **Not fully competition-certified yet.** This is a checkpoint, not an exhaustive
 security certification. The results immediately below supersede historical
-checkpoints later in this document. Updated 15 October 2026, Asia/Dubai.
+checkpoints later in this document. Updated 16 October 2026, Asia/Dubai.
+
+## 16 October Targeted Follow-Up
+
+The following results supersede the older source counts and load measurements
+below. Full source suite: **932 pass, 12 opt-in skips**, 121.09 seconds. Focused
+lint: baseline 10 errors/one warning, current seven/one; no introduced findings.
+Six explicit SQL/RLS tests pass in 16.78 seconds.
+
+- All **187 exported API methods** have a reviewed policy and a drift assertion.
+  Actual anonymous/wrong-key HTTP sweep: **187/187 pass**. Unconfigured service
+  503 responses are recorded, not described as successful live-provider access.
+- Additional two-way member-handler probes: **224/224 pass** on the final run,
+  with all foreign organization-owned table digests unchanged. Valid seeded core
+  foreign IDs, forged workspace cookies, body organization overrides and missing
+  optional-workflow IDs are differentiated; dedicated workflow suites retain
+  valid own-write controls. This is not every conceivable payload permutation.
+- **140 legacy-provider cases** cover 35 route families, with real normalizers
+  and mocked HTTP: 503, malformed body, empty data, abort/deadline. CCTV uses its
+  regional adapters. Existing registry suite adds 32 cases and healthy-source
+  independence controls. No real upstream or scan target was contacted.
+- Missing deadlines fixed in crypto, GDACS, stats/fusion, GitHub and email
+  exposure lookups. The shared fetch helper retains caller/body cancellation,
+  including already-aborted signals. GitHub/MAC/email failures do not return
+  arbitrary exception detail. Missing geomagnetic data is Unknown/null, not
+  Quiet/zero. No feature was deleted to make tests pass.
+- No new tables, migrations, grants or RLS policies were necessary. Session
+  validation reads the corresponding Supabase auth.sessions table and current
+  membership/role on every request. A deleted, foreign-owned or expired session
+  cannot authorize access. Real Auth logout failure is retryable, not success.
+- **50 connections:** p50 110 ms, p95 **263 ms**, 5,862 successful responses.
+  **200 connections:** p50 373 ms, p95 **804 ms**, 7,444 successful responses.
+  Zero errors/timeouts/non-2xx, native PostgreSQL with 10,000 shipments and
+  100,000 events. Historical p95: 1,443 / 3,897 ms. Identical concurrent reads
+  share in-flight queries, never completed data or authorization. Facets use
+  one scan; last-seen updates avoid a write on every read.
+  The rebuilt-package repeat also passes: p50/p95 94/242 ms at 50 connections
+  (6,550 responses) and 419/927 ms at 200 (6,313), zero errors/timeouts. Both
+  measurements are retained, alongside the historical pre-fix baseline.
+- Local latency scripts now fail unmet budgets instead of only logging them.
+  A contended first-screen run measured 4,664 ms; a fresh uncontended process
+  measured 374 ms, with all tested shells 216-497 ms and interactions 102-176 ms.
+  OS filesystem caches were not flushed. Repeated final measurements are in
+  artifacts/performance-gate.json; do not interpret warm-cache/local runs as
+  guaranteed cloud or cold-machine performance.
+  Final repeatability gate: all **33 timing checks** and **51 functional checks**
+  pass across three independent sequential server/database/browser launches.
+  First HTTP: **1758 / 357 / 345 ms**; shell/replay labels <=1009 ms; replay
+  interactions <=258 ms. No competing build/test job ran during that gate.
+  Production rebuild and separate TypeScript also pass. No deployment was made.
+
+**Real Supabase Auth is still blocked, not passed.** Docker Desktop fails before
+its Linux engine starts because sailor-ingest.sock cannot be accessed. Starting
+it reproduced the error; a conservative backup/rename also failed. No factory
+reset, WSL deletion, update installation or production project change was made.
+Five real loopback-only signup/membership/refresh/logout/replayed-token tests are
+prepared and explicitly skipped until a disposable Auth server is available.
+Setup and scope: [LIVE_SUPABASE.md](LIVE_SUPABASE.md). SQL/claims mocks are clearly
+separate from these tests. Session-row logic follows the
+[official Supabase session documentation](https://supabase.com/docs/guides/auth/sessions).
+
+The broader original gates (arbitrary hostile-parser isolation, distributed
+quotas, remaining valid-payload/role combinations, founder credential rotation)
+are not silently certified by this targeted follow-up. The PR stays draft.
 
 ## Current Verified Results
 

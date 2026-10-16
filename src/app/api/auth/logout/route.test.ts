@@ -13,3 +13,14 @@ it('preserves same-origin logout', async () => {
   const result = await POST(new NextRequest('http://localhost/api/auth/logout', { method: 'POST', headers: { Origin: 'http://localhost', Cookie: 'ophanim_session=synthetic' } }));
   expect(result.status).toBe(200); expect(mocks.revoke).toHaveBeenCalledWith('synthetic');
 });
+it.each(['returned-error', 'thrown-error'])('does not falsely report completed Supabase logout: %s', async (mode) => {
+  const signOut = vi.fn(async () => {
+    if (mode === 'thrown-error') throw new Error('synthetic secret upstream');
+    return { error: new Error('synthetic secret upstream') };
+  });
+  mocks.supabase.mockResolvedValue({ auth: { signOut } });
+  const result = await POST(new NextRequest('http://localhost/api/auth/logout', { method: 'POST' }));
+  expect(result.status).toBe(503);
+  expect(await result.text()).not.toContain('synthetic secret');
+  expect(mocks.revoke).not.toHaveBeenCalled();
+});

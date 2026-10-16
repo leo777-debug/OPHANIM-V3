@@ -27,3 +27,24 @@ it('does not allow a viewer to choose a foreign organization through filters', a
   await listShipmentPage({ ...actor, role: 'viewer' }, new URLSearchParams({ organizationId: 'org-b' }));
   expect(query.mock.calls.every(([, values]) => values[0] === 'org-a')).toBe(true);
 });
+it('coalesces identical simultaneous reads but never retains a completed result', async () => {
+  const results = await Promise.all(Array.from({ length: 20 }, () => listShipmentPage(actor, new URLSearchParams())));
+  expect(query).toHaveBeenCalledTimes(3);
+  expect(results.every(result => result.page.total === 10000)).toBe(true);
+  await listShipmentPage(actor, new URLSearchParams());
+  expect(query).toHaveBeenCalledTimes(6);
+});
+it('keeps concurrent organizations and filters separate', async () => {
+  await Promise.all([
+    listShipmentPage(actor, new URLSearchParams()),
+    listShipmentPage({ ...actor, organizationId: 'org-b' }, new URLSearchParams()),
+    listShipmentPage(actor, new URLSearchParams({ carrier: 'Other carrier' })),
+  ]);
+  expect(query).toHaveBeenCalledTimes(9);
+  expect(query.mock.calls.filter(([,values]) => values[0] === 'org-b')).toHaveLength(3);
+});
+it('clears rejected reads so an outage does not poison later requests', async () => {
+  query.mockRejectedValueOnce(new Error('synthetic database interruption'));
+  await expect(listShipmentPage(actor, new URLSearchParams())).rejects.toThrow('interruption');
+  await expect(listShipmentPage(actor, new URLSearchParams())).resolves.toMatchObject({ page: { total: 10000 } });
+});

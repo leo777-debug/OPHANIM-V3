@@ -13,6 +13,7 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     const res = await fetch('https://www.gdacs.org/xml/rss.xml', {
+      signal: AbortSignal.timeout(10000),
       next: { revalidate: 300 }, // Cache 5 min
     });
 

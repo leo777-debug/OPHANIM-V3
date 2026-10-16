@@ -130,8 +130,24 @@ export async function listShipments(actor: OrganizationActor): Promise<ShipmentR
   return result.rows.map(toRecord);
 }
 
+const pendingShipmentPages = new Map<string, Promise<Awaited<ReturnType<typeof queryShipmentPage>>>>();
+
 export async function listShipmentPage(actor: OrganizationActor, params: URLSearchParams) {
   requireOrganizationAccess(actor, actor.organizationId, 'shipment:read');
+  const serialized = params.toString();
+  if (serialized.length > 4096) throw new Error('Shipment filters are too long.');
+  const key = JSON.stringify([actor.organizationId, serialized]);
+  const existing = pendingShipmentPages.get(key);
+  if (existing) return existing;
+  // Coalesce only concurrent identical reads. Never retain results, cache an
+  // actor/role, or share a request across organization boundaries.
+  if (pendingShipmentPages.size >= 128) return queryShipmentPage(actor, params);
+  const pending = queryShipmentPage(actor, params).finally(() => pendingShipmentPages.delete(key));
+  pendingShipmentPages.set(key, pending);
+  return pending;
+}
+
+async function queryShipmentPage(actor: OrganizationActor, params: URLSearchParams) {
   const limit = Number(params.get('limit') ?? 100), offset = Number(params.get('offset') ?? 0);
   if (!Number.isInteger(limit) || limit < 1 || limit > 250 || !Number.isInteger(offset) || offset < 0 || offset > 1000000) throw new Error('Invalid shipment page. Limit must be 1-250 and offset must be a nonnegative integer.');
   const values: unknown[] = [actor.organizationId];
@@ -157,13 +173,15 @@ export async function listShipmentPage(actor: OrganizationActor, params: URLSear
     db().query<ShipmentRow>(`select ${fields} from ophanim_shipments where ${where} order by ${sorting[sort]} nulls last,id limit $${values.length + 1} offset $${values.length + 2}`, [...values, limit, offset]),
     db().query<{ total: number }>(`select count(*)::integer as total from ophanim_shipments where ${where}`, values),
     db().query<Record<string,string[]>>(`select
-      array(select distinct carrier from ophanim_shipments where organization_id=$1 and archived_at is null and carrier is not null order by carrier limit 500) as carrier,
-      array(select distinct vessel_name from ophanim_shipments where organization_id=$1 and archived_at is null and vessel_name is not null order by vessel_name limit 500) as "vesselName",
-      array(select distinct origin_port_name from ophanim_shipments where organization_id=$1 and archived_at is null and origin_port_name is not null order by origin_port_name limit 500) as "originPortName",
-      array(select distinct destination_port_name from ophanim_shipments where organization_id=$1 and archived_at is null and destination_port_name is not null order by destination_port_name limit 500) as "destinationPortName"`, [actor.organizationId]),
+      (array_agg(distinct carrier order by carrier) filter (where carrier is not null))[1:500] as carrier,
+      (array_agg(distinct vessel_name order by vessel_name) filter (where vessel_name is not null))[1:500] as "vesselName",
+      (array_agg(distinct origin_port_name order by origin_port_name) filter (where origin_port_name is not null))[1:500] as "originPortName",
+      (array_agg(distinct destination_port_name order by destination_port_name) filter (where destination_port_name is not null))[1:500] as "destinationPortName"
+      from ophanim_shipments where organization_id=$1 and archived_at is null`, [actor.organizationId]),
   ]);
   const total = count.rows[0]?.total ?? 0;
-  return { shipments: rows.rows.map(toRecord), page: { limit, offset, total, hasMore: offset + rows.rows.length < total }, facets: facets.rows[0] ?? {} };
+  const options = Object.fromEntries(Object.entries(facets.rows[0] ?? {}).map(([key, value]) => [key, value ?? []]));
+  return { shipments: rows.rows.map(toRecord), page: { limit, offset, total, hasMore: offset + rows.rows.length < total }, facets: options };
 }
 
 export async function getShipment(actor: OrganizationActor, shipmentId: string): Promise<ShipmentRecord | null> {

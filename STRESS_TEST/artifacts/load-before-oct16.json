@@ -1,0 +1,40 @@
+{
+  "checkedAt": "2026-10-14T14:50:01.953Z",
+  "externalTraffic": "server fetch/socket/DNS blocked; no real providers",
+  "runs": [
+    {
+      "connections": 50,
+      "durationSeconds": 15.12,
+      "responses": 1719,
+      "p50Ms": 49.3788,
+      "p95Ms": 1443.454,
+      "errors": 0,
+      "timeouts": 0,
+      "non2xx": 0,
+      "statusCodes": {
+        "200": {
+          "count": 1719
+        }
+      },
+      "serverPid": 14860,
+      "database": "native PostgreSQL 18 core; pgvector/Knowledge unavailable"
+    },
+    {
+      "connections": 200,
+      "durationSeconds": 15.25,
+      "responses": 2339,
+      "p50Ms": 44.8787,
+      "p95Ms": 3896.6789,
+      "errors": 0,
+      "timeouts": 0,
+      "non2xx": 0,
+      "statusCodes": {
+        "200": {
+          "count": 2339
+        }
+      },
+      "serverPid": 14860,
+      "database": "native PostgreSQL 18 core; pgvector/Knowledge unavailable"
+    }
+  ]
+}

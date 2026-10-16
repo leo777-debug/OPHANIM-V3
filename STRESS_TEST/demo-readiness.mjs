@@ -44,5 +44,5 @@ await withIsolatedApp(async({base,root})=>{
   for(const timing of timings)timing.withinBudget=timing.elapsedMs<timing.targetMs;
   await writeFile(resolve(root,'STRESS_TEST/artifacts/demo-readiness.json'),JSON.stringify({checkedAt:new Date().toISOString(),scope:'Local fixture demo, no external network. Not a cached service-worker app with the local server offline.',checks,timings},null,2));
   console.log(JSON.stringify({passed:checks.filter(item=>item.pass).length,failed:checks.filter(item=>!item.pass),timings}));
-  if(checks.some(item=>!item.pass))process.exitCode=1;
+  if(checks.some(item=>!item.pass) || timings.some(timing=>!timing.withinBudget))process.exitCode=1;
 },{standalone:true});

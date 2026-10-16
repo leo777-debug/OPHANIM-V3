@@ -1,0 +1,228 @@
+{
+  "checkedAt": "2026-10-16T00:48:11.158Z",
+  "scope": "Three independent local server/database/browser launches, sequential, no competing test/build jobs. Process-cold first HTTP, OS filesystem cache not flushed. External traffic blocked. Not cloud/cold-machine certification.",
+  "runs": [
+    {
+      "run": 1,
+      "exitCode": 0,
+      "checkedAt": "2026-10-16T00:47:50.872Z",
+      "timings": [
+        {
+          "step": "cold server Verify HTML",
+          "elapsedMs": 1758,
+          "targetMs": 2000,
+          "withinBudget": true
+        },
+        {
+          "step": "390px /verify shell and replay label",
+          "elapsedMs": 1009,
+          "targetMs": 2000,
+          "withinBudget": true
+        },
+        {
+          "step": "390px /imports shell and replay label",
+          "elapsedMs": 363,
+          "targetMs": 2000,
+          "withinBudget": true
+        },
+        {
+          "step": "390px /logistics/command shell and replay label",
+          "elapsedMs": 778,
+          "targetMs": 2000,
+          "withinBudget": true
+        },
+        {
+          "step": "390px /knowledge shell and replay label",
+          "elapsedMs": 708,
+          "targetMs": 2000,
+          "withinBudget": true
+        },
+        {
+          "step": "390px local replay result",
+          "elapsedMs": 258,
+          "targetMs": 1000,
+          "withinBudget": true
+        },
+        {
+          "step": "1920px /verify shell and replay label",
+          "elapsedMs": 234,
+          "targetMs": 2000,
+          "withinBudget": true
+        },
+        {
+          "step": "1920px /imports shell and replay label",
+          "elapsedMs": 247,
+          "targetMs": 2000,
+          "withinBudget": true
+        },
+        {
+          "step": "1920px /logistics/command shell and replay label",
+          "elapsedMs": 523,
+          "targetMs": 2000,
+          "withinBudget": true
+        },
+        {
+          "step": "1920px /knowledge shell and replay label",
+          "elapsedMs": 159,
+          "targetMs": 2000,
+          "withinBudget": true
+        },
+        {
+          "step": "1920px local replay result",
+          "elapsedMs": 81,
+          "targetMs": 1000,
+          "withinBudget": true
+        }
+      ],
+      "failed": []
+    },
+    {
+      "run": 2,
+      "exitCode": 0,
+      "checkedAt": "2026-10-16T00:48:00.700Z",
+      "timings": [
+        {
+          "step": "cold server Verify HTML",
+          "elapsedMs": 357,
+          "targetMs": 2000,
+          "withinBudget": true
+        },
+        {
+          "step": "390px /verify shell and replay label",
+          "elapsedMs": 467,
+          "targetMs": 2000,
+          "withinBudget": true
+        },
+        {
+          "step": "390px /imports shell and replay label",
+          "elapsedMs": 258,
+          "targetMs": 2000,
+          "withinBudget": true
+        },
+        {
+          "step": "390px /logistics/command shell and replay label",
+          "elapsedMs": 415,
+          "targetMs": 2000,
+          "withinBudget": true
+        },
+        {
+          "step": "390px /knowledge shell and replay label",
+          "elapsedMs": 193,
+          "targetMs": 2000,
+          "withinBudget": true
+        },
+        {
+          "step": "390px local replay result",
+          "elapsedMs": 157,
+          "targetMs": 1000,
+          "withinBudget": true
+        },
+        {
+          "step": "1920px /verify shell and replay label",
+          "elapsedMs": 318,
+          "targetMs": 2000,
+          "withinBudget": true
+        },
+        {
+          "step": "1920px /imports shell and replay label",
+          "elapsedMs": 299,
+          "targetMs": 2000,
+          "withinBudget": true
+        },
+        {
+          "step": "1920px /logistics/command shell and replay label",
+          "elapsedMs": 945,
+          "targetMs": 2000,
+          "withinBudget": true
+        },
+        {
+          "step": "1920px /knowledge shell and replay label",
+          "elapsedMs": 357,
+          "targetMs": 2000,
+          "withinBudget": true
+        },
+        {
+          "step": "1920px local replay result",
+          "elapsedMs": 206,
+          "targetMs": 1000,
+          "withinBudget": true
+        }
+      ],
+      "failed": []
+    },
+    {
+      "run": 3,
+      "exitCode": 0,
+      "checkedAt": "2026-10-16T00:48:11.018Z",
+      "timings": [
+        {
+          "step": "cold server Verify HTML",
+          "elapsedMs": 345,
+          "targetMs": 2000,
+          "withinBudget": true
+        },
+        {
+          "step": "390px /verify shell and replay label",
+          "elapsedMs": 466,
+          "targetMs": 2000,
+          "withinBudget": true
+        },
+        {
+          "step": "390px /imports shell and replay label",
+          "elapsedMs": 260,
+          "targetMs": 2000,
+          "withinBudget": true
+        },
+        {
+          "step": "390px /logistics/command shell and replay label",
+          "elapsedMs": 449,
+          "targetMs": 2000,
+          "withinBudget": true
+        },
+        {
+          "step": "390px /knowledge shell and replay label",
+          "elapsedMs": 201,
+          "targetMs": 2000,
+          "withinBudget": true
+        },
+        {
+          "step": "390px local replay result",
+          "elapsedMs": 163,
+          "targetMs": 1000,
+          "withinBudget": true
+        },
+        {
+          "step": "1920px /verify shell and replay label",
+          "elapsedMs": 257,
+          "targetMs": 2000,
+          "withinBudget": true
+        },
+        {
+          "step": "1920px /imports shell and replay label",
+          "elapsedMs": 246,
+          "targetMs": 2000,
+          "withinBudget": true
+        },
+        {
+          "step": "1920px /logistics/command shell and replay label",
+          "elapsedMs": 438,
+          "targetMs": 2000,
+          "withinBudget": true
+        },
+        {
+          "step": "1920px /knowledge shell and replay label",
+          "elapsedMs": 248,
+          "targetMs": 2000,
+          "withinBudget": true
+        },
+        {
+          "step": "1920px local replay result",
+          "elapsedMs": 108,
+          "targetMs": 1000,
+          "withinBudget": true
+        }
+      ],
+      "failed": []
+    }
+  ]
+}

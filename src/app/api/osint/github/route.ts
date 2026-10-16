@@ -8,8 +8,8 @@ export async function GET(req: Request) {
 
   try {
     const [userRes, reposRes] = await Promise.all([
-      fetch(`https://api.github.com/users/${encodeURIComponent(username)}`, { headers: { 'User-Agent': 'OSIRIS-Recon' } }),
-      fetch(`https://api.github.com/users/${encodeURIComponent(username)}/repos?sort=updated&per_page=5`, { headers: { 'User-Agent': 'OSIRIS-Recon' } })
+      fetch(`https://api.github.com/users/${encodeURIComponent(username)}`, { signal: AbortSignal.timeout(8000), headers: { 'User-Agent': 'OSIRIS-Recon' } }),
+      fetch(`https://api.github.com/users/${encodeURIComponent(username)}/repos?sort=updated&per_page=5`, { signal: AbortSignal.timeout(8000), headers: { 'User-Agent': 'OSIRIS-Recon' } })
     ]);
 
     if (userRes.status === 404) return NextResponse.json({ error: 'User not found' }, { status: 404 });
@@ -33,7 +33,7 @@ export async function GET(req: Request) {
       avatar_url: userData.avatar_url,
       recent_repos: Array.isArray(reposData) ? reposData.map((r: any) => ({ name: r.name, language: r.language, updated: r.updated_at })) : []
     });
-  } catch (error: any) {
-    return NextResponse.json({ error: 'GitHub lookup failed', detail: error.message }, { status: 502 });
+  } catch {
+    return NextResponse.json({ error: 'GitHub lookup failed' }, { status: 502 });
   }
 }

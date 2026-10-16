@@ -18,12 +18,21 @@ describe('legacy sessions cannot bypass configured Supabase authentication', () 
     expect(query).not.toHaveBeenCalled();
   });
   it('rejects a valid Auth subject without an organization membership without legacy fallback', async () => {
-    vi.mocked(createSupabaseServerClient).mockResolvedValue({ auth: { getClaims: async () => ({ data: { claims: { sub: '11111111-1111-4111-8111-111111111111' } }, error: null }) } } as unknown as Awaited<ReturnType<typeof createSupabaseServerClient>>);
+    vi.mocked(createSupabaseServerClient).mockResolvedValue({ auth: { getClaims: async () => ({ data: { claims: { sub: '11111111-1111-4111-8111-111111111111', session_id: '22222222-2222-4222-8222-222222222222' } }, error: null }) } } as unknown as Awaited<ReturnType<typeof createSupabaseServerClient>>);
     const query = vi.fn().mockResolvedValue({ rows: [] });
     vi.mocked(db).mockReturnValue({ query } as unknown as ReturnType<typeof db>);
     expect(await getAuthenticatedActor(request())).toBeNull();
     expect(query).toHaveBeenCalledOnce();
     expect(query.mock.calls[0][0]).toContain('auth_user_id');
+    expect(query.mock.calls[0][0]).toContain('auth.sessions');
+    expect(query.mock.calls[0][1][2]).toBe('22222222-2222-4222-8222-222222222222');
+  });
+  it('rejects a signed subject without a session id before querying membership', async () => {
+    vi.mocked(createSupabaseServerClient).mockResolvedValue({ auth: { getClaims: async () => ({ data: { claims: { sub: '11111111-1111-4111-8111-111111111111' } }, error: null }) } } as unknown as Awaited<ReturnType<typeof createSupabaseServerClient>>);
+    const query = vi.fn();
+    vi.mocked(db).mockReturnValue({ query } as unknown as ReturnType<typeof db>);
+    expect(await getAuthenticatedActor(request())).toBeNull();
+    expect(query).not.toHaveBeenCalled();
   });
   it('preserves standalone legacy login with expiry, revocation and membership checks', async () => {
     vi.mocked(createSupabaseServerClient).mockResolvedValue(null);

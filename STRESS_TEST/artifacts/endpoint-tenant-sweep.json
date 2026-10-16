@@ -1,0 +1,2236 @@
+{
+  "checkedAt": "2026-10-16T00:47:32.734Z",
+  "scope": "Every member handler in both directions, forged workspace cookie and foreign ID/body probes; actual HTTP and unchanged-table digests. Dedicated workflow suites supply valid own-write controls. Not exhaustive payload permutations.",
+  "checks": [
+    {
+      "method": "POST",
+      "path": "/api/ai/analyze",
+      "file": "src/app/api/ai/analyze/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 503,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/ai/briefing",
+      "file": "src/app/api/ai/briefing/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 503,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/ai/connection",
+      "file": "src/app/api/ai/connection/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/ai/generate",
+      "file": "src/app/api/ai/generate/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/ai/local-status",
+      "file": "src/app/api/ai/local-status/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/ai/overview",
+      "file": "src/app/api/ai/overview/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/ai/research",
+      "file": "src/app/api/ai/research/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 503,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/cyber/assets",
+      "file": "src/app/api/cyber/assets/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/cyber/assets",
+      "file": "src/app/api/cyber/assets/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/cyber/clients",
+      "file": "src/app/api/cyber/clients/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/cyber/clients",
+      "file": "src/app/api/cyber/clients/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/cyber/dependencies",
+      "file": "src/app/api/cyber/dependencies/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/cyber/dependencies",
+      "file": "src/app/api/cyber/dependencies/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/dark-web/entities",
+      "file": "src/app/api/dark-web/entities/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/dark-web/entities",
+      "file": "src/app/api/dark-web/entities/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/dark-web/entities/sync",
+      "file": "src/app/api/dark-web/entities/sync/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "GET",
+      "path": "/api/dark-web/mentions",
+      "file": "src/app/api/dark-web/mentions/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/dark-web/scan",
+      "file": "src/app/api/dark-web/scan/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/extension/context",
+      "file": "src/app/api/extension/context/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/imports/[id]",
+      "file": "src/app/api/imports/[id]/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 404,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "POST",
+      "path": "/api/imports/[id]/confirm",
+      "file": "src/app/api/imports/[id]/confirm/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "GET",
+      "path": "/api/imports/[id]/error-report",
+      "file": "src/app/api/imports/[id]/error-report/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 404,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "POST",
+      "path": "/api/imports/preview",
+      "file": "src/app/api/imports/preview/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "GET",
+      "path": "/api/imports/template/[type]",
+      "file": "src/app/api/imports/template/[type]/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 404,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "GET",
+      "path": "/api/intelligence/alerts",
+      "file": "src/app/api/intelligence/alerts/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/intelligence/alerts/[id]",
+      "file": "src/app/api/intelligence/alerts/[id]/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/intelligence/assessments/[id]/remediation",
+      "file": "src/app/api/intelligence/assessments/[id]/remediation/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/intelligence/assessments/[id]/rescue",
+      "file": "src/app/api/intelligence/assessments/[id]/rescue/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/intelligence/dashboard",
+      "file": "src/app/api/intelligence/dashboard/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/intelligence/deliveries",
+      "file": "src/app/api/intelligence/deliveries/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/intelligence/providers",
+      "file": "src/app/api/intelligence/providers/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/intelligence/providers",
+      "file": "src/app/api/intelligence/providers/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/intelligence/queue",
+      "file": "src/app/api/intelligence/queue/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/intelligence/queue/[id]",
+      "file": "src/app/api/intelligence/queue/[id]/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/intelligence/reconcile",
+      "file": "src/app/api/intelligence/reconcile/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/intelligence/settings",
+      "file": "src/app/api/intelligence/settings/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/intelligence/settings",
+      "file": "src/app/api/intelligence/settings/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/intelligence/tasks",
+      "file": "src/app/api/intelligence/tasks/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/intelligence/tasks/[id]",
+      "file": "src/app/api/intelligence/tasks/[id]/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/knowledge/ask",
+      "file": "src/app/api/knowledge/ask/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/knowledge/documents",
+      "file": "src/app/api/knowledge/documents/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/knowledge/documents",
+      "file": "src/app/api/knowledge/documents/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 503,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/knowledge/documents/[id]",
+      "file": "src/app/api/knowledge/documents/[id]/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "GET",
+      "path": "/api/knowledge/documents/[id]",
+      "file": "src/app/api/knowledge/documents/[id]/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 404,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "POST",
+      "path": "/api/knowledge/search",
+      "file": "src/app/api/knowledge/search/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/knowledge/settings",
+      "file": "src/app/api/knowledge/settings/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/knowledge/settings",
+      "file": "src/app/api/knowledge/settings/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/knowledge/shared",
+      "file": "src/app/api/knowledge/shared/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/knowledge/shared",
+      "file": "src/app/api/knowledge/shared/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 401,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/logistics/assets",
+      "file": "src/app/api/logistics/assets/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/assets",
+      "file": "src/app/api/logistics/assets/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/logistics/disruptions",
+      "file": "src/app/api/logistics/disruptions/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/disruptions",
+      "file": "src/app/api/logistics/disruptions/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/logistics/disruptions/[id]",
+      "file": "src/app/api/logistics/disruptions/[id]/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 404,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/logistics/disruptions/[id]/map",
+      "file": "src/app/api/logistics/disruptions/[id]/map/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 404,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/disruptions/[id]/reconcile",
+      "file": "src/app/api/logistics/disruptions/[id]/reconcile/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/disruptions/manual-sync",
+      "file": "src/app/api/logistics/disruptions/manual-sync/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/logistics/rescue-cases",
+      "file": "src/app/api/logistics/rescue-cases/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/rescue-cases",
+      "file": "src/app/api/logistics/rescue-cases/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/logistics/rescue-cases/[id]",
+      "file": "src/app/api/logistics/rescue-cases/[id]/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 404,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/logistics/rescue-cases/[id]",
+      "file": "src/app/api/logistics/rescue-cases/[id]/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/rescue-cases/[id]/actions",
+      "file": "src/app/api/logistics/rescue-cases/[id]/actions/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/rescue-cases/[id]/decisions",
+      "file": "src/app/api/logistics/rescue-cases/[id]/decisions/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/rescue-cases/[id]/evidence",
+      "file": "src/app/api/logistics/rescue-cases/[id]/evidence/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/logistics/shipments",
+      "file": "src/app/api/logistics/shipments/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/shipments",
+      "file": "src/app/api/logistics/shipments/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/logistics/shipments/[id]",
+      "file": "src/app/api/logistics/shipments/[id]/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 404,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "GET",
+      "path": "/api/logistics/shipments/[id]",
+      "file": "src/app/api/logistics/shipments/[id]/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 404,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/logistics/shipments/[id]",
+      "file": "src/app/api/logistics/shipments/[id]/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 404,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/shipments/imports/[id]/confirm",
+      "file": "src/app/api/logistics/shipments/imports/[id]/confirm/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/shipments/imports/preview",
+      "file": "src/app/api/logistics/shipments/imports/preview/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "GET",
+      "path": "/api/logistics/zero-day-roll-calls",
+      "file": "src/app/api/logistics/zero-day-roll-calls/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/zero-day-roll-calls",
+      "file": "src/app/api/logistics/zero-day-roll-calls/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/logistics/zero-day-roll-calls/[id]",
+      "file": "src/app/api/logistics/zero-day-roll-calls/[id]/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 404,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/logistics/zero-day-roll-calls/[id]",
+      "file": "src/app/api/logistics/zero-day-roll-calls/[id]/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/zero-day-roll-calls/[id]/assessments",
+      "file": "src/app/api/logistics/zero-day-roll-calls/[id]/assessments/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/zero-day-roll-calls/[id]/decisions",
+      "file": "src/app/api/logistics/zero-day-roll-calls/[id]/decisions/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/zero-day-roll-calls/[id]/evidence",
+      "file": "src/app/api/logistics/zero-day-roll-calls/[id]/evidence/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/operations/features",
+      "file": "src/app/api/operations/features/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/osint/shodan",
+      "file": "src/app/api/osint/shodan/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/osint/shodan",
+      "file": "src/app/api/osint/shodan/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/platform/analytics",
+      "file": "src/app/api/platform/analytics/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/platform/cases",
+      "file": "src/app/api/platform/cases/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/platform/cases",
+      "file": "src/app/api/platform/cases/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/platform/cases/[id]",
+      "file": "src/app/api/platform/cases/[id]/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 404,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "POST",
+      "path": "/api/platform/cases/[id]/tasks",
+      "file": "src/app/api/platform/cases/[id]/tasks/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "GET",
+      "path": "/api/platform/configuration",
+      "file": "src/app/api/platform/configuration/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/platform/configuration",
+      "file": "src/app/api/platform/configuration/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/platform/entities",
+      "file": "src/app/api/platform/entities/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/platform/entities",
+      "file": "src/app/api/platform/entities/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/platform/entities/[id]",
+      "file": "src/app/api/platform/entities/[id]/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 404,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "GET",
+      "path": "/api/platform/events",
+      "file": "src/app/api/platform/events/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/platform/events",
+      "file": "src/app/api/platform/events/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/platform/events/[id]/correlations",
+      "file": "src/app/api/platform/events/[id]/correlations/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "POST",
+      "path": "/api/platform/events/[id]/correlations",
+      "file": "src/app/api/platform/events/[id]/correlations/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "GET",
+      "path": "/api/platform/evidence",
+      "file": "src/app/api/platform/evidence/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/platform/evidence",
+      "file": "src/app/api/platform/evidence/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/platform/health",
+      "file": "src/app/api/platform/health/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/platform/imports/[id]/confirm",
+      "file": "src/app/api/platform/imports/[id]/confirm/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "POST",
+      "path": "/api/platform/imports/preview",
+      "file": "src/app/api/platform/imports/preview/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "GET",
+      "path": "/api/platform/notifications",
+      "file": "src/app/api/platform/notifications/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/platform/notifications",
+      "file": "src/app/api/platform/notifications/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/platform/search",
+      "file": "src/app/api/platform/search/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/platform/sources",
+      "file": "src/app/api/platform/sources/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/scanner",
+      "file": "src/app/api/scanner/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 405,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/scanner",
+      "file": "src/app/api/scanner/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/sdk/ingest",
+      "file": "src/app/api/sdk/ingest/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/sdk/stream",
+      "file": "src/app/api/sdk/stream/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe",
+      "streaming": "cancelled; dedicated SDK tenant suite checks contents"
+    },
+    {
+      "check": "Every foreign organization-owned table unchanged",
+      "phase": "foreign ID probes",
+      "direction": "A to B",
+      "tables": 60,
+      "pass": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/ai/analyze",
+      "file": "src/app/api/ai/analyze/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 503,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/ai/briefing",
+      "file": "src/app/api/ai/briefing/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 503,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/ai/connection",
+      "file": "src/app/api/ai/connection/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/ai/generate",
+      "file": "src/app/api/ai/generate/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/ai/local-status",
+      "file": "src/app/api/ai/local-status/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/ai/overview",
+      "file": "src/app/api/ai/overview/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/ai/research",
+      "file": "src/app/api/ai/research/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 503,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/cyber/assets",
+      "file": "src/app/api/cyber/assets/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/cyber/assets",
+      "file": "src/app/api/cyber/assets/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/cyber/clients",
+      "file": "src/app/api/cyber/clients/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/cyber/clients",
+      "file": "src/app/api/cyber/clients/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/cyber/dependencies",
+      "file": "src/app/api/cyber/dependencies/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/cyber/dependencies",
+      "file": "src/app/api/cyber/dependencies/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/dark-web/entities",
+      "file": "src/app/api/dark-web/entities/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/dark-web/entities",
+      "file": "src/app/api/dark-web/entities/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/dark-web/entities/sync",
+      "file": "src/app/api/dark-web/entities/sync/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "GET",
+      "path": "/api/dark-web/mentions",
+      "file": "src/app/api/dark-web/mentions/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/dark-web/scan",
+      "file": "src/app/api/dark-web/scan/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/extension/context",
+      "file": "src/app/api/extension/context/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/imports/[id]",
+      "file": "src/app/api/imports/[id]/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 404,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "POST",
+      "path": "/api/imports/[id]/confirm",
+      "file": "src/app/api/imports/[id]/confirm/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "GET",
+      "path": "/api/imports/[id]/error-report",
+      "file": "src/app/api/imports/[id]/error-report/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 404,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "POST",
+      "path": "/api/imports/preview",
+      "file": "src/app/api/imports/preview/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "GET",
+      "path": "/api/imports/template/[type]",
+      "file": "src/app/api/imports/template/[type]/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 404,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "GET",
+      "path": "/api/intelligence/alerts",
+      "file": "src/app/api/intelligence/alerts/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/intelligence/alerts/[id]",
+      "file": "src/app/api/intelligence/alerts/[id]/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/intelligence/assessments/[id]/remediation",
+      "file": "src/app/api/intelligence/assessments/[id]/remediation/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/intelligence/assessments/[id]/rescue",
+      "file": "src/app/api/intelligence/assessments/[id]/rescue/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/intelligence/dashboard",
+      "file": "src/app/api/intelligence/dashboard/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/intelligence/deliveries",
+      "file": "src/app/api/intelligence/deliveries/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/intelligence/providers",
+      "file": "src/app/api/intelligence/providers/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/intelligence/providers",
+      "file": "src/app/api/intelligence/providers/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/intelligence/queue",
+      "file": "src/app/api/intelligence/queue/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/intelligence/queue/[id]",
+      "file": "src/app/api/intelligence/queue/[id]/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/intelligence/reconcile",
+      "file": "src/app/api/intelligence/reconcile/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/intelligence/settings",
+      "file": "src/app/api/intelligence/settings/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/intelligence/settings",
+      "file": "src/app/api/intelligence/settings/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/intelligence/tasks",
+      "file": "src/app/api/intelligence/tasks/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/intelligence/tasks/[id]",
+      "file": "src/app/api/intelligence/tasks/[id]/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/knowledge/ask",
+      "file": "src/app/api/knowledge/ask/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/knowledge/documents",
+      "file": "src/app/api/knowledge/documents/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/knowledge/documents",
+      "file": "src/app/api/knowledge/documents/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 503,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/knowledge/documents/[id]",
+      "file": "src/app/api/knowledge/documents/[id]/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "GET",
+      "path": "/api/knowledge/documents/[id]",
+      "file": "src/app/api/knowledge/documents/[id]/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 404,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "POST",
+      "path": "/api/knowledge/search",
+      "file": "src/app/api/knowledge/search/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/knowledge/settings",
+      "file": "src/app/api/knowledge/settings/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/knowledge/settings",
+      "file": "src/app/api/knowledge/settings/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/knowledge/shared",
+      "file": "src/app/api/knowledge/shared/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/knowledge/shared",
+      "file": "src/app/api/knowledge/shared/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 401,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/logistics/assets",
+      "file": "src/app/api/logistics/assets/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/assets",
+      "file": "src/app/api/logistics/assets/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/logistics/disruptions",
+      "file": "src/app/api/logistics/disruptions/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/disruptions",
+      "file": "src/app/api/logistics/disruptions/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/logistics/disruptions/[id]",
+      "file": "src/app/api/logistics/disruptions/[id]/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 404,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/logistics/disruptions/[id]/map",
+      "file": "src/app/api/logistics/disruptions/[id]/map/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 404,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/disruptions/[id]/reconcile",
+      "file": "src/app/api/logistics/disruptions/[id]/reconcile/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/disruptions/manual-sync",
+      "file": "src/app/api/logistics/disruptions/manual-sync/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/logistics/rescue-cases",
+      "file": "src/app/api/logistics/rescue-cases/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/rescue-cases",
+      "file": "src/app/api/logistics/rescue-cases/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/logistics/rescue-cases/[id]",
+      "file": "src/app/api/logistics/rescue-cases/[id]/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 404,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/logistics/rescue-cases/[id]",
+      "file": "src/app/api/logistics/rescue-cases/[id]/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/rescue-cases/[id]/actions",
+      "file": "src/app/api/logistics/rescue-cases/[id]/actions/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/rescue-cases/[id]/decisions",
+      "file": "src/app/api/logistics/rescue-cases/[id]/decisions/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/rescue-cases/[id]/evidence",
+      "file": "src/app/api/logistics/rescue-cases/[id]/evidence/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/logistics/shipments",
+      "file": "src/app/api/logistics/shipments/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/shipments",
+      "file": "src/app/api/logistics/shipments/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/logistics/shipments/[id]",
+      "file": "src/app/api/logistics/shipments/[id]/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 404,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "GET",
+      "path": "/api/logistics/shipments/[id]",
+      "file": "src/app/api/logistics/shipments/[id]/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 404,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/logistics/shipments/[id]",
+      "file": "src/app/api/logistics/shipments/[id]/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 404,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/shipments/imports/[id]/confirm",
+      "file": "src/app/api/logistics/shipments/imports/[id]/confirm/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/shipments/imports/preview",
+      "file": "src/app/api/logistics/shipments/imports/preview/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "GET",
+      "path": "/api/logistics/zero-day-roll-calls",
+      "file": "src/app/api/logistics/zero-day-roll-calls/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/zero-day-roll-calls",
+      "file": "src/app/api/logistics/zero-day-roll-calls/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/logistics/zero-day-roll-calls/[id]",
+      "file": "src/app/api/logistics/zero-day-roll-calls/[id]/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 404,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/logistics/zero-day-roll-calls/[id]",
+      "file": "src/app/api/logistics/zero-day-roll-calls/[id]/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/zero-day-roll-calls/[id]/assessments",
+      "file": "src/app/api/logistics/zero-day-roll-calls/[id]/assessments/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/zero-day-roll-calls/[id]/decisions",
+      "file": "src/app/api/logistics/zero-day-roll-calls/[id]/decisions/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/logistics/zero-day-roll-calls/[id]/evidence",
+      "file": "src/app/api/logistics/zero-day-roll-calls/[id]/evidence/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/operations/features",
+      "file": "src/app/api/operations/features/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/osint/shodan",
+      "file": "src/app/api/osint/shodan/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/osint/shodan",
+      "file": "src/app/api/osint/shodan/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/platform/analytics",
+      "file": "src/app/api/platform/analytics/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/platform/cases",
+      "file": "src/app/api/platform/cases/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/platform/cases",
+      "file": "src/app/api/platform/cases/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/platform/cases/[id]",
+      "file": "src/app/api/platform/cases/[id]/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 404,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "POST",
+      "path": "/api/platform/cases/[id]/tasks",
+      "file": "src/app/api/platform/cases/[id]/tasks/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "GET",
+      "path": "/api/platform/configuration",
+      "file": "src/app/api/platform/configuration/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/platform/configuration",
+      "file": "src/app/api/platform/configuration/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/platform/entities",
+      "file": "src/app/api/platform/entities/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/platform/entities",
+      "file": "src/app/api/platform/entities/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/platform/entities/[id]",
+      "file": "src/app/api/platform/entities/[id]/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 404,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "GET",
+      "path": "/api/platform/events",
+      "file": "src/app/api/platform/events/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/platform/events",
+      "file": "src/app/api/platform/events/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/platform/events/[id]/correlations",
+      "file": "src/app/api/platform/events/[id]/correlations/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "POST",
+      "path": "/api/platform/events/[id]/correlations",
+      "file": "src/app/api/platform/events/[id]/correlations/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "GET",
+      "path": "/api/platform/evidence",
+      "file": "src/app/api/platform/evidence/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/platform/evidence",
+      "file": "src/app/api/platform/evidence/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/platform/health",
+      "file": "src/app/api/platform/health/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/platform/imports/[id]/confirm",
+      "file": "src/app/api/platform/imports/[id]/confirm/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "POST",
+      "path": "/api/platform/imports/preview",
+      "file": "src/app/api/platform/imports/preview/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "seeded foreign core ID"
+    },
+    {
+      "method": "GET",
+      "path": "/api/platform/notifications",
+      "file": "src/app/api/platform/notifications/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/platform/notifications",
+      "file": "src/app/api/platform/notifications/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/platform/search",
+      "file": "src/app/api/platform/search/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/platform/sources",
+      "file": "src/app/api/platform/sources/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/scanner",
+      "file": "src/app/api/scanner/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 405,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/scanner",
+      "file": "src/app/api/scanner/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/sdk/ingest",
+      "file": "src/app/api/sdk/ingest/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "GET",
+      "path": "/api/sdk/stream",
+      "file": "src/app/api/sdk/stream/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe",
+      "streaming": "cancelled; dedicated SDK tenant suite checks contents"
+    },
+    {
+      "check": "Every foreign organization-owned table unchanged",
+      "phase": "foreign ID probes",
+      "direction": "B to A",
+      "tables": 60,
+      "pass": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/platform/demo/reset",
+      "file": "src/app/api/platform/demo/reset/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/platform/demo/seed",
+      "file": "src/app/api/platform/demo/seed/route.ts",
+      "policy": "member",
+      "direction": "A to B",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "check": "Every foreign organization-owned table unchanged",
+      "phase": "demo resets last",
+      "direction": "A to B",
+      "tables": 60,
+      "pass": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/platform/demo/reset",
+      "file": "src/app/api/platform/demo/reset/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 400,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "method": "POST",
+      "path": "/api/platform/demo/seed",
+      "file": "src/app/api/platform/demo/seed/route.ts",
+      "policy": "member",
+      "direction": "B to A",
+      "status": 200,
+      "pass": true,
+      "probe": "foreign organization/body plus missing-ID probe"
+    },
+    {
+      "check": "Every foreign organization-owned table unchanged",
+      "phase": "demo resets last",
+      "direction": "B to A",
+      "tables": 60,
+      "pass": true
+    }
+  ]
+}

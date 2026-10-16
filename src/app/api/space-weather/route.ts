@@ -23,23 +23,24 @@ export async function GET() {
     ]);
 
     // Latest Kp index (geomagnetic storm indicator)
-    let kpIndex = 0;
+    let kpIndex: number | null = null;
     let kpTimestamp = '';
     if (kpRes.status === 'fulfilled' && Array.isArray(kpRes.value) && kpRes.value.length > 0) {
       const latest = kpRes.value[kpRes.value.length - 1];
-      kpIndex = parseFloat(latest.kp_index || latest.Kp || 0);
+      const observed = Number.parseFloat(latest.kp_index ?? latest.Kp);
+      if (Number.isFinite(observed)) kpIndex = observed;
       kpTimestamp = latest.time_tag || '';
     }
 
     // Storm level from Kp
-    let stormLevel = 'Quiet';
-    let stormColor = '#00E676';
-    if (kpIndex >= 8) { stormLevel = 'Extreme (G5)'; stormColor = '#FF1744'; }
-    else if (kpIndex >= 7) { stormLevel = 'Severe (G4)'; stormColor = '#FF3D3D'; }
-    else if (kpIndex >= 6) { stormLevel = 'Strong (G3)'; stormColor = '#FF9500'; }
-    else if (kpIndex >= 5) { stormLevel = 'Moderate (G2)'; stormColor = '#FFD700'; }
-    else if (kpIndex >= 4) { stormLevel = 'Minor (G1)'; stormColor = '#FFD700'; }
-    else if (kpIndex >= 3) { stormLevel = 'Unsettled'; stormColor = '#D4AF37'; }
+    let stormLevel = kpIndex === null ? 'Unknown' : 'Quiet';
+    let stormColor = kpIndex === null ? '#555' : '#00E676';
+    if (kpIndex !== null && kpIndex >= 8) { stormLevel = 'Extreme (G5)'; stormColor = '#FF1744'; }
+    else if (kpIndex !== null && kpIndex >= 7) { stormLevel = 'Severe (G4)'; stormColor = '#FF3D3D'; }
+    else if (kpIndex !== null && kpIndex >= 6) { stormLevel = 'Strong (G3)'; stormColor = '#FF9500'; }
+    else if (kpIndex !== null && kpIndex >= 5) { stormLevel = 'Moderate (G2)'; stormColor = '#FFD700'; }
+    else if (kpIndex !== null && kpIndex >= 4) { stormLevel = 'Minor (G1)'; stormColor = '#FFD700'; }
+    else if (kpIndex !== null && kpIndex >= 3) { stormLevel = 'Unsettled'; stormColor = '#D4AF37'; }
 
     // Recent alerts
     const alerts: any[] = [];
@@ -75,11 +76,12 @@ export async function GET() {
       alerts,
       solar_flares: flares,
       timestamp: new Date().toISOString(),
+      ...(kpIndex === null ? { error: 'No current geomagnetic observation available' } : {}),
     });
   } catch {
     console.error('Space Weather API error:');
     return NextResponse.json({
-      kp_index: 0, storm_level: 'Unknown', storm_color: '#555',
+      kp_index: null, storm_level: 'Unknown', storm_color: '#555',
       alerts: [], solar_flares: [], error: 'Failed to fetch space weather data',
     }, { status: 500 });
   }

@@ -108,9 +108,27 @@ development-tool advisories remain. Forced incompatible downgrades were rejected
 Gitleaks history findings still require founder rotation of historical FIRMS
 credentials; a clean new patch cannot revoke an old exposed credential.
 
+## 16 October Coverage Extension
+
+- Reviewed inventory: every one of 187 exported methods, with a drift test.
+- Actual HTTP: all 187 anonymous/wrong-key boundaries pass. Member/cron gates
+  require 401/403; unconfigured signed/service endpoints may fail closed 503.
+- Two-way member sweep finally passes 224 checks, including foreign-table
+  digests. Core foreign IDs and optional missing IDs are not conflated; the
+  final harness delays demo resets until both directions have probed seed IDs.
+- 35 legacy route families x four failure modes = 140 passing cases, including
+  all CCTV regional dispatch, plus 32 existing registry cases. Configuration-
+  gated branches, every possible upstream success schema and URL variant are
+  not exhaustively certified. Only mocked provider traffic is permitted.
+- Actual PostgreSQL session-row/role/revocation checks pass. Five real local
+  Auth-server lifecycle tests are opt-in and currently blocked by Docker.
+- Native mixed-route p95 improved to 263/804 ms at 50/200 connections, zero
+  errors. No authorization/result TTL cache was introduced. Fresh local timing
+  checks are repeated separately from other CPU-heavy jobs.
+
 ## Remaining Gates
 
-1. Full endpoint/role/child-link permutations and remaining legacy adapters/URLs.
+1. Remaining valid-payload/role/child-link permutations and upstream URL/success-schema variants beyond the complete anonymous method sweep.
 2. Runtime Supabase Auth revocation/logout in a disposable representative setup.
 3. Deployment-pinned OCR/PDF worker CPU/memory isolation and extraction throughput.
 4. Distributed cost quotas; current limits are per process.
