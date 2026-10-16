@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Activity, Boxes, FileText, LayoutDashboard, Map, Search, Settings, ShieldCheck } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
+import AdminEntry from '@/components/presentation/AdminEntry';
 
 type Configuration = { navigation: Array<{ id: string; label: string; href: string; capability?: string }>; capabilities: Record<string, boolean>; terminology: Record<string, string> };
 const icons: Record<string, typeof LayoutDashboard> = { command: LayoutDashboard, search: Search, map: Map, entities: Boxes, cases: Activity, evidence: FileText, settings: Settings };
@@ -34,6 +35,6 @@ export default function PlatformShell({ title, children }: { title: string; chil
       })}</nav>
       <Link href="/admin/health" className="platform-nav__health"><span />Platform health</Link>
     </aside>
-    <section className="platform-main"><header className="platform-header"><div><p>Configured operational workspace</p><h1>{title}</h1></div><div className="platform-header__actions"><Link href="/onboarding">Configure workspace</Link><Link href="/">Open map</Link></div></header>{children}</section>
+    <section className="platform-main"><header className="platform-header"><div><p>Configured operational workspace</p><h1>{title}</h1></div><div className="platform-header__actions"><AdminEntry /><Link href="/onboarding">Configure workspace</Link><Link href="/">Open map</Link></div></header>{children}</section>
   </main>;
 }

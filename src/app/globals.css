@@ -3588,6 +3588,7 @@ a.ops-stat:hover { border-color: var(--border-active); background: #1a2028; }
 
 /* Operational world monitor */
 .world-map-workspace {
+  container-type: inline-size;
   --wm-bg: #0c1211;
   --wm-panel: #111917;
   --wm-panel-raised: #17211e;
@@ -3937,6 +3938,11 @@ a.ops-stat:hover { border-color: var(--border-active); background: #1a2028; }
 .world-map-statusbar a { display: inline-flex; align-items: center; gap: 4px; color: #b7d8cc; text-decoration: none; }
 .world-map-statusbar a:hover { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
 
+@container (max-width: 1100px) {
+  .world-map-toolbar { grid-template-columns: minmax(160px, 1fr) auto auto; gap: 10px; }
+  .world-map-metrics { display: none; }
+}
+
 @media (max-width: 1180px) {
   .world-map-toolbar { grid-template-columns: minmax(210px, 1fr) auto auto; }
   .world-map-metrics { display: none; }
@@ -3971,3 +3977,22 @@ a.ops-stat:hover { border-color: var(--border-active); background: #1a2028; }
   .world-map-canvas > div:not(.world-map-source-badge):not(.world-map-inspector) { min-height: 470px; height: 470px; }
   .world-map-statusbar > div:last-child span { display: none; }
 }
+
+.world-map-workspace:fullscreen {
+  width: 100vw;
+  height: 100dvh;
+  min-height: 0;
+  max-height: none;
+  border: 0;
+  border-radius: 0;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+.world-map-workspace:fullscreen .world-map-stage {
+  min-height: 0;
+  grid-template-columns: minmax(150px, 22%) minmax(0, 1fr);
+  overflow: hidden;
+}
+.world-map-workspace:fullscreen .world-map-layer-rail { height: auto; min-height: 0; }
+.world-map-workspace:fullscreen .world-map-mode { display: none; }
+.world-map-workspace:fullscreen .world-map-canvas,
+.world-map-workspace:fullscreen .world-map-canvas > div:not(.world-map-source-badge):not(.world-map-inspector) { min-height: 0; height: 100%; }

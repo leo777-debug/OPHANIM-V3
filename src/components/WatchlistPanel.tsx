@@ -19,8 +19,8 @@ async function errorMessage(response: Response, fallback: string) {
   return typeof body?.error === 'string' ? body.error : fallback;
 }
 
-export default function WatchlistPanel() {
-  const [open, setOpen] = useState(false);
+export default function WatchlistPanel({ embedded = false }: { embedded?: boolean }) {
+  const [open, setOpen] = useState(embedded);
   const [items, setItems] = useState<WatchlistItem[]>([]);
   const [entityType, setEntityType] = useState('ip');
   const [entityValue, setEntityValue] = useState('');
@@ -53,6 +53,12 @@ export default function WatchlistPanel() {
     setOpen(true);
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (!embedded) return;
+    const frame=requestAnimationFrame(()=>void load());
+    return()=>cancelAnimationFrame(frame);
+  }, [embedded, load]);
 
   useEffect(() => {
     window.addEventListener('ophanim:open-watchlists', openWatchlists);
@@ -154,7 +160,7 @@ export default function WatchlistPanel() {
 
   return (
     <>
-      <button
+      {!embedded && <button
         type="button"
         onClick={() => {
           if (open) {
@@ -168,21 +174,21 @@ export default function WatchlistPanel() {
         className="fixed left-3 top-1/2 z-[840] flex h-9 w-9 -translate-y-1/2 items-center justify-center glass-panel transition-colors hover:border-[var(--gold-primary)]"
       >
         <Bookmark className="h-4 w-4 text-[var(--gold-primary)]" />
-      </button>
+      </button>}
 
       {open && (
         <>
-          <button
+          {!embedded && <button
             type="button"
             aria-label="Close watchlists"
             className="fixed inset-0 z-[845] cursor-default bg-black/20"
             onClick={() => setOpen(false)}
-          />
+          />}
           <section
-            role="dialog"
-            aria-modal="true"
+            role={embedded ? 'region' : 'dialog'}
+            aria-modal={embedded ? undefined : true}
             aria-label="Watchlists"
-            className="fixed left-1/2 top-[112px] z-[850] flex max-h-[calc(100dvh-136px)] w-[min(400px,calc(100vw-24px))] -translate-x-1/2 flex-col overflow-hidden rounded-xl border border-[var(--border-secondary)] bg-[var(--bg-primary)]/95 shadow-2xl backdrop-blur-xl md:top-[108px]"
+            className={embedded ? 'relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-[var(--bg-primary)]' : 'fixed left-1/2 top-[112px] z-[850] flex max-h-[calc(100dvh-136px)] w-[min(400px,calc(100vw-24px))] -translate-x-1/2 flex-col overflow-hidden rounded-xl border border-[var(--border-secondary)] bg-[var(--bg-primary)]/95 shadow-2xl backdrop-blur-xl md:top-[108px]'}
           >
             <header className="flex items-center justify-between border-b border-[var(--border-secondary)] px-4 py-3">
               <div>

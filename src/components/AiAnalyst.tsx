@@ -105,6 +105,7 @@ interface ChatMessage {
 interface AiAnalystProps {
   data: DashboardData;
   mode?: 'briefing' | 'settings';
+  embedded?: boolean;
 }
 
 const GEMINI_KEY_STORAGE = 'ophanim-gemini-key';
@@ -194,7 +195,7 @@ function renderMarkdown(text: string): string {
    Component
    ───────────────────────────────────────────────────────────── */
 
-export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
+export default function AiAnalyst({ data, mode = 'briefing', embedded = false }: AiAnalystProps) {
   const [isOpen, setIsOpen] = useState(true);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
@@ -505,13 +506,13 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
         {isOpen && (
           <>
             {/* Backdrop on mobile */}
-            <motion.div
+            {!embedded && <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[600] md:hidden"
               onClick={() => setIsOpen(false)}
-            />
+            />}
 
             {/* Main Panel */}
             <motion.div
@@ -519,7 +520,7 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 40, scale: 0.95 }}
               transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-              className="fixed bottom-0 right-0 md:bottom-6 md:right-6 z-[700] w-full md:w-[440px] h-[85vh] md:h-[680px] md:max-h-[85vh] flex flex-col md:rounded-2xl overflow-hidden"
+              className={embedded ? 'relative w-full min-h-full flex flex-col' : 'fixed bottom-0 right-0 md:bottom-6 md:right-6 z-[700] w-full md:w-[440px] h-[85vh] md:h-[680px] md:max-h-[85vh] flex flex-col md:rounded-2xl overflow-hidden'}
               style={{
                 background: 'linear-gradient(180deg, rgba(8, 10, 20, 0.96) 0%, rgba(6, 6, 12, 0.98) 100%)',
                 border: '1px solid rgba(124, 255, 203, 0.2)',
@@ -552,7 +553,7 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
                   <div className="flex flex-col">
                     <span className="hud-text text-[11px] text-[var(--text-heading)]">OPHANIM ANALYST</span>
                     <span className="text-[7px] font-mono tracking-[0.2em] text-[var(--text-muted)]">
-                      GEMINI 2.0 FLASH • ONLINE
+                      CONFIGURED AI PROVIDER
                     </span>
                   </div>
                 </div>

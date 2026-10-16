@@ -17,9 +17,27 @@ Osiris deployment is not required.
 [Operations](docs/OPERATIONS.md) |
 [World Monitor comparison and remaining gaps](docs/WORLD_MONITOR_COMPARISON.md)
 
+### Presentation Mode
+
+The existing owner can turn presentation mode on/off at `/admin/presentation`
+without redeploying. It starts OFF. Map view uses a key-free globe, public layers,
+news, timeline, source freshness and world clocks; the presenter can return to
+the original app using the view switch or Ctrl+Shift+P. Optional PIN protection
+does not replace login. Public snapshots provide a labelled replay fallback.
+See [presenter instructions](PRESENTATION.md) and the
+[implementation and verification report](PRESENTATION_REPORT.md).
+
 ## Features
 
-### Atlas and Map Workspaces
+### Unified Operational Map
+
+`/logistics/map` and presentation Map view use one operational map implementation,
+not separate Atlas and presentation interfaces. Old `/atlas` links redirect to
+the operational map, preserving supported map and tool parameters. Analyst,
+Fusion, Recon, Markets, Alerts, Entities, Shodan/IP lookup, tracking, Intel Desk,
+AI setup, watchlists and sources open in a dock beside the same globe.
+**Fullscreen map** hides the outer workspace; saved globe tabs retain their
+layers, position, projection and basemap across the two views in this browser.
 
 - MapLibre globe with night, earth-colored and satellite basemaps.
 - Independent globe workspace tabs and target-monitoring entry points.
@@ -34,7 +52,8 @@ embeds are not proof of a working native data connector.
 
 ### Intelligence Desk
 
-Open **INTEL DESK** in the atlas; on mobile use **NEWS** or **INTEL**.
+Open **Intel Desk** in the map toolbar. **Filters** reveals the news controls;
+on mobile the intelligence dock becomes a bottom panel.
 
 - **News:** text search, publisher filters, keyword-score filters and time windows
   of 1, 6, 24 or 48 hours, seven days, or all loaded news.
@@ -54,8 +73,9 @@ Open **INTEL DESK** in the atlas; on mobile use **NEWS** or **INTEL**.
 
 The news route polls nine sources: **BBC, Al Jazeera, GDACS, NASA, CISA,
 OSINTtechnical, Faytuks, Liveuamap and CyberKnow**. RSS and Telegram are loaded
-together, and one failed source does not stop the others. The atlas refreshes news
-every five minutes. Publisher limits mean time filters cover loaded stories, not
+together, and one failed source does not stop the others. The shared map polls
+public feeds every minute; upstream cache and publication times still apply.
+Publisher limits mean time filters cover loaded stories, not
 a complete historical archive.
 
 Reachable feeds can contain old publications. Undated news is not assigned a
@@ -89,7 +109,7 @@ configuration. They are not enabled simply by loading the public globe.
 
 ### AI and Local Models
 
-Open **AI SETUP** in the atlas to enter a base URL, model name, optional API key
+Open **AI setup** in the map toolbar to enter a base URL, model name, optional API key
 and enabled tasks. Use **Test connection**, then save the configuration.
 
 | Provider preset | Default base URL |
@@ -150,7 +170,7 @@ npm install
 npm run dev
 ```
 
-Open the globe at [http://localhost:3000/atlas](http://localhost:3000/atlas).
+Open the globe at [http://localhost:3000/logistics/map](http://localhost:3000/logistics/map).
 Configure database/authentication before using protected operational workflows.
 Keep secrets in uncommitted environment files, never in browser-exposed variables.
 
@@ -186,7 +206,7 @@ npx tsc --noEmit
 npm run build
 ```
 
-For the intelligence desk, open `/atlas`, select **INTEL DESK**, filter news,
+For the intelligence desk, open `/logistics/map`, select **Intel Desk**, filter news,
 download CSV/JSON, mark matching stories read and check **Unread** after reloading.
 Then test **TIMELINE**, **REGIONS**, **SOURCES** and **CLOCKS**, including a mobile
 viewport. The [comparison document](docs/WORLD_MONITOR_COMPARISON.md#testing)

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { stealthFetch } from '@/lib/stealthFetch';
 import { classifyOperationalCamera, filterCamerasByFocus, type CameraFocus } from './operational-context';
 import type { CctvCamera } from './types';
+import { regionCache } from './region-cache';
 
 export const maxDuration = 60;
 import { fetchAsfinagCameras } from './asfinag';
@@ -514,7 +515,6 @@ function getRegionsForBounds(lat: number, lng: number, radius: number): string[]
 // region is bounded by a budget; on failure we serve the last good result.
 const REGION_BUDGET_MS = 20000;
 const REGION_CACHE_TTL = 15 * 60 * 1000;
-const regionCache = new Map<string, { cams: any[]; at: number }>();
 
 function withBudget(p: Promise<any[]>): Promise<any[]> {
   return Promise.race([
