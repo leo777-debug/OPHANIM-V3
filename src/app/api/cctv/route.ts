@@ -629,8 +629,8 @@ export async function GET(request: Request) {
     }, {
       headers: { 'Cache-Control': cacheControl },
     });
-  } catch (error) {
-    console.error('CCTV fetch error:', error);
+  } catch {
+    console.error('CCTV fetch error:');
     return NextResponse.json({ cameras: [], error: 'Failed' }, { status: 500 });
   }
 }

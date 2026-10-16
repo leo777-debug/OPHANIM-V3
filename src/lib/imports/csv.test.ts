@@ -20,6 +20,11 @@ describe('shared import CSV parsing', () => {
     expect(escapeCsvCell('=HYPERLINK("https://example.test")')).toBe(`"'=HYPERLINK(""https://example.test"")"`);
   });
 
+  it.each(['=1+1', '+SUM(A1:A2)', '-1+2', '@SUM(A1:A2)', ' \t=1+1', '\r=1+1', '\n=1+1'])('neutralizes formula prefix %j', (value) => {
+    const escaped = escapeCsvCell(value);
+    expect(escaped.replace(/^"/, '')).toMatch(/^'/);
+  });
+
   it('rejects an unclosed quoted CSV cell', () => {
     expect(() => parseCsv('Reference\n"OPH-1')).toThrow(ImportError);
   });

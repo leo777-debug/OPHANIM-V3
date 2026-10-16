@@ -17,6 +17,7 @@ import {
   isoDate,
   label,
   requestJson,
+  requestAllShipments,
 } from "@/lib/logistics/client";
 import ActionWindow from "./logistics/ActionWindow";
 import EmptyState from "./logistics/EmptyState";
@@ -52,9 +53,7 @@ export default function RescueWorkspace() {
     try {
       const [caseData, shipmentData, disruptionData] = await Promise.all([
         requestJson<{ cases: RescueCase[] }>("/api/logistics/rescue-cases"),
-        requestJson<{ shipments: ShipmentRecord[] }>(
-          "/api/logistics/shipments",
-        ),
+        requestAllShipments(),
         requestJson<{ disruptions: DisruptionRecord[] }>(
           "/api/logistics/disruptions",
         ),

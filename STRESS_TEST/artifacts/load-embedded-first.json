@@ -1,0 +1,46 @@
+{
+  "checkedAt": "2026-10-14T14:09:49.670Z",
+  "externalTraffic": "server fetch/socket/DNS blocked; no real providers",
+  "runs": [
+    {
+      "connections": 50,
+      "durationSeconds": 15.09,
+      "responses": 2962,
+      "p50Ms": 51.8431,
+      "p95Ms": 701.7214,
+      "errors": 0,
+      "timeouts": 0,
+      "non2xx": 1004,
+      "statusCodes": {
+        "200": {
+          "count": 1958
+        },
+        "307": {
+          "count": 1004
+        }
+      },
+      "serverPid": 24664,
+      "database": "embedded PostgreSQL socket multiplexer, NOT native concurrency certification"
+    },
+    {
+      "connections": 200,
+      "durationSeconds": 15.14,
+      "responses": 3696,
+      "p50Ms": 61.1465,
+      "p95Ms": 2522.9559,
+      "errors": 0,
+      "timeouts": 0,
+      "non2xx": 1299,
+      "statusCodes": {
+        "200": {
+          "count": 2397
+        },
+        "307": {
+          "count": 1299
+        }
+      },
+      "serverPid": 24664,
+      "database": "embedded PostgreSQL socket multiplexer, NOT native concurrency certification"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import Link from "next/link";
 import { LoaderCircle, Search, X } from "lucide-react";
 import type { ShipmentRecord } from "@/lib/logistics/shipments";
@@ -21,20 +21,25 @@ export default function OperationalSearch() {
   const [disruptions, setDisruptions] = useState<DisruptionRecord[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
+  const latest = useRef(0);
+  useEffect(() => {
+    const generation = ++latest.current;
+    const timer = setTimeout(() => {
+      if (query.trim().length < 2) return;
+      void requestJson<{ shipments: ShipmentRecord[] }>(`/api/logistics/shipments?limit=20&query=${encodeURIComponent(query.trim())}`)
+        .then((data) => { if (generation === latest.current) setShipments(data.shipments); })
+        .catch(() => { if (generation === latest.current) setShipments([]); });
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [query]);
 
   const load = async () => {
     if (loaded || loading) return;
     setLoading(true);
     try {
-      const [shipmentData, disruptionData] = await Promise.all([
-        requestJson<{ shipments: ShipmentRecord[] }>(
-          "/api/logistics/shipments",
-        ),
-        requestJson<{ disruptions: DisruptionRecord[] }>(
+      const disruptionData = await requestJson<{ disruptions: DisruptionRecord[] }>(
           "/api/logistics/disruptions",
-        ),
-      ]);
-      setShipments(shipmentData.shipments);
+        );
       setDisruptions(disruptionData.disruptions);
       setLoaded(true);
     } catch {
@@ -51,6 +56,7 @@ export default function OperationalSearch() {
       const values = [
         shipment.shipmentReference,
         shipment.containerNumber,
+        shipment.carrier,
         shipment.vesselName,
         shipment.originPortName,
         shipment.destinationPortName,

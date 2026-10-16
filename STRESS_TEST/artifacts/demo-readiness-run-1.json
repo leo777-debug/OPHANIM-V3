@@ -1,0 +1,147 @@
+{
+  "checkedAt": "2026-10-16T00:47:50.872Z",
+  "scope": "Local fixture demo, no external network. Not a cached service-worker app with the local server offline.",
+  "checks": [
+    {
+      "check": "production CSP rejects eval and arbitrary HTTPS scripts",
+      "pass": true
+    },
+    {
+      "check": "production response hardening headers",
+      "pass": true
+    },
+    {
+      "check": "private/debug path unavailable: /.env.local",
+      "status": 404,
+      "pass": true
+    },
+    {
+      "check": "private/debug path unavailable: /STRESS_TEST/runtime/tenant-context.json",
+      "status": 404,
+      "pass": true
+    },
+    {
+      "check": "private/debug path unavailable: /api/debug",
+      "status": 404,
+      "pass": true
+    },
+    {
+      "check": "390px /verify explicit replay and no overflow",
+      "pass": true
+    },
+    {
+      "check": "390px /imports explicit replay and no overflow",
+      "pass": true
+    },
+    {
+      "check": "390px /logistics/command explicit replay and no overflow",
+      "pass": true
+    },
+    {
+      "check": "390px /knowledge explicit replay and no overflow",
+      "pass": true
+    },
+    {
+      "check": "390px Verify works with all internet requests blocked",
+      "pass": true
+    },
+    {
+      "check": "390px demo path has no uncaught browser exceptions",
+      "pass": true,
+      "errors": []
+    },
+    {
+      "check": "1920px /verify explicit replay and no overflow",
+      "pass": true
+    },
+    {
+      "check": "1920px /imports explicit replay and no overflow",
+      "pass": true
+    },
+    {
+      "check": "1920px /logistics/command explicit replay and no overflow",
+      "pass": true
+    },
+    {
+      "check": "1920px /knowledge explicit replay and no overflow",
+      "pass": true
+    },
+    {
+      "check": "1920px Verify works with all internet requests blocked",
+      "pass": true
+    },
+    {
+      "check": "1920px demo path has no uncaught browser exceptions",
+      "pass": true,
+      "errors": []
+    }
+  ],
+  "timings": [
+    {
+      "step": "cold server Verify HTML",
+      "elapsedMs": 1758,
+      "targetMs": 2000,
+      "withinBudget": true
+    },
+    {
+      "step": "390px /verify shell and replay label",
+      "elapsedMs": 1009,
+      "targetMs": 2000,
+      "withinBudget": true
+    },
+    {
+      "step": "390px /imports shell and replay label",
+      "elapsedMs": 363,
+      "targetMs": 2000,
+      "withinBudget": true
+    },
+    {
+      "step": "390px /logistics/command shell and replay label",
+      "elapsedMs": 778,
+      "targetMs": 2000,
+      "withinBudget": true
+    },
+    {
+      "step": "390px /knowledge shell and replay label",
+      "elapsedMs": 708,
+      "targetMs": 2000,
+      "withinBudget": true
+    },
+    {
+      "step": "390px local replay result",
+      "elapsedMs": 258,
+      "targetMs": 1000,
+      "withinBudget": true
+    },
+    {
+      "step": "1920px /verify shell and replay label",
+      "elapsedMs": 234,
+      "targetMs": 2000,
+      "withinBudget": true
+    },
+    {
+      "step": "1920px /imports shell and replay label",
+      "elapsedMs": 247,
+      "targetMs": 2000,
+      "withinBudget": true
+    },
+    {
+      "step": "1920px /logistics/command shell and replay label",
+      "elapsedMs": 523,
+      "targetMs": 2000,
+      "withinBudget": true
+    },
+    {
+      "step": "1920px /knowledge shell and replay label",
+      "elapsedMs": 159,
+      "targetMs": 2000,
+      "withinBudget": true
+    },
+    {
+      "step": "1920px local replay result",
+      "elapsedMs": 81,
+      "targetMs": 1000,
+      "withinBudget": true
+    }
+  ]
+}

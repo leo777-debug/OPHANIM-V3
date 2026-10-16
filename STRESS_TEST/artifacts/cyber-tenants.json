@@ -1,0 +1,359 @@
+{
+  "checkedAt": "2026-10-15T13:37:38.449Z",
+  "database": "native PostgreSQL 18",
+  "scope": "Synthetic HTTP plus authenticated database-role attacks; no actual scans, live advisories or provider traffic",
+  "checks": [
+    {
+      "check": "own asset positive control",
+      "status": 201,
+      "pass": true
+    },
+    {
+      "check": "own roll-call positive control",
+      "status": 201,
+      "pass": true
+    },
+    {
+      "check": "own asset assessment positive control",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "own roll-call decision positive control",
+      "status": 201,
+      "pass": true
+    },
+    {
+      "check": "own roll-call evidence positive control",
+      "status": 201,
+      "pass": true
+    },
+    {
+      "check": "own remediation positive control",
+      "status": 201,
+      "pass": true
+    },
+    {
+      "check": "own asset positive control",
+      "status": 201,
+      "pass": true
+    },
+    {
+      "check": "own roll-call positive control",
+      "status": 201,
+      "pass": true
+    },
+    {
+      "check": "own asset assessment positive control",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "own roll-call decision positive control",
+      "status": 201,
+      "pass": true
+    },
+    {
+      "check": "own roll-call evidence positive control",
+      "status": 201,
+      "pass": true
+    },
+    {
+      "check": "own remediation positive control",
+      "status": 201,
+      "pass": true
+    },
+    {
+      "check": "own cyber client and member positive control",
+      "status": 201,
+      "pass": true
+    },
+    {
+      "check": "own cyber asset client link positive control",
+      "status": 201,
+      "pass": true
+    },
+    {
+      "check": "own dependency client link positive control",
+      "status": 201,
+      "pass": true
+    },
+    {
+      "check": "own cyber client and member positive control",
+      "status": 201,
+      "pass": true
+    },
+    {
+      "check": "own cyber asset client link positive control",
+      "status": 201,
+      "pass": true
+    },
+    {
+      "check": "own dependency client link positive control",
+      "status": 201,
+      "pass": true
+    },
+    {
+      "check": "private client inventory list: /api/cyber/clients",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "private client inventory list: /api/cyber/assets",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "private client inventory list: /api/cyber/dependencies",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "foreign customer/member link rejected: /api/cyber/clients",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign customer/member link rejected: /api/cyber/assets",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign customer/member link rejected: /api/cyber/dependencies",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "scoped list: /api/logistics/assets",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "scoped list: /api/logistics/zero-day-roll-calls",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "scoped list: /api/intelligence/tasks",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "own roll detail contains assessment, decision and evidence",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "foreign roll read denied",
+      "status": 404,
+      "pass": true
+    },
+    {
+      "check": "foreign mutation denied: PATCH /api/logistics/zero-day-roll-calls/:id",
+      "status": 404,
+      "pass": true
+    },
+    {
+      "check": "foreign mutation denied: POST /api/logistics/zero-day-roll-calls/:id/assessments",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign mutation denied: POST /api/logistics/zero-day-roll-calls/:id/assessments",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign mutation denied: POST /api/logistics/zero-day-roll-calls/:id/decisions",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign mutation denied: POST /api/logistics/zero-day-roll-calls/:id/decisions",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign mutation denied: POST /api/logistics/zero-day-roll-calls/:id/evidence",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign mutation denied: POST /api/logistics/zero-day-roll-calls/:id/evidence",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign mutation denied: POST /api/intelligence/assessments/:id/remediation",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign mutation denied: PATCH /api/intelligence/tasks/:id",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign roll and task unchanged in database",
+      "pass": true
+    },
+    {
+      "check": "roll-call assessment Data API remains deny-by-default",
+      "pass": true
+    },
+    {
+      "check": "authenticated database identity positive control: own shipment readable, foreign shipment hidden",
+      "pass": true
+    },
+    {
+      "check": "authenticated role cannot attach a foreign private asset (table privilege boundary)",
+      "pass": true
+    },
+    {
+      "check": "API does not disclose foreign asset through RLS-created child link",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "private client inventory list: /api/cyber/clients",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "private client inventory list: /api/cyber/assets",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "private client inventory list: /api/cyber/dependencies",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "foreign customer/member link rejected: /api/cyber/clients",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign customer/member link rejected: /api/cyber/assets",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign customer/member link rejected: /api/cyber/dependencies",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "scoped list: /api/logistics/assets",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "scoped list: /api/logistics/zero-day-roll-calls",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "scoped list: /api/intelligence/tasks",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "own roll detail contains assessment, decision and evidence",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "foreign roll read denied",
+      "status": 404,
+      "pass": true
+    },
+    {
+      "check": "foreign mutation denied: PATCH /api/logistics/zero-day-roll-calls/:id",
+      "status": 404,
+      "pass": true
+    },
+    {
+      "check": "foreign mutation denied: POST /api/logistics/zero-day-roll-calls/:id/assessments",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign mutation denied: POST /api/logistics/zero-day-roll-calls/:id/assessments",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign mutation denied: POST /api/logistics/zero-day-roll-calls/:id/decisions",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign mutation denied: POST /api/logistics/zero-day-roll-calls/:id/decisions",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign mutation denied: POST /api/logistics/zero-day-roll-calls/:id/evidence",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign mutation denied: POST /api/logistics/zero-day-roll-calls/:id/evidence",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign mutation denied: POST /api/intelligence/assessments/:id/remediation",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign mutation denied: PATCH /api/intelligence/tasks/:id",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "foreign roll and task unchanged in database",
+      "pass": true
+    },
+    {
+      "check": "roll-call assessment Data API remains deny-by-default",
+      "pass": true
+    },
+    {
+      "check": "authenticated database identity positive control: own shipment readable, foreign shipment hidden",
+      "pass": true
+    },
+    {
+      "check": "authenticated role cannot attach a foreign private asset (table privilege boundary)",
+      "pass": true
+    },
+    {
+      "check": "API does not disclose foreign asset through RLS-created child link",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "viewer own roll read",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "viewer cannot assess assets",
+      "status": 403,
+      "pass": true
+    },
+    {
+      "check": "viewer cannot start remediation",
+      "status": 401,
+      "pass": true
+    },
+    {
+      "check": "anonymous cannot read roll",
+      "status": 403,
+      "pass": true
+    }
+  ]
+}

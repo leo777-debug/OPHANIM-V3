@@ -9,7 +9,7 @@ export async function recordJobRun(jobKey: string, status: 'queued' | 'running' 
 export async function platformHealth() {
   let database: 'healthy' | 'unhealthy' = 'healthy';
   let databaseError: string | undefined;
-  try { await db().query('select 1'); } catch (error) { database = 'unhealthy'; databaseError = error instanceof Error ? error.message : 'Database unavailable'; }
+  try { await db().query('select 1'); } catch { database = 'unhealthy'; databaseError = 'Database unavailable'; }
   const providers = getProviderCatalog().map((provider) => ({ id: provider.id, configured: provider.configured, status: provider.health.status, metrics: providerMetrics.get(provider.id) }));
   const latestJobs = database === 'healthy' ? (await db().query(`select distinct on (job_key) job_key,status,created_at,error,duration_ms from ophanim_job_runs order by job_key,created_at desc`)).rows : [];
   const environmentIssue = criticalEnvironmentIssue();
@@ -22,6 +22,6 @@ export async function platformHealth() {
     database: { status: database, ...(databaseError ? { error: databaseError } : {}) },
     environment: environmentChecks().map(({ name, configured, required }) => ({ name, configured, required })),
     providers,
-    jobs: latestJobs,
+    jobs: latestJobs.map((job)=>({...job,error:job.error ? 'Job failed; review its bounded retry status.':null})),
   };
 }

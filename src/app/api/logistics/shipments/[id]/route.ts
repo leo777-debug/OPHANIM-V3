@@ -5,7 +5,7 @@ import { archiveShipment, getShipment, updateShipment } from '@/lib/logistics/sh
 
 function failure(error: unknown): NextResponse {
   if (error instanceof OrganizationAccessError) return NextResponse.json({ error: error.message }, { status: 401 });
-  return NextResponse.json({ error: error instanceof Error ? error.message : 'Shipment request failed.' }, { status: 400 });
+  return NextResponse.json({ error: 'Shipment request failed.' }, { status: 400 });
 }
 
 function isUuid(value: string): boolean {

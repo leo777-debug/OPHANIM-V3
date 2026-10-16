@@ -1,0 +1,11 @@
+{
+  "checkedAt": "2026-10-15T06:34:54.776Z",
+  "pass": true,
+  "syntheticOnly": true,
+  "shipmentCreated": true,
+  "portNamesPersisted": true,
+  "destinationPortMatched": true,
+  "decisionLogged": true,
+  "loginWorks": true,
+  "limitation": "Port matching and a stored operator note only; no booking changed, fabricated document discrepancy, GPS or confirmation feature."
+}

@@ -1,19 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createHash } from 'node:crypto';
 import { verifyPassword } from '@/lib/auth/passwords';
 import { createSession, setOrganizationCookie, setSessionCookie } from '@/lib/auth/session';
 import { getClientIp, isRateLimited } from '@/lib/ssrf-guard';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { db } from '@/lib/watchlists/db';
+import { trustedRequestOrigin } from '@/lib/http/request-origin';
+import { limitedRequestBytes, RequestBodyLimitError } from '@/lib/http/limited-form-data';
 
 export async function POST(request: NextRequest) {
-  if (isRateLimited(getClientIp(request), 10, 60_000)) return NextResponse.json({ error: 'Rate limit exceeded.' }, { status: 429 });
-  let body: { email?: unknown; password?: unknown; organizationSlug?: unknown };
-  try { body = await request.json(); } catch { return NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 }); }
-  if (typeof body.email !== 'string' || typeof body.password !== 'string' || typeof body.organizationSlug !== 'string') {
+  if (!trustedRequestOrigin(request)) return NextResponse.json({ error: 'Cross-origin sign-in is not permitted.' }, { status: 403 });
+  const limited = () => NextResponse.json({ error: 'Rate limit exceeded. Try again shortly.' }, { status: 429, headers: { 'Retry-After': '60' } });
+  if (isRateLimited(`auth:login:ip:${getClientIp(request)}`, 10, 60_000)) return limited();
+  let body: { email?: unknown; password?: unknown; organizationSlug?: unknown } | null;
+  try {
+    body = JSON.parse(Buffer.from(await limitedRequestBytes(request, 8 * 1024)).toString('utf8'));
+  } catch (error) {
+    return error instanceof RequestBodyLimitError
+      ? NextResponse.json({ error: 'Sign-in request is too large.' }, { status: 413 })
+      : NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 });
+  }
+  if (!body || typeof body !== 'object' || typeof body.email !== 'string' || typeof body.password !== 'string' || typeof body.organizationSlug !== 'string') {
     return NextResponse.json({ error: 'Email, password, and organization slug are required.' }, { status: 400 });
   }
   const email = body.email.trim().toLowerCase();
   const organizationSlug = body.organizationSlug.trim();
+  if (!email || email.length > 320 || !body.password || body.password.length > 512 || !organizationSlug || organizationSlug.length > 128) {
+    return NextResponse.json({ error: 'Invalid sign-in details.' }, { status: 400 });
+  }
+  // An account budget cannot be bypassed by rotating forwarded IPs or org slugs.
+  const account = createHash('sha256').update(email).digest('hex');
+  if (isRateLimited(`auth:login:account:${account}`, 10, 60_000)) return limited();
   const supabase = await createSupabaseServerClient();
   if (supabase) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password: body.password });

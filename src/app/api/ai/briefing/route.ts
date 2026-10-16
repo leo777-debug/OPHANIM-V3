@@ -7,6 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { authorizeAiRequest } from '@/lib/ai/access';
 import {
   createGeminiClient,
   rotateApiKey,
@@ -96,6 +97,8 @@ interface ErrorResponse {
 export async function POST(
   request: NextRequest
 ): Promise<NextResponse<BriefingResponse | ErrorResponse>> {
+  const denied = await authorizeAiRequest(request);
+  if (denied) return denied;
   const ip =
     request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
     request.headers.get('x-real-ip') ||
@@ -171,8 +174,8 @@ export async function POST(
         },
       }
     );
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown Gemini API error';
+  } catch {
+    const message = 'Unknown Gemini API error';
 
     if (message.includes('API_KEY_INVALID') || message.includes('API key not valid')) {
       return NextResponse.json(
@@ -201,7 +204,7 @@ export async function POST(
       );
     }
 
-    console.error('[OPHANIM AI] Briefing error:', message);
+    console.error('[OPHANIM AI] Briefing error: BRIEFING_FAILED');
     return NextResponse.json(
       { error: 'Briefing generation failed. Please try again.', code: 'BRIEFING_FAILED' },
       { status: 500 }

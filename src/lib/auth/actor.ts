@@ -4,6 +4,7 @@ import { OrganizationAccessError, requireOrganizationAccess } from '@/lib/operat
 import type { OrganizationActor } from '@/lib/operations/types';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { hashSessionToken, ORGANIZATION_COOKIE, SESSION_COOKIE } from './session';
+import { trustedRequestOrigin } from '@/lib/http/request-origin';
 
 export interface AuthenticatedActor extends OrganizationActor {
   email: string;
@@ -15,12 +16,13 @@ function isUuid(value: string | undefined): value is string {
   return Boolean(value && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value));
 }
 
-async function getSupabaseActor(request: NextRequest): Promise<AuthenticatedActor | null> {
+async function getSupabaseActor(request: NextRequest): Promise<AuthenticatedActor | null | undefined> {
   const supabase = await createSupabaseServerClient();
-  if (!supabase) return null;
+  if (!supabase) return undefined;
   const { data, error } = await supabase.auth.getClaims();
   const authUserId = !error && typeof data?.claims?.sub === 'string' ? data.claims.sub : null;
-  if (!authUserId) return null;
+  const sessionId = data?.claims?.session_id;
+  if (!authUserId || typeof sessionId !== 'string' || !isUuid(sessionId)) return null;
 
   const selectedOrganization = request.cookies.get(ORGANIZATION_COOKIE)?.value;
   const result = await db().query<{
@@ -31,10 +33,12 @@ async function getSupabaseActor(request: NextRequest): Promise<AuthenticatedActo
      join ophanim_organization_memberships m on m.user_id = u.id
      where u.auth_user_id = $1
        and ($2::uuid is null or m.organization_id = $2)
+       and exists (select 1 from auth.sessions s where s.id = $3::uuid and s.user_id = u.auth_user_id
+         and (s.not_after is null or s.not_after > now()))
      order by case m.role when 'owner' then 0 when 'operations_manager' then 1 when 'analyst' then 2 else 3 end,
        m.created_at
      limit 1`,
-    [authUserId, isUuid(selectedOrganization) ? selectedOrganization : null],
+    [authUserId, isUuid(selectedOrganization) ? selectedOrganization : null, sessionId],
   );
   const row = result.rows[0];
   return row ? {
@@ -49,7 +53,9 @@ async function getSupabaseActor(request: NextRequest): Promise<AuthenticatedActo
 
 export async function getAuthenticatedActor(request: NextRequest): Promise<AuthenticatedActor | null> {
   const supabaseActor = await getSupabaseActor(request);
-  if (supabaseActor) return supabaseActor;
+  // Configured Auth is authoritative even when the token/membership is invalid.
+  // Only an unconfigured Supabase installation may accept legacy sessions.
+  if (supabaseActor !== undefined) return supabaseActor;
   const token = request.cookies.get(SESSION_COOKIE)?.value;
   if (!token) return null;
   const result = await db().query<{
@@ -65,11 +71,14 @@ export async function getAuthenticatedActor(request: NextRequest): Promise<Authe
   );
   const row = result.rows[0];
   if (!row) return null;
-  void db().query(`update ophanim_sessions set last_seen_at = now() where token_hash = $1`, [hashSessionToken(token)]).catch(() => {});
+  void db().query(`update ophanim_sessions set last_seen_at = now() where token_hash = $1 and (last_seen_at is null or last_seen_at < now() - interval '5 minutes')`, [hashSessionToken(token)]).catch(() => {});
   return { userId: row.user_id, organizationId: row.organization_id, role: row.role, email: row.email, displayName: row.display_name, authProvider: 'legacy' };
 }
 
 export async function requireAuthenticatedActor(request: NextRequest, permission?: Parameters<typeof requireOrganizationAccess>[2]): Promise<AuthenticatedActor> {
+  if (!['GET', 'HEAD', 'OPTIONS'].includes(request.method) && !trustedRequestOrigin(request)) {
+    throw new OrganizationAccessError('Cross-origin mutations are not permitted.');
+  }
   const actor = await getAuthenticatedActor(request);
   if (!actor) throw new OrganizationAccessError('Authentication is required.');
   if (permission) requireOrganizationAccess(actor, actor.organizationId, permission);

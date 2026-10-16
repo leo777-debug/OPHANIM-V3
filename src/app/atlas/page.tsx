@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Layers, BarChart3, Newspaper, Search, X, Globe, MapPinned, Radar, Satellite, Moon, ExternalLink, AlertTriangle, Activity, Database, Wifi, Play, Network, Crosshair, Brain, Bookmark, Settings, FileUp } from 'lucide-react';
 import IntelligenceWorkbench, { type IntelligenceWorkbenchView } from '@/components/IntelligenceWorkbench';
@@ -19,6 +20,7 @@ import CommandPalette, { type PaletteCommand } from '@/components/CommandPalette
 import ThreatFusionHUD from '@/components/ThreatFusionHUD';
 import WatchlistPanel from '@/components/WatchlistPanel';
 import ProviderStatusPanel from '@/components/ProviderStatusPanel';
+import { filterCurrentAtlasData, isRecentObservation, POSITION_MAX_AGE_MS, sourceTime, type AtlasFeedSnapshot } from '@/lib/atlas-freshness';
 import MapWorkspaceTabs from '@/components/MapWorkspaceTabs';
 import type { ProviderMapLayer } from '@/lib/providers';
 import {
@@ -150,7 +152,19 @@ function getYouTubeWatchUrl(url: string): string {
 export default function Dashboard() {
   const dataRef = useRef<any>({});
   const [dataVersion, setDataVersion] = useState(0);
-  const data = dataRef.current;
+  const sourceSnapshotsRef = useRef<Record<string, AtlasFeedSnapshot>>({});
+  const [freshnessNow, setFreshnessNow] = useState(0);
+  const freshness = useMemo(() => ({
+    ...filterCurrentAtlasData(dataRef.current, sourceSnapshotsRef.current, freshnessNow),
+    version: dataVersion,
+  }), [dataVersion, freshnessNow]);
+  const data = freshness.data as typeof dataRef.current;
+  useEffect(() => {
+    const tick = () => setFreshnessNow(Date.now());
+    tick();
+    const timer = setInterval(tick, 30_000);
+    return () => clearInterval(timer);
+  }, []);
 
   const [backendStatus, setBackendStatus] = useState<'connecting' | 'connected' | 'error'>('connecting');
   const [mapView, setMapView] = useState({ zoom: 6.5, latitude: 42.7, longitude: 25.48 });
@@ -577,17 +591,27 @@ export default function Dashboard() {
   // ── SHARED FETCH UTILITY (Fixes #107 — single definition, not 3 copies) ──
   const fetchEndpoint = useCallback(async (url: string, transform?: (d: any) => any, options?: RequestInit) => {
     if (typeof document !== 'undefined' && document.hidden) return;
+    const endpoint = url.split('?')[0];
     try {
       // Force the browser to bypass its local disk cache for real-time data
       const res = await fetch(url, { ...options, cache: 'no-store' });
       if (res.ok) {
         const json = await res.json();
+        if (json.error) throw new Error(String(json.error));
         const d = transform ? transform(json) : json;
         dataRef.current = { ...dataRef.current, ...d };
+        sourceSnapshotsRef.current[endpoint] = { checkedAt: Date.now(), sourceFetchedAt: sourceTime(json.timestamp),
+          withheld: typeof json.withheld_stale_or_undated === 'number' ? json.withheld_stale_or_undated : 0 };
+        setFreshnessNow(Date.now());
         setDataVersion(v => v + 1);
         setBackendStatus('connected');
-      }
+      } else throw new Error(`Source HTTP ${res.status}`);
     } catch (e) {
+      const previous = sourceSnapshotsRef.current[endpoint];
+      sourceSnapshotsRef.current[endpoint] = { checkedAt: Date.now(), sourceFetchedAt: previous?.sourceFetchedAt ?? null,
+        withheld: previous?.withheld,
+        error: e instanceof Error ? e.message : 'Source unavailable' };
+      setDataVersion(v => v + 1);
       console.warn('[OPHANIM] Suppressed error:', e instanceof Error ? e.message : e);
       setBackendStatus('error');
     }
@@ -603,7 +627,7 @@ export default function Dashboard() {
 
     // Polling — OPTIMIZED intervals to minimize edge requests
     const intervals = [
-      setInterval(() => fetchEndpoint('/api/earthquakes', eqTransform), 900000),  // 15 min
+      setInterval(() => fetchEndpoint('/api/earthquakes', eqTransform), 300000),
       setInterval(() => fetchEndpoint('/api/news'), 300000),        // 5 min, aligned with source cache
       setInterval(() => fetchEndpoint('/api/cyber-threats', (response) => ({ cyberThreats: response.threats || [] })), 1800000),
     ];
@@ -723,7 +747,7 @@ export default function Dashboard() {
   useEffect(() => {
     const intervals: ReturnType<typeof setInterval>[] = [];
     if (activeLayers.flights || activeLayers.military || activeLayers.jets || activeLayers.private) {
-      intervals.push(setInterval(() => fetchEndpoint('/api/flights', d => ({ ...d, flight_source: d.source, flight_timestamp: d.timestamp })), 300000)); // 5 min (was 2 min)
+      intervals.push(setInterval(() => fetchEndpoint('/api/flights', d => ({ ...d, flight_source: d.source, flight_timestamp: d.timestamp })), 120000));
     }
 
     if (activeLayers.balloons) {
@@ -735,7 +759,24 @@ export default function Dashboard() {
     if (activeLayers.maritime) {
       intervals.push(setInterval(() => fetchEndpoint('/api/maritime', d => ({ maritime_ports: d.ports, maritime_chokepoints: d.chokepoints, maritime_ships: d.ships })), 60000)); // 60s — was 10s; a 3MB poll every 10s OOM'd the prod container
     }
-    return () => intervals.forEach(clearInterval);
+    if (activeLayers.fires) intervals.push(setInterval(() => fetchEndpoint('/api/fires'), 600000));
+    if (activeLayers.weather) intervals.push(setInterval(() => fetchEndpoint('/api/weather', d => ({ weather_events: d.events })), 300000));
+    if (activeLayers.global_incidents) intervals.push(setInterval(() => fetchEndpoint('/api/gdelt', d => ({ gdelt: d.events })), 300000));
+    if (activeLayers.malware) intervals.push(setInterval(() => fetchEndpoint('/api/malware', d => ({ malware_threats: d.threats })), 300000));
+    const resume = () => {
+      if (document.hidden) return;
+      if (activeLayers.flights || activeLayers.military || activeLayers.jets || activeLayers.private) fetchEndpoint('/api/flights');
+      if (activeLayers.maritime) fetchEndpoint('/api/maritime', d => ({ maritime_ports: d.ports, maritime_chokepoints: d.chokepoints, maritime_ships: d.ships }));
+      if (activeLayers.weather) fetchEndpoint('/api/weather', d => ({ weather_events: d.events }));
+      if (activeLayers.fires) fetchEndpoint('/api/fires');
+      if (activeLayers.global_incidents) fetchEndpoint('/api/gdelt', d => ({ gdelt: d.events }));
+      if (activeLayers.malware) fetchEndpoint('/api/malware', d => ({ malware_threats: d.threats }));
+      fetchEndpoint('/api/news');
+      fetchEndpoint('/api/earthquakes', d => ({ earthquakes: d.earthquakes || [] }));
+      fetchEndpoint('/api/cyber-threats', d => ({ cyberThreats: d.threats || [] }));
+    };
+    document.addEventListener('visibilitychange', resume);
+    return () => { intervals.forEach(clearInterval); document.removeEventListener('visibilitychange', resume); };
   }, [activeLayers, fetchEndpoint]);
 
   // CCTV: loaded once on layer toggle via layerFetchedRef (no viewport polling)
@@ -819,7 +860,7 @@ export default function Dashboard() {
     }
 
     dataRef.current = { ...dataRef.current, sdk_entities: sdkEntities };
-  }, [dataVersion, activeLayers.sdk_sea, activeLayers.sdk_air, activeLayers.sdk_naval]);
+  }, [freshness.version, freshnessNow, data.commercial_flights, data.private_flights, data.private_jets, data.military_flights, data.maritime_ships, data.earthquakes, data.gdelt, data.news, activeLayers.sdk_sea, activeLayers.sdk_air, activeLayers.sdk_naval]);
 
   const totalFlights = useMemo(() => (
     (data.commercial_flights?.length||0)+(data.private_flights?.length||0)+(data.private_jets?.length||0)+(data.military_flights?.length||0)
@@ -1200,7 +1241,10 @@ export default function Dashboard() {
           scanTargets={scanTargets}
           demoMode={demoMode}
           theme={ophanimTheme}
-          providerLayers={providerLayers}
+          providerLayers={providerLayers.map((layer) => layer.id === 'maritime-vessels' ? {
+            ...layer, source: { ...layer.source, features: layer.source.features.filter((feature) =>
+              isRecentObservation(feature.properties?.observedAt ?? feature.properties?.timestamp, POSITION_MAX_AGE_MS, freshnessNow)) },
+          } : layer)}
         />
       </ErrorBoundary>
 
@@ -1271,6 +1315,7 @@ export default function Dashboard() {
           <span className="text-[8px] text-[var(--text-muted)] font-medium tracking-[0.03em] opacity-70 truncate">
             Observe, investigate, and monitor live signals
           </span>
+          {isMobile && <Link href="/verify" className="text-[10px] font-semibold text-[var(--cyan-primary)]" title="Verify a public event claim">VERIFY</Link>}
         </div>
       </motion.div>
 
@@ -1283,6 +1328,7 @@ export default function Dashboard() {
             <button onClick={() => window.dispatchEvent(new Event('ophanim:open-watchlists'))} className="ophanim-command-button" title="Open Watchlists"><Bookmark className="w-4 h-4" /><span>WATCH</span></button>
             <button onClick={() => window.location.assign('/imports')} className="ophanim-command-button" title="Import organization CSV data"><FileUp className="w-4 h-4" /><span>IMPORT</span></button>
             <button onClick={() => setShowProviders((value) => !value)} className="ophanim-command-button" title="View provider and source status"><Database className="w-4 h-4" /><span>SOURCES</span></button>
+            <Link href="/verify" className="ophanim-command-button" title="Verify a public event claim" aria-label="Verify a public event claim"><Search className="w-4 h-4" /></Link>
           </div>
         </motion.div>
       )}
@@ -1355,7 +1401,7 @@ export default function Dashboard() {
       <AnimatePresence>
         {showProviders && (
           <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className={`absolute left-1/2 z-[260] w-[min(440px,calc(100vw-32px))] -translate-x-1/2 pointer-events-auto ${isMobile ? 'top-[156px]' : 'top-[86px]'}`}>
-            <ProviderStatusPanel />
+            <ProviderStatusPanel freshness={freshness.feeds} />
           </motion.div>
         )}
       </AnimatePresence>

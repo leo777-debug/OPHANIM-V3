@@ -41,6 +41,18 @@ const DEFAULT_GOVERNANCE: Omit<SourceGovernanceRecord, "provider"> = {
 };
 
 const RECORDS: Record<string, Omit<SourceGovernanceRecord, "provider">> = {
+  "natural-earth-basemap": {
+    attribution: "Made with Natural Earth. https://www.naturalearthdata.com/",
+    licensing: "Public domain; commercial use allowed. https://www.naturalearthdata.com/about/terms-of-use/",
+    retentionHours: 0,
+    notes: "Bundled 1:110m static geography fetched 2026-10-14. No credentials or runtime upstream requests. Not a live operational feed.",
+  },
+  shodan: {
+    attribution: "Shodan (https://www.shodan.io). Observation dates are retained.",
+    licensing: "Shodan API subscription terms; commercial redistribution requires review of your agreement.",
+    retentionHours: 1,
+    notes: "Server-configured API key only. Searches are passive; active scans require owner authorization and a configured target allowlist.",
+  },
   "war-sanctions": {
     attribution: "War & Sanctions, Defence Intelligence of Ukraine.",
     licensing: "Use subject to the source terms and applicable law.",

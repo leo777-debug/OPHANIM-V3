@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { limitedRequestBytes, RequestBodyLimitError } from '@/lib/http/limited-form-data';
+import { pinnedPublicFetch } from '@/lib/http/pinned-public-fetch';
 
 export async function POST(request: Request) {
     const secret = process.env.GITHUB_WEBHOOK_SECRET;
@@ -14,13 +16,14 @@ export async function POST(request: Request) {
     }
 
     try {
-        const payloadText = await request.text();
         const signature = request.headers.get('x-hub-signature-256');
 
         // Always verify signature
         if (!signature) {
             return NextResponse.json({ error: 'Unauthorized: Missing signature' }, { status: 401 });
         }
+
+        const payloadText = new TextDecoder().decode(await limitedRequestBytes(request, 1024 * 1024));
 
         const hmac = crypto.createHmac('sha256', secret);
         const digest = 'sha256=' + hmac.update(payloadText).digest('hex');
@@ -34,8 +37,11 @@ export async function POST(request: Request) {
         }
 
         // Forward to configurable URL (no hardcoded IPs)
-        const response = await fetch(forwardUrl, {
+        const response = await pinnedPublicFetch(forwardUrl, {
             method: 'POST',
+            httpsOnly: true,
+            timeoutMs: 10000,
+            maxResponseBytes: 64 * 1024,
             headers: {
                 'Content-Type': 'application/json',
                 'x-hub-signature-256': signature,
@@ -44,14 +50,15 @@ export async function POST(request: Request) {
         });
 
         if (!response.ok) {
-            console.error('Failed to forward webhook:', response.statusText);
+            console.error('GitHub webhook forwarding failed');
             return NextResponse.json({ error: 'Failed to forward to bot' }, { status: 500 });
         }
 
         return NextResponse.json({ success: true, message: 'Webhook forwarded successfully' }, { status: 200 });
 
     } catch (error) {
-        console.error('Error handling GitHub webhook:', error);
+        if (error instanceof RequestBodyLimitError) return NextResponse.json({ error: 'Webhook payload exceeds the size limit.' }, { status: 413 });
+        console.error('GitHub webhook handling failed');
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }

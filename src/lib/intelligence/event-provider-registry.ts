@@ -1,4 +1,5 @@
 import { defaultIntelligenceEventProviders } from "./event-providers";
+import { verifyEventProviders } from '@/lib/verify/providers';
 import {
   validateNormalizedIntelligenceEvent,
   type IntelligenceEventProvider,
@@ -18,28 +19,38 @@ export class IntelligenceEventProviderRegistry {
   constructor(private readonly providers: IntelligenceEventProvider[]) {}
 
   catalog() {
-    return this.providers.map((provider) => ({
-      id: provider.id,
-      name: provider.name,
-      pack: provider.pack,
-      costType: provider.costType,
-      mode: provider.mode,
-      sourceId: provider.sourceId,
-      supportedEventTypes: provider.supportedEventTypes,
-      requiresCredentials: provider.requiresCredentials,
-      configured: provider.isConfigured(),
-    }));
+    return this.providers.map((provider) => {
+      let configured = false, warning: string | undefined;
+      let compliance: ReturnType<NonNullable<IntelligenceEventProvider['compliance']>> | undefined;
+      try { configured = provider.isConfigured(); compliance = provider.compliance?.(); } catch { configured = false; warning = 'Invalid provider configuration.'; }
+      if (compliance && compliance.commercialUse !== 'yes') warning = 'Disabled: commercial use is not approved.';
+      return {
+        id: provider.id,
+        name: provider.name,
+        pack: provider.pack,
+        costType: provider.costType,
+        mode: provider.mode,
+        sourceId: provider.sourceId,
+        supportedEventTypes: provider.supportedEventTypes,
+        requiresCredentials: provider.requiresCredentials,
+        configured,
+        enabled: configured && !warning,
+        timeoutMs: provider.timeoutMs,
+        compliance,
+        warning,
+      };
+    });
   }
 
   selected(ids?: string[]): IntelligenceEventProvider[] {
-    if (!ids?.length) return this.providers;
+    if (!ids?.length) return this.providers.filter((provider) => !provider.queryOnly);
     const allowed = new Set(ids);
     return this.providers.filter((provider) => allowed.has(provider.id));
   }
 }
 
 export const intelligenceEventProviderRegistry =
-  new IntelligenceEventProviderRegistry(defaultIntelligenceEventProviders);
+  new IntelligenceEventProviderRegistry([...defaultIntelligenceEventProviders, ...verifyEventProviders]);
 
 async function runProvider(
   provider: IntelligenceEventProvider,
@@ -49,7 +60,12 @@ async function runProvider(
   diagnostic: ProviderIngestionDiagnostic;
 }> {
   const started = Date.now();
-  if (!provider.isConfigured())
+  let configured: boolean;
+  let compliance: ReturnType<NonNullable<IntelligenceEventProvider['compliance']>> | undefined;
+  try { configured = provider.isConfigured(); compliance = provider.compliance?.(); } catch {
+    return { events: [], diagnostic: { providerId: provider.id, status: 'error', eventCount: 0, durationMs: 0, message: 'Invalid provider configuration.' } };
+  }
+  if (!configured || (compliance && compliance.commercialUse !== 'yes'))
     return {
       events: [],
       diagnostic: {
@@ -57,14 +73,17 @@ async function runProvider(
         status: "skipped",
         eventCount: 0,
         durationMs: 0,
-        message: "Provider is not configured.",
+        message: compliance && compliance.commercialUse !== 'yes' ? 'Commercial use is unknown or not allowed; provider is disabled.' : "Provider is not configured.",
       },
     };
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), provider.timeoutMs);
   try {
     const providerContext = { ...context, signal: controller.signal };
-    const raw = await provider.fetch(providerContext);
+    const raw = await Promise.race([
+      provider.fetch(providerContext),
+      new Promise<never>((_, reject) => controller.signal.addEventListener('abort', () => reject(new Error('Provider timed out.')), { once: true })),
+    ]);
     const events = provider
       .normalize(raw, providerContext)
       .map(validateNormalizedIntelligenceEvent);
@@ -77,7 +96,7 @@ async function runProvider(
         durationMs: Date.now() - started,
       },
     };
-  } catch (error) {
+  } catch {
     return {
       events: [],
       diagnostic: {
@@ -85,7 +104,7 @@ async function runProvider(
         status: "error",
         eventCount: 0,
         durationMs: Date.now() - started,
-        message: error instanceof Error ? error.message : "Provider failed.",
+        message: controller.signal.aborted ? 'Provider timed out.' : 'Provider failed. Check its configuration and health.',
       },
     };
   } finally {
@@ -99,6 +118,7 @@ export async function collectIntelligenceEvents(
     now?: Date;
     since?: Date;
     limitPerProvider?: number;
+    parameters?: Record<string, string>;
   } = {},
   registry = intelligenceEventProviderRegistry,
 ) {
@@ -107,6 +127,7 @@ export async function collectIntelligenceEvents(
     now,
     since: options.since ?? new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
     limit: Math.max(1, Math.min(options.limitPerProvider ?? 100, 500)),
+    parameters: options.parameters,
   };
   const results = await Promise.all(
     registry

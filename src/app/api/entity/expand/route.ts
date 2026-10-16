@@ -65,8 +65,8 @@ export async function GET(req: Request) {
     return NextResponse.json(data, {
       headers: { 'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200' },
     });
-  } catch (e) {
-    console.error('[OSIRIS] Intel proxy error:', e instanceof Error ? e.message : e);
+  } catch {
+    console.error('[OSIRIS] Intel proxy error:');
     return NextResponse.json(
       { error: 'Intelligence layer unavailable', nodes: [], links: [] },
       { status: 502 },

@@ -63,8 +63,8 @@ export async function GET() {
       total: stations.length,
       timestamp: new Date().toISOString(),
     });
-  } catch (error) {
-    console.error('Air Quality API error:', error);
+  } catch {
+    console.error('Air Quality API error:');
     return NextResponse.json({ stations: [], error: 'Failed to fetch air quality data' }, { status: 500 });
   }
 }

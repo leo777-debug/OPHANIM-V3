@@ -15,8 +15,8 @@ export async function GET(request: NextRequest) {
     const [legacy, entities] = await Promise.all([runImportJobs(), processEntityImports()]);
     await recordJobRun('imports', 'completed', { durationMs: Date.now() - started, metadata: { entityImports: entities } });
     return NextResponse.json({ ...legacy, entityImports: entities });
-  } catch (error) {
-    await recordJobRun('imports', 'failed', { durationMs: Date.now() - started, error: error instanceof Error ? error.message : 'Import worker failed.' }).catch(() => {});
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Import worker failed.' }, { status: 500 });
+  } catch {
+    await recordJobRun('imports', 'failed', { durationMs: Date.now() - started, error: 'Import worker failed.' }).catch(() => {});
+    return NextResponse.json({ error: 'Import worker failed.' }, { status: 500 });
   }
 }

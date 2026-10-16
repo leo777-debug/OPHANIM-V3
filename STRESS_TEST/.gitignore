@@ -1,0 +1,9 @@
+logs/
+video/*.mp4
+video/raw/
+artifacts/*.jsonl
+artifacts/*-raw.json
+artifacts/browser-profiles/
+runtime/
+.resume.lock
+lint-baseline.json

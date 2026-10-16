@@ -7,22 +7,25 @@ import { previewImportRows } from '@/lib/imports/pipeline';
 import { persistImportPreview } from '@/lib/imports/repository';
 import { IMPORT_TYPES, type ImportColumnMapping, type ImportType } from '@/lib/imports/types';
 import { OrganizationAccessError } from '@/lib/operations/authorization';
-import { getClientIp, isRateLimited } from '@/lib/ssrf-guard';
+import { importPreviewLimited } from '@/lib/imports/intake';
+import { MAX_IMPORT_BYTES } from '@/lib/imports/csv';
+import { limitedFormData, RequestBodyLimitError } from '@/lib/http/limited-form-data';
 
 function hasImportType(value: unknown): value is ImportType { return typeof value === 'string' && IMPORT_TYPES.includes(value as ImportType); }
 
 export async function POST(request: NextRequest) {
   try {
     const actor = await requireAuthenticatedActor(request, 'import:write');
-    if (isRateLimited(`import:${actor.userId}:${getClientIp(request)}`, 20, 60_000)) {
+    if (importPreviewLimited(request,actor)) {
       return NextResponse.json({ error: 'Too many import previews. Wait a moment and try again.' }, { status: 429 });
     }
-    const form = await request.formData();
+    const form = await limitedFormData(request, MAX_IMPORT_BYTES + 256 * 1024);
     const importType = form.get('importType');
     const file = form.get('file');
     const rawMapping = form.get('mapping');
     if (!hasImportType(importType)) return NextResponse.json({ error: 'A supported import type is required.' }, { status: 400 });
     if (!file || typeof file === 'string' || typeof file.arrayBuffer !== 'function') return NextResponse.json({ error: 'Select a CSV or .xlsx file to import.' }, { status: 400 });
+    if (file.size > MAX_IMPORT_BYTES) return NextResponse.json({ error: 'The file exceeds the 5 MB limit.' }, { status: 413 });
     assertImportFeature(importType);
     const mapping = typeof rawMapping === 'string' && rawMapping ? JSON.parse(rawMapping) as ImportColumnMapping : undefined;
     const parsed = await parseImportFile(file.name, file.type, await file.arrayBuffer());
@@ -31,7 +34,7 @@ export async function POST(request: NextRequest) {
     const imported = await persistImportPreview(actor, importType, file.name || 'import.csv', preview);
     return NextResponse.json({ import: imported, preview, adapter: { type: adapter.type, label: adapter.label, available: adapter.available, unavailableReason: adapter.unavailableReason } });
   } catch (error) {
-    const status = error instanceof OrganizationAccessError ? 401 : 400;
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Import preview failed.' }, { status });
+    const status = error instanceof OrganizationAccessError ? 401 : error instanceof RequestBodyLimitError ? 413 : 400;
+    return NextResponse.json({ error: 'Import preview failed.' }, { status });
   }
 }

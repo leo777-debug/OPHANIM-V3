@@ -23,6 +23,17 @@ export async function createEvidence(actor: OrganizationActor, value: unknown) {
   const client = await db().connect();
   try {
     await client.query('begin');
+    for (const link of input.links ?? []) {
+      const queries: Record<EvidenceLink['resourceType'], string> = {
+        entity: `select 1 from ophanim_entities where id=$1 and (organization_id=$2 or visibility='global')`,
+        event: `select 1 from ophanim_events where id=$1 and (organization_id=$2 or visibility='global')`,
+        case: `select 1 from ophanim_cases where id=$1 and organization_id=$2`,
+        task: `select 1 from ophanim_case_tasks task join ophanim_cases parent on parent.id=task.case_id where task.id=$1 and parent.organization_id=$2`,
+        assessment: `select 1 from ophanim_assessments where id=$1 and organization_id=$2`,
+      };
+      const target = await client.query(queries[link.resourceType], [link.resourceId, actor.organizationId]);
+      if (!target.rowCount) throw new Error('Evidence target was not found in this organization.');
+    }
     const contentHash = createHash('sha256').update(JSON.stringify({ title: input.title, description: input.description, sourceUrl: input.sourceUrl, metadata: input.metadata })).digest('hex');
     const result = await client.query<{ id: string }>(`insert into ophanim_evidence(organization_id,evidence_type,verification_state,source_id,provider_id,title,description,source_url,attachment_url,content_hash,original_timestamp,created_by_user_id,metadata) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) returning id`, [actor.organizationId, input.evidenceType, input.verificationState, input.sourceId ?? null, input.providerId ?? null, input.title, input.description ?? null, input.sourceUrl ?? null, input.attachmentUrl ?? null, contentHash, input.originalTimestamp ?? null, actor.userId, JSON.stringify(input.metadata ?? {})]);
     const id = result.rows[0].id;

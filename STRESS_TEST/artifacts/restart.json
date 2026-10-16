@@ -1,0 +1,10 @@
+{
+  "checkedAt": "2026-10-14T15:18:43.402Z",
+  "observedActiveImport": true,
+  "interruptedStatus": 400,
+  "importsAfterCrash": 0,
+  "rowsAfterCrash": 0,
+  "retryStatus": 200,
+  "retryValidRows": 5000,
+  "pass": true
+}

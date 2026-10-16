@@ -9,7 +9,7 @@ import type {
   IntelligenceAlert,
   OperationalTask,
 } from "@/lib/intelligence/operations";
-import { isoDate, requestJson } from "@/lib/logistics/client";
+import { isoDate, requestJson, requestAllShipments } from "@/lib/logistics/client";
 import ActionWindow from "./ActionWindow";
 import DataFreshness from "./DataFreshness";
 import EmptyState from "./EmptyState";
@@ -49,9 +49,7 @@ export default function LogisticsCommandWorkspace() {
     try {
       const [shipmentData, rescueData, alertData, taskData] = await Promise.all(
         [
-          requestJson<{ shipments: ShipmentRecord[] }>(
-            "/api/logistics/shipments",
-          ),
+          requestAllShipments(),
           requestJson<{ cases: RescueCase[] }>("/api/logistics/rescue-cases"),
           requestJson<{ alerts: IntelligenceAlert[] }>(
             "/api/intelligence/alerts",

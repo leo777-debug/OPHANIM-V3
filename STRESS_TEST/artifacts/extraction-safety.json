@@ -1,0 +1,14 @@
+{
+  "testsRun": 10,
+  "failures": 0,
+  "errors": 0,
+  "passed": true,
+  "elapsedSeconds": 4.875,
+  "runtime": {
+    "python": "3.12.14",
+    "pypdf": "6.10.0",
+    "Pillow": "12.3.0"
+  },
+  "scope": "Bounded in-memory synthetic fixtures, network blocked. No actual OCR or arbitrary hostile-PDF memory/CPU certification.",
+  "limitation": "Bundled test parsers differ from ml/requirements.txt (pypdf 6.1.1, Pillow 11.3.0); pinned deployment runtime still needs testing."
+}

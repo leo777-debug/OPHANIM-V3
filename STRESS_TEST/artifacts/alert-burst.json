@@ -1,0 +1,35 @@
+{
+  "checkedAt": "2026-10-15T05:27:23.861Z",
+  "database": "native PostgreSQL 18",
+  "scope": "Synthetic local mentions only; real deterministic reconciliation; no live dark-web provider, email or AI requests",
+  "checks": [
+    {
+      "check": "four concurrent deterministic reconciliation requests",
+      "statuses": [
+        200,
+        200,
+        200,
+        200
+      ],
+      "elapsedMs": 1691,
+      "pass": true
+    },
+    {
+      "check": "100 real generated alerts, assessments and verification tasks without duplicate race",
+      "alerts": 100,
+      "assessments": 100,
+      "tasks": 100,
+      "pass": true
+    },
+    {
+      "check": "own generated alert positive control",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "generated alerts not visible across tenants",
+      "status": 200,
+      "pass": true
+    }
+  ]
+}

@@ -130,6 +130,60 @@ export async function listShipments(actor: OrganizationActor): Promise<ShipmentR
   return result.rows.map(toRecord);
 }
 
+const pendingShipmentPages = new Map<string, Promise<Awaited<ReturnType<typeof queryShipmentPage>>>>();
+
+export async function listShipmentPage(actor: OrganizationActor, params: URLSearchParams) {
+  requireOrganizationAccess(actor, actor.organizationId, 'shipment:read');
+  const serialized = params.toString();
+  if (serialized.length > 4096) throw new Error('Shipment filters are too long.');
+  const key = JSON.stringify([actor.organizationId, serialized]);
+  const existing = pendingShipmentPages.get(key);
+  if (existing) return existing;
+  // Coalesce only concurrent identical reads. Never retain results, cache an
+  // actor/role, or share a request across organization boundaries.
+  if (pendingShipmentPages.size >= 128) return queryShipmentPage(actor, params);
+  const pending = queryShipmentPage(actor, params).finally(() => pendingShipmentPages.delete(key));
+  pendingShipmentPages.set(key, pending);
+  return pending;
+}
+
+async function queryShipmentPage(actor: OrganizationActor, params: URLSearchParams) {
+  const limit = Number(params.get('limit') ?? 100), offset = Number(params.get('offset') ?? 0);
+  if (!Number.isInteger(limit) || limit < 1 || limit > 250 || !Number.isInteger(offset) || offset < 0 || offset > 1000000) throw new Error('Invalid shipment page. Limit must be 1-250 and offset must be a nonnegative integer.');
+  const values: unknown[] = [actor.organizationId];
+  const clauses = ['organization_id=$1', 'archived_at is null'];
+  const columns: Record<string, string> = { status: 'current_status', carrier: 'carrier', vessel: 'vessel_name', origin: 'origin_port_name', destination: 'destination_port_name' };
+  for (const [key, column] of Object.entries(columns)) {
+    const value = params.get(key)?.trim();
+    if (!value) continue;
+    if (value.length > 240) throw new Error('Shipment filter is too long.');
+    values.push(value); clauses.push(`${column}=$${values.length}`);
+  }
+  const query = params.get('query')?.trim();
+  if (query) {
+    if (query.length > 240) throw new Error('Shipment search is too long.');
+    values.push(`%${query.replaceAll('\\', '\\\\').replaceAll('%', '\\%').replaceAll('_', '\\_')}%`);
+    clauses.push(`concat_ws(' ',shipment_reference,container_number,carrier,vessel_name,origin_port_name,destination_port_name,imo_number,mmsi_number) ilike $${values.length}`);
+  }
+  const sorting: Record<string,string> = { reference: 'shipment_reference', departure: 'planned_departure_at', arrival: 'planned_arrival_at' };
+  const sort = params.get('sort') ?? 'arrival';
+  if (!Object.hasOwn(sorting, sort)) throw new Error('Invalid shipment sorting.');
+  const where = clauses.join(' and ');
+  const [rows, count, facets] = await Promise.all([
+    db().query<ShipmentRow>(`select ${fields} from ophanim_shipments where ${where} order by ${sorting[sort]} nulls last,id limit $${values.length + 1} offset $${values.length + 2}`, [...values, limit, offset]),
+    db().query<{ total: number }>(`select count(*)::integer as total from ophanim_shipments where ${where}`, values),
+    db().query<Record<string,string[]>>(`select
+      (array_agg(distinct carrier order by carrier) filter (where carrier is not null))[1:500] as carrier,
+      (array_agg(distinct vessel_name order by vessel_name) filter (where vessel_name is not null))[1:500] as "vesselName",
+      (array_agg(distinct origin_port_name order by origin_port_name) filter (where origin_port_name is not null))[1:500] as "originPortName",
+      (array_agg(distinct destination_port_name order by destination_port_name) filter (where destination_port_name is not null))[1:500] as "destinationPortName"
+      from ophanim_shipments where organization_id=$1 and archived_at is null`, [actor.organizationId]),
+  ]);
+  const total = count.rows[0]?.total ?? 0;
+  const options = Object.fromEntries(Object.entries(facets.rows[0] ?? {}).map(([key, value]) => [key, value ?? []]));
+  return { shipments: rows.rows.map(toRecord), page: { limit, offset, total, hasMore: offset + rows.rows.length < total }, facets: options };
+}
+
 export async function getShipment(actor: OrganizationActor, shipmentId: string): Promise<ShipmentRecord | null> {
   requireOrganizationAccess(actor, actor.organizationId, 'shipment:read');
   const result = await db().query<ShipmentRow>(

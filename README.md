@@ -19,6 +19,27 @@ Osiris deployment is not required.
 
 ## Features
 
+### Ophanim Verify (Milestone 0)
+
+Open `/verify` or use the atlas **Verify** link to review a public-event claim,
+correct its place/time/entities and run deterministic evidence checks. Optional
+configured AI assists with parsing and an **INFERENCE** summary, never verdicts
+or provider selection. Text/URL inputs, source timestamps, coverage limitations,
+re-checks, revocable shares and PNG downloads are included.
+
+Five **synthetic replay** cases are explicitly labelled, never presented as live.
+USGS and NASA EONET reuse the existing registry; airport movement, maritime,
+sanctions and trusted-news checks need suitable reviewed observations. New METAR
+and observations providers remain off until commercial-use rights are configured.
+
+Signed-in history and durable shares require the database and both additive
+migrations. Without a database, checks use a 30-minute temporary session; public
+shares use the server's temporary filesystem and do not work across instances.
+Live RLS tests skip when `DATABASE_URL` is absent, not silently pass.
+
+[Verdict rules, source configuration and safety](docs/VERIFY_RULES.md) |
+[Milestone 0 verification report](docs/VERIFY_MILESTONE_REPORT.md)
+
 ### Atlas and Map Workspaces
 
 - MapLibre globe with night, earth-colored and satellite basemaps.
@@ -76,6 +97,28 @@ Installing an optional tool or configuring a provider is still necessary where
 required. A wrapper does not install the external tool or grant access to its
 data. Use active scanning only for targets you own or are authorized to assess.
 
+### Shodan
+
+Set server-only `SHODAN_API_KEY`, then sign in and open **Recon > Shodan**.
+The tool supports database search, counts/facets, batch IP lookups, DNS helpers,
+credit information, and scan status. Global search accepts `shodan: nginx` or
+filters such as `product:nginx country:AE port:443`. Observation dates are shown;
+Shodan results are not necessarily live or same-day.
+
+Active scans require workspace-owner permission, a target allowlist in
+`AUTHORIZED_SCAN_TARGETS`, an explicit authorization checkbox, and PostgreSQL
+audit storage. Empty allowlists disable scans. Scanning consumes Shodan credits;
+no active scans run automatically. See [Shodan setup and API usage](docs/SHODAN.md).
+
+The separate legacy scanner (`SCANNER_URL` / `SCANNER_KEY`) is also owner-only.
+Recon requests confirmation before sending a scan. Its `/api/scanner` endpoint
+accepts confirmed POST requests for one literal, approved public IP address;
+GET never runs a scan. `AUTHORIZED_SCAN_TARGETS` uses the same workspace-scoped
+configuration as Shodan. Hostnames are not accepted until the scanner backend
+can pin DNS resolution. Every submission must be recorded in PostgreSQL first;
+unconfirmed responses are not retried automatically. Scanner credentials stay
+server-side, and redirects to another scanner service are rejected.
+
 ### Watchlists, Notifications and Operations
 
 - Persisted watchlists, entity pages and provider checks.
@@ -116,6 +159,11 @@ must be explicitly allowed with `AI_LOCAL_BASE_URLS`, using origins without `/v1
 Keep this allowlist narrowly scoped and keep model services authenticated when
 exposed beyond your machine.
 
+Local and remote model calls have bounded response bodies and deadlines; local
+calls also honor caller cancellation. The verified-model status probe uses the
+same protected transport with a 2.5-second deadline and 1 MiB metadata limit.
+Status failures do not expose raw runtime errors or provider response bodies.
+
 Optional isolated research has a separate deployment/configuration boundary; see
 [sandbox research](docs/SANDBOX_RESEARCH.md). It is not enabled by selecting a
 local model.
@@ -153,6 +201,12 @@ npm run dev
 Open the globe at [http://localhost:3000/atlas](http://localhost:3000/atlas).
 Configure database/authentication before using protected operational workflows.
 Keep secrets in uncommitted environment files, never in browser-exposed variables.
+
+Sign-in rejects explicit cross-site browser requests and caps the actual JSON body
+at 8 KiB. Per-process limits allow ten attempts per minute per IP and per normalized
+account; changing forwarded headers or organization slugs does not reset the account
+budget. A 429 response includes `Retry-After: 60`. Configure shared deployment-wide
+abuse protection separately; these in-memory limits are not a distributed quota.
 
 ### Deployment
 
@@ -194,6 +248,33 @@ contains detailed checks and the remaining capability gaps. Full World Monitor
 parity is not claimed.
 
 ## Technology
+
+The Knowledge page adds private organization documents, shared sources, hybrid
+retrieval and cited answers. Setup: [Knowledge operations](docs/KNOWLEDGE.md).
+
+### Security And Demo Configuration
+
+- Knowledge document lists use bounded 100-item pages with previous/next controls.
+  Source-only search never calls an embedding or generation model; AI answers
+  require a signed-in user and share the application's user-level AI budget.
+- Resend delivery webhooks require `RESEND_WEBHOOK_SECRET` and verify the raw
+  signed payload before database writes. Duplicate signed events are idempotent.
+- Optional SDK ingestion requires both `SDK_INGEST_KEY` and
+  `SDK_INGEST_ORGANIZATION_ID`. The backend assigns that organization; a caller
+  cannot choose another organization in the payload. Status and SSE reads require
+  a member session, return only that organization's data, and periodically
+  reconnect to re-check authorization. Existing installations must configure the
+  organization explicitly; unconfigured ingestion fails closed.
+- The isolated presentation launcher sets `OPHANIM_DEMO_REPLAY_CREATED_AT` and
+  displays a persistent **DEMO REPLAY / Not live data** banner. This marks synthetic
+  fixtures, not live observations. The local fixture demo runs without external
+  internet, but still needs its local application/database processes. It is not
+  a fully offline cached PWA.
+- See [stress-test results](STRESS_TEST/REPORT.md) and
+  [isolated testing](STRESS_TEST/LOCAL_TESTING.md) for measured coverage and limits.
+Local model/Kaggle tooling lives in ml/; see the [implementation and evaluation
+report](ml/FINAL_REPORT.md) and [founder runbook](ml/TRAINING_RUNBOOK.md). The custom
+model is optional and remains behind hardware/quality acceptance gates.
 
 Next.js 16 App Router, React 19, TypeScript, MapLibre GL, Framer Motion, Lucide,
 PostgreSQL, Resend and Vitest. See [`package.json`](package.json) for dependency

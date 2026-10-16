@@ -9,6 +9,17 @@ export async function requestJson<T>(url: string, init?: RequestInit): Promise<T
   return body;
 }
 
+export async function requestAllShipments() {
+  const shipments: import('./shipments').ShipmentRecord[] = [];
+  for (let offset = 0; offset <= 1000000; offset += 250) {
+    const page = await requestJson<{ shipments: import('./shipments').ShipmentRecord[]; page: { hasMore: boolean } }>(`/api/logistics/shipments?limit=250&offset=${offset}`);
+    shipments.push(...page.shipments);
+    if (!page.page.hasMore) return { shipments };
+    if (!page.shipments.length) throw new Error('Shipment pagination did not advance.');
+  }
+  throw new Error('Shipment list exceeds the workspace retrieval limit.');
+}
+
 export function label(value?: string): string {
   return (value ?? 'unknown').replaceAll('_', ' ');
 }

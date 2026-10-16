@@ -119,8 +119,8 @@ export async function GET(req: Request) {
         Expires: '0',
       },
     });
-  } catch (err) {
-    console.error('[OSIRIS] Sweep Init error:', err instanceof Error ? err.message : err);
+  } catch {
+    console.error('[OSIRIS] Sweep Init error:');
     return NextResponse.json({ error: 'Sweep initialization failed' }, { status: 500 });
   }
 }

@@ -1,0 +1,470 @@
+{
+  "checkedAt": "2026-10-15T05:11:31.510Z",
+  "checks": [
+    {
+      "browser": "chromium",
+      "width": 390,
+      "path": "/verify",
+      "pass": false,
+      "reason": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:3100/verify\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "browser": "chromium",
+      "width": 390,
+      "path": "/imports",
+      "elapsedMs": 31928,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "chromium",
+      "width": 390,
+      "path": "/logistics/command",
+      "elapsedMs": 3464,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "chromium",
+      "width": 390,
+      "path": "/atlas",
+      "elapsedMs": 24194,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 1,
+      "mapPixels": {
+        "land": 28163,
+        "ocean": 84790,
+        "changedAfterDrag": true
+      },
+      "pass": true,
+      "mapAssets": "Bundled Natural Earth fallback; external tiles blocked; screenshot pixels and drag verified"
+    },
+    {
+      "browser": "chromium",
+      "width": 390,
+      "path": "Verify offline failure and replay recovery",
+      "pass": true
+    },
+    {
+      "browser": "chromium",
+      "width": 820,
+      "path": "/verify",
+      "elapsedMs": 2363,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "chromium",
+      "width": 820,
+      "path": "/imports",
+      "elapsedMs": 2243,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "chromium",
+      "width": 820,
+      "path": "/logistics/command",
+      "elapsedMs": 3225,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "chromium",
+      "width": 820,
+      "path": "/atlas",
+      "elapsedMs": 23219,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 1,
+      "mapPixels": {
+        "land": 37622,
+        "ocean": 101515,
+        "changedAfterDrag": true
+      },
+      "pass": true,
+      "mapAssets": "Bundled Natural Earth fallback; external tiles blocked; screenshot pixels and drag verified"
+    },
+    {
+      "browser": "chromium",
+      "width": 820,
+      "path": "Verify offline failure and replay recovery",
+      "pass": true
+    },
+    {
+      "browser": "chromium",
+      "width": 1920,
+      "path": "/verify",
+      "elapsedMs": 2359,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "chromium",
+      "width": 1920,
+      "path": "/imports",
+      "elapsedMs": 2330,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "chromium",
+      "width": 1920,
+      "path": "/logistics/command",
+      "elapsedMs": 3058,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "chromium",
+      "width": 1920,
+      "path": "/atlas",
+      "elapsedMs": 29492,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 1,
+      "mapPixels": {
+        "land": 37533,
+        "ocean": 106638,
+        "changedAfterDrag": true
+      },
+      "pass": true,
+      "mapAssets": "Bundled Natural Earth fallback; external tiles blocked; screenshot pixels and drag verified"
+    },
+    {
+      "browser": "chromium",
+      "width": 1920,
+      "path": "Verify offline failure and replay recovery",
+      "pass": true
+    },
+    {
+      "browser": "firefox",
+      "width": 390,
+      "path": "/verify",
+      "elapsedMs": 3628,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "firefox",
+      "width": 390,
+      "path": "/imports",
+      "elapsedMs": 2379,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "firefox",
+      "width": 390,
+      "path": "/logistics/command",
+      "elapsedMs": 3277,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "firefox",
+      "width": 390,
+      "path": "/atlas",
+      "elapsedMs": 9022,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 1,
+      "mapPixels": {
+        "land": 28430,
+        "ocean": 85074,
+        "changedAfterDrag": true
+      },
+      "pass": true,
+      "mapAssets": "Bundled Natural Earth fallback; external tiles blocked; screenshot pixels and drag verified"
+    },
+    {
+      "browser": "firefox",
+      "width": 390,
+      "path": "Verify offline failure and replay recovery",
+      "pass": true
+    },
+    {
+      "browser": "firefox",
+      "width": 820,
+      "path": "/verify",
+      "elapsedMs": 2259,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "firefox",
+      "width": 820,
+      "path": "/imports",
+      "elapsedMs": 2277,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "firefox",
+      "width": 820,
+      "path": "/logistics/command",
+      "elapsedMs": 2593,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "firefox",
+      "width": 820,
+      "path": "/atlas",
+      "elapsedMs": 9579,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 1,
+      "mapPixels": {
+        "land": 37478,
+        "ocean": 100921,
+        "changedAfterDrag": true
+      },
+      "pass": true,
+      "mapAssets": "Bundled Natural Earth fallback; external tiles blocked; screenshot pixels and drag verified"
+    },
+    {
+      "browser": "firefox",
+      "width": 820,
+      "path": "Verify offline failure and replay recovery",
+      "pass": true
+    },
+    {
+      "browser": "firefox",
+      "width": 1920,
+      "path": "/verify",
+      "elapsedMs": 2342,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "firefox",
+      "width": 1920,
+      "path": "/imports",
+      "elapsedMs": 2282,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "firefox",
+      "width": 1920,
+      "path": "/logistics/command",
+      "elapsedMs": 2931,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "firefox",
+      "width": 1920,
+      "path": "/atlas",
+      "elapsedMs": 11497,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 1,
+      "mapPixels": {
+        "land": 37523,
+        "ocean": 105726,
+        "changedAfterDrag": true
+      },
+      "pass": true,
+      "mapAssets": "Bundled Natural Earth fallback; external tiles blocked; screenshot pixels and drag verified"
+    },
+    {
+      "browser": "firefox",
+      "width": 1920,
+      "path": "Verify offline failure and replay recovery",
+      "pass": true
+    },
+    {
+      "browser": "webkit",
+      "width": 390,
+      "path": "/verify",
+      "elapsedMs": 2230,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "webkit",
+      "width": 390,
+      "path": "/imports",
+      "elapsedMs": 2131,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "webkit",
+      "width": 390,
+      "path": "/logistics/command",
+      "elapsedMs": 2660,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "webkit",
+      "width": 390,
+      "path": "/atlas",
+      "elapsedMs": 10651,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 1,
+      "mapPixels": {
+        "land": 28406,
+        "ocean": 85021,
+        "changedAfterDrag": true
+      },
+      "pass": true,
+      "mapAssets": "Bundled Natural Earth fallback; external tiles blocked; screenshot pixels and drag verified"
+    },
+    {
+      "browser": "webkit",
+      "width": 390,
+      "path": "Verify offline failure and replay recovery",
+      "pass": true
+    },
+    {
+      "browser": "webkit",
+      "width": 820,
+      "path": "/verify",
+      "elapsedMs": 2387,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "webkit",
+      "width": 820,
+      "path": "/imports",
+      "elapsedMs": 2227,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "webkit",
+      "width": 820,
+      "path": "/logistics/command",
+      "elapsedMs": 2834,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "webkit",
+      "width": 820,
+      "path": "/atlas",
+      "elapsedMs": 14826,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 1,
+      "mapPixels": {
+        "land": 33047,
+        "ocean": 90987,
+        "changedAfterDrag": true
+      },
+      "pass": true,
+      "mapAssets": "Bundled Natural Earth fallback; external tiles blocked; screenshot pixels and drag verified"
+    },
+    {
+      "browser": "webkit",
+      "width": 820,
+      "path": "Verify offline failure and replay recovery",
+      "pass": true
+    },
+    {
+      "browser": "webkit",
+      "width": 1920,
+      "path": "/verify",
+      "elapsedMs": 2421,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "webkit",
+      "width": 1920,
+      "path": "/imports",
+      "elapsedMs": 2302,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "webkit",
+      "width": 1920,
+      "path": "/logistics/command",
+      "elapsedMs": 2934,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 0,
+      "pass": true
+    },
+    {
+      "browser": "webkit",
+      "width": 1920,
+      "path": "/atlas",
+      "elapsedMs": 17985,
+      "errors": [],
+      "overflow": false,
+      "canvasElements": 1,
+      "mapPixels": {
+        "land": 32297,
+        "ocean": 88372,
+        "changedAfterDrag": true
+      },
+      "pass": true,
+      "mapAssets": "Bundled Natural Earth fallback; external tiles blocked; screenshot pixels and drag verified"
+    },
+    {
+      "browser": "webkit",
+      "width": 1920,
+      "path": "Verify offline failure and replay recovery",
+      "pass": true
+    }
+  ]
+}

@@ -6,11 +6,12 @@
  *  Generates a punchy intelligence read-out for the Alerts or Markets
  *  panel. Uses Gemini when GEMINI_API_KEY_* is configured, otherwise
  *  falls back to a built-in heuristic analyst so the button ALWAYS
- *  works — no key required. Anyone can click it.
+ *  works for signed-in users, with no key required for the heuristic fallback.
  * ═══════════════════════════════════════════════════════════════
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { authorizeAiRequest } from '@/lib/ai/access';
 import { createGeminiClient, rotateApiKey } from '@/lib/ai-engine';
 
 export const dynamic = 'force-dynamic';
@@ -173,8 +174,8 @@ async function geminiOverview(mode: Mode, digest: Digest, keys: string[]): Promi
     const result = await model.generateContent(prompt);
     const text = result.response.text().trim();
     return text || null;
-  } catch (e) {
-    console.warn('[OPHANIM] Gemini overview failed, using heuristic:', e);
+  } catch {
+    console.warn('[OPHANIM] Gemini overview failed, using heuristic: MODEL_UNAVAILABLE');
     return null;
   }
 }
@@ -182,6 +183,8 @@ async function geminiOverview(mode: Mode, digest: Digest, keys: string[]): Promi
 /* ─────────────────────────── Handler ─────────────────────────── */
 
 export async function POST(request: NextRequest) {
+  const denied = await authorizeAiRequest(request);
+  if (denied) return denied;
   let body: { mode?: Mode; payload?: any };
   try {
     body = await request.json();

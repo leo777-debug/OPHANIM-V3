@@ -21,12 +21,12 @@ export async function GET(req: Request) {
 
     // Fetch all internal APIs in parallel (they have their own Cache-Control TTLs)
     const [flightsRes, satsRes, cctvRes, weatherRes, infraRes, gdeltRes] = await Promise.allSettled([
-      fetch(`${origin}/api/flights`, { next: { revalidate: 45 } }),
-      fetch(`${origin}/api/satellites`, { next: { revalidate: 3600 } }),
-      fetch(`${origin}/api/cctv`, { next: { revalidate: 3600 } }),
-      fetch(`${origin}/api/weather`, { next: { revalidate: 300 } }),
-      fetch(`${origin}/api/infrastructure`, { next: { revalidate: 86400 } }),
-      fetch(`${origin}/api/gdelt`, { next: { revalidate: 300 } })
+      fetch(`${origin}/api/flights`, { next: { revalidate: 45 }, signal: AbortSignal.timeout(15000) }),
+      fetch(`${origin}/api/satellites`, { next: { revalidate: 3600 }, signal: AbortSignal.timeout(15000) }),
+      fetch(`${origin}/api/cctv`, { next: { revalidate: 3600 }, signal: AbortSignal.timeout(15000) }),
+      fetch(`${origin}/api/weather`, { next: { revalidate: 300 }, signal: AbortSignal.timeout(15000) }),
+      fetch(`${origin}/api/infrastructure`, { next: { revalidate: 86400 }, signal: AbortSignal.timeout(15000) }),
+      fetch(`${origin}/api/gdelt`, { next: { revalidate: 300 }, signal: AbortSignal.timeout(15000) })
     ]);
 
     let flights = 0;
@@ -86,8 +86,8 @@ export async function GET(req: Request) {
       }
     });
 
-  } catch (error) {
-    console.error('Stats aggregation failed:', error);
+  } catch {
+    console.error('Stats aggregation failed:');
     return NextResponse.json({ error: 'Failed to compute stats' }, { status: 500 });
   }
 }

@@ -30,7 +30,7 @@ let lastOverall = 0;
 
 async function grab(origin: string, path: string, revalidate: number): Promise<any> {
   try {
-    const res = await fetch(`${origin}${path}`, { next: { revalidate } });
+    const res = await fetch(`${origin}${path}`, { next: { revalidate }, signal: AbortSignal.timeout(15000) });
     return res.ok ? await res.json() : null;
   } catch {
     return null;

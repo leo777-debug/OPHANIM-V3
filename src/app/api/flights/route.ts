@@ -1,6 +1,7 @@
 
 import { NextResponse } from 'next/server';
 import { stealthFetch } from '@/lib/stealthFetch';
+import { adsbObservationTime, sourceTime } from '@/lib/atlas-freshness';
 
 export const maxDuration = 60;
 
@@ -98,7 +99,9 @@ async function fetchRegionFrom(
     });
     if (res.ok) {
       const data = await res.json();
-      return data[arrayKey] || data.ac || [];
+      return (data[arrayKey] || data.ac || []).map((aircraft: Record<string, unknown>) => ({
+        ...aircraft, observedAt: adsbObservationTime(aircraft, data.now),
+      }));
     }
   } catch {}
   return [];
@@ -156,6 +159,7 @@ function classifyFlight(f: any) {
     grounded: isGrounded,
     nac_p: f.nac_p,
     type: 'flight',
+    observedAt: sourceTime(f.observedAt),
   };
 }
 
@@ -194,7 +198,7 @@ async function getOpenSkyToken(): Promise<string | null> {
         signal: AbortSignal.timeout(10000),
       }
     );
-    if (!res.ok) { console.warn('[OSIRIS] OpenSky token failed:', res.status); return null; }
+    if (!res.ok) { console.warn('[OSIRIS] OpenSky token failed:'); return null; }
     const data = await res.json();
     if (!data.access_token) {
       console.warn('[OSIRIS] OpenSky token response missing access_token');
@@ -203,8 +207,8 @@ async function getOpenSkyToken(): Promise<string | null> {
     osToken = data.access_token;
     osTokenExpiry = Date.now() + ((data.expires_in || 1800) - 60) * 1000;
     return osToken;
-  } catch (e) {
-    console.warn('[OSIRIS] OpenSky token error:', e);
+  } catch {
+    console.warn('[OSIRIS] OpenSky token error:');
     return null;
   }
 }
@@ -270,7 +274,9 @@ export async function GET() {
         if (r.status !== 'fulfilled') return;
         if (r.value.ok) {
           const data = await r.value.json();
-          ingestAc(data.ac || [], allRaw, seenHex);
+          ingestAc((data.ac || []).map((aircraft: Record<string, unknown>) => ({
+            ...aircraft, observedAt: adsbObservationTime(aircraft, data.now),
+          })), allRaw, seenHex);
         } else {
           await r.value.body?.cancel();
         }
@@ -305,12 +311,13 @@ export async function GET() {
                   track: s[10],
                   squawk: s[14],
                   category_os: s[17],
+                  observedAt: sourceTime(s[3]),
                 });
               }
             }
           }
-        } catch (e) {
-          console.warn('[OSIRIS] OpenSky parse error:', e);
+        } catch {
+          console.warn('[OSIRIS] OpenSky parse error:');
         }
       } else {
         await osRes.value.body?.cancel();
@@ -387,8 +394,8 @@ export async function GET() {
         'Cache-Control': data.total < 100 ? 'no-store, max-age=0' : 'public, s-maxage=30, stale-while-revalidate=60',
       },
     });
-  } catch (error) {
-    console.error('[OSIRIS] Flight fetch error:', error);
+  } catch {
+    console.error('[OSIRIS] Flight fetch error:');
     fetchPromise = null;
     return NextResponse.json({ error: 'Failed to fetch flight data' }, { status: 500 });
   }

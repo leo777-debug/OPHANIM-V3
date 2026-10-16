@@ -329,8 +329,8 @@ export async function GET() {
               saveToDisk(fetchedSats);
             }
           }
-        } catch (err) {
-          console.error('SatNOGS fetch error:', err);
+        } catch {
+          console.error('SatNOGS fetch error:');
         }
       }
     }
@@ -398,8 +398,8 @@ export async function GET() {
         'Cache-Control': cacheControl,
       },
     });
-  } catch (error) {
-    console.error('Satellite fetch error:', error);
+  } catch {
+    console.error('Satellite fetch error:');
     return NextResponse.json({ satellites: [], error: 'Failed to fetch satellite data' }, { status: 500 });
   }
 }

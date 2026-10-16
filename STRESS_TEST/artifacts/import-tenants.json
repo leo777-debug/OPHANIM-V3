@@ -1,0 +1,54 @@
+{
+  "checkedAt": "2026-10-15T13:54:18.034Z",
+  "scope": "Actual loopback HTTP and PostgreSQL, two synthetic organizations, no external traffic.",
+  "checks": [
+    {
+      "check": "legacy JSON preview accepts a valid own shipment",
+      "pass": true
+    },
+    {
+      "check": "preview creates no shipment before review confirmation",
+      "pass": true
+    },
+    {
+      "check": "legacy JSON preview accepts a valid own shipment",
+      "pass": true
+    },
+    {
+      "check": "preview creates no shipment before review confirmation",
+      "pass": true
+    },
+    {
+      "check": "foreign import confirmation denied through alias /api/imports/",
+      "pass": true
+    },
+    {
+      "check": "foreign import confirmation denied through alias /api/logistics/shipments/imports/",
+      "pass": true
+    },
+    {
+      "check": "foreign import confirmation denied through alias /api/imports/",
+      "pass": true
+    },
+    {
+      "check": "foreign import confirmation denied through alias /api/logistics/shipments/imports/",
+      "pass": true
+    },
+    {
+      "check": "foreign attempts leave preview unconfirmed",
+      "pass": true
+    },
+    {
+      "check": "own reviewed import positive control persists exactly once",
+      "pass": true
+    },
+    {
+      "check": "foreign attempts leave preview unconfirmed",
+      "pass": true
+    },
+    {
+      "check": "own reviewed import positive control persists exactly once",
+      "pass": true
+    }
+  ]
+}

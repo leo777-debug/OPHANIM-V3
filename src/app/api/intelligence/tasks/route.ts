@@ -7,5 +7,5 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try { return NextResponse.json({ tasks: await listOperationalTasks(await requireAuthenticatedActor(request, 'intelligence:read')) }); }
-  catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : 'Tasks unavailable.' }, { status: error instanceof OrganizationAccessError ? 401 : 400 }); }
+  catch (error) { return NextResponse.json({ error: 'Tasks unavailable.' }, { status: error instanceof OrganizationAccessError ? 401 : 400 }); }
 }

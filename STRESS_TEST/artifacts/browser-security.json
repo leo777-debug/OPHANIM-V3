@@ -1,0 +1,23 @@
+{
+  "checkedAt": "2026-10-14T16:34:17.566Z",
+  "checks": [
+    {
+      "check": "stored shipment HTML is text, not executable markup",
+      "pass": true
+    },
+    {
+      "check": "SQL metacharacters remain parameter data",
+      "pass": true
+    },
+    {
+      "check": "actual HTTP rejects foreign-origin authenticated mutation",
+      "status": 401,
+      "pass": true
+    },
+    {
+      "check": "actual HTTP same-origin positive mutation control",
+      "status": 201,
+      "pass": true
+    }
+  ]
+}

@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   try {
     const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd', {
+      signal: AbortSignal.timeout(8000),
       next: { revalidate: 60 } // cache for 60 seconds
     });
     
@@ -18,8 +19,8 @@ export async function GET() {
     if (data.solana?.usd) prices.push({ symbol: 'SOL', price: data.solana.usd });
 
     return NextResponse.json(prices);
-  } catch (error) {
-    console.error('Failed to fetch crypto prices:', error);
+  } catch {
+    console.error('Failed to fetch crypto prices:');
     return NextResponse.json([]); // Return empty if entirely failed, no static fallbacks
   }
 }

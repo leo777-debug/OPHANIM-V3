@@ -15,6 +15,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ confirmation: result.import.summary, import: result.import, mode: result.mode });
   } catch (error) {
     const status = error instanceof OrganizationAccessError ? 401 : 400;
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Import confirmation failed.' }, { status });
+    return NextResponse.json({ error: 'Import confirmation failed.' }, { status });
   }
 }

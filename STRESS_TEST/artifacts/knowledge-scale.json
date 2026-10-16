@@ -1,0 +1,27 @@
+{
+  "checkedAt": "2026-10-14T16:53:07.496Z",
+  "database": "embedded PostgreSQL with pgvector; sequential scale, not native vector concurrency",
+  "records": 1000,
+  "privateFiles": 1000,
+  "chunks": 1000,
+  "scope": "Seeded synthetic post-extraction fixtures; not 1000 extractor/embedding jobs.",
+  "checks": [
+    {
+      "check": "1000 private documents list is bounded and tenant-scoped",
+      "elapsedMs": 639,
+      "returned": 500,
+      "pass": true,
+      "limitation": "500-record cap has no continuation controls; P2 remains open."
+    },
+    {
+      "check": "real private file from the 1000-document fixture downloads correctly",
+      "pass": true
+    },
+    {
+      "check": "bounded full-text retrieval works with embeddings unavailable",
+      "elapsedMs": 350,
+      "returned": 8,
+      "pass": true
+    }
+  ]
+}

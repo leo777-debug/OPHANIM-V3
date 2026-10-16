@@ -1,0 +1,100 @@
+{
+  "checkedAt": "2026-10-15T08:44:30.798Z",
+  "checks": [
+    {
+      "mode": "invalid",
+      "status": 502,
+      "elapsedMs": 1287,
+      "pass": true
+    },
+    {
+      "mode": "invalid",
+      "check": "deterministic shipment API still works",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "mode": "empty",
+      "status": 502,
+      "elapsedMs": 65,
+      "pass": true
+    },
+    {
+      "mode": "empty",
+      "check": "deterministic shipment API still works",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "mode": "failure",
+      "status": 502,
+      "elapsedMs": 51,
+      "pass": true
+    },
+    {
+      "mode": "failure",
+      "check": "deterministic shipment API still works",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "mode": "oversized",
+      "status": 502,
+      "elapsedMs": 61,
+      "pass": true
+    },
+    {
+      "mode": "oversized",
+      "check": "deterministic shipment API still works",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "mode": "chunked",
+      "status": 502,
+      "elapsedMs": 98,
+      "pass": true
+    },
+    {
+      "mode": "chunked",
+      "check": "deterministic shipment API still works",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "mode": "slow",
+      "status": 200,
+      "elapsedMs": 1252,
+      "pass": true
+    },
+    {
+      "mode": "slow",
+      "check": "deterministic shipment API still works",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "mode": "timeout",
+      "check": "deterministic API usable while model is hung",
+      "pass": true
+    },
+    {
+      "mode": "timeout",
+      "status": 502,
+      "elapsedMs": 120083,
+      "pass": true
+    },
+    {
+      "mode": "timeout",
+      "check": "deterministic shipment API still works",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "mode": "unreachable",
+      "status": 502,
+      "pass": true
+    }
+  ],
+  "scope": "owned loopback mock; no live AI or paid provider; real 120-second model deadline after headers, oversized and chunked-body caps, short delay, malformed JSON, provider failure, unreachable model"
+}

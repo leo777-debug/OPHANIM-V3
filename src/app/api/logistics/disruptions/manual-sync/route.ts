@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(await syncExistingOphanimDisruptions(new URL(request.url).origin, actor));
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof OrganizationAccessError ? error.message : error instanceof Error ? error.message : 'Disruption sync failed.' },
+      { error: error instanceof OrganizationAccessError ? error.message : 'Disruption sync failed.' },
       { status: error instanceof OrganizationAccessError ? 403 : 502 },
     );
   }

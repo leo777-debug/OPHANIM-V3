@@ -12,7 +12,13 @@ Existing watchlist and intelligence notifications use the configured Resend inte
 
 ## AI and research
 
-OpenAI-compatible AI is constrained to summarization, explanations, follow-up search suggestions, and email summaries. It never chooses providers or executes searches. Optional browser research must run as a separately deployed, private sandbox endpoint and return source-attributed results. Do not deploy browser automation in the web service or against targets without authorization.
+OpenAI-compatible AI supports summaries, explanations, follow-up search suggestions,
+logistics extraction and general-mode incident/claim tasks with strict output
+validation. It never chooses providers or makes operational decisions. Knowledge
+answers retrieve organization-scoped sources and validate quotations/citations.
+See [Knowledge operations](KNOWLEDGE.md) for storage, queue, RLS and embedding setup,
+and [the model report](../ml/FINAL_REPORT.md) for measured quality and release gates.
+Optional browser research runs in a separate private sandbox endpoint.
 
 ## Source handling
 

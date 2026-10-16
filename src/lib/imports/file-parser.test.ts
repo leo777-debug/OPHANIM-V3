@@ -45,6 +45,22 @@ function workbookBytes(sheets: Array<{ name: string; rows: Array<Array<string | 
 }
 
 describe('shipment import files', () => {
+  it.each(['malware.exe', 'archive.zip', 'document.pdf'])('rejects unsupported upload %s', async (name) => {
+    await expect(parseImportFile(name, 'text/csv', strToU8('Shipment Reference\nSYN-1'))).rejects.toThrow('Choose a CSV or .xlsx');
+  });
+
+  it('rejects renamed, truncated and oversized workbooks', async () => {
+    await expect(parseImportFile('renamed.xlsx', '', strToU8('%PDF-1.7'))).rejects.toThrow('not a valid');
+    await expect(parseImportFile('broken.xlsx', '', new Uint8Array([0x50, 0x4b, 1]))).rejects.toThrow('not a valid');
+    await expect(parseImportFile('huge.xlsx', '', new Uint8Array(5 * 1024 * 1024 + 1))).rejects.toThrow('5 MB');
+  });
+
+  it('rejects a highly compressed oversized worksheet before XML parsing', async () => {
+    const bomb = zipSync({ 'xl/worksheets/sheet1.xml': strToU8('x'.repeat(10 * 1024 * 1024 + 1)) });
+    expect(bomb.byteLength).toBeLessThan(5 * 1024 * 1024);
+    await expect(parseImportFile('compressed.xlsx', '', bomb)).rejects.toThrow('safe processing limit');
+  });
+
   it('parses .xlsx rows through the existing mapping and validation pipeline', async () => {
     const parsed = await parseImportFile(
       'active_shipments.xlsx',

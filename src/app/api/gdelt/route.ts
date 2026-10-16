@@ -13,6 +13,7 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     const res = await fetch('https://www.gdacs.org/xml/rss.xml', {
+      signal: AbortSignal.timeout(10000),
       next: { revalidate: 300 }, // Cache 5 min
     });
 
@@ -35,6 +36,7 @@ export async function GET() {
       const latMatch = item.match(/<geo:lat>(.*?)<\/geo:lat>/i);
       const lngMatch = item.match(/<geo:long>(.*?)<\/geo:long>/i);
       const typeMatch = item.match(/<gdacs:eventtype>(.*?)<\/gdacs:eventtype>/i);
+      const publishedMatch = item.match(/<pubDate>(.*?)<\/pubDate>/i);
 
       if (!titleMatch || !latMatch || !lngMatch) continue;
 
@@ -60,6 +62,7 @@ export async function GET() {
         url: link,
         html: `<a href="${link}" target="_blank">${title}</a><br/><i>${desc}</i>`,
         type,
+        date: publishedMatch?.[1] || null,
       });
     }
 
@@ -71,8 +74,8 @@ export async function GET() {
     }, {
       headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' },
     });
-  } catch (error) {
-    console.error('[OSIRIS] GDACS fetch error:', error);
+  } catch {
+    console.error('[OSIRIS] GDACS fetch error:');
     return NextResponse.json({ events: [], total: 0, error: 'GDACS unavailable' }, { status: 500 });
   }
 }

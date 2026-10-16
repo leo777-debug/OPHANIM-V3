@@ -1,0 +1,263 @@
+{
+  "checkedAt": "2026-10-15T13:14:25.354Z",
+  "scope": "Generic Error.message echo branches in API routes; explicitly typed safe-domain errors are separate",
+  "found": [
+    {
+      "file": "src/app/api/ai/analyze/route.ts",
+      "line": 195
+    },
+    {
+      "file": "src/app/api/ai/briefing/route.ts",
+      "line": 178
+    },
+    {
+      "file": "src/app/api/ai/research/route.ts",
+      "line": 31
+    },
+    {
+      "file": "src/app/api/auth/bootstrap/route.ts",
+      "line": 77
+    },
+    {
+      "file": "src/app/api/auth/bootstrap/route.ts",
+      "line": 93
+    },
+    {
+      "file": "src/app/api/auth/bootstrap/route.ts",
+      "line": 118
+    },
+    {
+      "file": "src/app/api/cyber/assets/route.ts",
+      "line": 6
+    },
+    {
+      "file": "src/app/api/cyber/clients/route.ts",
+      "line": 6
+    },
+    {
+      "file": "src/app/api/cyber/dependencies/route.ts",
+      "line": 6
+    },
+    {
+      "file": "src/app/api/dark-web/entities/route.ts",
+      "line": 6
+    },
+    {
+      "file": "src/app/api/dark-web/entities/sync/route.ts",
+      "line": 7
+    },
+    {
+      "file": "src/app/api/dark-web/mentions/route.ts",
+      "line": 6
+    },
+    {
+      "file": "src/app/api/dark-web/scan/route.ts",
+      "line": 18
+    },
+    {
+      "file": "src/app/api/extension/context/route.ts",
+      "line": 45
+    },
+    {
+      "file": "src/app/api/imports/cron/route.ts",
+      "line": 19
+    },
+    {
+      "file": "src/app/api/imports/cron/route.ts",
+      "line": 20
+    },
+    {
+      "file": "src/app/api/imports/preview/route.ts",
+      "line": 38
+    },
+    {
+      "file": "src/app/api/imports/template/[type]/route.ts",
+      "line": 19
+    },
+    {
+      "file": "src/app/api/imports/[id]/confirm/route.ts",
+      "line": 17
+    },
+    {
+      "file": "src/app/api/imports/[id]/error-report/route.ts",
+      "line": 28
+    },
+    {
+      "file": "src/app/api/imports/[id]/route.ts",
+      "line": 21
+    },
+    {
+      "file": "src/app/api/intelligence/alerts/route.ts",
+      "line": 10
+    },
+    {
+      "file": "src/app/api/intelligence/alerts/[id]/route.ts",
+      "line": 8
+    },
+    {
+      "file": "src/app/api/intelligence/assessments/[id]/remediation/route.ts",
+      "line": 8
+    },
+    {
+      "file": "src/app/api/intelligence/assessments/[id]/rescue/route.ts",
+      "line": 8
+    },
+    {
+      "file": "src/app/api/intelligence/dashboard/route.ts",
+      "line": 10
+    },
+    {
+      "file": "src/app/api/intelligence/deliveries/route.ts",
+      "line": 10
+    },
+    {
+      "file": "src/app/api/intelligence/queue/route.ts",
+      "line": 10
+    },
+    {
+      "file": "src/app/api/intelligence/queue/[id]/route.ts",
+      "line": 8
+    },
+    {
+      "file": "src/app/api/intelligence/reconcile/route.ts",
+      "line": 10
+    },
+    {
+      "file": "src/app/api/intelligence/settings/route.ts",
+      "line": 10
+    },
+    {
+      "file": "src/app/api/intelligence/settings/route.ts",
+      "line": 15
+    },
+    {
+      "file": "src/app/api/intelligence/tasks/route.ts",
+      "line": 10
+    },
+    {
+      "file": "src/app/api/intelligence/tasks/[id]/route.ts",
+      "line": 8
+    },
+    {
+      "file": "src/app/api/logistics/assets/route.ts",
+      "line": 5
+    },
+    {
+      "file": "src/app/api/logistics/disruptions/manual-sync/route.ts",
+      "line": 14
+    },
+    {
+      "file": "src/app/api/logistics/disruptions/route.ts",
+      "line": 8
+    },
+    {
+      "file": "src/app/api/logistics/disruptions/sync/route.ts",
+      "line": 8
+    },
+    {
+      "file": "src/app/api/logistics/disruptions/[id]/map/route.ts",
+      "line": 16
+    },
+    {
+      "file": "src/app/api/logistics/disruptions/[id]/reconcile/route.ts",
+      "line": 14
+    },
+    {
+      "file": "src/app/api/logistics/disruptions/[id]/route.ts",
+      "line": 17
+    },
+    {
+      "file": "src/app/api/logistics/rescue-cases/route.ts",
+      "line": 6
+    },
+    {
+      "file": "src/app/api/logistics/rescue-cases/[id]/actions/route.ts",
+      "line": 7
+    },
+    {
+      "file": "src/app/api/logistics/rescue-cases/[id]/decisions/route.ts",
+      "line": 7
+    },
+    {
+      "file": "src/app/api/logistics/rescue-cases/[id]/evidence/route.ts",
+      "line": 7
+    },
+    {
+      "file": "src/app/api/logistics/rescue-cases/[id]/route.ts",
+      "line": 7
+    },
+    {
+      "file": "src/app/api/logistics/shipments/imports/preview/route.ts",
+      "line": 22
+    },
+    {
+      "file": "src/app/api/logistics/shipments/imports/[id]/confirm/route.ts",
+      "line": 18
+    },
+    {
+      "file": "src/app/api/logistics/shipments/route.ts",
+      "line": 8
+    },
+    {
+      "file": "src/app/api/logistics/shipments/[id]/route.ts",
+      "line": 8
+    },
+    {
+      "file": "src/app/api/logistics/zero-day-roll-calls/route.ts",
+      "line": 2
+    },
+    {
+      "file": "src/app/api/logistics/zero-day-roll-calls/[id]/assessments/route.ts",
+      "line": 3
+    },
+    {
+      "file": "src/app/api/logistics/zero-day-roll-calls/[id]/decisions/route.ts",
+      "line": 3
+    },
+    {
+      "file": "src/app/api/logistics/zero-day-roll-calls/[id]/evidence/route.ts",
+      "line": 3
+    },
+    {
+      "file": "src/app/api/logistics/zero-day-roll-calls/[id]/route.ts",
+      "line": 2
+    },
+    {
+      "file": "src/app/api/operations/features/route.ts",
+      "line": 14
+    },
+    {
+      "file": "src/app/api/osint/sanctions/route.ts",
+      "line": 61
+    },
+    {
+      "file": "src/app/api/platform/imports/cron/route.ts",
+      "line": 20
+    },
+    {
+      "file": "src/app/api/search/route.ts",
+      "line": 32
+    },
+    {
+      "file": "src/app/api/verify/check/route.ts",
+      "line": 22
+    },
+    {
+      "file": "src/app/api/verify/parse/route.ts",
+      "line": 16
+    },
+    {
+      "file": "src/app/api/watchlists/check/route.ts",
+      "line": 20
+    },
+    {
+      "file": "src/app/api/watchlists/route.ts",
+      "line": 35
+    },
+    {
+      "file": "src/app/api/watchlists/[id]/route.ts",
+      "line": 4
+    }
+  ],
+  "pass": false
+}

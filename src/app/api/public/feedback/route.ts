@@ -15,8 +15,8 @@ export async function POST(request: Request) {
     if ((email && !isEmail(email)) || message.length < 3) return NextResponse.json({ error: 'Please check the feedback fields.' }, { status: 400 });
     await insertMarketingRecord('ophanim_feedback', { name, email, message, source: 'landing_page' });
     return NextResponse.json({ ok: true }, { status: 201 });
-  } catch (error) {
-    console.error('Feedback submission failed', error);
+  } catch {
+    console.error('Feedback submission failed');
     return NextResponse.json({ error: 'Unable to save the feedback.' }, { status: 500 });
   }
 }

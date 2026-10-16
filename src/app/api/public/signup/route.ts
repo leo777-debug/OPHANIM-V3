@@ -15,8 +15,8 @@ export async function POST(request: Request) {
     if (name.length < 2 || !isEmail(email) || phone.length < 5) return NextResponse.json({ error: 'Please check the required fields.' }, { status: 400 });
     await insertMarketingRecord('ophanim_access_requests', { name, email, company_name: companyName, phone, source: 'landing_page' });
     return NextResponse.json({ ok: true }, { status: 201 });
-  } catch (error) {
-    console.error('Access request submission failed', error);
+  } catch {
+    console.error('Access request submission failed');
     return NextResponse.json({ error: 'Unable to save the request.' }, { status: 500 });
   }
 }

@@ -1,0 +1,9 @@
+{
+  "date": "2026-10-16",
+  "scope": "Earlier observation retained from the readiness runner output. The RLS runner was also invoked during this session. Not the uncontended repeatability gate.",
+  "functionalChecksPassed": 17,
+  "coldServerVerifyHtmlMs": 4664,
+  "targetMs": 2000,
+  "withinBudget": false,
+  "note": "A later independent process measured 374 ms. OS filesystem caches were not flushed. Neither result guarantees cloud or cold-machine latency."
+}

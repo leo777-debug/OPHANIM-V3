@@ -80,9 +80,23 @@ describe("intelligence provider registry", () => {
         providerId: "failed",
         status: "error",
         eventCount: 0,
-        message: "Upstream unavailable",
+        message: "Provider failed. Check its configuration and health.",
       },
     ]);
+  });
+
+  it('isolates empty, malformed, credential-bearing and never-settling sources', async () => {
+    const empty = provider('empty', 40); empty.normalize = () => [];
+    const garbage = provider('garbage', 40); garbage.normalize = () => [null as unknown as NormalizedIntelligenceEvent];
+    const leaking = provider('leaking', 40); leaking.fetch = async () => { throw new Error('synthetic-provider-private-token'); };
+    const hung = provider('hung', 40); hung.timeoutMs = 20; hung.fetch = () => new Promise(() => {});
+    const result = await collectIntelligenceEvents({}, new IntelligenceEventProviderRegistry([provider('healthy', 70), empty, garbage, leaking, hung]));
+    expect(result.events).toHaveLength(1);
+    expect(result.diagnostics.map((item) => [item.providerId, item.status])).toEqual([
+      ['healthy', 'success'], ['empty', 'success'], ['garbage', 'error'], ['leaking', 'error'], ['hung', 'error'],
+    ]);
+    expect(result.diagnostics.at(-1)?.message).toBe('Provider timed out.');
+    expect(JSON.stringify(result)).not.toContain('synthetic-provider-private-token');
   });
 
   it("deduplicates normalized records and keeps the stronger report", async () => {

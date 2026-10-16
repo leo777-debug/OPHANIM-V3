@@ -1,0 +1,257 @@
+{
+  "checkedAt": "2026-10-14T09:37:49.522Z",
+  "database": "embedded PostgreSQL socket; sequential HTTP, not native concurrency",
+  "coverage": "shipments/imports/entities/events/cases/evidence; knowledge/alerts/files/Verify and child links still pending",
+  "checks": [
+    {
+      "check": "positive control: own record",
+      "path": "/api/logistics/shipments/66abafbc-7d93-4e87-bc0e-59ba0c653879",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "positive control: own record",
+      "path": "/api/imports/96e9973a-2738-4876-affe-05b31082ac01",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "positive control: own record",
+      "path": "/api/imports/96e9973a-2738-4876-affe-05b31082ac01/error-report",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "positive control: own record",
+      "path": "/api/platform/entities/50a39b84-0983-4b0d-8101-b4660206c32a",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "positive control: own record",
+      "path": "/api/platform/cases/1a6a5f75-aa35-41cb-8da1-72c08df35af7",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "other tenant read",
+      "path": "/api/logistics/shipments/11b83d0e-ce0b-4257-bc99-615a8bd0c723",
+      "status": 404,
+      "pass": true
+    },
+    {
+      "check": "other tenant read",
+      "path": "/api/imports/f6b8fd8a-9a57-423b-985b-a10a2b9eea34",
+      "status": 404,
+      "pass": true
+    },
+    {
+      "check": "other tenant read",
+      "path": "/api/imports/f6b8fd8a-9a57-423b-985b-a10a2b9eea34/error-report",
+      "status": 404,
+      "pass": true
+    },
+    {
+      "check": "other tenant read",
+      "path": "/api/platform/entities/dba093c6-724c-47fe-9b3e-09b0e69add90",
+      "status": 404,
+      "pass": true
+    },
+    {
+      "check": "other tenant read",
+      "path": "/api/platform/cases/ba56e0ca-b9e2-4745-8ff5-7bc0731fb369",
+      "status": 404,
+      "pass": true
+    },
+    {
+      "check": "other tenant mutation",
+      "path": "/api/logistics/shipments/11b83d0e-ce0b-4257-bc99-615a8bd0c723",
+      "method": "PATCH",
+      "status": 404,
+      "pass": true
+    },
+    {
+      "check": "other tenant mutation",
+      "path": "/api/logistics/shipments/11b83d0e-ce0b-4257-bc99-615a8bd0c723",
+      "method": "DELETE",
+      "status": 404,
+      "pass": true
+    },
+    {
+      "check": "other tenant mutation",
+      "path": "/api/imports/f6b8fd8a-9a57-423b-985b-a10a2b9eea34/confirm",
+      "method": "POST",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "evidence cannot link into a foreign private case",
+      "status": 201,
+      "pass": false
+    },
+    {
+      "check": "foreign evidence cannot appear in case detail",
+      "status": 200,
+      "pass": false
+    },
+    {
+      "check": "scoped list includes own, excludes other marker",
+      "path": "/api/logistics/shipments",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "scoped list includes own, excludes other marker",
+      "path": "/api/platform/entities",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "scoped list includes own, excludes other marker",
+      "path": "/api/platform/events",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "scoped list includes own, excludes other marker",
+      "path": "/api/platform/cases",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "scoped list includes own, excludes other marker",
+      "path": "/api/platform/evidence",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "database proves foreign shipment unchanged",
+      "pass": true
+    },
+    {
+      "check": "positive control: own record",
+      "path": "/api/logistics/shipments/11b83d0e-ce0b-4257-bc99-615a8bd0c723",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "positive control: own record",
+      "path": "/api/imports/f6b8fd8a-9a57-423b-985b-a10a2b9eea34",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "positive control: own record",
+      "path": "/api/imports/f6b8fd8a-9a57-423b-985b-a10a2b9eea34/error-report",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "positive control: own record",
+      "path": "/api/platform/entities/dba093c6-724c-47fe-9b3e-09b0e69add90",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "positive control: own record",
+      "path": "/api/platform/cases/ba56e0ca-b9e2-4745-8ff5-7bc0731fb369",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "other tenant read",
+      "path": "/api/logistics/shipments/66abafbc-7d93-4e87-bc0e-59ba0c653879",
+      "status": 404,
+      "pass": true
+    },
+    {
+      "check": "other tenant read",
+      "path": "/api/imports/96e9973a-2738-4876-affe-05b31082ac01",
+      "status": 404,
+      "pass": true
+    },
+    {
+      "check": "other tenant read",
+      "path": "/api/imports/96e9973a-2738-4876-affe-05b31082ac01/error-report",
+      "status": 404,
+      "pass": true
+    },
+    {
+      "check": "other tenant read",
+      "path": "/api/platform/entities/50a39b84-0983-4b0d-8101-b4660206c32a",
+      "status": 404,
+      "pass": true
+    },
+    {
+      "check": "other tenant read",
+      "path": "/api/platform/cases/1a6a5f75-aa35-41cb-8da1-72c08df35af7",
+      "status": 404,
+      "pass": true
+    },
+    {
+      "check": "other tenant mutation",
+      "path": "/api/logistics/shipments/66abafbc-7d93-4e87-bc0e-59ba0c653879",
+      "method": "PATCH",
+      "status": 404,
+      "pass": true
+    },
+    {
+      "check": "other tenant mutation",
+      "path": "/api/logistics/shipments/66abafbc-7d93-4e87-bc0e-59ba0c653879",
+      "method": "DELETE",
+      "status": 404,
+      "pass": true
+    },
+    {
+      "check": "other tenant mutation",
+      "path": "/api/imports/96e9973a-2738-4876-affe-05b31082ac01/confirm",
+      "method": "POST",
+      "status": 400,
+      "pass": true
+    },
+    {
+      "check": "evidence cannot link into a foreign private case",
+      "status": 201,
+      "pass": false
+    },
+    {
+      "check": "foreign evidence cannot appear in case detail",
+      "status": 200,
+      "pass": false
+    },
+    {
+      "check": "scoped list includes own, excludes other marker",
+      "path": "/api/logistics/shipments",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "scoped list includes own, excludes other marker",
+      "path": "/api/platform/entities",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "scoped list includes own, excludes other marker",
+      "path": "/api/platform/events",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "scoped list includes own, excludes other marker",
+      "path": "/api/platform/cases",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "scoped list includes own, excludes other marker",
+      "path": "/api/platform/evidence",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "check": "database proves foreign shipment unchanged",
+      "pass": true
+    }
+  ]
+}

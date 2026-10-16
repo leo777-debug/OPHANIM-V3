@@ -30,9 +30,9 @@ export async function POST(request: NextRequest) {
 
   try {
     return response({ watchlist: await createWatchlist(ownerId, await request.json()) }, ownerId, 201);
-  } catch (error) {
+  } catch {
     return response(
-      { error: error instanceof Error ? error.message : 'Invalid watchlist item.' },
+      { error: 'Invalid watchlist item.' },
       ownerId,
       400,
     );

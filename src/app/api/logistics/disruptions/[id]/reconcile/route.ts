@@ -11,6 +11,6 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     if (!UUID.test(id)) return NextResponse.json({ error: 'Disruption ID is invalid.' }, { status: 400 });
     return NextResponse.json({ assessments: await reconcileDisruptionImpacts(await requireAuthenticatedActor(request, 'disruption:write'), id) });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof OrganizationAccessError ? error.message : error instanceof Error ? error.message : 'Disruption reconciliation failed.' }, { status: error instanceof OrganizationAccessError ? 403 : 400 });
+    return NextResponse.json({ error: error instanceof OrganizationAccessError ? error.message : 'Disruption reconciliation failed.' }, { status: error instanceof OrganizationAccessError ? 403 : 400 });
   }
 }

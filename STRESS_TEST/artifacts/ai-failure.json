@@ -1,0 +1,76 @@
+{
+  "checkedAt": "2026-10-14T16:33:54.349Z",
+  "checks": [
+    {
+      "mode": "invalid",
+      "status": 502,
+      "elapsedMs": 2861,
+      "pass": true
+    },
+    {
+      "mode": "invalid",
+      "check": "deterministic shipment API still works",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "mode": "empty",
+      "status": 502,
+      "elapsedMs": 53,
+      "pass": true
+    },
+    {
+      "mode": "empty",
+      "check": "deterministic shipment API still works",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "mode": "failure",
+      "status": 502,
+      "elapsedMs": 37,
+      "pass": true
+    },
+    {
+      "mode": "failure",
+      "check": "deterministic shipment API still works",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "mode": "slow",
+      "status": 200,
+      "elapsedMs": 1242,
+      "pass": true
+    },
+    {
+      "mode": "slow",
+      "check": "deterministic shipment API still works",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "mode": "timeout",
+      "check": "deterministic API usable while model is hung",
+      "pass": true
+    },
+    {
+      "mode": "timeout",
+      "status": 502,
+      "elapsedMs": 120044,
+      "pass": true
+    },
+    {
+      "mode": "timeout",
+      "check": "deterministic shipment API still works",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "mode": "unreachable",
+      "status": 502,
+      "pass": true
+    }
+  ],
+  "scope": "owned loopback mock; no live AI or paid provider; real 120-second model deadline, short delay, malformed JSON, provider failure, unreachable model"
+}

@@ -16,6 +16,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return new NextResponse(`${header}\n`, { headers: { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': `attachment; filename="ophanim-${type}-template.csv"`, 'Cache-Control': 'no-store' } });
   } catch (error) {
     const status = error instanceof OrganizationAccessError ? 401 : 400;
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Unable to create the import template.' }, { status });
+    return NextResponse.json({ error: 'Unable to create the import template.' }, { status });
   }
 }

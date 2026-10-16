@@ -1,0 +1,6 @@
+{
+  "checkedAt": "2026-10-15T13:31:33.648Z",
+  "scope": "Generic Error.message echo branches in API routes; explicitly typed safe-domain errors are separate",
+  "found": [],
+  "pass": true
+}

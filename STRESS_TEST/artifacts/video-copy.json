@@ -1,0 +1,11 @@
+{
+  "checkedAt": "2026-10-15T16:27:26+04:00",
+  "source": "STRESS_TEST/video/Ophanim-Demo-2026-10.mp4",
+  "destination": "D:/OPHANIM/Documentation/Ophanim-Demo-2026-10.mp4",
+  "previousCopyBackup": "D:/OPHANIM/Documentation/Ophanim-Demo-before-20261015-1627.mp4",
+  "bytes": 2960851,
+  "durationSeconds": 143.166667,
+  "sha256": "ff15b73b72880adcae5b5559f0c5a57f887f787597c69683db659b61c151fffc",
+  "sourceAndDestinationVerified": true,
+  "scope": "Previously inspected synthetic demo video, no re-recording or live provider contact. D: became available after the earlier checkpoint."
+}

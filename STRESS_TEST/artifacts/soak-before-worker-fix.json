@@ -1,0 +1,118 @@
+{
+  "startedAt": "2026-10-14T15:36:09.999Z",
+  "elapsedSeconds": 303,
+  "requestedSeconds": 3600,
+  "finished": false,
+  "samples": [
+    {
+      "elapsedSeconds": 0,
+      "health": 200,
+      "shipments": 200,
+      "worker": 500,
+      "memory": {
+        "WorkingSet64": 166170624,
+        "PrivateMemorySize64": 188121088
+      }
+    },
+    {
+      "elapsedSeconds": 30,
+      "health": 200,
+      "shipments": 200,
+      "worker": 500,
+      "memory": {
+        "WorkingSet64": 122896384,
+        "PrivateMemorySize64": 116801536
+      }
+    },
+    {
+      "elapsedSeconds": 60,
+      "health": 200,
+      "shipments": 200,
+      "worker": 500,
+      "memory": {
+        "WorkingSet64": 123650048,
+        "PrivateMemorySize64": 117817344
+      }
+    },
+    {
+      "elapsedSeconds": 90,
+      "health": 200,
+      "shipments": 200,
+      "worker": 500,
+      "memory": {
+        "WorkingSet64": 123351040,
+        "PrivateMemorySize64": 115916800
+      }
+    },
+    {
+      "elapsedSeconds": 120,
+      "health": 200,
+      "shipments": 200,
+      "worker": 500,
+      "memory": {
+        "WorkingSet64": 123887616,
+        "PrivateMemorySize64": 118894592
+      }
+    },
+    {
+      "elapsedSeconds": 150,
+      "health": 200,
+      "shipments": 200,
+      "worker": 500,
+      "memory": {
+        "WorkingSet64": 124686336,
+        "PrivateMemorySize64": 119394304
+      }
+    },
+    {
+      "elapsedSeconds": 180,
+      "health": 200,
+      "shipments": 200,
+      "worker": 500,
+      "memory": {
+        "WorkingSet64": 124891136,
+        "PrivateMemorySize64": 119394304
+      }
+    },
+    {
+      "elapsedSeconds": 210,
+      "health": 200,
+      "shipments": 200,
+      "worker": 500,
+      "memory": {
+        "WorkingSet64": 124764160,
+        "PrivateMemorySize64": 118898688
+      }
+    },
+    {
+      "elapsedSeconds": 240,
+      "health": 200,
+      "shipments": 200,
+      "worker": 500,
+      "memory": {
+        "WorkingSet64": 125038592,
+        "PrivateMemorySize64": 119115776
+      }
+    },
+    {
+      "elapsedSeconds": 270,
+      "health": 200,
+      "shipments": 200,
+      "worker": 500,
+      "memory": {
+        "WorkingSet64": 125079552,
+        "PrivateMemorySize64": 119119872
+      }
+    },
+    {
+      "elapsedSeconds": 300,
+      "health": 200,
+      "shipments": 200,
+      "worker": 500,
+      "memory": {
+        "WorkingSet64": 125255680,
+        "PrivateMemorySize64": 119193600
+      }
+    }
+  ]
+}

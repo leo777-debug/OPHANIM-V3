@@ -99,19 +99,7 @@ export async function stealthFetch(
     ) : undefined
   );
 
-  const controller = new AbortController();
-  if (init?.signal) {
-    init.signal.addEventListener('abort', () => controller.abort());
-  }
-
-  const timeoutId = setTimeout(() => controller.abort(new Error('stealthFetch Hard Timeout')), 30000);
-
-  try {
-    const res = await fetch(url, { ...init, headers, signal: controller.signal });
-    clearTimeout(timeoutId);
-    return res;
-  } catch (err) {
-    clearTimeout(timeoutId);
-    throw err;
-  }
+  const deadline = AbortSignal.timeout(30000);
+  const signal = init?.signal ? AbortSignal.any([init.signal, deadline]) : deadline;
+  return fetch(url, { ...init, headers, signal });
 }

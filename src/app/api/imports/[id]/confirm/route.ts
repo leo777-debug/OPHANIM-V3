@@ -4,7 +4,7 @@ import { confirmImport } from '@/lib/imports/jobs';
 import { ImportError } from '@/lib/imports/types';
 import { OrganizationAccessError } from '@/lib/operations/authorization';
 
-function isUuid(value: string): boolean { return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i.test(value); }
+function isUuid(value: string): boolean { return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value); }
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -14,6 +14,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json(confirmation);
   } catch (error) {
     const status = error instanceof OrganizationAccessError ? 401 : error instanceof ImportError ? 400 : 500;
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Import confirmation failed.' }, { status });
+    return NextResponse.json({ error: 'Import confirmation failed.' }, { status });
   }
 }

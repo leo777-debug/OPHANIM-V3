@@ -7,6 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { authorizeAiRequest } from '@/lib/ai/access';
 import {
   createGeminiClient,
   rotateApiKey,
@@ -99,6 +100,8 @@ interface ErrorResponse {
 export async function POST(
   request: NextRequest
 ): Promise<NextResponse<AnalyzeResponse | ErrorResponse>> {
+  const denied = await authorizeAiRequest(request);
+  if (denied) return denied;
   // Extract client IP
   const ip =
     request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
@@ -188,8 +191,8 @@ export async function POST(
         },
       }
     );
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown Gemini API error';
+  } catch {
+    const message = 'Unknown Gemini API error';
 
     // Detect specific Gemini error types
     if (message.includes('API_KEY_INVALID') || message.includes('API key not valid')) {
@@ -219,7 +222,7 @@ export async function POST(
       );
     }
 
-    console.error('[OPHANIM AI] Analysis error:', message);
+    console.error('[OPHANIM AI] Analysis error: ANALYSIS_FAILED');
     return NextResponse.json(
       { error: 'Intelligence analysis failed. Please try again.', code: 'ANALYSIS_FAILED' },
       { status: 500 }

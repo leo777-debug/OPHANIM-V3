@@ -49,7 +49,7 @@ export default function LogisticsTopBar() {
     ? `Organization ${actor.organizationId.slice(0, 8)}`
     : "Organization workspace";
   const health = providers
-    ? `${providers.available} of ${providers.total} sources online`
+    ? `${providers.available} of ${providers.total} sources configured`
     : "Checking source health";
 
   return (
