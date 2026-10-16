@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-10-16T12:07:53.609Z",
+  "checkedAt": "2026-10-16T14:02:02.618Z",
   "checks": [
     {
       "name": "Disposable local database: full migration chain, external APIs blocked"
@@ -27,7 +27,7 @@
     },
     {
       "name": "Runtime database switch without redeploy",
-      "applyMilliseconds": 25
+      "applyMilliseconds": 37
     },
     {
       "name": "All restored reference and signal layers enabled; dense camera fixture is not dropped"
@@ -40,27 +40,27 @@
             "width": 1920,
             "height": 1080
           },
-          "shellReadyMilliseconds": 303,
-          "readyMilliseconds": 4755,
-          "pixelCheckedMilliseconds": 8006
+          "shellReadyMilliseconds": 407,
+          "readyMilliseconds": 7084,
+          "pixelCheckedMilliseconds": 12493
         },
         {
           "viewport": {
             "width": 1366,
             "height": 768
           },
-          "shellReadyMilliseconds": 576,
-          "readyMilliseconds": 4843,
-          "pixelCheckedMilliseconds": 9017
+          "shellReadyMilliseconds": 650,
+          "readyMilliseconds": 8460,
+          "pixelCheckedMilliseconds": 14878
         },
         {
           "viewport": {
             "width": 390,
             "height": 844
           },
-          "shellReadyMilliseconds": 502,
-          "readyMilliseconds": 4414,
-          "pixelCheckedMilliseconds": 7311
+          "shellReadyMilliseconds": 1438,
+          "readyMilliseconds": 8692,
+          "pixelCheckedMilliseconds": 13921
         }
       ]
     },
@@ -72,6 +72,18 @@
     },
     {
       "name": "Quick switch and Ctrl+Shift+P both work in both directions"
+    },
+    {
+      "name": "Fullscreen enters and exits using the real browser API"
+    },
+    {
+      "name": "Tool navigation preserves selected destination through PIN; Shodan uses one mocked read-only backend lookup"
+    },
+    {
+      "name": "All original Atlas tool panels open; vessels/aircraft layers and return destination are retained"
+    },
+    {
+      "name": "No uncaught errors opening Atlas tools; no live scan submitted"
     },
     {
       "name": "Owner dashboard turns OFF without redeploy; normal site returns and controls disappear"

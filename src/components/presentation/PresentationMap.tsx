@@ -3,13 +3,14 @@
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
-import { Activity, Cable, Camera, ChevronDown, ChevronUp, Clock3, CloudLightning, Flame, Globe2, Landmark, MapPin, MapPinned, Maximize, Moon, Newspaper, Plane, Radio, RefreshCw, Satellite, Shield, Ship, SunMoon, TriangleAlert, X } from 'lucide-react';
+import { Activity, Cable, Camera, ChevronDown, ChevronUp, Clock3, CloudLightning, Flame, Globe2, Landmark, MapPin, MapPinned, Moon, Newspaper, Plane, Radio, RefreshCw, Satellite, Shield, Ship, SunMoon, TriangleAlert, X } from 'lucide-react';
+import FullscreenButton from '@/components/FullscreenButton';
 import IntelligenceExplorer from '@/components/intelligence/IntelligenceExplorer';
 import { PRESENTATION_FEEDS, feedIds, publicUrl } from '@/lib/presentation/feeds';
 import type { FeedId, PresentationFeed, PresentationSettings } from '@/lib/presentation/types';
 import type { MapProjection, MapStyle } from '@/lib/map-workspaces';
 import OphanimMark from './OphanimMark';
-import { PresenterSwitch, usePresentation } from './PresentationBoundary';
+import { IntelligenceTools, PresenterSwitch, usePresentation } from './PresentationBoundary';
 import styles from './presentation.module.css';
 
 const Globe = dynamic(() => import('./PresentationGlobe'), { ssr: false, loading: () => <div className={styles.globePoster} data-testid="globe-starter"><span>Starting interactive map...</span></div> });
@@ -70,7 +71,7 @@ export default function PresentationMap({ settings: initial, preview = false }: 
     <header className={styles.topbar}>
       <div className={styles.brand}><OphanimMark /><div><strong>OPHANIM</strong><span>Live global intelligence</span></div></div>
       <div className={styles.metrics} aria-label="Live object counts"><span><Plane size={15} />{feeds.flights?.state === 'unavailable' ? '--' : feeds.flights?.features.length.toLocaleString() ?? '--'} <small>aircraft</small></span><span><Ship size={15} />{feeds.maritime?.state === 'unavailable' ? '--' : feeds.maritime?.features.length.toLocaleString() ?? '--'} <small>vessels</small></span><span><Radio size={15} />{available.filter(feed => !feed.reference && !['flights','maritime','cables','satellites','news','cameras'].includes(feed.id)).reduce((sum,feed) => sum+feed.features.length,0)} <small>events</small></span></div>
-      <div className={styles.headerTools}><time aria-label="UTC clock">{clock} <small>UTC</small></time><span className={styles.health}><i data-health={health} />{health === 'live' ? 'Live' : health === 'replay' ? 'Replay' : health === 'partial' ? 'Partial feeds' : 'Connecting'}</span><button title="Fullscreen" aria-label="Fullscreen" onClick={() => { if (document.fullscreenElement) void document.exitFullscreen(); else void document.documentElement.requestFullscreen().catch(() => {}); }}><Maximize size={18} /></button><PresenterSwitch view="map" /></div>
+      <div className={styles.headerTools}><time aria-label="UTC clock">{clock} <small>UTC</small></time><span className={styles.health}><i data-health={health} />{health === 'live' ? 'Live' : health === 'replay' ? 'Replay' : health === 'partial' ? 'Partial feeds' : 'Connecting'}</span><IntelligenceTools /><FullscreenButton /><PresenterSwitch view="map" /></div>
     </header>
     {preview && <div className={styles.preview}>Owner preview <Link href="/admin/presentation">Back to settings</Link></div>}
     <aside className={styles.layers} aria-label="Map layers"><div className={styles.panelTitle}><span>MAP LAYERS</span><button aria-label="Refresh feeds" title="Refresh feeds" onClick={() => setRefresh(value=>value+1)}><RefreshCw size={15} /></button></div>

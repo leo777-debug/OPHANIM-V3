@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import { Suspense, useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Layers, BarChart3, Newspaper, Search, X, Globe, MapPinned, Radar, Satellite, Moon, ExternalLink, AlertTriangle, Activity, Database, Wifi, Play, Network, Crosshair, Brain, Bookmark, Settings, FileUp } from 'lucide-react';
@@ -20,6 +21,7 @@ import ThreatFusionHUD from '@/components/ThreatFusionHUD';
 import WatchlistPanel from '@/components/WatchlistPanel';
 import ProviderStatusPanel from '@/components/ProviderStatusPanel';
 import MapWorkspaceTabs from '@/components/MapWorkspaceTabs';
+import { parseAtlasTool } from '@/lib/atlas-tools';
 import type { ProviderMapLayer } from '@/lib/providers';
 import {
   closeMapWorkspace,
@@ -147,7 +149,12 @@ function getYouTubeWatchUrl(url: string): string {
   return url;
 }
 
-export default function Dashboard() {
+export default function AtlasPage() {
+  return <Suspense fallback={<div role="status" className="fixed inset-0 bg-[#080e14] text-white grid place-items-center">Opening intelligence tools...</div>}><Dashboard /></Suspense>;
+}
+
+function Dashboard() {
+  const requestedTool = parseAtlasTool(useSearchParams().get('tool'));
   const dataRef = useRef<any>({});
   const [dataVersion, setDataVersion] = useState(0);
   const data = dataRef.current;
@@ -162,7 +169,7 @@ export default function Dashboard() {
   const [locationLabel, setLocationLabel] = useState('');
   const [regionDossier, setRegionDossier] = useState<any>(null);
   const [dossierLoading, setDossierLoading] = useState(false);
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(!requestedTool);
   const [activeCamera, setActiveCamera] = useState<any>(null);
   const [spaceWeather, setSpaceWeather] = useState<any>(null);
   const [showLayers, setShowLayers] = useState(true);
@@ -170,6 +177,7 @@ export default function Dashboard() {
   const [showAlerts, setShowAlerts] = useState(false);
   const [showScmPanel, setShowScmPanel] = useState(true);
   const [showIntel, setShowIntel] = useState(false);
+  const [reconTab, setReconTab] = useState<'scanner' | 'shodan' | 'bgp'>('scanner');
   const [showNews, setShowNews] = useState(false);
   const [workbenchView, setWorkbenchView] = useState<IntelligenceWorkbenchView>('news');
   const [showEntityGraph, setShowEntityGraph] = useState(false);
@@ -191,9 +199,9 @@ export default function Dashboard() {
 
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
-    const lat = Number(query.get('lat'));
-    const lng = Number(query.get('lng'));
-    const zoom = Number(query.get('zoom'));
+    const lat = query.has('lat') ? Number(query.get('lat')) : NaN;
+    const lng = query.has('lng') ? Number(query.get('lng')) : NaN;
+    const zoom = query.has('zoom') ? Number(query.get('zoom')) : NaN;
     if (Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180) {
       setFlyToLocation({ lat, lng, zoom: Number.isFinite(zoom) ? zoom : 8, ts: Date.now() });
       setMapView({
@@ -259,6 +267,32 @@ export default function Dashboard() {
     terrain_3d: false,
     malware: true,
   });
+
+  useEffect(() => {
+    const tool = requestedTool;
+    if (!tool) return;
+    // Coalesce URL-driven navigation with the next frame; cancel superseded requests.
+    const frame = requestAnimationFrame(() => {
+      setShowNews(false);
+      setMobilePanel(null);
+      setShowAiAnalyst(tool === 'analyst');
+      setShowFusion(tool === 'fusion');
+      setShowIntel(tool === 'recon' || tool === 'shodan');
+      setReconTab(tool === 'shodan' ? 'shodan' : 'scanner');
+      setShowMarkets(tool === 'markets');
+      setShowAlerts(tool === 'alerts');
+      setShowEntityGraph(tool === 'entities');
+      setShowDesktopSearch(['search', 'ip', 'tracking'].includes(tool));
+      if (window.innerWidth < 768) {
+        if (tool === 'recon' || tool === 'shodan') setMobilePanel('recon');
+        else if (tool === 'markets') setMobilePanel('markets');
+        else if (['search', 'ip', 'tracking'].includes(tool)) setMobilePanel('search');
+        else if (tool === 'alerts') { setMobilePanel('intel'); setWorkbenchView('alerts'); }
+      }
+      if (tool === 'tracking') setActiveLayers(previous => ({ ...previous, flights: true, private: true, jets: true, military: true, maritime: true, ship_cargo: true, ship_tanker: true, ship_passenger: true, ship_fishing: true, ship_military: true }));
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [requestedTool]);
   const [mapWorkspaces, setMapWorkspaces] = useState<MapWorkspace[]>(() => [
     createMapWorkspaceState({
       id: 'main',
@@ -455,8 +489,9 @@ export default function Dashboard() {
     if (urlTimer.current) clearTimeout(urlTimer.current);
     urlTimer.current = setTimeout(() => {
       const active = Object.entries(activeLayers).filter(([,v]) => v).map(([k]) => k).join(',');
-      const url = `${window.location.pathname}?layers=${active}`;
-      window.history.replaceState(null, '', url);
+      const url = new URL(window.location.href);
+      url.searchParams.set('layers', active);
+      window.history.replaceState(null, '', url.pathname + url.search);
     }, 1500);
   }, [activeLayers]);
 
@@ -1352,6 +1387,7 @@ export default function Dashboard() {
         />
       )}
       {isMobile && showAiAnalyst && <AiAnalyst data={data} mode={aiPanelMode} />}
+      {isMobile && showFusion && <section role="dialog" aria-label="Fusion" className="fixed inset-x-3 top-28 bottom-24 overflow-auto z-[300] bg-[#101719] border border-white/20 p-3 rounded-md"><button aria-label="Close fusion" onClick={() => setShowFusion(false)}><X size={20} /></button><ThreatFusionHUD onLocate={(lat, lng) => setFlyToLocation({ lat, lng, ts: Date.now() })} /></section>}
       <AnimatePresence>
         {showProviders && (
           <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className={`absolute left-1/2 z-[260] w-[min(440px,calc(100vw-32px))] -translate-x-1/2 pointer-events-auto ${isMobile ? 'top-[156px]' : 'top-[86px]'}`}>
@@ -1396,7 +1432,7 @@ export default function Dashboard() {
           <AnimatePresence>
             {showIntel && (
               <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="absolute right-12 top-1/2 -translate-y-1/2 w-80">
-                <OsintPanel onSweepVisualize={setSweepData} onScanGeolocate={(target, data) => {
+                <OsintPanel key={reconTab} initialTab={reconTab} onSweepVisualize={setSweepData} onScanGeolocate={(target, data) => {
                   setScanTargets(prev => {
                     const existing = prev.filter(t => t.id !== target);
                     return [{ id: target, timestamp: Date.now(), ...data }, ...existing].slice(0, 10);
@@ -1642,7 +1678,7 @@ export default function Dashboard() {
                   )}
                   {mobilePanel === 'recon' && (
                     <div className="space-y-2">
-                      <OsintPanel isOpen={true} onClose={() => setMobilePanel(null)} isMobile={true} onSweepVisualize={setSweepData} />
+                      <OsintPanel key={reconTab} initialTab={reconTab} isOpen={true} onClose={() => setMobilePanel(null)} isMobile={true} onSweepVisualize={setSweepData} />
                     </div>
                   )}
                 </div>

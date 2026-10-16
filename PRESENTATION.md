@@ -56,6 +56,28 @@ browser cookie for four hours; a new browser uses the configured default.
 
 ### Full Platform And Demo Login
 
+**Intelligence tools** in the Map view header and Full platform presenter bar
+opens the original Atlas with the chosen panel already open: Analyst, Fusion,
+Recon, Markets, Alerts, Entities, Search, Shodan IP lookup or IP search.
+**Vessels & aircraft** enables position layers and opens target search.
+Select a vessel or aircraft on that globe for its existing details. This is not
+a promise of historical tracks or global AIS coverage.
+
+The **Fullscreen** button beside the tools menu expands the entire application;
+press it again or Escape to leave fullscreen. Small screens retain the expand
+icon. A browser that blocks fullscreen shows a dismissible message.
+
+Opening a tool enters Full platform through the same optional switch PIN. It
+does not sign in a visitor or unlock private APIs. The selected tool is retained
+after PIN entry, and Back to map / Full platform remembers its URL in this
+browser. The tools are absent from the presenter bar when presentation is OFF.
+
+In this branch, **Shodan IP lookup** is the existing read-only InternetDB host
+lookup, routed through Ophanim's backend. It is not the authenticated Shodan
+database-query / credit / active-scan integration from other work in progress.
+No Shodan key is needed for InternetDB; no active scan is submitted on opening
+any menu or tool. Do not present this branch as offering full Shodan search.
+
 The normal app and login are preserved. Use the existing clearly labelled demo
 organization, not customer records. This feature does not manufacture demo
 accounts or grant public access to a real organization's workspace.

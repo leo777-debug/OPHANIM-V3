@@ -12,6 +12,27 @@ is no new platform-admin role, allowlist or company-management workflow.
 
 ## What Changed
 
+### Tool Discovery And Fullscreen Follow-Up
+
+- Added a labelled fullscreen control in Map view and the Full platform presenter
+  bar, including exit state and a dismissible browser-rejection message.
+- Added an Intelligence tools menu in both headers. It opens the existing Atlas
+  panels rather than duplicating their implementations in the public map.
+- Atlas accepts allowlisted `tool` links, opens the corresponding panel, preserves
+  the query while saving layers, and avoids interpreting absent map coordinates
+  as zero. Tool-to-tool navigation works without a full page reload. Direct tool
+  links skip the old blocking startup animation, which browser testing caught
+  intercepting lookup clicks.
+- The optional switch PIN retains the requested tool destination. Normal login
+  and private API restrictions are unchanged. Presenter controls remain absent
+  when mode is OFF.
+- The existing Shodan InternetDB lookup now uses the existing server route and
+  a LOOKUP button. Full authenticated Shodan query/scan capabilities are not in
+  this branch. Vessel/aircraft entry enables position layers and target search;
+  historical tracks are not added by this follow-up.
+- Added allowlist/URL unit tests and mocked-browser tool navigation, PIN,
+  fullscreen and read-only lookup checks. No live scans or paid searches run.
+
 - `src/lib/presentation/`: settings, routing policy, bounded/CSRF-checked input,
   fixed public-feed loaders, explicit public projection, independent cache and
   snapshot/replay fallback. Reads are bounded; public flags cache for two seconds,
@@ -177,23 +198,27 @@ Final checks on 16 October 2026:
 | Check | Result |
 | --- | --- |
 | TypeScript / production build | PASS |
-| Unit and database tests | 251 passed, one pre-existing opt-in live test skipped; 58 files |
+| Unit and database tests | 267 passed, one pre-existing opt-in live test skipped; 59 files |
 | Focused ESLint on presentation code | PASS, zero errors or warnings |
 | Shared legacy map lint baseline | Unchanged: 96 existing errors, 10 existing warnings; unrelated cleanup excluded |
+| Shared Atlas / Recon lint baseline | Unchanged: Atlas 57 errors / 16 warnings; Recon 27 errors / 7 warnings |
 | Local migration chain / actual RLS checks | PASS |
-| Browser integration scenarios | 16 PASS; zero uncaught errors and zero console errors; at least 14 enabled populated layers |
-| Geographic starter + panel shell under 2 seconds | PASS: 0.303 / 0.576 / 0.502 s |
-| Fully interactive WebGL under 2 seconds | NOT MET: approximately 4.4-4.8 seconds locally |
+| Browser integration scenarios | 20 PASS; zero uncaught errors on map/tool navigation and zero console errors on map/switch path; at least 14 enabled populated layers |
+| Geographic starter + panel shell under 2 seconds | PASS: 0.407 / 0.650 / 1.438 s |
+| Fully interactive WebGL under 2 seconds | NOT MET: approximately 7.1-8.7 seconds in latest local run |
 
 The browser's default GPU path measured the geographic starter and panel shell
-at **0.303 s (1920x1080), 0.576 s (1366x768), 0.502 s (390x844)**. This is an
+at **0.407 s (1920x1080), 0.650 s (1366x768), 1.438 s (390x844)**. This is an
 actual render of the bundled geography, labelled while loading, with no fake live
-markers. Full interactive globe readiness took **4.755 / 4.843 / 4.414 s**.
+markers. Full interactive globe readiness took **7.084 / 8.460 / 8.692 s**.
 PNG/pixel readback is measured separately in the results file. Forced SwiftShader
 was substantially slower. These are local PGlite/headless measurements, not a
 hosted PostgreSQL or projector-device benchmark. Fully interactive startup under
 two seconds remains an open performance limitation, not a claimed pass. Runtime
-ON/OFF propagation was measured at 25 ms in the final integration run.
+ON/OFF propagation was measured at 37 ms in the final integration run. The tool
+follow-up also has a repeatable focused run: `node tools/presentation/check.mjs
+--tools-only`, recorded in `presentation-evidence/tools-results.json`. Its Shodan
+image uses a reserved test IP and mocked response, not a live customer lookup.
 
 Screenshots (all use labelled synthetic replay, no real customer records):
 

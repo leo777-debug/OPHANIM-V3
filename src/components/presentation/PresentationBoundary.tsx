@@ -3,12 +3,20 @@
 import { createContext, useCallback, useContext, useEffect, useEffectEvent, useRef, useState, type ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { ArrowLeft, X } from 'lucide-react';
+import AtlasToolMenu from '@/components/AtlasToolMenu';
+import FullscreenButton from '@/components/FullscreenButton';
+import { atlasToolHref, type AtlasTool } from '@/lib/atlas-tools';
 import { DEFAULT_PRESENTATION, type PresentationSettings, type PresentationView } from '@/lib/presentation/types';
 import styles from './presentation.module.css';
 
-type Controls = { settings: PresentationSettings; switchView: (view: PresentationView) => void };
-const Context = createContext<Controls>({ settings: DEFAULT_PRESENTATION, switchView: () => {} });
+type Controls = { settings: PresentationSettings; switchView: (view: PresentationView) => void; openTool: (tool: AtlasTool) => void };
+const Context = createContext<Controls>({ settings: DEFAULT_PRESENTATION, switchView: () => {}, openTool: () => {} });
 export const usePresentation = () => useContext(Context);
+
+export function IntelligenceTools() {
+  const { openTool } = usePresentation();
+  return <AtlasToolMenu onChoose={openTool} />;
+}
 
 export function PresenterSwitch({ view }: { view: PresentationView }) {
   const { settings, switchView } = usePresentation();
@@ -28,6 +36,7 @@ export default function PresentationBoundary({ children }: { children: ReactNode
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const lastSettings = useRef(DEFAULT_PRESENTATION);
+  const pendingDestination = useRef<string | undefined>(undefined);
   const mapPage = pathname === '/presentation' || pathname === '/presentation/preview';
 
   useEffect(() => {
@@ -60,22 +69,30 @@ export default function PresentationBoundary({ children }: { children: ReactNode
     return () => { controller.abort(); clearInterval(timer); window.removeEventListener('presentation-settings-changed', onVisible); document.removeEventListener('visibilitychange', onVisible); };
   }, [pathname, router, mapPage]);
 
-  const submitSwitch = useCallback(async (view: PresentationView, suppliedPin?: string) => {
+  const submitSwitch = useCallback(async (view: PresentationView, suppliedPin?: string, destination?: string) => {
     setBusy(true); setError('');
     try {
-      const returnTo = mapPage ? sessionStorage.getItem('ophanim-presenter-return') ?? '/operations' : pathname;
+      if (destination) pendingDestination.current = destination;
+      const currentPath = location.pathname + location.search;
+      const returnTo = pendingDestination.current ?? (mapPage ? sessionStorage.getItem('ophanim-presenter-return') ?? '/operations' : currentPath);
       const response = await fetch('/api/presentation/view', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ view, pin: suppliedPin, returnTo }) });
       const body = await response.json();
       if (response.status === 401) { setPinOpen(true); if (suppliedPin) setError(body.error); return; }
       if (!response.ok) throw new Error(body.error || 'Could not switch views.');
-      if (view === 'map' && !mapPage) sessionStorage.setItem('ophanim-presenter-return', pathname);
+      if (view === 'map' && !mapPage) sessionStorage.setItem('ophanim-presenter-return', currentPath);
+      pendingDestination.current = undefined;
       setPinOpen(false); setPin('');
       router.push(body.href); router.refresh();
     } catch (failure) { setError(failure instanceof Error ? failure.message : 'Could not switch views.'); }
     finally { setBusy(false); }
-  }, [mapPage, pathname, router]);
+  }, [mapPage, router]);
 
-  const switchView = useCallback((view: PresentationView) => { void submitSwitch(view); }, [submitSwitch]);
+  const switchView = useCallback((view: PresentationView) => { pendingDestination.current = undefined; void submitSwitch(view); }, [submitSwitch]);
+  const openTool = useCallback((tool: AtlasTool) => {
+    const href = atlasToolHref(tool);
+    if (settings.enabled) void submitSwitch('full', undefined, href);
+    else router.push(href);
+  }, [router, settings.enabled, submitSwitch]);
   const keyboardSwitch = useEffectEvent(() => switchView(location.pathname.startsWith('/presentation') ? 'full' : 'map'));
   useEffect(() => {
     if (!settings.enabled) return;
@@ -87,13 +104,13 @@ export default function PresentationBoundary({ children }: { children: ReactNode
   }, [settings.enabled]);
 
   const content = settings.enabled && !mapPage ? <div className={styles.fullPlatform}>
-    <header className={styles.presenterBar}><button onClick={() => switchView('map')}><ArrowLeft size={16} />Back to map</button><span>Presentation mode is ON</span><PresenterSwitch view="full" /></header>
+    <header className={styles.presenterBar}><button onClick={() => switchView('map')}><ArrowLeft size={16} />Back to map</button><IntelligenceTools /><FullscreenButton /><span>Presentation mode is ON</span><PresenterSwitch view="full" /></header>
     <div className={styles.platformContent}>{children}</div>
   </div> : children;
-  return <Context.Provider value={{ settings, switchView }}>{content}
+  return <Context.Provider value={{ settings, switchView, openTool }}>{content}
     {settings.enabled && error && !pinOpen && <div className={styles.toast} role="alert">{error}<button aria-label="Dismiss" onClick={() => setError('')}><X size={16} /></button></div>}
     {settings.enabled && pinOpen && <div className={styles.scrim}><form role="dialog" aria-modal="true" aria-labelledby="switch-pin-title" className={styles.dialog} onSubmit={event => { event.preventDefault(); void submitSwitch('full', pin); }}>
-      <button type="button" className={styles.close} aria-label="Close PIN dialog" onClick={() => { setPinOpen(false); setPin(''); }}><X size={20} /></button>
+      <button type="button" className={styles.close} aria-label="Close PIN dialog" onClick={() => { setPinOpen(false); setPin(''); pendingDestination.current = undefined; }}><X size={20} /></button>
       <h2 id="switch-pin-title">Enter switch PIN</h2><p>Full platform still uses its normal login.</p>
       <label>Switch PIN<input autoFocus required type="password" inputMode="numeric" pattern="[0-9]{4,12}" autoComplete="off" value={pin} onChange={event => setPin(event.target.value)} /></label>
       {error && <p role="alert">{error}</p>}<button className={styles.primary} disabled={busy}>{busy ? 'Checking...' : 'Open full platform'}</button>

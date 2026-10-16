@@ -5,6 +5,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { chromium } from '@playwright/test';
 import sharp from 'sharp';
 import { startTestDatabase,seedReplay } from './test-db.mjs';
+import { checkTools } from './check-tools.mjs';
 
 const port=Number(process.env.PRESENTATION_TEST_PORT ?? 3107),url=`http://127.0.0.1:${port}`;
 const output='presentation-evidence';
@@ -37,6 +38,12 @@ try {
   for(const stream of [server.stdout,server.stderr])stream.on('data',chunk=>logs.push(chunk.toString()));
   await eventually(async()=>{assert.equal(server.exitCode,null,'Local server exited before readiness');assert.equal((await request('/api/presentation/settings')).status,200);},60000);
   pass('Disposable local database: full migration chain, external APIs blocked');
+  if(process.argv.includes('--tools-only')) {
+    await save({enabled:true,replay:'on'});
+    browser=await chromium.launch({headless:true,args:['--enable-unsafe-swiftshader']});
+    await checkTools({browser,url,owner,save,output,pass});
+    await writeFile(`${output}/tools-results.json`,JSON.stringify({checkedAt:new Date().toISOString(),checks,syntheticFixturesOnly:true},null,2));
+  } else {
   assert.equal((await settings()).enabled,false);
   const originalRoutes=['/','/atlas','/operations','/imports','/logistics','/logistics/rescue','/onboarding','/login'];
   for(const route of originalRoutes)assert.equal((await request(route)).status,200,route);
@@ -90,7 +97,7 @@ try {
   const page=await context.newPage();
   page.on('pageerror',error=>errors.push(error.message));
   page.on('console',message=>{if(message.type()==='warning' && message.text().includes('Presentation map')){logs.push(message.text());console.log(message.text());}});
-  page.on('console',message=>{if(message.type()==='error')consoleErrors.push(message.text());});
+  page.on('console',message=>{if(message.type()==='error')consoleErrors.push(`${message.text()} ${message.location().url}`);});
   await page.goto(url,{waitUntil:'networkidle'});
   assert.equal(await page.getByRole('group',{name:'Presentation view'}).count(),0);
   await page.keyboard.press('Control+Shift+P');assert.equal(new URL(page.url()).pathname,'/');
@@ -179,6 +186,7 @@ try {
   await page.getByRole('button',{name:'Back to map',exact:true}).waitFor();
   await page.keyboard.press('Control+Shift+P');await page.waitForURL('**/presentation**');
   pass('Quick switch and Ctrl+Shift+P both work in both directions');
+  await checkTools({browser,url,owner,save,output,pass});
   await page.goto(url+'/admin/presentation');await page.getByRole('switch',{name:'Presentation mode'}).waitFor();
   await page.screenshot({path:`${output}/screenshots/admin-settings.png`});
   await page.getByRole('switch',{name:'Presentation mode'}).click();await page.getByRole('button',{name:'Confirm OFF'}).click();
@@ -190,6 +198,7 @@ try {
   assert.equal(errors.length,0,errors.join('\n'));assert.equal(consoleErrors.length,0,consoleErrors.join('\n'));pass('No uncaught or console browser errors on map and switch path');
   await writeFile(`${output}/results.json`,JSON.stringify({checkedAt:new Date().toISOString(),checks,browserErrors:errors,consoleErrors,syntheticFixturesOnly:true},null,2));
   console.log(`${checks.length} presentation integration checks passed.`);
+  }
 }catch(error) {
   if(browser)for(const context of browser.contexts())for(const page of context.pages()) {
     await writeFile(`${output}/debug-dom.html`,await page.content()).catch(()=>{});

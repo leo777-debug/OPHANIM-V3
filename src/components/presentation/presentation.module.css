@@ -100,6 +100,8 @@
 .presenterBar { height:44px; display:flex; align-items:center; gap:16px; padding:0 16px; background:#101c25; border-bottom:1px solid #30424d; color:#d8e8f1; font-family:Arial,Helvetica,sans-serif; }
 .presenterBar>span { font-size:11px; color:#91adbf; margin-left:auto; }
 .presenterBar>button { border:0; font-size:12px; }
+.presenterBar { position:relative; z-index:700; }
+@media (max-width:680px) { .presenterBar>span { display:none; } }
 .platformContent { position:relative; transform:translateZ(0); min-height:calc(100dvh - 44px); height:calc(100dvh - 44px); overflow:auto; }
 .scrim { position:fixed; inset:0; display:grid; place-items:center; padding:20px; background:#02080dbd; backdrop-filter:blur(5px); z-index:10000; color:#edf4fa; font-family:Arial,Helvetica,sans-serif; }
 .dialog { position:relative; width:100%; max-width:400px; border:1px solid #526575; border-radius:6px; padding:28px; background:#12202a; }

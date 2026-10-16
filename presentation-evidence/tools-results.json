@@ -1,0 +1,21 @@
+{
+  "checkedAt": "2026-10-16T13:59:33.524Z",
+  "checks": [
+    {
+      "name": "Disposable local database: full migration chain, external APIs blocked"
+    },
+    {
+      "name": "Fullscreen enters and exits using the real browser API"
+    },
+    {
+      "name": "Tool navigation preserves selected destination through PIN; Shodan uses one mocked read-only backend lookup"
+    },
+    {
+      "name": "All original Atlas tool panels open; vessels/aircraft layers and return destination are retained"
+    },
+    {
+      "name": "No uncaught errors opening Atlas tools; no live scan submitted"
+    }
+  ],
+  "syntheticFixturesOnly": true
+}
