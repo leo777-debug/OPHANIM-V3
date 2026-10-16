@@ -8,6 +8,7 @@ import { presentationSettingsOrOff,fullViewUnlocked } from '@/lib/presentation/s
 import { presentationDestination,resolvePresentationView,protectedPresentationApi } from '@/lib/presentation/policy';
 import { sameOrigin } from '@/lib/presentation/http';
 import { VIEW_COOKIE } from '@/lib/presentation/types';
+import { parseAtlasTool } from '@/lib/atlas-tools';
 
 export async function proxy(request: NextRequest, event: NextFetchEvent) {
   const response = await refreshSupabaseSession(request);
@@ -35,6 +36,12 @@ export async function proxy(request: NextRequest, event: NextFetchEvent) {
       const destination=presentationDestination(path,settings,view,request.nextUrl.searchParams.get('admin')==='1');
       if(destination) {
         const target=new URL(destination,request.url);
+        if(target.pathname==='/presentation' && (path==='/atlas'||path==='/logistics/map')) {
+          for(const key of ['tool','layers','lat','lng','lon','zoom']) {
+            const value=request.nextUrl.searchParams.get(key);
+            if(value && value.length<=1200 && (key!=='tool'||parseAtlasTool(value)))target.searchParams.set(key,value);
+          }
+        }
         if(requested==='full' && view==='map')target.searchParams.set('unlock','1');
         const redirect=NextResponse.redirect(target);
         for(const item of response.cookies.getAll())redirect.cookies.set(item);

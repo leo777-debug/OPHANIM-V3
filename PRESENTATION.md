@@ -1,5 +1,33 @@
 # Presentation Mode
 
+## One Operational Map
+
+Map view and **Full platform > Operational map** now use the same map layout,
+renderer, public feed pipeline and saved globe workspaces. Old `/atlas` links
+redirect to `/logistics/map`; they no longer open another map interface.
+
+- The left rail contains the real public feed layers, their counts and provenance.
+  Reference locations, calculated satellite positions and replay are labelled.
+- Use the map toolbar for Analyst, Fusion, Recon, Markets, Alerts, Entities,
+  Shodan/IP lookup, tracking, Intel Desk, AI setup, watchlists and source health.
+  Tools open in a right-hand dock beside the existing globe, not another page.
+  On a phone the dock becomes a bottom panel and **Show layers** opens the rail.
+- **New globe** creates an independent set of layers, camera position, basemap
+  and projection. Switching Map/Full platform retains these in this browser.
+  Only map configuration is saved locally, never feed payloads or credentials.
+- **Fullscreen map** expands only this workspace: globe, layers, tabs and tools.
+  The outer company sidebar and presenter bar are excluded. Escape exits.
+- Search is in one toolbar field. Ctrl/Cmd+F focuses it; Ctrl/Cmd+K opens the
+  command palette for tools, regions, layers and globe tabs. Earth,
+  Satellite, Night, 2D/3D and day/night controls stay inside the map canvas.
+- **Share map view** copies public map configuration, not shipment IDs or private
+  records. **Import** and other private pages still use the normal login/PIN flow.
+
+Shodan in this branch is the existing read-only **InternetDB IP lookup**, not
+paid Shodan query search or authorized scanning. Missing feeds stay unavailable;
+the interface does not generate replacement observations. Fusion is explicitly
+unavailable during replay rather than mixing live analysis into a recording.
+
 This is a presentation switch for your existing Ophanim installation, not a new
 company-management system. Use your existing **owner** login. No global-admin
 role, account allowlist, billing change or second deployment is needed.

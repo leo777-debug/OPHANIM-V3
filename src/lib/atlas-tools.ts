@@ -9,6 +9,11 @@ export const ATLAS_TOOLS = [
   { id: 'shodan', label: 'Shodan IP lookup', description: 'Read-only Shodan InternetDB records' },
   { id: 'ip', label: 'IP search', description: 'IP intelligence and location search' },
   { id: 'tracking', label: 'Vessels & aircraft', description: 'Enable positions and search targets' },
+  { id: 'news', label: 'Intel Desk', description: 'News, timeline, regions and clocks' },
+  { id: 'settings', label: 'AI setup', description: 'API provider or local model' },
+  { id: 'watchlists', label: 'Watchlists', description: 'Saved target monitoring' },
+  { id: 'sources', label: 'Sources', description: 'Feed health and observation times' },
+  { id: 'logistics', label: 'Logistics', description: 'Ports, chokepoints and supply chain context' },
 ] as const;
 
 export type AtlasTool = typeof ATLAS_TOOLS[number]['id'];
@@ -18,5 +23,5 @@ export function parseAtlasTool(value: unknown): AtlasTool | null {
 }
 
 export function atlasToolHref(tool: AtlasTool): string {
-  return `/atlas?tool=${tool}`;
+  return `/logistics/map?tool=${tool}`;
 }

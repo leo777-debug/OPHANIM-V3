@@ -26,6 +26,7 @@ const TABS = [
   { id: 'subdomains', label: 'SUBDOMAINS', icon: Layers, placeholder: 'Domain to enumerate', color: '#00BCD4' },
   { id: 'tech', label: 'TECH DETECT', icon: Code, placeholder: 'URL to fingerprint', color: '#9C27B0' },
   { id: 'shodan', label: 'SHODAN IOT', icon: Network, placeholder: 'IP address', color: '#FF3D3D' },
+  { id: 'ip', label: 'IP LOOKUP', icon: LocateFixed, placeholder: 'IP address', color: '#5BB6FF' },
   { id: 'bgp', label: 'BGP ROUTE', icon: Globe, placeholder: 'IP or ASN', color: '#5BB6FF' },
   { id: 'mac', label: 'MAC ADDR', icon: Fingerprint, placeholder: 'MAC address', color: '#FFD700' },
   { id: 'phone', label: 'PHONE INTEL', icon: Phone, placeholder: 'Phone number (e.g. +1...)', color: '#FF9500' },
@@ -34,7 +35,7 @@ const TABS = [
   { id: 'sweep', label: 'IP SWEEP', icon: Crosshair, placeholder: 'Enter IP address (e.g. 8.8.8.8)', color: '#FF3D3D' },
 ];
 
-interface OsintPanelProps { initialTab?: 'scanner' | 'shodan' | 'bgp'; isOpen?: boolean; onClose?: () => void; isMobile?: boolean; onSweepVisualize?: (data: any) => void; onScanGeolocate?: (target: string, data: any) => void; }
+interface OsintPanelProps { initialTab?: 'scanner' | 'shodan' | 'bgp' | 'ip'; isOpen?: boolean; onClose?: () => void; isMobile?: boolean; onSweepVisualize?: (data: any) => void; onScanGeolocate?: (target: string, data: any) => void; }
 
 function OsintPanelInner({ initialTab = 'scanner', isMobile, onSweepVisualize, onScanGeolocate }: OsintPanelProps) {
   const [activeTab, setActiveTab] = useState(initialTab as string);
@@ -185,6 +186,7 @@ function OsintPanelInner({ initialTab = 'scanner', isMobile, onSweepVisualize, o
     try {
       let url = '';
       switch (activeTab) {
+        case 'ip': url = `/api/osint/ip?ip=${encodeURIComponent(query)}`; break;
 
         case 'dns': url = `/api/osint/dns?domain=${encodeURIComponent(query)}`; break;
         case 'certs': url = `/api/osint/certs?domain=${encodeURIComponent(query)}`; break;
@@ -750,7 +752,7 @@ function OsintPanelInner({ initialTab = 'scanner', isMobile, onSweepVisualize, o
           <button onClick={runLookup} disabled={loading || !query.trim()}
             className="px-4 py-2 rounded-lg text-[10px] font-mono font-bold tracking-wider disabled:opacity-30 transition-all flex items-center justify-center min-w-[70px]"
             style={{ backgroundColor: `${currentTab?.color}20`, border: `1px solid ${currentTab?.color}40`, color: currentTab?.color }}>
-            {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : activeTab === 'shodan' ? 'LOOKUP' : 'SCAN'}
+            {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : activeTab === 'shodan' || activeTab === 'ip' ? 'LOOKUP' : 'SCAN'}
           </button>
         </div>
 

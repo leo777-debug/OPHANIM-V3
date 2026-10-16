@@ -12,6 +12,73 @@ is no new platform-admin role, allowlist or company-management workflow.
 
 ## What Changed
 
+### Unified Operational Map (Current)
+
+The latest founder request supersedes the earlier separate Atlas tool-navigation
+layout described below. `UnifiedMap` is now the single implementation used by
+`LogisticsMapWorkspace` and `PresentationMap`. `/atlas` is a compatibility redirect
+with allowlisted map/tool parameters, not a third rendering surface. The
+WorldMonitor embed/source switch is no longer part of this workspace.
+
+The operational header, left layer rail and main canvas remain. All intelligence
+tools open inside one dock: Analyst, AI setup (including existing local-model
+configuration), Fusion, Recon, Markets, Alerts, Entities, Shodan InternetDB,
+IP lookup, tracking, Intel Desk, watchlists and sources. Place search locates on
+the same globe. The renderer/canvas is not remounted when changing tools.
+
+New globe tabs save independent public layer flags, basemap, projection and camera
+position in validated browser storage shared by the two surfaces. No private
+data or keys are saved there. The public surface never loads shipment/disruption
+query IDs; the authenticated operational surface retains those detail workflows.
+The shared `/api/map/feeds/[id]` route uses the existing sanitized public feed
+projection, fixed feed allowlist and replay policy. It never uses tenant adapters.
+
+Desktop tools occupy a separate grid column; on mobile they use a bottom sheet
+and the layer rail is an explicit drawer. Fullscreen targets only the workspace.
+Native controls and basemap buttons are kept clear of each other. The old second
+floating search box is gone. Replay labels, source observation/retrieval times,
+PIN verification, owner settings and protected APIs remain in place. Ports are
+shown as reference evidence, not unsupported congestion/operational claims.
+
+No migrations or new external data sources were added for this consolidation.
+Key-free OpenFreeMap/Natural Earth and optional existing Esri basemaps are unchanged.
+Historical tracks, guaranteed camera playback and paid Shodan search are not
+implemented by this UI change. Existing source coverage/freshness limitations
+still apply; a successful fetch is not proof of a new observation.
+
+The presenter wrapper now keeps the page subtree mounted when settings arrive,
+preventing duplicate private-record fetches. When OFF its wrappers use
+`display:contents`, with no presenter header, shortcuts or layout styling.
+Map pages expose only the map-targeted fullscreen control; whole-page fullscreen
+remains available on other presenter pages. Tool URL changes use Next's supported
+native history integration, not a server navigation or replacement map.
+
+Verification for this follow-up:
+
+- Full production-browser regression: **26 checks passed**, recorded fixtures
+  only, including ON/OFF, owner/PIN/audit protection, private APIs, source payloads,
+  live WebGL pixels, all tool panels, independent globe tabs, canonical redirects,
+  map-only fullscreen, private record links and public query-ID isolation.
+- Unit/database suite: **287 passed, 1 pre-existing opt-in live test skipped**
+  across 60 files. This includes six actual presentation-migration/RLS assertions.
+- Production build and TypeScript pass. One local build needed automatic static
+  generation retries under resource pressure; it still exited successfully.
+- New/shared map code passes focused lint. Reused legacy panels still have their
+  existing lint debt; this change is not a repository-wide lint cleanup.
+- `presentation-evidence/results.json` records the full regression. Focused tool
+  rechecks are in `presentation-evidence/tools-results.json`: **11 passed** on
+  the final build after removing the mobile news entrance delay.
+- Screenshots: `unified-map-1920.png`, `unified-map-1366.png`,
+  `unified-map-mobile.png`, `unified-map-mobile-layers.png`, `shodan-tools.png`,
+  `map-1920x1080.png`, `map-1366x768.png` and `map-390x844.png`, under
+  `presentation-evidence/screenshots/`.
+
+Implementation files: `src/components/map/*`, `src/lib/unified-map.ts` and tests,
+`src/app/api/map/feeds/[id]/route.ts`, the two map facades, Atlas redirect, tool
+destination helpers/menu, presenter boundary and existing panel embedding props.
+README, presenter instructions and the browser runner were updated. No production
+deployment was performed; these changes belong to the existing presentation PR.
+
 ### Tool Discovery And Fullscreen Follow-Up
 
 The Full platform operational map now also has its own **Fullscreen map**

@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { Activity, BarChart3, Bell, Brain, Crosshair, Globe2, Network, Radar, Search, Ship, Wrench } from 'lucide-react';
+import { Activity, BarChart3, Bell, Brain, Crosshair, Globe2, Network, Radar, Search, Ship, Wrench, Newspaper, Settings, Bookmark, Database } from 'lucide-react';
 import { ATLAS_TOOLS, type AtlasTool } from '@/lib/atlas-tools';
 import styles from './intelligence-tools.module.css';
 
-const icons = { analyst: Brain, fusion: Activity, recon: Radar, markets: BarChart3, alerts: Bell, entities: Network, search: Search, shodan: Globe2, ip: Crosshair, tracking: Ship };
+const icons = { analyst: Brain, fusion: Activity, recon: Radar, markets: BarChart3, alerts: Bell, entities: Network, search: Search, shodan: Globe2, ip: Crosshair, tracking: Ship, news:Newspaper, settings:Settings, watchlists:Bookmark, sources:Database, logistics:Ship };
 
 export default function AtlasToolMenu({ onChoose }: { onChoose: (tool: AtlasTool) => void }) {
   const ref = useRef<HTMLDetailsElement>(null);

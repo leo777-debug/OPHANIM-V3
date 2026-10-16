@@ -9,8 +9,8 @@ import { atlasToolHref, type AtlasTool } from '@/lib/atlas-tools';
 import { DEFAULT_PRESENTATION, type PresentationSettings, type PresentationView } from '@/lib/presentation/types';
 import styles from './presentation.module.css';
 
-type Controls = { settings: PresentationSettings; switchView: (view: PresentationView) => void; openTool: (tool: AtlasTool) => void };
-const Context = createContext<Controls>({ settings: DEFAULT_PRESENTATION, switchView: () => {}, openTool: () => {} });
+type Controls = { settings: PresentationSettings; switchView: (view: PresentationView) => void; openTool: (tool: AtlasTool) => void; openPage: (href:string)=>void };
+const Context = createContext<Controls>({ settings: DEFAULT_PRESENTATION, switchView: () => {}, openTool: () => {}, openPage:()=>{} });
 export const usePresentation = () => useContext(Context);
 
 export function IntelligenceTools() {
@@ -74,7 +74,7 @@ export default function PresentationBoundary({ children }: { children: ReactNode
     try {
       if (destination) pendingDestination.current = destination;
       const currentPath = location.pathname + location.search;
-      const returnTo = pendingDestination.current ?? (mapPage ? sessionStorage.getItem('ophanim-presenter-return') ?? '/operations' : currentPath);
+      const returnTo = pendingDestination.current ?? (mapPage ? sessionStorage.getItem('ophanim-presenter-return') ?? '/logistics/map' : currentPath);
       const response = await fetch('/api/presentation/view', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ view, pin: suppliedPin, returnTo }) });
       const body = await response.json();
       if (response.status === 401) { setPinOpen(true); if (suppliedPin) setError(body.error); return; }
@@ -89,10 +89,21 @@ export default function PresentationBoundary({ children }: { children: ReactNode
 
   const switchView = useCallback((view: PresentationView) => { pendingDestination.current = undefined; void submitSwitch(view); }, [submitSwitch]);
   const openTool = useCallback((tool: AtlasTool) => {
+    if (mapPage || pathname === '/logistics/map') {
+      const params = new URLSearchParams(location.search);
+      params.set('tool',tool);
+      window.history.replaceState(null,'',pathname+'?'+params.toString());
+      return;
+    }
     const href = atlasToolHref(tool);
     if (settings.enabled) void submitSwitch('full', undefined, href);
     else router.push(href);
-  }, [router, settings.enabled, submitSwitch]);
+  }, [router, settings.enabled, submitSwitch, mapPage, pathname]);
+  const openPage = useCallback((href:string)=>{
+    if (!href.startsWith('/') || href.startsWith('//')) return;
+    if (settings.enabled && mapPage) void submitSwitch('full',undefined,href);
+    else router.push(href);
+  },[router,settings.enabled,mapPage,submitSwitch]);
   const keyboardSwitch = useEffectEvent(() => switchView(location.pathname.startsWith('/presentation') ? 'full' : 'map'));
   useEffect(() => {
     if (!settings.enabled) return;
@@ -103,11 +114,13 @@ export default function PresentationBoundary({ children }: { children: ReactNode
     return () => window.removeEventListener('keydown', onKey);
   }, [settings.enabled]);
 
-  const content = settings.enabled && !mapPage ? <div className={styles.fullPlatform}>
-    <header className={styles.presenterBar}><button onClick={() => switchView('map')}><ArrowLeft size={16} />Back to map</button><IntelligenceTools /><FullscreenButton /><span>Presentation mode is ON</span><PresenterSwitch view="full" /></header>
-    <div className={styles.platformContent}>{children}</div>
-  </div> : children;
-  return <Context.Provider value={{ settings, switchView, openTool }}>{content}
+  // Keep the page subtree mounted while runtime settings arrive or change.
+  // In OFF mode display:contents leaves the normal page layout untouched.
+  const content = <div className={settings.enabled?styles.fullPlatform:undefined} style={!settings.enabled?{display:'contents'}:undefined}>
+    {settings.enabled&&<header className={styles.presenterBar}>{!mapPage&&<button onClick={() => switchView('map')}><ArrowLeft size={16} />Back to map</button>}<IntelligenceTools />{!mapPage&&pathname!=='/logistics/map'&&<FullscreenButton />}<span>Presentation mode is ON</span><PresenterSwitch view={mapPage?'map':'full'} /></header>}
+    <div className={settings.enabled?styles.platformContent:undefined} style={!settings.enabled?{display:'contents'}:undefined}>{children}</div>
+  </div>;
+  return <Context.Provider value={{ settings, switchView, openTool, openPage }}>{content}
     {settings.enabled && error && !pinOpen && <div className={styles.toast} role="alert">{error}<button aria-label="Dismiss" onClick={() => setError('')}><X size={16} /></button></div>}
     {settings.enabled && pinOpen && <div className={styles.scrim}><form role="dialog" aria-modal="true" aria-labelledby="switch-pin-title" className={styles.dialog} onSubmit={event => { event.preventDefault(); void submitSwitch('full', pin); }}>
       <button type="button" className={styles.close} aria-label="Close PIN dialog" onClick={() => { setPinOpen(false); setPin(''); pendingDestination.current = undefined; }}><X size={20} /></button>

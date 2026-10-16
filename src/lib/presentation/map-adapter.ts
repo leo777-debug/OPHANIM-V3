@@ -17,7 +17,7 @@ export function atlasPresentationData(feeds: Partial<Record<FeedId, Presentation
       maritime_ports: rows('ports'), maritime_chokepoints: rows('chokepoints'),
       cameras: rows('cameras'), live_feeds: rows('broadcasts').map(p=>({...p,url:p.sourceUrl})),
       infrastructure: rows('infrastructure'), conflict_markers: rows('conflicts'), public_sanctions: rows('war-sanctions'),
-      earthquakes: rows('earthquakes').map(p => ({ ...p, place: p.name })),
+      earthquakes: rows('earthquakes').map((p):Record<string,unknown> => ({ ...p, place: p.name })),
       satellites: rows('satellites'), gdelt: rows('incidents'), fires: rows('fires'),
       weather_events: rows('weather').map(p => ({ ...p, title: p.name })),
       malware_threats: rows('cyber').map(p => ({ ...p, malware: p.name })),

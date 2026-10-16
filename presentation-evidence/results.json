@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-10-16T14:02:02.618Z",
+  "checkedAt": "2026-10-16T16:13:49.822Z",
   "checks": [
     {
       "name": "Disposable local database: full migration chain, external APIs blocked"
@@ -27,7 +27,7 @@
     },
     {
       "name": "Runtime database switch without redeploy",
-      "applyMilliseconds": 37
+      "applyMilliseconds": 65
     },
     {
       "name": "All restored reference and signal layers enabled; dense camera fixture is not dropped"
@@ -40,27 +40,27 @@
             "width": 1920,
             "height": 1080
           },
-          "shellReadyMilliseconds": 407,
-          "readyMilliseconds": 7084,
-          "pixelCheckedMilliseconds": 12493
+          "shellReadyMilliseconds": 1123,
+          "readyMilliseconds": 9094,
+          "pixelCheckedMilliseconds": 15202
         },
         {
           "viewport": {
             "width": 1366,
             "height": 768
           },
-          "shellReadyMilliseconds": 650,
-          "readyMilliseconds": 8460,
-          "pixelCheckedMilliseconds": 14878
+          "shellReadyMilliseconds": 2704,
+          "readyMilliseconds": 10568,
+          "pixelCheckedMilliseconds": 15505
         },
         {
           "viewport": {
             "width": 390,
             "height": 844
           },
-          "shellReadyMilliseconds": 1438,
-          "readyMilliseconds": 8692,
-          "pixelCheckedMilliseconds": 13921
+          "shellReadyMilliseconds": 3274,
+          "readyMilliseconds": 12173,
+          "pixelCheckedMilliseconds": 21468
         }
       ]
     },
@@ -74,16 +74,34 @@
       "name": "Quick switch and Ctrl+Shift+P both work in both directions"
     },
     {
-      "name": "Fullscreen enters and exits using the real browser API"
+      "name": "Read-only Shodan opens beside the same globe, without navigation, remount or active scanning"
     },
     {
-      "name": "Tool navigation preserves selected destination through PIN; Shodan uses one mocked read-only backend lookup"
+      "name": "All intelligence tools are docked in the operational layout; replay never mixes in live fusion"
     },
     {
-      "name": "All original Atlas tool panels open; vessels/aircraft layers and return destination are retained"
+      "name": "A single place/IP/domain search locates results in the existing globe"
     },
     {
-      "name": "No uncaught errors opening Atlas tools; no live scan submitted"
+      "name": "The existing command palette opens tools in the same workspace"
+    },
+    {
+      "name": "Independent globe tabs retain layers and appearance through PIN-gated Full platform and Back to map"
+    },
+    {
+      "name": "Legacy Atlas links redirect to the same operational map with tool and camera parameters retained"
+    },
+    {
+      "name": "Map-only fullscreen, non-overlapping rail/globe/tool dock, and button/Escape exit pass at desktop and laptop sizes"
+    },
+    {
+      "name": "Authenticated shipment detail links still work; public Map view never fetches private query IDs"
+    },
+    {
+      "name": "Mobile globe, collapsible layer rail and bottom intelligence dock fit without horizontal page overflow"
+    },
+    {
+      "name": "Unified map tool path has no uncaught browser errors; no active scan submitted"
     },
     {
       "name": "Owner dashboard turns OFF without redeploy; normal site returns and controls disappear"

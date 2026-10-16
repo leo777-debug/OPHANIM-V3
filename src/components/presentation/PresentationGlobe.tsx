@@ -1,25 +1,33 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
 import OphanimMap from '@/components/OphanimMap';
 import { atlasFallbackBasemap } from '@/lib/presentation/basemap';
 import { atlasPresentationData, pickPublicMapPoint } from '@/lib/presentation/map-adapter';
 import type { FeedId, PresentationFeed } from '@/lib/presentation/types';
-import type { MapProjection, MapStyle } from '@/lib/map-workspaces';
+import type { MapProjection, MapStyle, MapViewport } from '@/lib/map-workspaces';
 import styles from './presentation.module.css';
 
-export default function PresentationGlobe({ feeds, hidden, onSelect, locate, projection, mapStyle, dayNight }: {
+export default function PresentationGlobe({ feeds, hidden, onSelect, locate, projection, mapStyle, dayNight, embedded = false, initialViewport, onViewportChange, extraLayers }: {
   feeds: Partial<Record<FeedId, PresentationFeed>>; hidden: ReadonlySet<FeedId>;
   onSelect: (entity: Record<string, unknown>) => void;
-  locate: {lat:number;lng:number;sequence:number} | null;
+  locate: {lat:number;lng:number;sequence:number;zoom?:number} | null;
   projection: MapProjection; mapStyle: MapStyle;
   dayNight: boolean;
+  embedded?: boolean;
+  initialViewport?: MapViewport;
+  onViewportChange?: (view:MapViewport)=>void;
+  extraLayers?: Record<string,boolean>;
 }) {
   const [basemap, setBasemap] = useState<maplibregl.StyleSpecification | null>(null);
   const [map, setMap] = useState<maplibregl.Map | null>(null);
   const [ready, setReady] = useState(false);
   const [fallback, setFallback] = useState(false);
+  const rotating=useRef(false);
+  const onNativeViewport=useCallback((viewport:MapViewport)=>{
+    if(!rotating.current)onViewportChange?.(viewport);
+  },[onViewportChange]);
   useEffect(() => {
     const controller = new AbortController();
     // Keep the original dark cartography without CARTO's API-key watermark.
@@ -50,9 +58,9 @@ export default function PresentationGlobe({ feeds, hidden, onSelect, locate, pro
   }, [map,feeds,hidden,onSelect]);
   const publicPresentation = useMemo(() => basemap ? { style: basemap, onReady } : undefined, [basemap,onReady]);
   const atlas = useMemo(() => atlasPresentationData(feeds,hidden), [feeds,hidden]);
-  const activeLayers = useMemo(()=>({...atlas.activeLayers,day_night:dayNight}),[atlas.activeLayers,dayNight]);
-  const flyTo = useMemo(() => locate ? { ...locate, ts:locate.sequence, zoom:4 } : null, [locate]);
-  const initialView = useMemo(() => ({longitude:42,latitude:24,zoom:window.innerWidth<680?1.1:1.8}), []);
+  const activeLayers = useMemo(()=>({...atlas.activeLayers,...extraLayers,day_night:dayNight}),[atlas.activeLayers,extraLayers,dayNight]);
+  const flyTo = useMemo(() => locate ? { ...locate, ts:locate.sequence, zoom:locate.zoom??4 } : null, [locate]);
+  const [initialView] = useState(() => initialViewport ?? {longitude:42,latitude:24,zoom:window.innerWidth<680?1.1:1.8});
   useEffect(() => {
     if (!map) return;
     let idleAt = Date.now();
@@ -61,17 +69,20 @@ export default function PresentationGlobe({ feeds, hidden, onSelect, locate, pro
     for (const event of ['pointerdown','pointermove','wheel','keydown']) target.addEventListener(event,pause,{passive:true});
     const timer = setInterval(() => {
       if (projection === 'globe' && Date.now()>idleAt && !document.hidden && !map.isMoving() && map.getZoom()<3 && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        const center = map.getCenter(); map.jumpTo({center:[center.lng+.06,center.lat]});
+        const center = map.getCenter();
+        rotating.current=true;
+        try { map.jumpTo({center:[center.lng+.06,center.lat]}); }
+        finally { rotating.current=false; }
       }
     },100);
     return () => { clearInterval(timer); for (const event of ['pointerdown','pointermove','wheel','keydown']) target.removeEventListener(event,pause); };
   }, [map,projection]);
   return <>
-    <div className={styles.globe} aria-label="Live intelligence globe" data-testid="presentation-globe" data-ready={ready} data-renderer="ophanim-atlas" data-map-style={mapStyle} data-projection={projection}>
-      {publicPresentation && <OphanimMap data={atlas.data} activeLayers={activeLayers} initialView={initialView} projection={projection} mapStyle={mapStyle} flyToLocation={flyTo} publicPresentation={publicPresentation} />}
+    <div className={styles.globe} style={embedded?{position:'absolute',inset:0,width:'100%',height:'100%'}:undefined} aria-label="Live intelligence globe" data-testid="presentation-globe" data-ready={ready} data-renderer="ophanim-atlas" data-map-style={mapStyle} data-projection={projection}>
+      {publicPresentation && <OphanimMap data={atlas.data} activeLayers={activeLayers} initialView={initialView} projection={projection} mapStyle={mapStyle} flyToLocation={flyTo} publicPresentation={publicPresentation} onViewStateChange={onNativeViewport} />}
     </div>
-    {!ready && <div className={styles.globePoster} data-testid="globe-starter"><span>Starting Ophanim map...</span></div>}
-    <div className={styles.attribution}>
+    {!ready && <div className={styles.globePoster} style={embedded?{inset:0}:undefined} data-testid="globe-starter"><span>Starting Ophanim map...</span></div>}
+    <div className={styles.attribution} style={embedded?{left:8,bottom:4}:undefined}>
       {fallback ? <a href="https://www.naturalearthdata.com/about/" target="_blank" rel="noopener noreferrer">Natural Earth (offline basemap)</a> : <><a href="https://openfreemap.org/" target="_blank" rel="noopener noreferrer">OpenFreeMap</a> / <a href="https://openmaptiles.org/" target="_blank" rel="noopener noreferrer">OpenMapTiles</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a></>}
       {mapStyle !== 'dark' && <> / <a href="https://www.esri.com/en-us/legal/terms/data-attributions" target="_blank" rel="noopener noreferrer">Esri and data contributors</a></>}
     </div>

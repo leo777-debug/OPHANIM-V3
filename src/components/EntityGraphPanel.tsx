@@ -48,9 +48,10 @@ const TYPE_ICONS: Record<string, typeof Plane> = {
 interface Props {
   entity: { type: string; id: string; label?: string; properties?: Record<string, any> } | null;
   onClose: () => void;
+  embedded?: boolean;
 }
 
-function EntityGraphPanel({ entity, onClose }: Props) {
+function EntityGraphPanel({ entity, onClose, embedded = false }: Props) {
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -195,9 +196,9 @@ function EntityGraphPanel({ entity, onClose }: Props) {
       <motion.div
         initial={{ x: 500, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 500, opacity: 0 }}
         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-        className="fixed top-0 right-0 h-full z-[500] flex flex-col glass-panel"
+        className={embedded ? 'relative h-full min-h-0 flex flex-col' : 'fixed top-0 right-0 h-full z-[500] flex flex-col glass-panel'}
         style={{
-          width: expanded ? '60vw' : '480px', maxWidth: '90vw',
+          width: embedded ? '100%' : expanded ? '60vw' : '480px', maxWidth: embedded ? '100%' : '90vw',
           borderLeft: '1px solid var(--border-primary)',
           borderRight: 'none',
           borderTop: 'none',

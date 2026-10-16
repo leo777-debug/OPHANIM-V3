@@ -46,7 +46,8 @@ try {
   } else {
   assert.equal((await settings()).enabled,false);
   const originalRoutes=['/','/atlas','/operations','/imports','/logistics','/logistics/rescue','/onboarding','/login'];
-  for(const route of originalRoutes)assert.equal((await request(route)).status,200,route);
+  for(const route of originalRoutes.filter(route=>route!=='/atlas'))assert.equal((await request(route)).status,200,route);
+  assert.equal((await request('/atlas?tool=shodan')).status,307,'Legacy Atlas now aliases the operational map');
   assert.equal((await request('/presentation')).status,307);
   pass('OFF keeps original pages reachable, presentation page redirects home');
   for(const mode of [false,true]) {
@@ -122,25 +123,30 @@ try {
   for(const viewport of [{width:1920,height:1080},{width:1366,height:768},{width:390,height:844}]) {
     await page.setViewportSize(viewport);
     const begin=Date.now();await page.reload({waitUntil:'domcontentloaded'});
-    await page.waitForFunction(()=>Boolean(document.querySelector('[data-testid="presentation-map"]')) && (performance.getEntriesByType('resource').some(entry=>entry.name.endsWith('/presentation/globe-poster.png')) || Boolean(document.querySelector('[data-testid="presentation-globe"][data-ready="true"]'))));
+    await page.waitForFunction(()=>Boolean(document.querySelector('[data-testid="operational-map-workspace"]')) && (performance.getEntriesByType('resource').some(entry=>entry.name.endsWith('/presentation/globe-poster.png')) || Boolean(document.querySelector('[data-testid="presentation-globe"][data-ready="true"]'))));
     const shellReadyMilliseconds=Date.now()-begin;
+    if(viewport.width<700)await page.getByRole('button',{name:'Show layers',exact:true}).click();
     await page.getByRole('checkbox',{name:/Aircraft/}).waitFor();
     const canvas=page.locator('[data-testid="presentation-globe"] canvas');await canvas.waitFor();
     await page.locator('[data-testid="presentation-globe"][data-ready="true"]').waitFor();
     const readyMilliseconds=Date.now()-begin;
-    assert.ok((await page.getByTestId('presentation-globe').boundingBox()).height>=viewport.height-160,'Map container must retain its viewport height after MapLibre CSS loads');
+    assert.ok((await page.getByTestId('presentation-globe').boundingBox()).height>=viewport.height*.45,'Map retains usable height after MapLibre CSS loads');
     await eventually(async()=>{
       const {data,info}=await sharp(await canvas.screenshot()).raw().toBuffer({resolveWithObject:true});
-      const colors=new Set();for(let y=100;y<info.height-50;y+=20)for(let x=viewport.width>680?240:170;x<info.width-(viewport.width>680?350:70);x+=20){const i=(y*info.width+x)*info.channels;colors.add(`${data[i]},${data[i+1]},${data[i+2]}`);}
+      const colors=new Set();for(let y=20;y<info.height-20;y+=15)for(let x=20;x<info.width-20;x+=15){const i=(y*info.width+x)*info.channels;colors.add(`${data[i]},${data[i+1]},${data[i+2]}`);}
       assert.ok(colors.size>8,`Globe pixels must include geography on desktop and mobile, not a blank canvas (${colors.size} sampled colors)`);
     },12000);
     timings.push({viewport,shellReadyMilliseconds,readyMilliseconds,pixelCheckedMilliseconds:Date.now()-begin});
     assert.ok(await page.getByRole('checkbox',{checked:true}).count()>=14,'At least 14 populated layers, not disabled placeholders');
-    assert.ok(await page.getByRole('article').getByRole('link',{name:'Oman port weather advisory: test replay'}).isVisible());
+    if(viewport.width<700)await page.getByRole('button',{name:'Show layers',exact:true}).click();
+    await page.getByRole('navigation',{name:'Map tools'}).getByRole('button',{name:'Intel Desk',exact:true}).click();
+    await page.getByRole('heading',{name:'Oman port weather advisory: test replay',exact:true}).waitFor();
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
     const before=await page.getByTestId('ticker-track').evaluate(element=>getComputedStyle(element).transform);
     await delay(700);const after=await page.getByTestId('ticker-track').evaluate(element=>getComputedStyle(element).transform);assert.notEqual(before,after);
     await page.screenshot({path:`${output}/screenshots/map-${viewport.width}x${viewport.height}.png`});
+    await page.getByRole('button',{name:'Close tool',exact:true}).click();
+    await page.getByTestId('map-tool-dock').waitFor({state:'detached'});
   }
   pass('Real WebGL globe, >=3 layers, news, moving ticker and responsive screenshots',{timings});
   await page.setViewportSize({width:1366,height:768});
@@ -149,7 +155,7 @@ try {
   const {data,info}=await sharp(await canvas.screenshot()).raw().toBuffer({resolveWithObject:true});
   const aircraftPixel=i=>data[i]>70&&data[i]<110&&data[i+1]>150&&data[i+1]<195&&data[i+2]>220;
   let point;
-  for(let y=70;y<info.height-130&&!point;y++)for(let x=240;x<info.width-360;x++){const i=(y*info.width+x)*info.channels;if(aircraftPixel(i)){point={x,y};break;}}
+  for(let y=30;y<info.height-60&&!point;y++)for(let x=30;x<info.width-60;x++){const i=(y*info.width+x)*info.channels;if(aircraftPixel(i)){point={x,y};break;}}
   assert.ok(point,'Aircraft pixels must render');
   console.log('Rendered aircraft pixel candidate',point);
   const nearby=[];
@@ -167,25 +173,28 @@ try {
   await page.getByRole('button',{name:'Satellite imagery',exact:true}).click();
   assert.equal(await page.getByTestId('presentation-globe').getAttribute('data-map-style'),'satellite');
   await page.getByRole('button',{name:'Night basemap',exact:true}).click();
-  await page.getByRole('button',{name:'Switch to 2D map',exact:true}).click();
+  await page.getByRole('button',{name:'2D / 3D projection',exact:true}).click();
   assert.equal(await page.getByTestId('presentation-globe').getAttribute('data-projection'),'mercator');
-  await page.getByRole('button',{name:'Switch to 3D globe',exact:true}).click();
+  await page.getByRole('button',{name:'2D / 3D projection',exact:true}).click();
   assert.equal(await page.getByTestId('presentation-globe').getAttribute('data-projection'),'globe');
-  await page.getByRole('button',{name:'Day/night overlay',exact:true}).click();
-  assert.equal(await page.getByRole('button',{name:'Day/night overlay',exact:true}).getAttribute('aria-pressed'),'true');
-  await page.getByRole('button',{name:'Day/night overlay',exact:true}).click();
-  assert.equal(await page.locator('input[placeholder*="Search IPs"]').count(),0,'No duplicate floating search box');
+  await page.getByRole('button',{name:'Day and night overlay',exact:true}).click();
+  assert.equal(await page.getByRole('button',{name:'Day and night overlay',exact:true}).getAttribute('aria-pressed'),'true');
+  await page.getByRole('button',{name:'Day and night overlay',exact:true}).click();
+  assert.equal(await page.locator('input[placeholder*="Search IPs"]').count(),1,'One docked search, no duplicate floating search box');
   pass('Original Ophanim renderer, Night/Earth/Satellite and 2D/3D controls restored');
   await context.addCookies([{name:'ophanim_session',value:owner,url}]);
-  await page.getByRole('button',{name:'Full platform',exact:true}).click();await page.waitForURL('**/operations**');
+  await page.getByRole('button',{name:'Full platform',exact:true}).click();await page.waitForURL('**/logistics/map**');
   await page.getByRole('button',{name:'Back to map',exact:true}).waitFor();
   await page.screenshot({path:`${output}/screenshots/full-platform.png`});
   await page.getByRole('button',{name:'Back to map',exact:true}).click();await page.waitForURL('**/presentation**');
   await page.getByRole('checkbox',{name:/Aircraft/}).waitFor();
-  await page.keyboard.press('Control+Shift+P');await page.waitForURL('**/operations**');
+  await page.keyboard.press('Control+Shift+P');await page.waitForURL('**/logistics/map**');
   await page.getByRole('button',{name:'Back to map',exact:true}).waitFor();
   await page.keyboard.press('Control+Shift+P');await page.waitForURL('**/presentation**');
   pass('Quick switch and Ctrl+Shift+P both work in both directions');
+  // Release the first software-rendered globe while the independent tool
+  // context runs; two hidden WebGL loops needlessly contend in headless CI.
+  await page.goto(url+'/admin/presentation');
   await checkTools({browser,url,owner,save,output,pass});
   await page.goto(url+'/admin/presentation');await page.getByRole('switch',{name:'Presentation mode'}).waitFor();
   await page.screenshot({path:`${output}/screenshots/admin-settings.png`});

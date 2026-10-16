@@ -1,21 +1,20 @@
 import assert from 'node:assert/strict';
 import sharp from 'sharp';
 
-// Run only inside the disposable, network-blocked presentation test server.
+// Disposable local database + recorded public fixtures only. No active scans.
 export async function checkTools({browser,url,owner,save,output,pass}) {
-  const context=await browser.newContext({viewport:{width:1366,height:768}});
+  const context=await browser.newContext({viewport:{width:1366,height:768},reducedMotion:'reduce'});
   const errors=[],requests=[];
   await context.route('**/*',async route=>{
     const target=new URL(route.request().url());
-    // Offline geography fixture, never a request to a third-party tile service.
-    if(target.href==='https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json') return route.fulfill({json:{version:8,sources:{countries:{type:'geojson',data:url+'/presentation/countries.geojson'}},layers:[{id:'ocean',type:'background',paint:{'background-color':'#2b343b'}},{id:'land',type:'fill',source:'countries',paint:{'fill-color':'#0a0b0e'}},{id:'borders',type:'line',source:'countries',paint:{'line-color':'#677178','line-width':1}}]}});
-    if(target.origin!==url && !target.href.startsWith('data:'))return route.fulfill({status:204,body:''});
-    if(target.origin===url && target.pathname.startsWith('/api/') && !target.pathname.startsWith('/api/presentation/')) {
+    if(target.origin!==url&&!target.href.startsWith('data:'))return route.fulfill({status:204,body:''});
+    if(target.origin===url&&target.pathname.startsWith('/api/')&&!target.pathname.startsWith('/api/presentation/')&&!target.pathname.startsWith('/api/map/feeds/')) {
       requests.push(target.pathname);
-      assert.ok(!['/api/scanner','/api/osint/sweep'].includes(target.pathname),'Opening tools must never submit active scans');
-      const data=target.pathname==='/api/osint/shodan'
-        ? {ip:'192.0.2.10',ports:[443],hostnames:['demo.invalid'],tags:[],vulns:[],cpes:[]}
-        : {commercial_flights:[],private_flights:[],private_jets:[],military_flights:[],ships:[],ports:[],chokepoints:[],cameras:[],satellites:[],news:[],events:[],earthquakes:[],fires:[],weather_events:[],infrastructure:[],gdelt:[],live_feeds:[],malware_threats:[],layers:[],results:[],domains:[],hotspots:[],quality:{},stats:{},sources:[],alerts:[],items:[]};
+      assert.ok(!['/api/scanner','/api/osint/sweep'].includes(target.pathname),'Opening tools must not submit scans');
+      const data=target.pathname==='/api/logistics/shipments/recorded-shipment'?{shipment:{id:'recorded-shipment',originPortName:'Fixture origin port',destinationPortName:'Fixture destination port',transshipmentPorts:[]}}
+        :target.pathname==='/api/osint/shodan'?{ip:'192.0.2.10',ports:[443],hostnames:['demo.invalid'],tags:[],vulns:[],cpes:[]}
+        :target.pathname==='/api/search'?{results:[{id:'test-place',label:'Dubai, United Arab Emirates',type:'location',category:'geospatial',lat:25.2,lng:55.3,zoomLevel:5,source:'Recorded test fixture'}]}
+        :{news:[],events:[],earthquakes:[],domains:[],hotspots:[],quality:{},stats:{},sources:[],alerts:[],items:[],watchlists:[],nodes:[],links:[]};
       return route.fulfill({json:data});
     }
     return route.continue();
@@ -27,94 +26,145 @@ export async function checkTools({browser,url,owner,save,output,pass}) {
     const name=new RegExp('^'+label.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?: |$)');
     await page.getByRole('navigation',{name:'Intelligence tools'}).getByRole('button',{name}).click();
   };
+  const workspace=page.getByTestId('operational-map-workspace');
+  const dock=page.getByTestId('map-tool-dock');
+  async function geography() {
+    const canvas=workspace.locator('canvas.maplibregl-canvas');
+    await page.locator('[data-testid="presentation-globe"][data-ready="true"]').waitFor();
+    const {data,info}=await sharp(await canvas.screenshot()).raw().toBuffer({resolveWithObject:true});
+    const colors=new Set();for(let y=10;y<info.height;y+=12)for(let x=10;x<info.width;x+=12){const i=(y*info.width+x)*info.channels;colors.add(`${data[i]},${data[i+1]},${data[i+2]}`);}
+    assert.ok(colors.size>8,'Geography and signals must render, not a blank canvas');
+  }
   try {
     await save({pin:'6294'});
     await page.goto(url+'/presentation?view=map',{waitUntil:'domcontentloaded'});
-    await page.getByRole('button',{name:'Fullscreen',exact:true}).click();
-    await page.waitForFunction(()=>Boolean(document.fullscreenElement));
-    await page.getByRole('button',{name:'Exit fullscreen',exact:true}).click();
-    await page.waitForFunction(()=>!document.fullscreenElement);
-    pass('Fullscreen enters and exits using the real browser API');
+    await geography();
+    await page.locator('canvas.maplibregl-canvas').evaluate(canvas=>canvas.dataset.identity='same-globe');
     await choose('Shodan IP lookup');
-    await page.getByRole('dialog',{name:'Enter switch PIN'}).waitFor();
+    await dock.getByPlaceholder('IP address',{exact:true}).fill('192.0.2.10');
+    await dock.getByRole('button',{name:'LOOKUP',exact:true}).click();
+    await dock.getByText('SHODAN IOT INTELLIGENCE',{exact:true}).waitFor();
     assert.equal(new URL(page.url()).pathname,'/presentation');
-    await page.getByLabel('Switch PIN',{exact:true}).fill('6294');
-    await page.getByRole('button',{name:'Open full platform',exact:true}).click();
-    await page.waitForURL('**/atlas?tool=shodan**');
-    await page.getByPlaceholder('IP address',{exact:true}).waitFor();
-    await page.getByPlaceholder('IP address',{exact:true}).fill('192.0.2.10');
-    await page.getByRole('button',{name:'LOOKUP',exact:true}).click();
-    await page.getByText('SHODAN IOT INTELLIGENCE',{exact:true}).waitFor();
+    assert.equal(await page.getByRole('dialog',{name:'Enter switch PIN'}).count(),0);
+    assert.equal(await page.locator('canvas.maplibregl-canvas').getAttribute('data-identity'),'same-globe');
     assert.equal(requests.filter(path=>path==='/api/osint/shodan').length,1);
     await page.screenshot({path:`${output}/screenshots/shodan-tools.png`});
-    pass('Tool navigation preserves selected destination through PIN; Shodan uses one mocked read-only backend lookup');
+    pass('Read-only Shodan opens beside the same globe, without navigation, remount or active scanning');
     await context.addCookies([{name:'ophanim_session',value:owner,url}]);
     for(const [label,tool,selector] of [
       ['Analyst','analyst','text=OPHANIM ANALYST'],
-      ['Fusion','fusion','text=SIGNAL POSTURE'],
+      ['Fusion','fusion','text=Live fusion is unavailable in replay mode.'],
       ['Recon','recon','input[placeholder="IP or hostname"]'],
       ['Markets','markets','text=COMMODITIES'],
       ['Alerts','alerts','text=LIVE ALERTS'],
       ['Entities','entities','text=[ OPHANIM // ENTITY INTEL ]'],
-      ['Search','search','.ophanim-context-rail input'],
-      ['IP search','ip','.ophanim-context-rail input'],
-      ['Vessels & aircraft','tracking','.ophanim-context-rail input'],
+      ['IP search','ip','input[placeholder="IP address"]'],
+      ['Vessels & aircraft','tracking','input[aria-label="Find vessel or aircraft"]'],
+      ['Intel Desk','news','[role="tablist"]'],
+      ['AI setup','settings','text=OPENAI-COMPATIBLE AI PROVIDER'],
+      ['Watchlists','watchlists','text=Watchlists'],
+      ['Sources','sources','text=Observed:'],
+      ['Logistics','logistics','text=Ports and chokepoints'],
     ]) {
       await choose(label);
-      await page.waitForURL(new RegExp(`/atlas\\?tool=${tool}`));
-      await page.locator(selector).first().waitFor();
+      await page.waitForURL(new RegExp(`/presentation\\?view=map&tool=${tool}`));
+      await dock.locator(selector).first().waitFor();
+      assert.equal(await page.locator('canvas.maplibregl-canvas').getAttribute('data-identity'),'same-globe',label);
     }
-    await page.waitForTimeout(1800);
-    assert.equal(new URL(page.url()).searchParams.get('tool'),'tracking','Layer URL persistence must retain tool selection');
-    const layers=new URL(page.url()).searchParams.get('layers').split(',');
-    assert.ok(layers.includes('flights') && layers.includes('maritime'));
-    await page.getByRole('button',{name:'Back to map',exact:true}).click();
-    await page.waitForURL('**/presentation**');
-    await page.getByTestId('presentation-map').waitFor();
+    pass('All intelligence tools are docked in the operational layout; replay never mixes in live fusion');
+    await dock.getByRole('button',{name:'Close tool',exact:true}).click();
+    await choose('Search');
+    const search=page.getByTestId('global-search-input');
+    await search.fill('Dubai');
+    await page.getByTestId('global-search-results').getByRole('button').first().click();
+    assert.equal(await page.getByTestId('global-search-input').count(),1);
+    pass('A single place/IP/domain search locates results in the existing globe');
+    await page.keyboard.press('Control+k');
+    const palette=page.getByPlaceholder('Search layers, regions, tools, display…');
+    await palette.fill('Shodan');
+    await palette.press('Enter');
+    await dock.getByPlaceholder('IP address',{exact:true}).waitFor();
+    await dock.getByRole('button',{name:'Close tool',exact:true}).click();
+    pass('The existing command palette opens tools in the same workspace');
+    await workspace.getByRole('button',{name:'New globe',exact:true}).click();
+    await workspace.getByRole('button',{name:'Earth colored basemap',exact:true}).click();
+    await workspace.getByRole('checkbox',{name:'Aircraft',exact:true}).uncheck();
+    await workspace.getByRole('tab',{name:'Global',exact:true}).click();
+    assert.equal(await workspace.getByRole('button',{name:'Night basemap',exact:true}).getAttribute('aria-pressed'),'true');
+    assert.equal(await workspace.getByRole('checkbox',{name:'Aircraft',exact:true}).isChecked(),true);
+    await workspace.getByRole('tab',{name:'Globe 2',exact:true}).click();
+    assert.equal(await workspace.getByRole('button',{name:'Earth colored basemap',exact:true}).getAttribute('aria-pressed'),'true');
+    assert.equal(await workspace.getByRole('checkbox',{name:'Aircraft',exact:true}).isChecked(),false);
     await page.getByRole('button',{name:'Full platform',exact:true}).click();
     await page.getByRole('dialog',{name:'Enter switch PIN'}).waitFor();
     await page.getByLabel('Switch PIN',{exact:true}).fill('6294');
     await page.getByRole('button',{name:'Open full platform',exact:true}).click();
-    await page.waitForURL('**/atlas?tool=tracking**');
-    pass('All original Atlas tool panels open; vessels/aircraft layers and return destination are retained');
-    await page.goto(url+'/logistics/map?view=full',{waitUntil:'domcontentloaded'});
-    await page.getByRole('button',{name:'Ophanim live',exact:true}).click();
-    const workspace=page.getByTestId('operational-map-workspace');
+    await page.waitForURL('**/logistics/map**');
+    await workspace.getByRole('tab',{name:'Globe 2',exact:true}).waitFor();
+    assert.equal(await workspace.getByRole('button',{name:'Earth colored basemap',exact:true}).getAttribute('aria-pressed'),'true');
+    assert.equal(await workspace.getByRole('checkbox',{name:'Aircraft',exact:true}).isChecked(),false);
+    await page.getByRole('button',{name:'Back to map',exact:true}).click();
+    await page.waitForURL('**/presentation**');
+    await workspace.getByRole('tab',{name:'Globe 2',exact:true}).waitFor();
+    assert.equal(await workspace.getByRole('checkbox',{name:'Aircraft',exact:true}).isChecked(),false);
+    pass('Independent globe tabs retain layers and appearance through PIN-gated Full platform and Back to map');
+    await save({pin:null});
+    await page.goto(url+'/atlas?view=full&tool=tracking&lat=25&lng=55&zoom=3',{waitUntil:'domcontentloaded'});
+    await page.waitForURL('**/logistics/map**');
+    await dock.getByLabel('Find vessel or aircraft').waitFor();
+    assert.equal(new URL(page.url()).searchParams.get('tool'),'tracking');
+    pass('Legacy Atlas links redirect to the same operational map with tool and camera parameters retained');
+    await dock.getByRole('button',{name:'Close tool',exact:true}).click();
     for(const viewport of [{width:1920,height:1080},{width:1366,height:768}]) {
       await page.setViewportSize(viewport);
       await workspace.getByRole('button',{name:'Fullscreen map',exact:true}).click();
       await page.waitForFunction(()=>document.fullscreenElement?.getAttribute('data-testid')==='operational-map-workspace');
       assert.equal(await page.evaluate(()=>Boolean(document.fullscreenElement.querySelector('.ops-sidebar,.ops-topbar,[aria-label="Presentation view"]'))),false);
       const box=await workspace.boundingBox();
-      assert.ok(Math.abs(box.width-viewport.width)<2 && Math.abs(box.height-viewport.height)<2,'Only the map workspace fills the screen');
-      assert.equal(await workspace.locator('.world-map-layer-rail').isVisible(),true);
-      const canvas=workspace.locator('canvas.maplibregl-canvas');
-      await canvas.waitFor();
+      assert.ok(Math.abs(box.width-viewport.width)<2&&Math.abs(box.height-viewport.height)<2);
       await page.waitForFunction(()=>{
-        const root=document.fullscreenElement,canvas=root?.querySelector('canvas.maplibregl-canvas'),parent=root?.querySelector('.world-map-canvas');
-        return canvas && parent && Math.abs(canvas.clientWidth-parent.clientWidth)<2 && Math.abs(canvas.clientHeight-parent.clientHeight)<2;
+        const root=document.fullscreenElement,canvas=root?.querySelector('canvas.maplibregl-canvas'),parent=root?.querySelector('[data-testid="unified-map-canvas"]');
+        return canvas&&parent&&Math.abs(canvas.clientWidth-parent.clientWidth)<2&&Math.abs(canvas.clientHeight-parent.clientHeight)<2;
       });
-      const {data,info}=await sharp(await canvas.screenshot()).raw().toBuffer({resolveWithObject:true});
-      const colors=new Set();for(let y=20;y<info.height;y+=20)for(let x=20;x<info.width;x+=20){const i=(y*info.width+x)*info.channels;colors.add(`${data[i]},${data[i+1]},${data[i+2]}`);}
-      assert.ok(colors.size>3,'Fullscreen globe must not be a blank canvas');
-      await page.screenshot({path:`${output}/screenshots/map-only-fullscreen-${viewport.width}.png`});
+      await geography();
+      await workspace.getByRole('button',{name:'Intel Desk',exact:true}).click();
+      await dock.getByRole('tab',{name:'news',exact:true}).waitFor();
+      const bounds=await Promise.all([page.getByTestId('unified-map-canvas').boundingBox(),dock.boundingBox(),workspace.getByRole('complementary',{name:'Visible layers'}).boundingBox()]);
+      assert.ok(bounds[0].x>=bounds[2].x+bounds[2].width-1&&bounds[1].x>=bounds[0].x+bounds[0].width-1,'Layer rail, canvas and dock must not overlap');
+      await page.screenshot({path:`${output}/screenshots/unified-map-${viewport.width}.png`});
+      await dock.getByRole('button',{name:'Close tool',exact:true}).click();
       await workspace.getByRole('button',{name:'Exit fullscreen',exact:true}).click();
       await page.waitForFunction(()=>!document.fullscreenElement);
     }
     await workspace.getByRole('button',{name:'Fullscreen map',exact:true}).click();
-    await page.waitForFunction(()=>Boolean(document.fullscreenElement));
-    await page.keyboard.press('Escape');
-    await page.waitForFunction(()=>!document.fullscreenElement);
-    await page.getByRole('button',{name:'Back to map',exact:true}).waitFor();
-    pass('Ophanim live map-only fullscreen hides outer navigation, preserves layers, resizes the globe and exits by button/Escape at desktop and laptop sizes');
+    await page.waitForFunction(()=>Boolean(document.fullscreenElement));await page.keyboard.press('Escape');await page.waitForFunction(()=>!document.fullscreenElement);
+    pass('Map-only fullscreen, non-overlapping rail/globe/tool dock, and button/Escape exit pass at desktop and laptop sizes');
+    await page.goto(url+'/logistics/map?view=full&shipment=recorded-shipment',{waitUntil:'domcontentloaded'});
+    await page.getByRole('complementary',{name:'Shipment route',exact:true}).getByText('Fixture origin port',{exact:true}).waitFor();
+    assert.equal(requests.filter(path=>path==='/api/logistics/shipments/recorded-shipment').length,1);
+    await page.goto(url+'/presentation?view=map&shipment=recorded-shipment',{waitUntil:'domcontentloaded'});
+    await geography();
+    assert.equal(requests.filter(path=>path==='/api/logistics/shipments/recorded-shipment').length,1,'Public surface must ignore private record query IDs');
+    assert.equal(await page.getByRole('complementary',{name:'Shipment route',exact:true}).count(),0);
+    pass('Authenticated shipment detail links still work; public Map view never fetches private query IDs');
+    await page.goto(url+'/presentation?view=map',{waitUntil:'domcontentloaded'});
+    await page.setViewportSize({width:390,height:844});
+    await geography();
+    await workspace.getByRole('button',{name:'Show layers',exact:true}).click();
+    await workspace.getByLabel('Search layers',{exact:true}).fill('vessel');
+    await workspace.getByRole('checkbox',{name:'Vessels',exact:true}).waitFor();
+    await page.screenshot({path:`${output}/screenshots/unified-map-mobile-layers.png`});
+    await workspace.getByRole('button',{name:'Show layers',exact:true}).click();
+    await workspace.getByRole('button',{name:'Intel Desk',exact:true}).click();
+    await dock.getByRole('tab',{name:'news',exact:true}).waitFor();
+    await dock.getByRole('heading',{name:'Oman port weather advisory: test replay',exact:true}).waitFor();
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+    await page.screenshot({path:`${output}/screenshots/unified-map-mobile.png`});
+    pass('Mobile globe, collapsible layer rail and bottom intelligence dock fit without horizontal page overflow');
     assert.equal(errors.length,0,errors.join('\n'));
-    pass('No uncaught errors opening Atlas tools; no live scan submitted');
-  } catch (error) {
+    pass('Unified map tool path has no uncaught browser errors; no active scan submitted');
+  } catch(error) {
     await page.screenshot({path:`${output}/screenshots/failed-tools.png`,timeout:5000}).catch(()=>{});
-    error.message += `\nTool browser errors: ${errors.join('; ')}`;
-    throw error;
-  } finally {
-    await context.close();
-    await save({pin:null});
-  }
+    error.message+=`\nTool browser errors: ${errors.join('; ')}`;throw error;
+  } finally {await context.close();await save({pin:null});}
 }
