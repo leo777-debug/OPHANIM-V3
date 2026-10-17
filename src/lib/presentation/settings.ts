@@ -24,8 +24,9 @@ export async function readPresentationSettings(fresh = false): Promise<Presentat
   reading = (async () => {
     let timer: ReturnType<typeof setTimeout> | undefined;
     try {
-      const query = { text: `select ${columns} from ophanim_presentation_settings where id=1`, query_timeout: 1500 };
-      const result = await Promise.race([db().query<SettingsRow>(query), new Promise<never>((_,reject) => { timer = setTimeout(()=>reject(new Error('Settings timed out.')),1800); })]);
+      // Cold serverless connections need a TCP/TLS handshake before the query.
+      const query = { text: `select ${columns} from ophanim_presentation_settings where id=1`, query_timeout: 4000 };
+      const result = await Promise.race([db().query<SettingsRow>(query), new Promise<never>((_,reject) => { timer = setTimeout(()=>reject(new Error('Settings timed out.')),10000); })]);
       const value = settings(result.rows[0]);
       cached = { settings: value, until: Date.now() + 2000 };
       return value;
