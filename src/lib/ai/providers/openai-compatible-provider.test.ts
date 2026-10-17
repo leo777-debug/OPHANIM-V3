@@ -39,5 +39,23 @@ describe('openAiCompatibleProvider', () => {
     expect(output).toBe('Concise summary.');
     const [, init] = fetchMock.mock.calls[0];
     expect(JSON.parse(init.body)).not.toHaveProperty('tools');
+    expect(JSON.parse(init.body).max_tokens).toBe(1024);
+  });
+
+  it('caps output tokens for small connection tests and clamps excessive budgets', async () => {
+    const fetchMock = vi.fn().mockImplementation(() => Promise.resolve(new Response(JSON.stringify({ choices: [{ message: { content: 'Connected' } }] }))));
+    vi.stubGlobal('fetch', fetchMock);
+    const config = { apiKey: 'key', baseUrl: 'https://api.example.com/v1', model: 'model', enabledTasks: [] };
+    for (const [requested, expected] of [[64, 64], [99999, 2048], [-1, 32], [NaN, 1024]]) {
+      await openAiCompatibleProvider.generate(config, { task: 'explain', maxOutputTokens: requested });
+      expect(JSON.parse(fetchMock.mock.lastCall![1].body).max_tokens).toBe(expected);
+    }
+  });
+
+  it('does not blindly retry a provider rate limit', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response('{"message":"Too many requests"}', { status: 429 }));
+    vi.stubGlobal('fetch', fetchMock);
+    await expect(openAiCompatibleProvider.generate({ apiKey: 'key', baseUrl: 'https://api.example.com/v1', model: 'model', enabledTasks: [] }, { task: 'explain' })).rejects.toThrow('429');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });

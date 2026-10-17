@@ -1,6 +1,7 @@
 import { validateHost } from '@/lib/ssrf-guard';
 import { buildAiMessages } from '../task-policy';
 import type { AiGenerationRequest, AiProvider, AiProviderConfig } from './types';
+import { providerError } from './provider-error';
 
 function endpoint(baseUrl: string): URL {
   const url = new URL(baseUrl);
@@ -32,9 +33,10 @@ export const openAiCompatibleProvider: AiProvider = {
     const response = await fetch(url, {
       method: 'POST', redirect: 'error', signal: AbortSignal.timeout(120_000),
       headers: { 'Content-Type': 'application/json', ...(config.apiKey ? { Authorization: `Bearer ${config.apiKey}` } : {}) },
-      body: JSON.stringify({ model: config.model, messages: buildAiMessages(request), temperature: 0.2 }),
+      body: JSON.stringify({ model: config.model, messages: buildAiMessages(request), temperature: 0.2,
+        max_tokens: Number.isFinite(request.maxOutputTokens) ? Math.max(32, Math.min(2048, Math.floor(request.maxOutputTokens!))) : 1024 }),
     });
-    if (!response.ok) throw new Error(`AI provider returned ${response.status}`);
+    if (!response.ok) throw await providerError(response);
     const payload = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
     const content = payload.choices?.[0]?.message?.content?.trim();
     if (!content) throw new Error('AI provider returned an empty response');

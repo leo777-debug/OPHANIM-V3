@@ -309,3 +309,13 @@ service. The bundled `intel/` Docker service is not deployed as part of a Vercel
 Next.js build. Without this service, the selected observation remains visible,
 and no ownership, sanctions or other relationships are invented. Vercel reports
 the missing configuration immediately instead of attempting a Docker hostname.
+
+### AI Rate Limits
+
+Connection tests request at most 64 output tokens. Normal writing tasks default
+to 1,024 output tokens, bounded at 2,048 for internal requests. This avoids leaving
+the response budget unspecified, but does not bypass provider quotas or billing
+limits. The provider's 429 response is classified into quota/budget, capacity, token-rate,
+or unspecified rate/quota messages, without returning its raw text or credentials.
+Connection and generation routes preserve HTTP 429 and a valid numeric Retry-After
+header. Error bodies are limited to 8 KiB; requests are not automatically retried.
