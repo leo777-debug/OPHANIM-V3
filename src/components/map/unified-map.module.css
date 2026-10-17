@@ -80,6 +80,12 @@
 .tracking p { font-size:11px; line-height:1.6; color:#a0b9a8; }
 .tracking>button { display:flex; gap:10px; align-items:center; text-align:left; width:100%; padding:10px; border:0; border-bottom:1px solid #284232; background:transparent; color:#e5f0e8; font-size:12px; }
 .tracking small { display:block; color:#93b3a0; margin-top:5px; }
+.entityPicker { padding-bottom:12px; }
+.entityPicker input { width:100%; padding:10px; border:1px solid #3b5a45; border-radius:4px; color:#edf8f0; background:#0c1710; font-size:12px; }
+.entityPicker>div { max-height:180px; overflow:auto; margin-top:6px; }
+.entityPicker button { display:block; width:100%; text-align:left; padding:8px; border:0; border-bottom:1px solid #284232; background:transparent; color:#e5f0e8; font-size:12px; }
+.entityPicker small { display:block; color:#93b3a0; margin-top:4px; }
+.entityPicker p { color:#a0b9a8; font-size:12px; }
 .empty { padding:16px; color:#abc2b2; font-size:13px; line-height:1.6; }
 .footer { display:flex; min-height:34px; min-width:0; align-items:center; gap:12px; padding:5px 12px; background:#101c14; border-top:1px solid #294431; font-size:10px; color:#a9bfae; }
 .footer>span { flex-shrink:0; max-width:45%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
