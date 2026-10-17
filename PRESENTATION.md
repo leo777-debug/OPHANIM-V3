@@ -270,3 +270,29 @@ for the transaction pooler.
 Presentation settings allow up to ten seconds for a cold database connection and
 query. A failed fresh read still reports an error, rather than reusing stale mode
 or PIN settings. No database passwords need to be changed for this behavior.
+
+### Temporary Public Demo Access
+
+For the 17 October presentation, anonymous visitors can use one shared workspace
+labelled **Presentation demo (public)**. This is not a permanent removal of login:
+the private `ophanim_private.presentation_demo_access` grant must be explicitly
+enabled, Presentation mode must be ON, and the grant expires automatically.
+The presentation cutoff is **17 October 2026, 20:30 Asia/Dubai (16:30 UTC)**.
+An individual grant cannot last longer than 24 hours. No grant is created by the
+migration, so ordinary installations retain their original login requirements.
+
+Only the fixed demo organization and demo user can receive this fallback. Real
+signed-in users retain their own permissions. Treat everything entered in the
+shared workspace as public; do not upload personal or customer information.
+Active scanning, private SDK/extension access, and sandbox research still require
+normal sign-in. Credentials and provider secrets remain server-side.
+
+To end access early, disable the grant in the database:
+
+```sql
+update ophanim_private.presentation_demo_access set enabled = false where id = 1;
+```
+
+Turning Presentation mode OFF also ends anonymous demo access. No redeploy is
+needed for either change. After the presentation, disable the grant and confirm
+that a signed-out request to `/api/auth/me` no longer returns a demo actor.

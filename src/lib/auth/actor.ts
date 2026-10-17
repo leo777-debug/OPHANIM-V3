@@ -4,11 +4,12 @@ import { OrganizationAccessError, requireOrganizationAccess } from '@/lib/operat
 import type { OrganizationActor } from '@/lib/operations/types';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { hashSessionToken, ORGANIZATION_COOKIE, SESSION_COOKIE } from './session';
+import { presentationDemoActor } from './demo-access';
 
 export interface AuthenticatedActor extends OrganizationActor {
   email: string;
   displayName: string | null;
-  authProvider: 'supabase' | 'legacy';
+  authProvider: 'supabase' | 'legacy' | 'presentation-demo';
 }
 
 function isUuid(value: string | undefined): value is string {
@@ -50,9 +51,9 @@ async function getSupabaseActor(request: NextRequest, supplied?: AuthClient): Pr
 
 export async function getAuthenticatedActor(request: NextRequest, supplied?: AuthClient): Promise<AuthenticatedActor | null> {
   const supabaseActor = await getSupabaseActor(request, supplied);
-  if (supabaseActor !== undefined) return supabaseActor;
+  if (supabaseActor !== undefined) return supabaseActor ?? presentationDemoActor(request);
   const token = request.cookies.get(SESSION_COOKIE)?.value;
-  if (!token) return null;
+  if (!token) return presentationDemoActor(request);
   const result = await db().query<{
     user_id: string; organization_id: string; role: AuthenticatedActor['role']; email: string; display_name: string | null;
   }>(
@@ -65,7 +66,7 @@ export async function getAuthenticatedActor(request: NextRequest, supplied?: Aut
     [hashSessionToken(token)],
   );
   const row = result.rows[0];
-  if (!row) return null;
+  if (!row) return presentationDemoActor(request);
   void db().query(`update ophanim_sessions set last_seen_at = now() where token_hash = $1`, [hashSessionToken(token)]).catch(() => {});
   return { userId: row.user_id, organizationId: row.organization_id, role: row.role, email: row.email, displayName: row.display_name, authProvider: 'legacy' };
 }
@@ -73,6 +74,9 @@ export async function getAuthenticatedActor(request: NextRequest, supplied?: Aut
 export async function requireAuthenticatedActor(request: NextRequest, permission?: Parameters<typeof requireOrganizationAccess>[2]): Promise<AuthenticatedActor> {
   const actor = await getAuthenticatedActor(request);
   if (!actor) throw new OrganizationAccessError('Authentication is required.');
+  if (actor.authProvider === 'presentation-demo' && permission === 'research:run') {
+    throw new OrganizationAccessError('Sandbox research requires sign-in.');
+  }
   if (permission) requireOrganizationAccess(actor, actor.organizationId, permission);
   return actor;
 }
