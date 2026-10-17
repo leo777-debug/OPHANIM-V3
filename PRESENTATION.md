@@ -319,3 +319,15 @@ limits. The provider's 429 response is classified into quota/budget, capacity, t
 or unspecified rate/quota messages, without returning its raw text or credentials.
 Connection and generation routes preserve HTTP 429 and a valid numeric Retry-After
 header. Error bodies are limited to 8 KiB; requests are not automatically retried.
+
+AI setup includes **Load available models**, which sends the entered key through
+Ophanim to the provider's `/v1/models` endpoint without generating text. It returns
+only chat-capable model identifiers/aliases and never stores credentials on the
+server. Discovery does not prove that generation quota is available.
+
+For Mistral, **Test connection** checks model-list access with the entered key,
+verifies the selected identifier, waits 1.2 seconds to separate requests, then
+requests a 64-token completion. Failures identify the model-access or generation
+stage. A local HTTP integration test verifies the actual outbound Bearer header,
+model, endpoint path, output budget, and refusal to report rejected requests as
+connected. It uses a fake fixture key, never a founder or production API key.
