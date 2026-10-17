@@ -57,7 +57,7 @@ export async function checkTools({browser,url,owner,save,output,pass}) {
       ['Recon','recon','input[placeholder="IP or hostname"]'],
       ['Markets','markets','text=COMMODITIES'],
       ['Alerts','alerts','text=LIVE ALERTS'],
-      ['Entities','entities','text=[ OPHANIM // ENTITY INTEL ]'],
+      ['Entities','entities','input[aria-label="Find map entity"]'],
       ['IP search','ip','input[placeholder="IP address"]'],
       ['Vessels & aircraft','tracking','input[aria-label="Find vessel or aircraft"]'],
       ['Intel Desk','news','[role="tablist"]'],
@@ -69,6 +69,10 @@ export async function checkTools({browser,url,owner,save,output,pass}) {
       await choose(label);
       await page.waitForURL(new RegExp(`/presentation\\?view=map&tool=${tool}`));
       await dock.locator(selector).first().waitFor();
+      if(tool==='entities') {
+        await dock.getByLabel('Matching map entities').getByRole('button').first().click();
+        await dock.getByText('[ OPHANIM // ENTITY INTEL ]',{exact:true}).waitFor();
+      }
       assert.equal(await page.locator('canvas.maplibregl-canvas').getAttribute('data-identity'),'same-globe',label);
     }
     pass('All intelligence tools are docked in the operational layout; replay never mixes in live fusion');

@@ -296,3 +296,16 @@ update ophanim_private.presentation_demo_access set enabled = false where id = 1
 Turning Presentation mode OFF also ends anonymous demo access. No redeploy is
 needed for either change. After the presentation, disable the grant and confirm
 that a signed-out request to `/api/auth/me` no longer returns a demo actor.
+
+### Entity Inspection
+
+The map's Entities tool searches objects already loaded from public feeds. Select
+a result to inspect its source fields. Vessel expansion uses MMSI/IMO and aircraft
+expansion uses ICAO24 instead of presentation-specific marker IDs. Event and other
+unsupported observation types remain inspectable without requesting enrichment.
+
+External relationship expansion additionally requires a reachable `INTEL_URL`
+service. The bundled `intel/` Docker service is not deployed as part of a Vercel
+Next.js build. Without this service, the selected observation remains visible,
+and no ownership, sanctions or other relationships are invented. Vercel reports
+the missing configuration immediately instead of attempting a Docker hostname.

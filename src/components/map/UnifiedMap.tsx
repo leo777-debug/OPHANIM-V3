@@ -15,6 +15,7 @@ import { feedIds, PRESENTATION_FEEDS, publicUrl } from '@/lib/presentation/feeds
 import type { FeedId, PresentationSettings } from '@/lib/presentation/types';
 import type { SearchAction } from '@/lib/providers/types';
 import { requestJson } from '@/lib/logistics/client';
+import { mapEntity } from '@/lib/map-entities';
 import type { ShipmentRecord } from '@/lib/logistics/shipments';
 import type { DisruptionRecord } from '@/lib/logistics/disruptions';
 import DetailDrawer from '@/components/logistics/DetailDrawer';
@@ -150,7 +151,7 @@ export default function UnifiedMap({ publicSurface=false, settings: suppliedSett
   const objectCount=Object.values(feeds).reduce((sum,feed)=>sum+feed.features.length,0);
   const rows=feedIds.filter(id=>groups[group].includes(id)&&`${PRESENTATION_FEEDS[id].name} ${PRESENTATION_FEEDS[id].source}`.toLowerCase().includes(layerSearch.toLowerCase()));
   const selectedFeed=feeds[selected?.provider as FeedId];
-  const entity=useMemo(()=>selected?{type:String(selected.provider==='maritime'?'vessel':selected.provider==='flights'?'aircraft':selected.type??'event'),id:String(selected.id??selected.name??''),label:String(selected.name??selected.id??'Object'),properties:selected}:null,[selected]);
+  const entity=useMemo(()=>selected?mapEntity(selected):null,[selected]);
   return <main ref={root} className={`world-map-workspace ${styles.workspace} ${styles.stageWithTabs} ${publicSurface?styles.publicSurface:''}`} style={{containerType:'inline-size'}} data-testid="operational-map-workspace" data-unified-map="true" data-surface={publicSurface?'public':'platform'}>
     <header className={styles.header}>
       <div className={styles.title}><Globe2/><div><small>Operational map</small><h1>Global situation monitor</h1></div></div>

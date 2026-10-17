@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import dynamic from 'next/dynamic';
+import { supportsEntityEnrichment } from '@/lib/map-entities';
 import {
   X, Maximize2, Minimize2, Loader2, AlertTriangle,
   Plane, Ship, Building2, User, Globe, Newspaper, ShieldAlert,
@@ -109,7 +110,7 @@ function EntityGraphPanel({ entity, onClose, embedded = false }: Props) {
     setExpandedIds(new Set());
     setSelectedNode(root);
     setError(null);
-    expandEntity(entity.type, entity.id, entity.properties);
+    if (supportsEntityEnrichment(entity.type)) expandEntity(entity.type, entity.id, entity.properties);
   }, [entity]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleNodeClick = useCallback((node: any) => {
@@ -328,7 +329,7 @@ function EntityGraphPanel({ entity, onClose, embedded = false }: Props) {
                   ))}
                 </div>
               )}
-              {!expandedIds.has(`${selectedNode.type}:${selectedNode.id.includes(':') ? selectedNode.id.split(':').slice(1).join(':') : selectedNode.id}`) && (
+              {supportsEntityEnrichment(selectedNode.type) && !expandedIds.has(`${selectedNode.type}:${selectedNode.id.includes(':') ? selectedNode.id.split(':').slice(1).join(':') : selectedNode.id}`) && (
                 <button onClick={() => {
                   const rawId = selectedNode.id.includes(':') ? selectedNode.id.split(':').slice(1).join(':') : selectedNode.id;
                   expandEntity(selectedNode.type, rawId);

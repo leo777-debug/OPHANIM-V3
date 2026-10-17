@@ -41,6 +41,13 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'Invalid id (2-200 chars)' }, { status: 400 });
   }
 
+  if (process.env.VERCEL && !process.env.INTEL_URL?.trim()) {
+    return NextResponse.json(
+      { error: 'External entity enrichment is not configured. The selected map observation remains available.', nodes: [], links: [] },
+      { status: 503, headers: { 'Cache-Control': 'no-store' } },
+    );
+  }
+
   try {
     const params = new URLSearchParams({ type, id });
     // Forward extra aircraft properties to the intel brain
