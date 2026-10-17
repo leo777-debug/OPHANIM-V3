@@ -208,6 +208,8 @@ export default function AiAnalyst({ data, mode = 'briefing', embedded = false }:
   const [keySaved, setKeySaved] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('');
   const [testingConnection, setTestingConnection] = useState(false);
+  const [loadingModels, setLoadingModels] = useState(false);
+  const [availableModels, setAvailableModels] = useState<string[]>([]);
   const [monitorMinutes, setMonitorMinutes] = useState(0);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -377,6 +379,26 @@ export default function AiAnalyst({ data, mode = 'briefing', embedded = false }:
       setConnectionStatus(response.ok ? `Connected to ${result.model}` : result.error);
     } catch { setConnectionStatus('Unable to contact Ophanim. Check that the app is running.'); }
     finally { setTestingConnection(false); }
+  };
+
+  const loadModels = async () => {
+    setLoadingModels(true);
+    setAvailableModels([]);
+    setConnectionStatus('Checking provider model access...');
+    try {
+      const response = await fetch('/api/ai/models', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apiKey: apiKeyInput, baseUrl: baseUrlInput }),
+        signal: AbortSignal.timeout(25000),
+      });
+      const result = await response.json() as { models?: string[]; message?: string; error?: string };
+      if (!response.ok) { setConnectionStatus(result.error ?? 'Model access check failed.'); return; }
+      setAvailableModels(result.models ?? []);
+      setConnectionStatus(result.message ?? 'Model list loaded.');
+      // Separate model discovery and completion on providers with a one-request-per-second limit.
+      await new Promise(resolve => setTimeout(resolve, 1200));
+    } catch { setConnectionStatus('Unable to load provider models through Ophanim.'); }
+    finally { setLoadingModels(false); }
   };
 
   const handleSandboxResearch = useCallback(async () => {
@@ -617,7 +639,7 @@ export default function AiAnalyst({ data, mode = 'briefing', embedded = false }:
                           <select aria-label="AI provider preset" defaultValue="custom" onChange={(e) => {
                             const preset = e.target.value;
                             if (preset !== 'custom') { setBaseUrlInput(preset === 'ollama' ? 'http://localhost:11434/v1' : 'http://localhost:1234/v1'); setApiKeyInput(''); }
-                            setKeySaved(false); setConnectionStatus('');
+                            setKeySaved(false); setConnectionStatus(''); setAvailableModels([]);
                           }} className="mt-1 w-full bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded-lg px-3 py-2">
                             <option value="custom">Custom OpenAI-compatible server</option>
                             <option value="ollama">Local model - Ollama</option>
@@ -630,17 +652,21 @@ export default function AiAnalyst({ data, mode = 'briefing', embedded = false }:
                           onChange={(e) => {
                             setApiKeyInput(e.target.value);
                             setKeySaved(false);
+                            setAvailableModels([]);
+                            setConnectionStatus('');
                           }}
                           aria-label="API key (optional)"
                           placeholder="API key (optional for local servers)"
                           className="flex-1 bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded-lg px-3 py-2 text-[11px] font-mono text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--gold-dim)] transition-colors"
                         />
-                        <input value={baseUrlInput} onChange={(e) => { setBaseUrlInput(e.target.value); setKeySaved(false); }} placeholder="Base URL, e.g. https://api.openai.com/v1" className="bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded-lg px-3 py-2 text-[11px] font-mono text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--gold-dim)] transition-colors" />
-                        <input value={modelInput} onChange={(e) => { setModelInput(e.target.value); setKeySaved(false); }} placeholder="Model, e.g. gpt-4o-mini" className="bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded-lg px-3 py-2 text-[11px] font-mono text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--gold-dim)] transition-colors" />
+                        <input value={baseUrlInput} onChange={(e) => { setBaseUrlInput(e.target.value); setKeySaved(false); setAvailableModels([]); setConnectionStatus(''); }} placeholder="Base URL, e.g. https://api.openai.com/v1" className="bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded-lg px-3 py-2 text-[11px] font-mono text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--gold-dim)] transition-colors" />
+                        <input value={modelInput} onChange={(e) => { setModelInput(e.target.value); setKeySaved(false); setConnectionStatus(''); }} placeholder="Model, e.g. gpt-4o-mini" className="bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded-lg px-3 py-2 text-[11px] font-mono text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--gold-dim)] transition-colors" />
                         <div className="flex flex-wrap gap-2">
                           {AI_TASKS.map((task) => <label key={task} className="flex items-center gap-1 text-[8px] font-mono text-[var(--text-muted)]"><input type="checkbox" checked={enabledTasks.includes(task)} onChange={() => { setEnabledTasks((current) => current.includes(task) ? current.filter((value) => value !== task) : [...current, task]); setKeySaved(false); }} />{task.replace(/_/g, ' ')}</label>)}
                         </div>
-                        <button disabled={testingConnection || !baseUrlInput.trim() || !modelInput.trim()} onClick={() => void testConnection()} className="px-3 py-2 border border-[var(--border-secondary)] rounded-lg text-xs disabled:opacity-50">{testingConnection ? 'Testing...' : 'Test connection'}</button>
+                        <button disabled={loadingModels || testingConnection || !baseUrlInput.trim()} onClick={() => void loadModels()} className="px-3 py-2 border border-[var(--border-secondary)] rounded-lg text-xs disabled:opacity-50">{loadingModels ? 'Checking models...' : 'Load available models'}</button>
+                        {availableModels.length > 0 && <select aria-label="Available provider models" value={availableModels.includes(modelInput) ? modelInput : ''} onChange={event => { setModelInput(event.target.value); setKeySaved(false); }} className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded-lg px-3 py-2 text-xs"><option value="" disabled>Select a provider model</option>{availableModels.map(model => <option key={model} value={model}>{model}</option>)}</select>}
+                        <button disabled={loadingModels || testingConnection || !baseUrlInput.trim() || !modelInput.trim()} onClick={() => void testConnection()} className="px-3 py-2 border border-[var(--border-secondary)] rounded-lg text-xs disabled:opacity-50">{testingConnection ? 'Testing...' : 'Test connection'}</button>
                         {connectionStatus && <p role="status" className="text-xs text-[var(--text-primary)]">{connectionStatus}</p>}
                         <label className="text-xs text-[var(--text-primary)]">Automatic monitoring summaries
                           <select aria-label="Monitoring summary interval" value={monitorMinutes} disabled={!keySaved || !enabledTasks.includes('summarize')} onChange={(e) => setMonitorMinutes(Number(e.target.value))} className="mt-1 w-full bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded-lg px-3 py-2">

@@ -5,7 +5,7 @@ export class AiProviderError extends Error {
   }
 }
 
-async function readErrorPayload(response: Response): Promise<unknown> {
+export async function readProviderJson(response: Response, maxBytes = 8192): Promise<unknown> {
   const reader = response.body?.getReader();
   if (!reader) return null;
   const decoder = new TextDecoder();
@@ -16,7 +16,7 @@ async function readErrorPayload(response: Response): Promise<unknown> {
       const { done, value } = await reader.read();
       if (done) break;
       size += value.byteLength;
-      if (size > 8192) { await reader.cancel(); return null; }
+      if (size > maxBytes) { await reader.cancel(); return null; }
       text += decoder.decode(value, { stream: true });
     }
     return JSON.parse(text + decoder.decode()) as unknown;
@@ -26,7 +26,7 @@ async function readErrorPayload(response: Response): Promise<unknown> {
 
 export async function providerError(response: Response): Promise<AiProviderError> {
   if (response.status !== 429) return new AiProviderError(`AI provider returned ${response.status}`, response.status);
-  const payload = await readErrorPayload(response);
+  const payload = await readProviderJson(response);
   const raw = payload && typeof payload === 'object' ? payload as Record<string, unknown> : {};
   const nested = raw.error && typeof raw.error === 'object' ? raw.error as Record<string, unknown> : {};
   const description = [raw.code, raw.type, raw.message, raw.error, nested.code, nested.type, nested.message]
