@@ -12,6 +12,7 @@ export interface AiGenerationRequest {
   task: AiTask;
   input?: string;
   context?: unknown;
+  maxOutputTokens?: number;
 }
 
 export interface AiProvider {

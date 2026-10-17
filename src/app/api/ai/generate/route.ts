@@ -3,6 +3,7 @@ import { getServerAiConfig, parseAiConfig } from '@/lib/ai/config';
 import { getAiProvider } from '@/lib/ai/providers/registry';
 import { AI_TASKS, type AiGenerationRequest } from '@/lib/ai/providers/types';
 import { getClientIp, isRateLimited } from '@/lib/ssrf-guard';
+import { AiProviderError } from '@/lib/ai/providers/provider-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,6 +20,9 @@ export async function POST(request: NextRequest) {
     const output = await getAiProvider().generate(config, { task, input: typeof body.input === 'string' ? body.input : undefined, context: body.context });
     return NextResponse.json({ output, model: config.model, provider: 'openai-compatible', task, generatedAt: new Date().toISOString() });
   } catch (error) {
+    if (error instanceof AiProviderError && error.status === 429) return NextResponse.json(
+      { error: error.message }, { status: 429, headers: error.retryAfterSeconds ? { 'Retry-After': String(error.retryAfterSeconds) } : {} },
+    );
     const message = error instanceof Error ? error.message : 'AI provider failed';
     return NextResponse.json({ error: message }, { status: 502 });
   }
