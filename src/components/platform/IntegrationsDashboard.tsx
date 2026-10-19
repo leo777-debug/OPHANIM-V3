@@ -18,7 +18,7 @@ export default function IntegrationsDashboard() {
       const body = await response.json(); setIntegrations(body.integrations); setMessage(''); setProtectedView(false);
     } catch { setMessage('Integration status unavailable. Retry when the service is running.'); }
   }, []);
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { void Promise.resolve().then(load); }, [load]);
   const test = async (id: string) => {
     setPending(id); setMessage('');
     try {

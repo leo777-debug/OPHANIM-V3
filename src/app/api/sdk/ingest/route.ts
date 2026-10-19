@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { authorizeSdkRead, sdkOrganizationId } from '@/lib/integrations/sdk-access';
+import { isRateLimited } from '@/lib/ssrf-guard';
 
 /**
  * ╔══════════════════════════════════════════════════════════════════╗
@@ -15,14 +17,14 @@ import { NextRequest, NextResponse } from 'next/server';
 
 // Share the entity store with the stream endpoint
 const globalForSDK = globalThis as unknown as {
-  sdkEntityStore: Map<string, any>;
+  sdkEntityStore: Map<string, unknown>;
   sdkLastUpdate: number;
   sdkIngestLog: Array<{ source: string; count: number; timestamp: string }>;
 };
 
 if (!globalForSDK.sdkEntityStore) {
   globalForSDK.sdkEntityStore = new Map();
-  globalForSDK.sdkLastUpdate = Date.now();
+  globalForSDK.sdkLastUpdate = 0;
 }
 if (!globalForSDK.sdkIngestLog) {
   globalForSDK.sdkIngestLog = [];
@@ -34,6 +36,7 @@ const VALID_KEYS = SDK_KEY ? new Set([SDK_KEY]) : null;
 
 export async function POST(request: NextRequest) {
   try {
+    if (Number(request.headers.get('content-length') ?? 0) > 1000000) return NextResponse.json({ error: 'Payload too large.' }, { status: 413 });
     const body = await request.json();
 
     // Validate structure
@@ -47,11 +50,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate API key (fail-closed: endpoint disabled when SDK_INGEST_KEY is unset)
-    if (!VALID_KEYS) {
+    if (!VALID_KEYS || !sdkOrganizationId()) {
       return NextResponse.json({
         accepted: 0,
         rejected: 0,
-        errors: ['Ingest endpoint disabled — SDK_INGEST_KEY not configured'],
+        errors: ['Ingest endpoint disabled — configure SDK_INGEST_KEY and SDK_ORGANIZATION_ID in Admin → Integrations'],
         timestamp: new Date().toISOString(),
       }, { status: 503 });
     }
@@ -64,13 +67,16 @@ export async function POST(request: NextRequest) {
       }, { status: 401 });
     }
 
+    if (isRateLimited(`sdk-ingest:${sdkOrganizationId()}`, 30)) return NextResponse.json({ error: 'Rate limit reached.' }, { status: 429 });
+    if (typeof body.source !== 'string' || !/^[a-z0-9_.-]{1,80}$/i.test(body.source) || body.entities.length > 500) return NextResponse.json({ error: 'Provide a source identifier and at most 500 entities.' }, { status: 400 });
+
     let accepted = 0;
     let rejected = 0;
     const errors: string[] = [];
 
     for (const entity of body.entities) {
       // Validate minimum required fields
-      if (!entity.id || !entity.position?.lat || !entity.position?.lng) {
+      if (!entity.id || !Number.isFinite(entity.position?.lat) || !Number.isFinite(entity.position?.lng) || Math.abs(entity.position.lat) > 90 || Math.abs(entity.position.lng) > 180) {
         rejected++;
         errors.push(`Entity missing required fields (id, position.lat, position.lng): ${entity.id || 'unknown'}`);
         continue;
@@ -97,7 +103,8 @@ export async function POST(request: NextRequest) {
           originalId: entity.id,
           confidence: entity.confidence || 0.8,
         },
-        timestamp: entity.timestamp || new Date().toISOString(),
+        timestamp: typeof entity.timestamp === 'string' && Number.isFinite(Date.parse(entity.timestamp)) ? new Date(entity.timestamp).toISOString() : null,
+        receivedAt: new Date().toISOString(),
         properties: entity.properties || {},
         display: entity.display || {
           color: '#D4AF37',
@@ -108,6 +115,7 @@ export async function POST(request: NextRequest) {
         },
       };
 
+      if (!globalForSDK.sdkEntityStore.has(normalized.id) && globalForSDK.sdkEntityStore.size >= 10000) globalForSDK.sdkEntityStore.delete(globalForSDK.sdkEntityStore.keys().next().value!);
       globalForSDK.sdkEntityStore.set(normalized.id, normalized);
       accepted++;
     }
@@ -132,22 +140,24 @@ export async function POST(request: NextRequest) {
       errors: errors.slice(0, 10), // Limit error list
       timestamp: new Date().toISOString(),
     });
-  } catch (e) {
+  } catch {
     return NextResponse.json({
       accepted: 0,
       rejected: 0,
-      errors: [`Server error: ${e instanceof Error ? e.message : 'Unknown'}`],
+      errors: ['SDK request failed. Check the payload and server configuration.'],
       timestamp: new Date().toISOString(),
     }, { status: 500 });
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const denied = await authorizeSdkRead(request);
+  if (denied) return denied;
   return NextResponse.json({
     sdk: 'polybolos',
     version: '1.0.0',
     entityCount: globalForSDK.sdkEntityStore.size,
     recentIngestions: globalForSDK.sdkIngestLog.slice(-10),
     timestamp: new Date().toISOString(),
-  });
+  }, { headers: { 'Cache-Control': 'private, no-store' } });
 }

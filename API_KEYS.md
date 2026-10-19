@@ -16,7 +16,7 @@ Pricing/quotas vary by plan and may change. “Keyless” describes access, not 
 | VoidAccess | `VOIDACCESS_API_URL` | Private authorized research worker; requires token or service account | Self-hosted/service-specific terms. | [Provider](https://github.com/leo777-debug/OPHANIM-V3) | Optional worker disabled; public discovery continues. |
 | Recon scanner | `SCANNER_URL`, `SCANNER_KEY` | Authorized defensive scanning | Self-hosted compute; no hosted quota. | [Provider](https://github.com/leo777-debug/OPHANIM-V3) | Scanner unavailable until service is running. |
 | Entity resolver | `INTEL_URL` | Optional isolated entity resolver | Self-hosted compute. | [Provider](https://github.com/leo777-debug/OPHANIM-V3) | Local dictionary correlation does not need this service. |
-| Private SDK ingestion | `SDK_INGEST_KEY` | Authenticated ingestion from your SDK | Self-hosted; application ingestion limits apply. | [Provider](https://github.com/leo777-debug/OPHANIM-V3) | Private ingestion disabled without its key. |
+| Private SDK ingestion | `SDK_INGEST_KEY`, `SDK_ORGANIZATION_ID` | Authenticated ingestion from your SDK | Self-hosted; application ingestion limits apply. | [Provider](https://github.com/leo777-debug/OPHANIM-V3) | Private ingestion disabled without its key. |
 | Shodan | `SHODAN_API_KEY` | Passive host/service intelligence; active scans also require authorized targets | Paid features and credits vary by subscription; no assumed free search quota. | [Provider](https://account.shodan.io/register) | Other public cyber sources remain available. |
 | abuse.ch ThreatFox | `THREATFOX_AUTH_KEY` | Malware indicators | Authentication required; commercial use subject to current abuse.ch access terms. | [Provider](https://auth.abuse.ch/) | CISA KEV and permitted public indicators. |
 | CISA KEV | None | Known exploited vulnerabilities | Keyless public feed; cache 30 minutes; no promised SLA. | [Provider](https://www.cisa.gov/known-exploited-vulnerabilities-catalog) | Keyless default. |
@@ -151,6 +151,7 @@ This table includes credentials, local-service settings, safety gates and runtim
 | Optional services | `SCANNER_KEY` | Authorized defensive scanning |
 | Optional services | `SCANNER_URL` | Authorized defensive scanning |
 | Optional services | `SDK_INGEST_KEY` | Authenticated ingestion from your SDK |
+| Optional services | `SDK_ORGANIZATION_ID` | Authenticated ingestion from your SDK |
 | Cyber | `SHODAN_API_KEY` | Passive host/service intelligence; active scans also require authorized targets |
 | Cyber | `SHODAN_CACHE_TTL_MS` | Optional runtime setting; leave empty to use the documented code default. |
 | Cyber | `SHODAN_LOW_CREDITS` | Optional runtime setting; leave empty to use the documented code default. |

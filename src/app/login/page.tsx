@@ -35,7 +35,8 @@ export default function LoginPage() {
       );
       const body = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(body.error || "Sign-in failed.");
-      router.push("/operations");
+      const { safeReturnTo } = await import('@/lib/auth/return-to');
+      router.push(safeReturnTo(new URLSearchParams(window.location.search).get('returnTo')));
       router.refresh();
     } catch (submitError) {
       setError(

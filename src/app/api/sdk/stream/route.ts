@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { authorizeSdkRead } from '@/lib/integrations/sdk-access';
 
 /**
  * ╔══════════════════════════════════════════════════════════════════╗
@@ -12,19 +13,22 @@ import { NextResponse } from 'next/server';
 
 // In-memory entity store shared across the SDK endpoints
 const globalForSDK = globalThis as unknown as {
-  sdkEntityStore: Map<string, any>;
+  sdkEntityStore: Map<string, unknown>;
   sdkLastUpdate: number;
 };
 
 if (!globalForSDK.sdkEntityStore) {
   globalForSDK.sdkEntityStore = new Map();
-  globalForSDK.sdkLastUpdate = Date.now();
+  globalForSDK.sdkLastUpdate = 0;
 }
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const denied = await authorizeSdkRead(request);
+  if (denied) return denied;
   const encoder = new TextEncoder();
+  let cleanup = () => {};
 
   const stream = new ReadableStream({
     start(controller) {
@@ -35,10 +39,9 @@ export async function GET() {
         payload: {
           connected: true,
           entityCount: globalForSDK.sdkEntityStore.size,
-          feedCount: 9,
+          feedCount: null,
           latticeStatus: 'disconnected',
-          lastUpdate: new Date().toISOString(),
-          uptime: Date.now() - globalForSDK.sdkLastUpdate,
+          lastUpdate: globalForSDK.sdkLastUpdate ? new Date(globalForSDK.sdkLastUpdate).toISOString() : null,
         },
       };
       controller.enqueue(encoder.encode(`data: ${JSON.stringify(statusEvent)}\n\n`));
@@ -76,13 +79,19 @@ export async function GET() {
           clearInterval(heartbeat);
         }
       }, 5000);
+      const expiry = setTimeout(() => { cleanup(); try { controller.close(); } catch { /* Already closed. */ } }, 60000);
+      const abort = () => { cleanup(); try { controller.close(); } catch { /* Already closed. */ } };
+      cleanup = () => { clearInterval(entityPush); clearInterval(heartbeat); clearTimeout(expiry); request.signal.removeEventListener('abort', abort); };
+      request.signal.addEventListener('abort', abort, { once: true });
+      if (request.signal.aborted) abort();
     },
+    cancel() { cleanup(); },
   });
 
   return new Response(stream, {
     headers: {
       'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Cache-Control': 'private, no-cache, no-store, must-revalidate',
       'Connection': 'keep-alive',
       'X-Accel-Buffering': 'no',
     },
