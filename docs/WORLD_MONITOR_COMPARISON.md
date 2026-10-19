@@ -76,9 +76,9 @@ summaries and links do not transfer publisher ownership or republication rights.
 
 ## Remaining Differences
 
-These are not implemented by this update. Entries in `src/lib/world-monitor-layers.ts`
-labelled WorldMonitor API or public embed must not be described as native Ophanim
-data connectors just because they appear in that catalog.
+The earlier catalogue in `src/lib/world-monitor-layers.ts` has now been removed,
+along with its external product iframe. That catalogue was never evidence of native
+connectors. The broader specialist work below remains unfinished.
 
 | Area | Remaining work |
 | --- | --- |

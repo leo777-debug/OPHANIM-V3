@@ -150,6 +150,9 @@ coverage, a successful real-time subscription or every existing camera/operator.
   authenticated integration UI and browser-bundle secret scanning remain pending.
 - Signed-out integrations screenshot: `screenshots/integrations-signed-out.jpg`.
 - Stories screenshot: `screenshots/stories.jpg`.
+- Sources and native Logistics screenshots: `screenshots/sources.jpg`,
+  `screenshots/logistics-native.jpg`. Mobile sign-in prompt/return-link check at
+  390px: `screenshots/integrations-mobile.jpg`. This is not the full mobile matrix.
 - Additional browser verification and final standalone typecheck results are
   recorded in PROGRESS.md. Screenshots must not imply authenticated flows passed.
 
@@ -159,6 +162,6 @@ Commits include task-owned files only; pre-existing dirty Shodan/freshness/searc
 changes are preserved. `.env.example` was intentionally consolidated. The branch
 inherits local committed work newer than the remote foundation branch; its PR must
 disclose that ancestry. The new work does not justify merging unfinished parity.
-Pull-request status/URL will be recorded in state.json after creation.
+Draft pull request: https://github.com/leo777-debug/OPHANIM-V3/pull/25. Not merged.
 All checks above ran against the shared checkout, which includes preserved
 pre-existing uncommitted work. A clean-checkout CI run remains required before merge.

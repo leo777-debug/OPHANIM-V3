@@ -81,6 +81,16 @@ Do not fabricate keys, observations, availability, timestamps or successful chec
 - Targeted ESLint passed after fixing the effect scheduling and legacy SDK any types.
 - Live reachability audit: 14/14 endpoints reached; NOT a parsing/freshness audit.
 - Browser: protected integration sign-in prompt, Atlas and Stories verified.
+- After restarting the final production build, confirmed corrected Stories sorting
+  and non-merged same-publisher alerts. Sources expose publication dates separately
+  from successful fetches, including old Telegram publications; this is a real
+  coverage gap despite HTTP reachability. Native Logistics map rendered without
+  an external product iframe. Mobile integration prompt/return link checked at 390px.
+- Screenshots: PARITY/screenshots/{stories,sources,logistics-native,
+  integrations-signed-out,integrations-mobile}.jpg.
+- Final standalone typecheck and `git diff --check` passed. Checks used the shared
+  dirty checkout; clean-checkout CI is still required.
+- Draft PR: https://github.com/leo777-debug/OPHANIM-V3/pull/25 (unmerged).
 - Full requested browser/load/security matrix is pending. No authenticated admin
   session or private environment credential was borrowed to fake verification.
 - REPORT.md is an interim report with every requested capability accounted for.
