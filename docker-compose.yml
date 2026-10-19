@@ -1,5 +1,16 @@
 name: ophanim
 services:
+  ophanim-health-monitor:
+    image: node:22-alpine
+    profiles: [health]
+    command: [node, /app/health-worker.mjs]
+    volumes:
+      - ./ops/health-worker.mjs:/app/health-worker.mjs:ro
+    env_file:
+      - path: .env
+        required: false
+    depends_on: [ophanim]
+    restart: unless-stopped
   ophanim:
     # Pulls the prebuilt image from GitHub Container Registry. The `build:`
     # block is kept as a fallback: `docker compose up -d` uses the registry

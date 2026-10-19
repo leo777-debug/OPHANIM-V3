@@ -3,6 +3,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { INTEGRATIONS } from './catalog';
 import { integrationStatus, testIntegration } from './status';
+vi.mock('@/lib/runtime/store', () => ({ readRuntimeScope: async () => ({ items: {}, storage: 'memory' }), writeRuntimeValue: async () => ({ storage: 'memory' }) }));
 
 const service = (id: string) => INTEGRATIONS.find(item => item.id === id)!;
 describe('server integration status', () => {
@@ -24,14 +25,15 @@ describe('server integration status', () => {
     expect(integrationStatus(service('metar'), { VERIFY_METAR_COMMERCIAL_USE: 'yes' }).status).toBe('Configured');
     expect(integrationStatus(service('verify-observations'), { VERIFY_OBSERVATIONS_COMMERCIAL_USE: 'yes' }).status).toBe('Disabled by licence');
   });
-  it('never fetches arbitrary ids, missing credentials, or configuration-only services', async () => {
-    const fetcher = vi.fn();
+  it('never fetches arbitrary ids or missing credentials, and tests configured keyed services server-side', async () => {
+    const fetcher = vi.fn().mockResolvedValue(new Response('{}'));
     expect(await testIntegration('https://127.0.0.1', { fetcher })).toBeNull();
     await testIntegration('shodan', { env: {}, fetcher });
     const result = await testIntegration('shodan', { env: { SHODAN_API_KEY: 'private' }, fetcher });
-    expect(result?.observation?.scope).toBe('configuration');
-    expect(result?.observation?.lastSuccessAt).toBeNull();
-    expect(fetcher).not.toHaveBeenCalled();
+    expect(result?.observation?.scope).toBe('connection');
+    expect(result?.observation?.lastSuccessAt).not.toBeNull();
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(JSON.stringify(result)).not.toContain('private');
   });
   it('records real reachability only; preserves last success on failure and redacts errors', async () => {
     const fetcher = vi.fn().mockResolvedValue(new Response('{}'));

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuthenticatedActor } from '@/lib/auth/actor';
 import { platformError } from '@/lib/platform/http';
-import { integrationStatuses, testIntegration } from '@/lib/integrations/status';
+import { persistedIntegrationStatuses, testIntegration } from '@/lib/integrations/status';
 import { isRateLimited } from '@/lib/ssrf-guard';
 
 export const dynamic = 'force-dynamic';
@@ -10,7 +10,7 @@ const headers = { 'Cache-Control': 'private, no-store' };
 export async function GET(request: NextRequest) {
   try {
     await requireAuthenticatedActor(request, 'organization:manage');
-    return NextResponse.json({ integrations: integrationStatuses(), observationStorage: 'process-local; clears on restart' }, { headers });
+    return NextResponse.json(await persistedIntegrationStatuses(), { headers });
   } catch (error) { return platformError(error); }
 }
 

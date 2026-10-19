@@ -1,6 +1,6 @@
 import { NextRequest,NextResponse } from 'next/server';
 import { requireAuthenticatedActor } from '@/lib/auth/actor';
-import { getServerAiConfig,parseAiConfig } from '@/lib/ai/config';
+import { resolveAiConfig } from '@/lib/ai/config';
 import { generateWithRouting } from '@/lib/ai/local-model';
 import { knowledgeError } from '@/lib/knowledge/http';
 import { parseFilters,searchKnowledge } from '@/lib/knowledge/search';
@@ -16,7 +16,7 @@ export async function POST(request:NextRequest) {
     let statements:KnowledgeStatement[]=[{label:'NOT FOUND',text:NOT_FOUND,citations:[]}]; let warning=result.warning;
     if (result.chunks.length) {
       try {
-        const generated=await generateWithRouting(parseAiConfig(body.config) ?? getServerAiConfig(),{
+        const generated=await generateWithRouting(resolveAiConfig(body.config),{
           task:'grounded_qa',mode:body.mode==='general' ? 'general':'logistics',input:body.question,
           context:result.chunks.map(c=>({id:c.id,content:neutraliseInstructions(c.content),source:c.source_file,reference:c.reference,date:c.published_at})) });
         const validated=validateGroundedAnswer(generated.output,result.chunks);

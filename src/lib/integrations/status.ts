@@ -1,4 +1,6 @@
 import { INTEGRATIONS, type IntegrationDefinition } from './catalog';
+import { readRuntimeScope, writeRuntimeValue, type RuntimeStorage } from '@/lib/runtime/store';
+import { connectionProbe, runConnectionProbe } from './probes';
 
 export type IntegrationState = 'Configured' | 'Not configured' | 'Error' | 'Disabled by licence';
 export interface ConnectionObservation {
@@ -14,6 +16,8 @@ export interface IntegrationStatus extends IntegrationDefinition {
   missing: string[];
   observation: ConnectionObservation | null;
   guidance: string;
+  storage?: RuntimeStorage;
+  storageWarning?: string;
 }
 
 /** Explicit projection: never return values, suffixes, lengths or upstream bodies. */
@@ -39,11 +43,15 @@ function isLocalCompatible(value: string, allowlist?: string) {
   }); } catch { return false; }
 }
 
-// Deliberately process-local until the persistent health scheduler is implemented.
-// A restart clears observations; no timestamp is synthesized on list requests.
+// Fast local mirror. Routes load durable observations and report storage failures.
 const observations = new Map<string, ConnectionObservation>();
 export function integrationStatuses(env: Record<string, string | undefined> = process.env) {
   return INTEGRATIONS.map(service => integrationStatus(service, env, observations.get(service.id) ?? null));
+}
+
+export async function persistedIntegrationStatuses(env: Record<string, string | undefined> = process.env) {
+  const records = await readRuntimeScope<ConnectionObservation>('integration-health');
+  return { integrations: INTEGRATIONS.map(service => ({ ...integrationStatus(service, env, records.items[service.id] ?? observations.get(service.id) ?? null), storage: records.storage, storageWarning: records.warning })), observationStorage: records.storage, storageWarning: records.warning };
 }
 
 export async function testIntegration(id: string, options: { env?: Record<string, string | undefined>; fetcher?: typeof fetch; now?: () => number } = {}) {
@@ -52,24 +60,33 @@ export async function testIntegration(id: string, options: { env?: Record<string
   const env = options.env ?? process.env;
   const status = integrationStatus(service, env);
   if (status.status === 'Not configured' || status.status === 'Disabled by licence') return status;
+  if (!observations.has(id)) {
+    const previous = await readRuntimeScope<ConnectionObservation>('integration-health');
+    if (previous.items[id]) observations.set(id, previous.items[id]);
+  }
   const now = options.now ?? Date.now;
   const started = now();
   let error: string | null = null;
-  if (service.probe) {
+  const probe = connectionProbe(service, env);
+  let connected = false;
+  if (probe) {
     // Only compile-time URLs, no user URL, key, Authorization or redirect forwarding.
     try {
-      const response = await (options.fetcher ?? fetch)(service.probe, { signal: AbortSignal.timeout(8000), redirect: 'error', cache: 'no-store', headers: { Accept: 'application/json', 'User-Agent': 'Ophanim/1.0 (integration health)' } });
-      await response.body?.cancel();
-      if (!response.ok) error = `Provider returned HTTP ${response.status}.`;
+      if (options.fetcher) {
+        const response = await options.fetcher(probe.url, { signal: AbortSignal.timeout(8000), redirect: 'error', cache: 'no-store', headers: { Accept: 'application/json', ...probe.headers } });
+        await response.body?.cancel(); if (!response.ok) error = `Provider returned HTTP ${response.status}.`;
+      } else await runConnectionProbe(probe, env);
+      connected = !error;
     } catch { error = 'Connection unavailable or timed out. No credential or upstream error body was logged.'; }
   }
   const checkedAt = new Date(now()).toISOString();
   const observation: ConnectionObservation = {
-    checkedAt, lastSuccessAt: service.probe && !error ? checkedAt : observations.get(id)?.lastSuccessAt ?? null,
-    error, latencyMs: Math.max(0, now() - started), scope: service.probe ? 'connection' : 'configuration',
-    message: service.probe ? error ?? 'Public endpoint reachable. Payload/data freshness is not validated by this test.'
+    checkedAt, lastSuccessAt: connected ? checkedAt : observations.get(id)?.lastSuccessAt ?? null,
+    error, latencyMs: Math.max(0, now() - started), scope: probe ? 'connection' : 'configuration',
+    message: probe ? error ?? 'Endpoint connection succeeded. This check does not establish current geographic coverage.'
       : 'Configuration checked only. This service does not yet have a safe connection-test adapter; no network request was made.',
   };
   observations.set(id, observation);
-  return integrationStatus(service, env, observation);
+  const persistence = await writeRuntimeValue('integration-health', id, observation);
+  return { ...integrationStatus(service, env, observation), storage: persistence.storage, storageWarning: persistence.warning };
 }

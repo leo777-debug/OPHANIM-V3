@@ -22,3 +22,11 @@ export function getServerAiConfig(): AiProviderConfig | null {
     enabledTasks: (process.env.AI_ENABLED_TASKS ?? '').split(',').map((value) => value.trim()),
   });
 }
+
+/** Environment credentials always win and are never attached to browser-selected hosts. */
+export function resolveAiConfig(preferences: unknown): AiProviderConfig | null {
+  const server = getServerAiConfig();
+  if (server) return server;
+  if (!preferences || typeof preferences !== 'object') return null;
+  return parseAiConfig({ ...preferences, apiKey: '' });
+}

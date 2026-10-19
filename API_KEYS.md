@@ -8,6 +8,12 @@ Pricing/quotas vary by plan and may change. “Keyless” describes access, not 
 
 | Service | Environment variables | Unlocks | Free/paid and limits | Sign-up / original documentation | Without a key |
 | --- | --- | --- | --- | --- | --- |
+| NOAA/NWS public warnings | None | Official US weather warnings | Keyless public-domain NWS-authored text; five-minute application cache. | [Provider](https://www.weather.gov/documentation/services-web-api) | Keyless default; US coverage. |
+| NHC Atlantic advisories | None | Official cyclone advisories | Keyless US government text; five-minute cache. | [Provider](https://www.nhc.noaa.gov/aboutrss.shtml) | Keyless default; Atlantic coverage. |
+| NHC Eastern Pacific advisories | None | Official cyclone advisories | Keyless US government text; five-minute cache. | [Provider](https://www.nhc.noaa.gov/aboutrss.shtml) | Keyless default; Eastern Pacific coverage. |
+| NHC Atlantic en Español | None | Original Spanish official advisories | Keyless US government text; five-minute cache. | [Provider](https://www.nhc.noaa.gov/mobile/rss.html) | Keyless default; Atlantic coverage. |
+| CDC Travel Health Notices | None | Official health notices | Keyless CDC-authored public-domain notices; 15-minute cache. | [Provider](https://wwwnc.cdc.gov/travel/page/rss) | Keyless default; international notices, incomplete coverage. |
+| FCDO travel advice | None | Country travel advice | Keyless Open Government Licence v3.0; one-hour cache per country. | [Provider](https://www.gov.uk/help/reuse-govuk-content) | Keyless default; select country. |
 | OpenAI-compatible / Mistral / local AI | `AI_BASE_URL`, `AI_MODEL`, `AI_API_KEY` | Optional labelled summaries and explanations | Provider-specific paid usage; local inference has no API fee. No universal free quota. | [Provider](https://docs.mistral.ai/getting-started/quickstart/) | Deterministic search and intelligence continue without AI. |
 | Google Gemini | `GEMINI_API_KEY_1` | Legacy Gemini briefings; numbered key slots 1–8 | Free and paid quotas vary by model/project; consult the linked pricing. | [Provider](https://ai.google.dev/gemini-api/docs/pricing) | OpenAI-compatible or local AI; otherwise deterministic views. |
 | Local / compatible embeddings | `EMBEDDING_BASE_URL`, `EMBEDDING_MODEL` | Knowledge semantic search | Local compute or provider-specific billing; no universal free quota. | [Provider](https://docs.ollama.com/) | Keyword search; semantic indexing waits for a model server. |
@@ -75,6 +81,7 @@ This table includes credentials, local-service settings, safety gates and runtim
 | AI | `AI_MODEL` | Optional labelled summaries and explanations |
 | Optional services | `AI_SANDBOX_RESEARCH_TOKEN` | Authorized sandbox research |
 | Optional services | `AI_SANDBOX_RESEARCH_URL` | Authorized sandbox research |
+| Platform | `APP_INTERNAL_URL` | Optional runtime setting; leave empty to use the documented code default. |
 | Platform | `APP_URL` | Optional runtime setting; leave empty to use the documented code default. |
 | Cyber | `AUTHORIZED_SCAN_TARGETS` | Optional runtime setting; leave empty to use the documented code default. |
 | Maritime | `CUSTOMER_AIS_API_TOKEN` | Server-only credential; configure only for the associated optional feature. |
@@ -101,6 +108,11 @@ This table includes credentials, local-service settings, safety gates and runtim
 | Platform | `GITHUB_WEBHOOK_FORWARD_URL` | Optional runtime setting; leave empty to use the documented code default. |
 | Platform | `GITHUB_WEBHOOK_SECRET` | Server-only credential; configure only for the associated optional feature. |
 | Platform | `GIT_COMMIT` | Optional runtime setting; leave empty to use the documented code default. |
+| Platform | `HEALTH_ADMIN_EMAILS` | Optional runtime setting; leave empty to use the documented code default. |
+| Platform | `HEALTH_ALERT_AFTER_MINUTES` | Optional runtime setting; leave empty to use the documented code default. |
+| Platform | `HEALTH_CRITICAL_INTEGRATIONS` | Optional runtime setting; leave empty to use the documented code default. |
+| Platform | `HEALTH_CRON_SECRET` | Server-only credential; configure only for the associated optional feature. |
+| Platform | `HEALTH_POLL_SECONDS` | Optional runtime setting; leave empty to use the documented code default. |
 | Platform | `HOSTNAME` | Optional runtime setting; leave empty to use the documented code default. |
 | Platform | `IMPORT_CRON_SECRET` | Server-only credential; configure only for the associated optional feature. |
 | Platform | `INTELLIGENCE_ALERT_CRON_SECRET` | Server-only credential; configure only for the associated optional feature. |
@@ -136,6 +148,7 @@ This table includes credentials, local-service settings, safety gates and runtim
 | AI | `OPHANIM_MODEL_FILE` | Optional runtime setting; leave empty to use the documented code default. |
 | Platform | `OPHANIM_NOMINATIM_ENABLED` | Optional runtime setting; leave empty to use the documented code default. |
 | Platform | `OPHANIM_PORT` | Optional runtime setting; leave empty to use the documented code default. |
+| Platform | `OPHANIM_RUNTIME_DIR` | Optional runtime setting; leave empty to use the documented code default. |
 | Platform | `OPHANIM_SESSION_DAYS` | Optional runtime setting; leave empty to use the documented code default. |
 | Platform | `OPHANIM_TEST_LLM` | Optional runtime setting; leave empty to use the documented code default. |
 | Platform | `OPHANIM_TEST_PGLITE` | Optional runtime setting; leave empty to use the documented code default. |
@@ -163,6 +176,7 @@ This table includes credentials, local-service settings, safety gates and runtim
 | Cyber | `THREATFOX_AUTH_KEY` | Malware indicators |
 | Platform | `UMAMI_ENDPOINT` | Optional private analytics |
 | Platform | `UMAMI_WEBSITE_ID` | Optional private analytics |
+| Platform | `VERCEL` | Optional runtime setting; leave empty to use the documented code default. |
 | Cyber | `VERIFY_BLOCKED_HOSTS` | Optional runtime setting; leave empty to use the documented code default. |
 | Cyber | `VERIFY_METAR_COMMERCIAL_USE` | Optional runtime setting; leave empty to use the documented code default. |
 | Cyber | `VERIFY_OBSERVATIONS_ATTRIBUTION` | Optional runtime setting; leave empty to use the documented code default. |

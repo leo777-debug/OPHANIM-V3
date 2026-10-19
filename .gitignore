@@ -90,3 +90,4 @@ scanner_backend_backup.js
 *.bin
 /models/
 /.knowledge-storage/
+/.ophanim-runtime/

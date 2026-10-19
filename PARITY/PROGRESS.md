@@ -100,6 +100,26 @@ Do not fabricate keys, observations, availability, timestamps or successful chec
 
 ## Task order
 
+## Continuation: completion and merge requested
+
+User authorized merging only after completion. Deployment verification is explicitly
+deferred until last. Existing PR CI passed; Vercel preview is failing and the
+connector needs reauthentication. Do not bypass that check or mark parity complete.
+
+Implemented additional integration work: private runtime schema, PostgreSQL/shared
+storage or explicit single-instance file persistence, pinned bounded connection
+probes, optional scheduled health worker, failure-episode alert handling, Admin
+Health status table and centralized server AI credentials. Browser secret input
+and storage were removed; old preferences are sanitized. New PGlite policy tests
+and transport/configuration tests pass. Full milestone checks follow.
+
+Continuation checks: 357 tests passed, 5 skipped; production build and standalone
+typecheck passed. This includes six new official source normalizers and their
+public API. Public-source UI lint caught an effect scheduling issue, corrected
+before review. Only task-owned changes are staged in milestone commits.
+
+## Task order (continued)
+
 0. Inventory, branch and resumable state.
 1. Central API_KEYS.md, empty .env.example, protected integrations status/tests.
 2. P1 deterministic story/entity/convergence/trust/context and coverage UI.

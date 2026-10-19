@@ -32,7 +32,7 @@ export default function IntegrationsDashboard() {
   return <div className="platform-content"><section className="platform-section">
     <div className="platform-section__heading"><div><p>Admin · server configuration</p><h2>External services</h2></div><button type="button" onClick={() => void load()}>Refresh status</button></div>
     <p>Put keys in your server’s uncommitted .env or hosting dashboard using API_KEYS.md, then restart. Credentials are never displayed here. Environment configuration is the source of truth.</p>
-    <p>Configured means settings are present. Connection observations below are process-local and clear on restart; tests do not prove current data coverage.</p>
+    <p>Configured means settings are present. Each card reports its observation storage and what its test verified. Connection tests do not establish complete data coverage.</p>
     {message && <p role="status" className="platform-notice">{message}</p>}
     {protectedView ? <Link href="/login?returnTo=%2Fadmin%2Fintegrations">Sign in to see your organization’s data</Link> : <>
       <label>Find an integration <input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder="Service, area or variable" /></label>
@@ -43,6 +43,8 @@ export default function IntegrationsDashboard() {
           <p>{item.guidance}</p><p>{item.fallback}</p>
           <p>Last successful connection: {item.observation?.lastSuccessAt ?? 'Never observed'}</p>
           <p>Last checked: {item.observation?.checkedAt ?? 'Not tested'}</p>
+          <p>Observation storage: {item.storage ?? 'Not recorded'}</p>
+          {item.storageWarning && <p role="status">{item.storageWarning}</p>}
           {item.observation?.error && <p role="alert">{item.observation.error}</p>}
           <p><a href={item.signup} target="_blank" rel="noreferrer">Provider documentation and access</a></p>
           <button type="button" disabled={pending !== null || item.status === 'Disabled by licence'} onClick={() => void test(item.id)}>{pending === item.id ? 'Testing…' : 'Test connection'}</button>

@@ -205,7 +205,6 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showSettings, setShowSettings] = useState(() => mode === 'settings');
-  const [apiKeyInput, setApiKeyInput] = useState('');
   const [baseUrlInput, setBaseUrlInput] = useState('');
   const [modelInput, setModelInput] = useState('');
   const [enabledTasks, setEnabledTasks] = useState<AiTask[]>([...AI_TASKS]);
@@ -220,12 +219,11 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Provider credentials are held only for the current browser session.
+  // Browser preferences never contain credentials; keys live in server integrations.
   if (isClient && !configHydrated) {
     setConfigHydrated(true);
     const saved = readClientAiConfig();
     if (saved) {
-      setApiKeyInput(saved.apiKey);
       setBaseUrlInput(saved.baseUrl);
       setModelInput(saved.model);
       setEnabledTasks(saved.enabledTasks);
@@ -372,7 +370,7 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
     try {
       const response = await fetch('/api/ai/connection', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ apiKey: apiKeyInput, baseUrl: baseUrlInput, model: modelInput, enabledTasks }),
+        body: JSON.stringify({ baseUrl: baseUrlInput, model: modelInput, enabledTasks }),
       });
       const result = await response.json();
       setConnectionStatus(response.ok ? `Connected to ${result.model}` : result.error);
@@ -441,19 +439,17 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
   );
 
   const saveApiKey = useCallback(() => {
-    const key = apiKeyInput.trim();
     const baseUrl = baseUrlInput.trim();
     const model = modelInput.trim();
     if (baseUrl && model) {
-      writeClientAiConfig({ apiKey: key, baseUrl, model, enabledTasks, taskModels });
+      writeClientAiConfig({ apiKey: '', baseUrl, model, enabledTasks, taskModels });
       setKeySaved(true);
       setTimeout(() => setShowSettings(false), 600);
     }
-  }, [apiKeyInput, baseUrlInput, modelInput, enabledTasks, taskModels]);
+  }, [baseUrlInput, modelInput, enabledTasks, taskModels]);
 
   const clearApiKey = useCallback(() => {
     sessionStorage.removeItem('ophanim-ai-provider-config');
-    setApiKeyInput('');
     setBaseUrlInput('');
     setModelInput('');
     setEnabledTasks([...AI_TASKS]);
@@ -617,7 +613,7 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
                         <label className="text-xs text-[var(--text-primary)]">Provider
                           <select aria-label="AI provider preset" defaultValue="custom" onChange={(e) => {
                             const preset = e.target.value;
-                            if (preset !== 'custom') { setBaseUrlInput(preset === 'lmstudio' ? 'http://localhost:1234/v1' : 'http://localhost:11434/v1'); setApiKeyInput(''); }
+                            if (preset !== 'custom') { setBaseUrlInput(preset === 'lmstudio' ? 'http://localhost:1234/v1' : 'http://localhost:11434/v1'); }
                             if (preset === 'ophanim') setModelInput('ophanim-logistics:base');
                             setKeySaved(false); setConnectionStatus('');
                           }} className="mt-1 w-full bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded-lg px-3 py-2">
@@ -627,17 +623,7 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
                             <option value="lmstudio">Local model - LM Studio</option>
                           </select>
                         </label>
-                        <input
-                          type="password"
-                          value={apiKeyInput}
-                          onChange={(e) => {
-                            setApiKeyInput(e.target.value);
-                            setKeySaved(false);
-                          }}
-                          aria-label="API key (optional)"
-                          placeholder="API key (optional for local servers)"
-                          className="flex-1 bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded-lg px-3 py-2 text-[11px] font-mono text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--gold-dim)] transition-colors"
-                        />
+                        <p className="text-xs">Keys are configured on the server in <a href="/admin/integrations">Admin → Integrations</a>. Browser settings store public model preferences only.</p>
                         <input value={baseUrlInput} onChange={(e) => { setBaseUrlInput(e.target.value); setKeySaved(false); }} placeholder="Base URL, e.g. https://api.openai.com/v1" className="bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded-lg px-3 py-2 text-[11px] font-mono text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--gold-dim)] transition-colors" />
                         <input value={modelInput} onChange={(e) => { setModelInput(e.target.value); setKeySaved(false); }} placeholder="Model, e.g. gpt-4o-mini" className="bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded-lg px-3 py-2 text-[11px] font-mono text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--gold-dim)] transition-colors" />
                         <div className="flex flex-wrap gap-2">
