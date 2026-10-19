@@ -7,7 +7,6 @@ import {
   Activity,
   Check,
   ChevronRight,
-  ExternalLink,
   Globe2,
   Layers3,
   LockKeyhole,
@@ -22,12 +21,11 @@ import type { ProviderMapLayer } from "@/lib/providers";
 import type { DisruptionRecord } from "@/lib/logistics/disruptions";
 import type { ShipmentRecord } from "@/lib/logistics/shipments";
 import {
-  WORLD_MONITOR_LAYER_GROUPS,
-  WORLD_MONITOR_LAYERS,
-  WORLD_MONITOR_PUBLIC_LAYER_IDS,
-  type WorldMonitorLayer,
-  type WorldMonitorLayerGroup,
-} from "@/lib/world-monitor-layers";
+  OPERATIONAL_LAYER_GROUPS,
+  OPERATIONAL_LAYERS,
+  type OperationalLayer,
+  type OperationalLayerGroup,
+} from "@/lib/operational-layers";
 import { requestJson } from "@/lib/logistics/client";
 import DetailDrawer from "./DetailDrawer";
 import ShipmentRoute from "./ShipmentRoute";
@@ -42,7 +40,6 @@ const OphanimMap = dynamic(() => import("@/components/OphanimMap"), {
   ),
 });
 
-type MonitorMode = "worldmonitor" | "ophanim";
 type FeedState = { label: string; count: number; ok: boolean };
 type MapData = Record<string, unknown>;
 
@@ -115,7 +112,9 @@ async function readJson(path: string): Promise<Record<string, unknown>> {
     signal: AbortSignal.timeout(15_000),
   });
   if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
-  return (await response.json()) as Record<string, unknown>;
+  const body = (await response.json()) as Record<string, unknown>;
+  if (body.error) throw new Error('Feed reports unavailable');
+  return body;
 }
 
 function list(value: unknown): unknown[] {
@@ -132,7 +131,7 @@ const LOCAL_FEEDS = [
   },
   {
     key: "news",
-    label: "Verified news",
+    label: "Attributed news reports",
     path: "/api/news",
     map: (payload: MapData) => ({ news: list(payload.news) }),
     count: (payload: MapData) => list(payload.news).length,
@@ -232,18 +231,14 @@ const LOCAL_FEEDS = [
 
 export default function LogisticsMapWorkspace() {
   const query = useSearchParams();
-  const [mode, setMode] = useState<MonitorMode>("worldmonitor");
   const [regionKey, setRegionKey] = useState("global");
-  const [group, setGroup] = useState<WorldMonitorLayerGroup | "All">("All");
+  const [group, setGroup] = useState<OperationalLayerGroup | "All">("All");
   const [search, setSearch] = useState("");
-  const [publicLayers, setPublicLayers] = useState<string[]>(
-    WORLD_MONITOR_PUBLIC_LAYER_IDS,
-  );
   const [activeLayers, setActiveLayers] = useState(DEFAULT_OPHANIM_LAYERS);
   const [data, setData] = useState<MapData>(EMPTY_DATA);
   const [providerLayers, setProviderLayers] = useState<ProviderMapLayer[]>([]);
   const [feedStates, setFeedStates] = useState<FeedState[]>([]);
-  const [selectedLayer, setSelectedLayer] = useState<WorldMonitorLayer | null>(
+  const [selectedLayer, setSelectedLayer] = useState<OperationalLayer | null>(
     null,
   );
   const [selectedEntity, setSelectedEntity] = useState<MapData | null>(null);
@@ -322,7 +317,7 @@ export default function LogisticsMapWorkspace() {
 
   const visibleCatalog = useMemo(() => {
     const normalized = search.trim().toLowerCase();
-    return WORLD_MONITOR_LAYERS.filter(
+    return OPERATIONAL_LAYERS.filter(
       (item) =>
         (group === "All" || item.group === group) &&
         (!normalized ||
@@ -331,54 +326,21 @@ export default function LogisticsMapWorkspace() {
     );
   }, [group, search]);
 
-  const embedUrl = useMemo(() => {
-    const params = new URLSearchParams({
-      layers: publicLayers.join(","),
-      center: `${region.lat},${region.lng}`,
-      zoom: String(region.zoom),
-      theme: "dark",
-      variant: "full",
-    });
-    return `https://www.worldmonitor.app/embed?${params.toString()}`;
-  }, [publicLayers, region]);
-
-  const availableCount = WORLD_MONITOR_LAYERS.filter((item) =>
-    mode === "worldmonitor" ? item.embedId : item.ophanimKey,
-  ).length;
-  const activeCount =
-    mode === "worldmonitor"
-      ? publicLayers.length
-      : new Set(
-          WORLD_MONITOR_LAYERS.filter(
-            (item) => item.ophanimKey && activeLayers[item.ophanimKey],
-          ).map((item) => item.ophanimKey),
-        ).size;
+  const availableCount = OPERATIONAL_LAYERS.length;
+  const activeCount = OPERATIONAL_LAYERS.filter(item => activeLayers[item.ophanimKey]).length;
   const liveFeedCount = feedStates.filter((item) => item.ok).length;
   const pointCount = feedStates.reduce((total, item) => total + item.count, 0);
 
-  const toggleCatalogLayer = (item: WorldMonitorLayer) => {
+  const toggleCatalogLayer = (item: OperationalLayer) => {
     setSelectedLayer(item);
-    if (mode === "worldmonitor" && item.embedId) {
-      setPublicLayers((current) =>
-        current.includes(item.embedId!)
-          ? current.filter((id) => id !== item.embedId)
-          : [...current, item.embedId!],
-      );
-    }
-    if (mode === "ophanim" && item.ophanimKey) {
-      setActiveLayers((current) => ({
+    setActiveLayers((current) => ({
         ...current,
         [item.ophanimKey!]: !current[item.ophanimKey!],
-      }));
-    }
+    }));
   };
 
-  const isLayerActive = (item: WorldMonitorLayer) =>
-    mode === "worldmonitor"
-      ? Boolean(item.embedId && publicLayers.includes(item.embedId))
-      : Boolean(item.ophanimKey && activeLayers[item.ophanimKey]);
-  const isLayerAvailable = (item: WorldMonitorLayer) =>
-    mode === "worldmonitor" ? Boolean(item.embedId) : Boolean(item.ophanimKey);
+  const isLayerActive = (item: OperationalLayer) => Boolean(activeLayers[item.ophanimKey]);
+  const isLayerAvailable = (item: OperationalLayer) => Boolean(item.ophanimKey);
 
   const selectedEntityTitle = selectedEntity
     ? String(
@@ -409,22 +371,7 @@ export default function LogisticsMapWorkspace() {
           </div>
         </div>
 
-        <div className="world-map-mode" aria-label="Map data source">
-          <button
-            type="button"
-            className={mode === "worldmonitor" ? "is-active" : ""}
-            onClick={() => setMode("worldmonitor")}
-          >
-            WorldMonitor public
-          </button>
-          <button
-            type="button"
-            className={mode === "ophanim" ? "is-active" : ""}
-            onClick={() => setMode("ophanim")}
-          >
-            Ophanim live
-          </button>
-        </div>
+        <div className="world-map-mode" aria-label="Map data source">Ophanim · source-attributed feeds</div>
 
         <div className="world-map-metrics" aria-label="Map status">
           <span>
@@ -434,7 +381,7 @@ export default function LogisticsMapWorkspace() {
             <strong>{availableCount}</strong> available
           </span>
           <span>
-            <strong>{WORLD_MONITOR_LAYERS.length}</strong> catalogued
+            <strong>{OPERATIONAL_LAYERS.length}</strong> controls
           </span>
         </div>
 
@@ -508,7 +455,7 @@ export default function LogisticsMapWorkspace() {
             >
               All
             </button>
-            {WORLD_MONITOR_LAYER_GROUPS.map((item) => (
+            {OPERATIONAL_LAYER_GROUPS.map((item) => (
               <button
                 type="button"
                 key={item}
@@ -553,17 +500,6 @@ export default function LogisticsMapWorkspace() {
         </aside>
 
         <div className="world-map-canvas">
-          {mode === "worldmonitor" ? (
-            <iframe
-              key={embedUrl}
-              className="world-map-embed"
-              src={embedUrl}
-              title="WorldMonitor public global map"
-              loading="eager"
-              referrerPolicy="strict-origin-when-cross-origin"
-              sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-            />
-          ) : (
             <OphanimMap
               key={`${refreshToken}-${regionKey}`}
               data={data}
@@ -579,13 +515,10 @@ export default function LogisticsMapWorkspace() {
               mapStyle="dark"
               theme="core"
             />
-          )}
 
           <div className="world-map-source-badge">
             <span />
-            {mode === "worldmonitor"
-              ? "Official public embed"
-              : loading
+            {loading
                 ? "Updating open feeds"
                 : `${liveFeedCount}/${LOCAL_FEEDS.length} feeds responding`}
           </div>
@@ -620,8 +553,7 @@ export default function LogisticsMapWorkspace() {
               {!isLayerAvailable(selectedLayer) && (
                 <p className="world-map-inspector__note">
                   This layer is catalogued but is not represented as live data
-                  without the appropriate WorldMonitor API access or a verified
-                  Ophanim provider.
+                  without a verified, permitted Ophanim provider.
                 </p>
               )}
             </aside>
@@ -638,23 +570,12 @@ export default function LogisticsMapWorkspace() {
           </span>
         </div>
         <div>
-          {mode === "ophanim" && (
             <span>
               {pointCount.toLocaleString()} objects
               {lastUpdated
-                ? ` · updated ${lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+                ? ` · checked ${lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
                 : ""}
             </span>
-          )}
-          {mode === "worldmonitor" && (
-            <a
-              href="https://www.worldmonitor.app/"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Open WorldMonitor <ExternalLink aria-hidden="true" size={11} />
-            </a>
-          )}
           <Link href="/events">Open event ledger</Link>
         </div>
       </footer>
