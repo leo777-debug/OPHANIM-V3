@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "branch": "parity-and-reliability",
+  "startedAt": "2026-10-19",
+  "firstUnfinishedTask": "01-integrations",
+  "tasks": [
+    { "id": "00-inventory", "status": "done" },
+    { "id": "01-integrations", "status": "in_progress" },
+    { "id": "02-core-intelligence", "status": "pending" },
+    { "id": "03-provider-reliability", "status": "pending" },
+    { "id": "04-specialist-layers", "status": "pending" },
+    { "id": "05-analysis-tools", "status": "pending" },
+    { "id": "06-platform-ux-api", "status": "pending" },
+    { "id": "07-limitations", "status": "pending" },
+    { "id": "08-validation-report-pr", "status": "pending" }
+  ],
+  "checks": { "baselineTests": "311 passed, 5 skipped", "baselineTypecheck": "running", "baselineBuild": "running" },
+  "preserveExistingChanges": true,
+  "worldMonitorCodeUsed": false
+}
