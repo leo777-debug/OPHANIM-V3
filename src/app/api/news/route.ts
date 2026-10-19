@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import Parser from 'rss-parser';
 import { deduplicateNews, publishedTime, safeSourceUrl, type FeedHealth, type NewsItem } from '@/lib/intelligence/news';
+import { newsFeedCache } from '@/lib/intelligence/news-cache';
+import { refreshLabel } from '@/lib/providers/resilient-feed';
 
 /**
  * Ophanim supporting news discovery. Each source fails independently.
@@ -52,6 +54,7 @@ function findCoords(text: string): [number, number] | null {
 type Article = {
   title: string; description: string; link: string; pubDate: string | null; source: string;
   coords?: [number, number]; sourcePolicy?: { reliability: string; purpose: string };
+  feedMode?: 'fresh' | 'stale' | 'unavailable'; lastSuccessAt?: string | null; staleSince?: string | null;
 };
 
 function parseTelegramHTML(html: string, channel: string): Article[] {
@@ -84,6 +87,16 @@ const parser = new Parser<Record<string, unknown>, { geoLat?: string; geoLong?: 
   customFields: { item: [['geo:lat', 'geoLat'], ['geo:long', 'geoLong']] },
 });
 
+// Observation time differs from publication time. Lifetime and reset behaviour
+// are explicit in the UI; bounded memory awaits a persistent public ingestion store.
+const firstObservations = new Map<string, string>();
+function firstObserved(id: string) {
+  const existing = firstObservations.get(id);
+  if (existing) return existing;
+  if (firstObservations.size >= 10000) firstObservations.delete(firstObservations.keys().next().value!);
+  const value = new Date().toISOString(); firstObservations.set(id, value); return value;
+}
+
 async function parseRSSItems(xml: string, source: string): Promise<Article[]> {
   const feed = await parser.parseString(xml);
   return feed.items.slice(0, 25).flatMap((item) => {
@@ -106,21 +119,26 @@ export async function GET() {
   try {
     const health: FeedHealth[] = [];
     const load = async (name: string, url: string, parse: (text: string) => Article[] | Promise<Article[]>) => {
-      let articles: Article[] = [];
-      let status: FeedHealth['status'] = 'unavailable';
-      try {
+      const result = await newsFeedCache.load(name, async (signal) => {
         const res = await fetch(url, {
-          signal: AbortSignal.timeout(8000), next: { revalidate: 300 },
+          signal, cache: 'no-store', redirect: 'error',
           headers: { 'User-Agent': 'Ophanim/1.0 (news feed reader)' },
         });
         if (!res.ok) throw new Error(`Source HTTP ${res.status}`);
-        articles = await parse(await res.text());
-        status = articles.length ? 'ok' : 'empty';
-      } catch { /* A failed feed must not interrupt other feeds. */ }
+        if (Number(res.headers.get('content-length') ?? 0) > 2000000) throw new Error('Feed too large');
+        const text = await res.text();
+        if (Buffer.byteLength(text) > 2000000) throw new Error('Feed too large');
+        return parse(text);
+      });
+      const articles = result.data ?? [];
+      const status: FeedHealth['status'] = result.mode === 'fresh' ? articles.length ? 'ok' : 'empty' : 'unavailable';
       const times = articles.map((item) => publishedTime(item.pubDate)).filter((time): time is number => time !== null);
-      health.push({ name, url, status, count: articles.length, checkedAt: new Date().toISOString(),
+      health.push({ name, url, status, count: articles.length, checkedAt: result.observation.checkedAt!,
+        lastSuccessAt: result.observation.lastSuccessAt, mode: result.mode, staleSince: result.staleSince,
+        latencyMs: result.observation.latencyMs, error: result.observation.error,
+        refresh: refreshLabel('polling', 300),
         latestPublished: times.length ? new Date(Math.max(...times)).toISOString() : null });
-      return articles;
+      return articles.map((article): Article => ({ ...article, feedMode: result.mode, lastSuccessAt: result.observation.lastSuccessAt, staleSince: result.staleSince }));
     };
     const results = await Promise.all([
       ...REVIEWED_TELEGRAM_SOURCES.map((source) => load(`t.me/${source.channel}`, `https://t.me/s/${source.channel}`,
@@ -136,8 +154,13 @@ export async function GET() {
       const region = Object.keys(KEYWORD_COORDS).find((keyword) => text.toLowerCase().includes(keyword));
       const time = publishedTime(article.pubDate);
 
+      const id = crypto.createHash('sha256').update(`${article.source}:${article.link || article.title}`).digest('hex').slice(0, 24);
       return {
-        id: crypto.createHash('sha256').update(`${article.source}:${article.link || article.title}`).digest('hex').slice(0, 24),
+        id,
+        first_seen: firstObserved(id),
+        source_data_mode: article.feedMode,
+        source_last_success: article.lastSuccessAt,
+        source_stale_since: article.staleSince,
         title: article.title,
         description: article.description,
         link: safeSourceUrl(article.link),

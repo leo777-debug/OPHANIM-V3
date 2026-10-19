@@ -27,10 +27,10 @@ Do not fabricate keys, observations, availability, timestamps or successful chec
 ## Milestone 1: central integration inventory
 
 - Added generated API_KEYS.md and an all-empty .env.example (52 service entries,
-  110 environment identifiers), plus a reproducible inventory generator.
+  initially 110, now 111 environment identifiers), plus an inventory generator.
 - Added owner-protected `/admin/integrations` and its API; no UI credential storage.
 - Status uses configuration presence, explicit licence gates for verification
-  sources and process-local observations. Six fixed public probes test reachability.
+  sources and process-local observations. Five fixed public probes test reachability.
 - Tests accept only a registered ID, reject supplied credentials/URLs and
   cross-origin requests, rate-limit calls, and do not return raw provider errors.
 - 320 tests passed, 5 skipped; repaired the test environment typing issue and
@@ -41,10 +41,52 @@ Do not fabricate keys, observations, availability, timestamps or successful chec
 - Existing `.env.example` comments/settings are consolidated into the empty
   inventory deliberately; no private environment files were read or modified.
 
-## Milestone 2 in progress
+## Milestone 2: core intelligence and news resilience (partial)
 
-Independent deterministic story clustering, bounded public-role entity extraction,
-trust metadata and convergence calculations are being connected to the Intel Desk.
+- Stories tab groups cross-publisher reports by canonical URL/title/window,
+  preserves evidence and exposes publisher counts and observed first-seen times.
+- Added dictionary entities, cross-report links, explicit IMO/MMSI/ICAO24 extraction,
+  manually configured trust/affiliation flags and labelled rule-based context.
+- Added configurable convergence with operator independence and unique-type scores.
+  Only news and seismic adapters are wired, so default three-type convergence
+  cannot yet trigger. Remaining signal adapters and alert delivery are pending.
+- Shared bounded news cache coalesces requests; timeout, backoff, circuit breaker,
+  last-good results and stale-since labels do not move the last-success time.
+- Browser testing found over-grouped generic GDACS titles. Added same-publisher
+  identity and distant-reported-location guards plus regression tests.
+- Methods and caveats: docs/INTELLIGENCE_METHODS.md.
+
+## Milestone 3: independent Logistics map
+
+- Removed the pre-existing third-party product iframe and catalogue.
+- Native Ophanim map, regional navigation, layers and organization detail drawers
+  remain. Auth/reference provenance and source-health limitations stay explicit.
+- Added a regression assertion that the workspace has no product iframe dependency.
+
+## Milestone 4: SDK isolation and sign-in return
+
+- SDK metadata/stream require a session in SDK_ORGANIZATION_ID; 401 signed out,
+  403 other tenant, 503 incomplete configuration. Ingestion also needs the existing
+  SDK credential. This is a single-organization, process-local worker contract.
+- Removed invented feed count/latest update; actual receipt and observation times
+  differ. SSE cancellation clears timers and reconnects after a minute for auth.
+- Added limits, conservative errors and valid zero-coordinate handling.
+- Login respects a validated same-site returnTo. Research/SDK docs explain what is
+  available and what still needs implementation; no fake worker was bundled.
+
+## Verification and remaining work
+
+- Baseline: 311 tests passed / 5 skipped, typecheck and build passed.
+- Current: 343 tests passed / 5 skipped (75 files passed); production build passed.
+- Targeted ESLint passed after fixing the effect scheduling and legacy SDK any types.
+- Live reachability audit: 14/14 endpoints reached; NOT a parsing/freshness audit.
+- Browser: protected integration sign-in prompt, Atlas and Stories verified.
+- Full requested browser/load/security matrix is pending. No authenticated admin
+  session or private environment credential was borrowed to fake verification.
+- REPORT.md is an interim report with every requested capability accounted for.
+- First unfinished task remains 01-integrations: finish actual test adapters,
+  persistent fetch health, all existing key UIs/prompts and per-operator inventory.
+- P2/P3/P4 are unfinished; do not mark overall parity complete or merge this work.
 
 ## Task order
 

@@ -21,8 +21,9 @@ import {
 import IntelFeed from '@/components/IntelFeed';
 import LiveAlerts from '@/components/LiveAlerts';
 import IntelligenceExplorer, { type ExplorerData } from '@/components/intelligence/IntelligenceExplorer';
+import StoryAnalysis from '@/components/intelligence/StoryAnalysis';
 
-export type IntelligenceWorkbenchView = 'news' | 'alerts' | 'signals' | 'timeline' | 'regions' | 'sources' | 'clocks';
+export type IntelligenceWorkbenchView = 'news' | 'stories' | 'alerts' | 'signals' | 'timeline' | 'regions' | 'sources' | 'clocks';
 
 type MonitorTab = {
   id: string;
@@ -187,12 +188,14 @@ export default function IntelligenceWorkbench({
                   <button type="button" role="tab" aria-selected={view === 'news'} onClick={() => onViewChange('news')} className={view === 'news' ? 'is-active' : ''}><Newspaper className="h-3.5 w-3.5" /> NEWS</button>
                   <button type="button" role="tab" aria-selected={view === 'alerts'} onClick={() => onViewChange('alerts')} className={view === 'alerts' ? 'is-active' : ''}><Bell className="h-3.5 w-3.5" /> ALERTS</button>
                   <button type="button" role="tab" aria-selected={view === 'signals'} onClick={() => onViewChange('signals')} className={view === 'signals' ? 'is-active' : ''}><Activity className="h-3.5 w-3.5" /> SIGNALS</button>
+                  <button type="button" role="tab" aria-selected={view === 'stories'} onClick={() => onViewChange('stories')} className={view === 'stories' ? 'is-active' : ''}><Newspaper className="h-3.5 w-3.5" /> STORIES</button>
                   <button type="button" role="tab" aria-selected={view === 'timeline'} onClick={() => onViewChange('timeline')} className={view === 'timeline' ? 'is-active' : ''}><History className="h-3.5 w-3.5" /> TIMELINE</button>
                   <button type="button" role="tab" aria-selected={view === 'regions'} onClick={() => onViewChange('regions')} className={view === 'regions' ? 'is-active' : ''}><Globe className="h-3.5 w-3.5" /> REGIONS</button>
                   <button type="button" role="tab" aria-selected={view === 'sources'} onClick={() => onViewChange('sources')} className={view === 'sources' ? 'is-active' : ''}><ListChecks className="h-3.5 w-3.5" /> SOURCES</button>
                   <button type="button" role="tab" aria-selected={view === 'clocks'} onClick={() => onViewChange('clocks')} className={view === 'clocks' ? 'is-active' : ''}><Clock className="h-3.5 w-3.5" /> CLOCKS</button>
                 </div>
                 {view === 'news' && <IntelFeed data={data} onLocate={onLocate} variant="workbench" />}
+                {view === 'stories' && <StoryAnalysis data={data} onLocate={onLocate} />}
                 {view === 'alerts' && <LiveAlerts data={data} onLocate={onLocate} />}
                 {(view === 'timeline' || view === 'regions' || view === 'sources' || view === 'clocks') && <IntelligenceExplorer view={view} data={data} onLocate={onLocate} />}
                 {view === 'signals' && (

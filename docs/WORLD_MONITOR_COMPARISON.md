@@ -12,10 +12,24 @@ coverage and outstanding work. This is not a claim of full parity.
 
 Central configuration now has generated `API_KEYS.md`, an all-empty `.env.example`,
 and an owner-protected Admin → Integrations page. Presence checks are distinguished
-from actual endpoint reachability. Six fixed public probes are implemented;
+from actual endpoint reachability. Five fixed public probes are implemented;
 authenticated probes and persistent fetch observations remain unfinished.
 Credentials are environment-only and never returned by the integrations API.
 No new external data connector is enabled by the integration inventory.
+
+The Intel Desk now includes independent deterministic Stories analysis with
+evidence-preserving groups, limited dictionary entities, manual trust metadata,
+labelled context and a documented convergence method. Only news/seismic adapters
+are wired for convergence; other source types remain pending. News gains bounded
+last-good caching, coalesced requests, backoff/circuit protection and explicit
+stale labels. See `docs/INTELLIGENCE_METHODS.md` for formulas and caveats.
+
+The pre-existing Logistics World Monitor iframe and product-specific catalogue
+were removed. Logistics uses Ophanim's native map and source-attributed controls.
+Unsupported competitor catalogue entries are not treated as implementations.
+SDK reads now require sign-in and the configured organization, and no longer
+invent a latest source update or nine connected feeds. Setup wizard, durable
+health/storage and the broader parity roadmap remain unfinished.
 
 Reference material:
 - https://github.com/koala73/worldmonitor

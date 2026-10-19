@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Newspaper, ChevronDown, ChevronUp, ExternalLink, MapPin, Zap, Download, CheckCheck } from 'lucide-react';
 import { filterNews, newsCsv, NEWS_WINDOWS, safeSourceUrl, type NewsItem } from '@/lib/intelligence/news';
 import { useReadNews } from '@/components/intelligence/useReadNews';
+import { trustFor } from '@/lib/intelligence/analysis';
 import styles from '@/components/intelligence/desk.module.css';
 
 /* ═══════════════════════════════════════════════════════════════
@@ -150,6 +151,10 @@ export default function IntelFeed({ data, onLocate, variant = 'panel' }: IntelFe
                       </span>
                       <span className="text-[8px] font-mono text-[var(--text-muted)] bg-[var(--bg-tertiary)] px-1.5 py-0.5 rounded">
                         {item.source}
+                        {item.source_data_mode === 'stale' ? ` · stale since ${item.source_stale_since ?? 'unknown'}` : ''}
+                        {' · '}{trustFor(item.source).tier}
+                        {trustFor(item.source).stateAffiliated ? ' · state affiliated' : ''}
+                        {trustFor(item.source).propagandaRisk ? ' · propaganda-risk flag' : ''}
                       </span>
                       {item.coords && (
                         <button
