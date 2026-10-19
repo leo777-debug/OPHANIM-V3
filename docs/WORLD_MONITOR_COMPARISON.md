@@ -1,7 +1,21 @@
 # World Monitor / Ophanim Comparison
 
 Reviewed: 2026-10-08. This is a capability comparison, not a claim of complete parity.
-World Monitor source code was not copied into Ophanim.
+No World Monitor code, styles, assets, API, embeds or backend data were used for
+the parity-and-reliability work. Implementations are independent.
+
+## Parity and reliability work (2026-10-19)
+
+The active branch is `parity-and-reliability`. `PARITY/state.json` and
+`PARITY/PROGRESS.md` are the resumable record; `PARITY/REPORT.md` records verified
+coverage and outstanding work. This is not a claim of full parity.
+
+Central configuration now has generated `API_KEYS.md`, an all-empty `.env.example`,
+and an owner-protected Admin → Integrations page. Presence checks are distinguished
+from actual endpoint reachability. Six fixed public probes are implemented;
+authenticated probes and persistent fetch observations remain unfinished.
+Credentials are environment-only and never returned by the integrations API.
+No new external data connector is enabled by the integration inventory.
 
 Reference material:
 - https://github.com/koala73/worldmonitor

@@ -22,7 +22,29 @@ Do not fabricate keys, observations, availability, timestamps or successful chec
 - Existing work includes Shodan, freshness, search and provider changes; preserved.
 - Read repository AGENTS.md and installed Next.js route/client-component guides.
 - Baseline tests: 68 files passed, 1 skipped; 311 tests passed, 5 skipped.
-- Baseline typecheck and production build running; results pending.
+- Baseline typecheck and production build passed.
+
+## Milestone 1: central integration inventory
+
+- Added generated API_KEYS.md and an all-empty .env.example (52 service entries,
+  110 environment identifiers), plus a reproducible inventory generator.
+- Added owner-protected `/admin/integrations` and its API; no UI credential storage.
+- Status uses configuration presence, explicit licence gates for verification
+  sources and process-local observations. Six fixed public probes test reachability.
+- Tests accept only a registered ID, reject supplied credentials/URLs and
+  cross-origin requests, rate-limit calls, and do not return raw provider errors.
+- 320 tests passed, 5 skipped; repaired the test environment typing issue and
+  production build and standalone typecheck passed. All nine integration-specific
+  tests passed after the correction.
+- Limitations: service-specific authenticated probes, payload/data-age validation,
+  persistent observations and global key-required empty-state adoption remain.
+- Existing `.env.example` comments/settings are consolidated into the empty
+  inventory deliberately; no private environment files were read or modified.
+
+## Milestone 2 in progress
+
+Independent deterministic story clustering, bounded public-role entity extraction,
+trust metadata and convergence calculations are being connected to the Intel Desk.
 
 ## Task order
 

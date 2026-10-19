@@ -34,6 +34,7 @@ export default function PlatformShell({ title, children }: { title: string; chil
         return <Link key={item.id} href={item.href} className={`platform-nav__item${active ? ' is-active' : ''}`}><Icon size={17} /><span>{configuration?.terminology[item.id] ?? item.label}</span></Link>;
       })}</nav>
       <Link href="/admin/health" className="platform-nav__health"><span />Platform health</Link>
+      <Link href="/admin/integrations" className="platform-nav__item"><Settings size={17} /><span>Integrations</span></Link>
     </aside>
     <section className="platform-main"><header className="platform-header"><div><p>Configured operational workspace</p><h1>{title}</h1></div><div className="platform-header__actions"><Link href="/onboarding">Configure workspace</Link><Link href="/">Open map</Link></div></header>{children}</section>
   </main>;
