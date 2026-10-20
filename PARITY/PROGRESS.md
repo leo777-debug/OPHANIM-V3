@@ -173,3 +173,20 @@ verified; never infer completion from a catalog entry or this plan.
   URL tracking normalization and fallback reporting. The 368-test/build/typecheck/
   lint milestone above includes these changes. News, seismic and dated FIRMS fire
   observations now feed convergence; other disruption adapters remain unfinished.
+
+## 20 October 2026 — public polling notifications
+
+- Public advisory SSE coalesces one polling loop/server instance, sends changed
+  revision notifications and explicitly labels 300-second polling. Browser
+  fallback polling continues on disconnect. Country advice retains its hourly
+  source cache. No private SDK/organization data enters this channel.
+- Added capacity/rate limits, bounded connection lifetime and timer/subscriber
+  cleanup; heartbeats never claim new source observations. Unit-tested 1,000
+  listeners; 12/12 concurrent local HTTP streams received notification in 2.63 s.
+  This is not a many-browser or multi-instance load benchmark.
+- Browser verified connected channel status and health filtering; screenshot:
+  screenshots/official-health.jpg. Full remaining layout/RTL/Presentation matrix
+  is still pending. Route screenshot is a partial mobile viewport, not a complete
+  desktop geometry validation.
+- Checks: 372 passed, 5 skipped (87 files passed); production build, standalone
+  typecheck and targeted lint passed. Follow docs/PUBLIC_UPDATES.md.

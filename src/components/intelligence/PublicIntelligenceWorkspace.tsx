@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { NormalizedIntelligenceEvent } from '@/lib/intelligence/event-provider';
 import type { SpecialistSource } from '@/lib/intelligence/specialist-providers';
 import { safeSourceUrl } from '@/lib/intelligence/news';
@@ -9,6 +9,8 @@ export default function PublicIntelligenceWorkspace() {
   const [data, setData] = useState<ResponseData | null>(null);
   const [country, setCountry] = useState(''); const [selectedCountry, setSelectedCountry] = useState('');
   const [kind, setKind] = useState('all'); const [query, setQuery] = useState(''); const [message, setMessage] = useState('');
+  const [updates, setUpdates] = useState('Connecting to public update notifications');
+  const revision = useRef('');
   const load = useCallback(async (signal?: AbortSignal) => {
     try {
       const response = await fetch(`/api/public-intelligence${selectedCountry ? `?country=${encodeURIComponent(selectedCountry)}` : ''}`, { signal, cache: 'no-store' });
@@ -17,6 +19,15 @@ export default function PublicIntelligenceWorkspace() {
     } catch (error) { if (!signal?.aborted) setMessage(error instanceof Error ? error.message : 'Public sources unavailable.'); }
   }, [selectedCountry]);
   useEffect(() => { const controller = new AbortController(); void Promise.resolve().then(() => load(controller.signal)); const timer = setInterval(() => void load(controller.signal), 300000); return () => { controller.abort(); clearInterval(timer); }; }, [load]);
+  useEffect(() => {
+    const controller = new AbortController(), source = new EventSource('/api/public-intelligence/stream');
+    source.onopen = () => setUpdates('Public update channel connected; backend polls every 300 s');
+    source.onerror = () => setUpdates('Update channel disconnected/reconnecting; browser polling every 300 s continues');
+    source.addEventListener('public-update', event => {
+      if (event.lastEventId && event.lastEventId !== revision.current) { revision.current = event.lastEventId; void load(controller.signal); }
+    });
+    return () => { controller.abort(); source.close(); };
+  }, [load]);
   const events = useMemo(() => (data?.events ?? []).filter(event => (kind === 'all' || event.eventType === kind) && `${event.title} ${event.summary} ${event.location.label ?? ''}`.toLocaleLowerCase().includes(query.toLocaleLowerCase())).sort((a, b) => (Date.parse(b.startedAt ?? '') || 0) - (Date.parse(a.startedAt ?? '') || 0)), [data, kind, query]);
   const exportCsv = () => {
     const cell = (value: unknown) => `"${String(value ?? '').replace(/^[=+@-]/, "'$&").replaceAll('"', '""')}"`;
@@ -33,6 +44,7 @@ export default function PublicIntelligenceWorkspace() {
     </form>
     <button type="button" onClick={() => void load()}>Refresh</button> <button type="button" onClick={exportCsv}>Export filtered CSV</button>
     {message && <p role="status">{message}</p>}<p>{events.length} loaded publications · last request {data?.checkedAt ?? 'not completed'} · browser refresh every 300 s; individual sources cache at their stated cadence.</p>
+    <p role="status">{updates}. Notifications do not turn periodically published sources into continuous streams. Country-specific advice still follows its hourly source cache.</p>
     <details><summary>Coverage, source rights and gaps</summary>{data?.sources.map(source => {
       const diagnostic = data.diagnostics.find(item => item.providerId === source.id);
       return <article key={source.id}><h3>{source.name}</h3><p>{diagnostic?.status ?? (source.format === 'govuk' && !selectedCountry ? 'Select country' : 'Not checked')} {diagnostic?.message ?? ''}</p><p>{source.region} · {source.language} · {source.licence} · commercial use {source.commercialUse} · key {source.keyNeeded ? 'required' : 'not needed'}</p><p>{source.attribution}</p><p>{source.rateLimits}</p><a href={source.termsUrl} target="_blank" rel="noreferrer">Original source terms</a></article>;

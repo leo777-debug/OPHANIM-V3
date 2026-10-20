@@ -165,3 +165,6 @@ sources. This remains an incomplete parity project; see PARITY/state.json.
 Dataset provenance and formulas: docs/ROUTE_SCENARIO_METHODS.md. New official
 source declarations live in specialist-providers.ts and the existing event
 provider registry. Founder configuration remains centralized in API_KEYS.md.
+Public advisory updates use Ophanim SSE revision notifications over explicitly
+periodic polling. Source cadence remains visible; no continuous upstream stream
+is implied. See docs/PUBLIC_UPDATES.md for capacity and instance limitations.

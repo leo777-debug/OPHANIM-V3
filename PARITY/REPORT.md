@@ -114,7 +114,7 @@ the reason states the missing work rather than implying that keys alone will fix
 | 4.1 Feed health | News timeout/backoff/circuit/cache, persistent connection observations, optional health worker and sustained-outage email; six new official-source payloads parsed in local audit | Complete all-provider/item-age audit, universal durable last-good caches and labelled replay snapshots |
 | 4.2 Keys/separate services | Central empty inventory, server-only AI credentials, protected connection adapters, optional Compose health profile | Remaining optional service containers, protocol adapters and universal unavailable-service states |
 | 4.3 Static reference data | Native Logistics reference labels; route dataset pinned by version/date/hash/licence | Scheduled authoritative importers, change history and live asset-status overlays |
-| 4.4 Periodic refresh | News says Every 300 s; existing SDK SSE remains periodic store checks with cancellation cleanup | Public normalized-event push, cross-instance fanout and per-layer refresh labels |
+| 4.4 Periodic refresh | News says Every 300 s; public advisories receive SSE revision notifications from shared 300-second polling; source cadence is explicit | Other map layers, cross-instance fanout and universal per-layer labels remain pending; country advice follows hourly cache |
 | 4.5 Research/private SDK | Setup docs; SDK reads require session and matching configured tenant; unset configuration disabled | Wizard, actual connection-test gating, send-test-event, durable/scoped SDK storage |
 | 4.6 Protected API UX | Integration sign-in prompt; safe login returnTo; SDK metadata/stream 401 signed-out and 403 other tenant | Remember-me choice, demo organization, full private-route regression suite and all protected-screen prompts |
 
@@ -155,7 +155,7 @@ coverage, a successful real-time subscription or every existing camera/operator.
 ## Checks and screenshots
 
 - Before: typecheck/build passed; 311 tests passed, 5 skipped (68 files passed).
-- Continuation milestone: 368 tests passed, 5 skipped (85 files passed); production
+- Continuation milestone: 372 tests passed, 5 skipped (87 files passed); production
   build, standalone typecheck and targeted lint passed. One database-policy test
   timed out during the first unconstrained concurrent build/test run; rerunning
   with two test workers passed. These results include first-seen persistence and
@@ -166,6 +166,13 @@ coverage, a successful real-time subscription or every existing camera/operator.
   with PGlite; no live migration was applied. Tenant document policies were not changed.
 - Resilience tests include 100 simultaneous callers sharing one source fetch.
   This is not a WebGL marker benchmark or many-browser SSE load test.
+- Public updates: 1,000 hub listeners unit-tested; 12/12 concurrent local HTTP
+  streams received a public polling notification in 2.63 seconds. See
+  public-updates-load.json and docs/PUBLIC_UPDATES.md. These were HTTP clients,
+  not full browsers or a cross-instance throughput benchmark.
+- Browser verified official health filtering (21 publications) and connected
+  polling-notification status: screenshots/official-health.jpg. A future-dated
+  NHC source item is retained with an anomaly warning and excluded from ranking.
 - Full requested Playwright/layout/RTL/mobile/Presentation regression matrix,
   authenticated integration UI and browser-bundle secret scanning remain pending.
 - Signed-out integrations screenshot: `screenshots/integrations-signed-out.jpg`.

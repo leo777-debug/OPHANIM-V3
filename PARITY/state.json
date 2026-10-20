@@ -40,7 +40,7 @@
     {
       "id": "07-limitations",
       "status": "partial",
-      "remaining": "Reference importers, public push, optional Compose services, setup wizard, full session/demo UX"
+      "remaining": "Reference refresh importers, other public-layer push and cross-instance fanout, optional service setup wizard, full session/demo UX"
     },
     {
       "id": "08-validation-report-pr",
@@ -52,7 +52,7 @@
     "baselineTests": "311 passed, 5 skipped",
     "baselineTypecheck": "passed",
     "baselineBuild": "passed",
-    "currentTests": "368 passed, 5 skipped; 85 files passed",
+    "currentTests": "372 passed, 5 skipped; 87 files passed",
     "typecheck": "passed",
     "build": "passed",
     "targetedLint": "passed",
