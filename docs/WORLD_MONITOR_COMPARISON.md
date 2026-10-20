@@ -138,3 +138,30 @@ failures without live network dependency.
 
 The separately pending local-AI changes are preserved, but are not attributed to
 this comparison update. No GitHub commit or deployment is implied by this document.
+
+## Independent parity continuation — 20 October 2026
+
+No World Monitor code, styles, assets, API, embeds or backend data were used.
+The following additions use Ophanim's own components and documented original
+sources. This remains an incomplete parity project; see PARITY/state.json.
+
+- Admin integrations now persist connection observations in a private runtime
+  schema, or an explicitly reported local-file/memory fallback. An optional
+  health worker checks connections and sends configured critical-outage emails.
+  A successful connection is not a claim of current item coverage.
+- Official public advisories use NOAA/NWS, NHC (English and Spanish), CDC and
+  UK FCDO sources, with source-specific rights, coverage and polling metadata.
+  Their timeline supports filtering and CSV. NHC coverage does not include the
+  Arabian Sea or Bay of Bengal. NWS weather warnings are not global siren feeds.
+- Route Explorer independently calculates shortest sea paths and closed-passage
+  alternatives over pinned Apache-2.0 Marnet reference data. It shows distance,
+  constant-speed days, unrouted endpoint connectors and public hazard context.
+  It does not provide navigation or actual road/rail routing.
+- Four hypothetical scenario templates assess the signed-in organization's
+  recorded shipment ports. Every modeled exposure includes inputs, calculation,
+  unresolved records and limitations. Private CSV and browser Print / Save PDF
+  exports require access to the private results.
+
+Dataset provenance and formulas: docs/ROUTE_SCENARIO_METHODS.md. New official
+source declarations live in specialist-providers.ts and the existing event
+provider registry. Founder configuration remains centralized in API_KEYS.md.

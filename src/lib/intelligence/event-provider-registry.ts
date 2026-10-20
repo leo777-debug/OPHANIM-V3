@@ -1,5 +1,8 @@
 import { defaultIntelligenceEventProviders } from "./event-providers";
 import { verifyEventProviders } from '@/lib/verify/providers';
+import { specialistEventProviders } from './specialist-providers';
+import { MARITIME_NETWORK } from '@/lib/route-intelligence/open-network';
+export const registeredReferenceDatasets = [MARITIME_NETWORK];
 import {
   validateNormalizedIntelligenceEvent,
   type IntelligenceEventProvider,
@@ -50,7 +53,7 @@ export class IntelligenceEventProviderRegistry {
 }
 
 export const intelligenceEventProviderRegistry =
-  new IntelligenceEventProviderRegistry([...defaultIntelligenceEventProviders, ...verifyEventProviders]);
+  new IntelligenceEventProviderRegistry([...defaultIntelligenceEventProviders, ...verifyEventProviders, ...specialistEventProviders]);
 
 async function runProvider(
   provider: IntelligenceEventProvider,

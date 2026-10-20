@@ -132,3 +132,31 @@ before review. Only task-owned changes are staged in milestone commits.
 
 The detailed capability list is in REPORT.md. Pending means unimplemented or not
 verified; never infer completion from a catalog entry or this plan.
+
+## 20 October 2026 — official advisories and route/scenario milestone
+
+- Added six official source adapters: NWS warnings; NHC Atlantic, Eastern Pacific
+  and Atlantic Spanish; CDC travel health; selected-country UK FCDO advice.
+  Every adapter records rights, attribution, cadence, keys and geographic limits.
+  A point-in-time local audit parsed all six; see public-intelligence-audit.json
+  and audit-public-intelligence.mjs. Counts are capped at 100/source.
+- Added public source timeline, filters, rights/coverage details and CSV. Fixed
+  the GOV.UK content API's human-page link and flagged a future-dated NHC item;
+  preserve its reported timestamp but exclude it from chronological ranking.
+- Added independent sea-network routing over pinned Apache-2.0 Marnet data,
+  alternatives for eight chokepoints, explicit distance/days formulas, unrouted
+  connectors and public USGS/EONET route context. Network version/hash/provenance
+  are recorded in docs/ROUTE_SCENARIO_METHODS.md.
+- Four scenario templates assess session-scoped organization shipment ports;
+  unknown ports remain unknown. No tenant is selected by a request body. Public
+  route CSV and private scenario CSV plus browser Print / Save PDF are available.
+- Browser verified Jebel Ali to Rotterdam: baseline 11,627 km / 18.69 days;
+  Suez-excluded route 20,486 km / 32.92 days at 14 knots. Signed-out private
+  scenario evaluation showed a sign-in prompt and return link. Added map bounds
+  framing after inspecting the first render. Authenticated browser flow remains
+  unverified; API isolation is tested with fixtures.
+- Checks: 368 passed, 5 skipped (85 files passed); production build, standalone
+  typecheck and targeted lint passed. An earlier unconstrained build/test run
+  timed out in PGlite; two-worker rerun passed without weakening the timeout.
+- These checks use the shared checkout with preserved pre-existing edits.
+  Deployment stays last. No merge has been attempted; broad parity is unfinished.

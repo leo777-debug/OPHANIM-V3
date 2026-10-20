@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuthenticatedActor } from "@/lib/auth/actor";
 import { ingestIntelligenceEvents } from "@/lib/intelligence/provider-ingestion";
-import { intelligenceEventProviderRegistry } from "@/lib/intelligence/event-provider-registry";
+import { intelligenceEventProviderRegistry, registeredReferenceDatasets } from "@/lib/intelligence/event-provider-registry";
 import { requirePlatformCapability } from "@/lib/platform/capabilities";
 import { platformError } from "@/lib/platform/http";
 import { getClientIp, isRateLimited } from "@/lib/ssrf-guard";
@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
     await requirePlatformCapability(actor, "events");
     return NextResponse.json({
       providers: intelligenceEventProviderRegistry.catalog(),
+      referenceDatasets: registeredReferenceDatasets,
     });
   } catch (error) {
     return platformError(error);

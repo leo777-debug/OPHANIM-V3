@@ -15,6 +15,7 @@ interface OphanimMapProps {
   onRightClick?: (coords: { lat: number; lng: number }) => void;
   onViewStateChange?: (vs: MapViewport) => void;
   initialView?: MapViewport;
+  fitBounds?: [[number, number], [number, number]];
   flyToLocation?: { lat: number; lng: number; zoom?: number; ts: number } | null;
   projection?: 'mercator' | 'globe';
   mapStyle?: 'dark' | 'earth' | 'satellite';
@@ -55,7 +56,7 @@ function isExpectedMapTileAbort(error: unknown): boolean {
     && /signal timed out|request was aborted|signal is aborted without reason/i.test(message);
 }
 
-function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightClick, onViewStateChange, initialView, flyToLocation, projection = 'globe', mapStyle = 'dark', sweepData, scanTargets = [], demoMode = false, theme = 'core', providerLayers = [] }: OphanimMapProps) {
+function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightClick, onViewStateChange, initialView, fitBounds, flyToLocation, projection = 'globe', mapStyle = 'dark', sweepData, scanTargets = [], demoMode = false, theme = 'core', providerLayers = [] }: OphanimMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const popupRef = useRef<maplibregl.Popup | null>(null);
@@ -1706,6 +1707,12 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     if (!mapReady || !mapRef.current || !flyToLocation) return;
     mapRef.current.flyTo({ center: [flyToLocation.lng, flyToLocation.lat], zoom: flyToLocation.zoom || 8, duration: 2000 });
   }, [mapReady, flyToLocation]);
+
+  useEffect(() => {
+    if (!mapReady || !mapRef.current || !fitBounds) return;
+    if (!fitBounds.flat().every(Number.isFinite)) return;
+    mapRef.current.fitBounds(fitBounds, { padding: 30, maxZoom: 8, duration: 0 });
+  }, [mapReady, fitBounds]);
 
   // Dynamic projection switching (lightweight — no terrain DEM)
   useEffect(() => {

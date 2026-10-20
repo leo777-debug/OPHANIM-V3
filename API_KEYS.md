@@ -8,6 +8,7 @@ Pricing/quotas vary by plan and may change. “Keyless” describes access, not 
 
 | Service | Environment variables | Unlocks | Free/paid and limits | Sign-up / original documentation | Without a key |
 | --- | --- | --- | --- | --- | --- |
+| Marnet open sea-route network | None | Sea-route and closure-scenario planning | Apache-2.0 packaged network and ports, version 1.6.0; no API quota. | [Provider](https://github.com/genthalili/searoute-py/tree/1.6.0) | Keyless dated reference dataset; not navigation or live status. |
 | NOAA/NWS public warnings | None | Official US weather warnings | Keyless public-domain NWS-authored text; five-minute application cache. | [Provider](https://www.weather.gov/documentation/services-web-api) | Keyless default; US coverage. |
 | NHC Atlantic advisories | None | Official cyclone advisories | Keyless US government text; five-minute cache. | [Provider](https://www.nhc.noaa.gov/aboutrss.shtml) | Keyless default; Atlantic coverage. |
 | NHC Eastern Pacific advisories | None | Official cyclone advisories | Keyless US government text; five-minute cache. | [Provider](https://www.nhc.noaa.gov/aboutrss.shtml) | Keyless default; Eastern Pacific coverage. |

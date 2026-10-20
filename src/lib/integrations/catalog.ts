@@ -16,6 +16,7 @@ const entry = (id: string, name: string, area: string, variables: string[], unlo
   ({ id, name, area, variables, unlocks, pricing, signup, fallback, ...(probe ? { probe } : {}) });
 
 export const INTEGRATIONS: IntegrationDefinition[] = [
+  entry('marnet-reference', 'Marnet open sea-route network', 'Reference data', [], 'Sea-route and closure-scenario planning', 'Apache-2.0 packaged network and ports, version 1.6.0; no API quota.', 'https://github.com/genthalili/searoute-py/tree/1.6.0', 'Keyless dated reference dataset; not navigation or live status.'),
   entry('noaa-public-warnings', 'NOAA/NWS public warnings', 'Public intelligence', [], 'Official US weather warnings', 'Keyless public-domain NWS-authored text; five-minute application cache.', 'https://www.weather.gov/documentation/services-web-api', 'Keyless default; US coverage.', 'https://api.weather.gov/alerts/active?status=actual&message_type=alert'),
   entry('nhc-atlantic', 'NHC Atlantic advisories', 'Public intelligence', [], 'Official cyclone advisories', 'Keyless US government text; five-minute cache.', 'https://www.nhc.noaa.gov/aboutrss.shtml', 'Keyless default; Atlantic coverage.', 'https://www.nhc.noaa.gov/index-at.xml'),
   entry('nhc-pacific', 'NHC Eastern Pacific advisories', 'Public intelligence', [], 'Official cyclone advisories', 'Keyless US government text; five-minute cache.', 'https://www.nhc.noaa.gov/aboutrss.shtml', 'Keyless default; Eastern Pacific coverage.', 'https://www.nhc.noaa.gov/index-ep.xml'),
