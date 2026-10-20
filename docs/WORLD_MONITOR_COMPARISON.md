@@ -172,3 +172,7 @@ The independent public offline shell now stores a deliberately saved, filtered
 official-advisory snapshot with explicit offline timestamps. It caches no private
 HTML or API responses; offline interactive maps are not implemented. Browser
 server-down fallback was verified. See docs/OFFLINE_MODE.md.
+An independent organization forecast register stores analyst-entered, source-linked
+probabilities and future horizons, with immutable inputs and one-time sourced
+outcomes. It computes binary Brier scores explicitly; no automated prediction or
+validated accuracy is implied. See docs/FORECASTS.md and the additive RLS migration.

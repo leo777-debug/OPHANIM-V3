@@ -31,7 +31,7 @@
     {
       "id": "05-analysis-tools",
       "status": "partial",
-      "remaining": "Sea route alternatives and four organization scenario templates added; actual land routes, Deduce and scored forecasts remain"
+      "remaining": "Sea routes, four scenario templates and sourced forecast register added; actual land routes, Deduce and authenticated deployment validation remain"
     },
     {
       "id": "06-platform-ux-api",
@@ -53,7 +53,7 @@
     "baselineTests": "311 passed, 5 skipped",
     "baselineTypecheck": "passed",
     "baselineBuild": "passed",
-    "currentTests": "380 passed, 5 skipped; 90 files passed",
+    "currentTests": "386 passed, 5 skipped; 92 files passed",
     "typecheck": "passed",
     "build": "passed",
     "targetedLint": "passed",

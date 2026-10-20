@@ -224,3 +224,22 @@ verified; never infer completion from a catalog entry or this plan.
   database-test milestones sequentially; no test deadline was weakened.
 - Next in progress: organization-scoped, source-linked forecast records and Brier
   scoring. The forecast migration was generated locally, not applied to a database.
+
+## 20 October 2026 — sourced forecast register
+
+- Added authenticated organization forecast panel/API: question, evidence URL,
+  analyst probability, prospective horizon and rationale. Initial inputs remain
+  immutable; after the horizon an authorized analyst can record one sourced
+  outcome. Binary Brier score is shown transparently, unresolved = unscored.
+- Additive migration has forced RLS and no browser write policies/grants. Tests
+  execute real SQL for two tenants, horizon gating, immutable probability,
+  repeat-resolution prevention and browser-role isolation. The migration is not
+  applied to a live database. No automatic prediction or source scraping occurs.
+- API exposes write capability; UI waits for access checks and viewers get read-only
+  controls. Signed-out browser prompt and safe return link verified. Screenshot:
+  screenshots/forecasts-signed-out.jpg. Authenticated production UI remains pending.
+- Checks: 386 passed, 5 skipped (92 files passed); production build, standalone
+  typecheck and targeted lint passed. Built browser token-format scan found zero
+  matches in 61 JavaScript chunks, without reading env files or printing values.
+- Broad specialist coverage, global UX/API and end-to-end validation still need
+  work. Deployment remains last; this does not satisfy the condition for merging.

@@ -89,7 +89,7 @@ the reason states the missing work rather than implying that keys alone will fix
 | Route Explorer | Partial | Pinned Apache-2.0 sea network, port search, eight passage choices, alternatives, extra distance/days, public hazard context and native map. Endpoint connectors are explicitly unrouted; road/rail legs remain pending. |
 | Scenario engine | Partial | Four hypothetical templates assess session-scoped organization shipments, with exact port resolution, unknowns, calculations, CSV and browser Print / Save PDF. Up to 200 records; no persisted scenarios or capacity/queue simulation. |
 | Deduce/what-if analyst | Blocked | Sourced structured FACT/INFERENCE analysis experience pending. |
-| Forecast panel/scoring | Blocked | Question/horizon/outcome/probability persistence and scoring pending. |
+| Forecast panel/scoring | Partial | Organization-scoped analyst probability register, evidence/horizon, immutable initial record, sourced outcome after horizon and binary Brier score. Forced RLS and API guards tested; live migration/authenticated browser validation pending. No automated predictions or validated accuracy claim. |
 | Panel management | Blocked | General drag/resize/layout persistence not implemented. |
 | Dense marker clustering/LOD | Partial | Existing map preserved; new all-layer clustering/load validation pending. |
 | Global Ctrl/Cmd+K and shortcut help | Partial | Existing search retained; unified keyboard palette/help pending. |
@@ -155,7 +155,7 @@ coverage, a successful real-time subscription or every existing camera/operator.
 ## Checks and screenshots
 
 - Before: typecheck/build passed; 311 tests passed, 5 skipped (68 files passed).
-- Continuation milestone: 380 tests passed, 5 skipped (90 files passed); production
+- Continuation milestone: 386 tests passed, 5 skipped (92 files passed); production
   build, standalone typecheck and targeted lint passed. One database-policy test
   timed out during the first unconstrained concurrent build/test run; rerunning
   with two test workers passed. These results include first-seen persistence and
@@ -177,6 +177,13 @@ coverage, a successful real-time subscription or every existing camera/operator.
   navigated to another app page and read the cached offline shell/snapshot. Clear
   snapshot succeeded. Screenshot: screenshots/offline-public-snapshot.jpg. No
   organization data was cached or authenticated account used in this check.
+- Forecast PostgreSQL fixtures verify cross-tenant isolation, future-horizon
+  gating, immutable probabilities, one-time outcome resolution and browser-role
+  RLS denial. Signed-out browser prompt/return link verified in
+  screenshots/forecasts-signed-out.jpg. No live forecast migration was applied.
+- Built-client known-token-format scan: 61 JavaScript chunks, zero findings; see
+  client-secret-audit.json. This limited pattern scan is not a proof about all
+  arbitrary secret formats or every runtime API response.
 - Full requested Playwright/layout/RTL/mobile/Presentation regression matrix,
   authenticated integration UI and browser-bundle secret scanning remain pending.
 - Signed-out integrations screenshot: `screenshots/integrations-signed-out.jpg`.
