@@ -260,3 +260,5 @@ worktree, preserve unrelated local edits, retarget the draft PR appropriately an
 re-run regressions before any merge or deployment. See task 00a in state.json.
 
 Combined default integration (20 October): default d22f6a0 is now reconciled in the isolated managed worktree, preserving Presentation, shared map and current AI behavior with server-only credentials. Anonymous demo auth fallback removed to maintain session requirements. Clean combined suite: 529 passed, 5 skipped; typecheck/build/targeted lint passed. Earlier screenshots/checks remain historical. Dependency audit contains critical Next.js/MapLibre findings; remediation and renewed browser checks are pending. PR base has not yet been retargeted.
+
+Dependency remediation: Next16.4.2/MapLibre6.15.0/Sharp0.35.5 pinned, compatible transitive fixes applied. 531 tests passed, 5 skipped; typecheck/lint/Webpack build passed. Production audit zero findings; five dev-only lint-chain high advisories remain without a compatible patch. See docs/DEPENDENCY_SECURITY.md. Browser validation is running, not yet passed.

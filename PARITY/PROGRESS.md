@@ -414,3 +414,9 @@ verified; never infer completion from a catalog entry or this plan.
   transitive findings. Raw audit saved in dependency-audit.json. Next task: apply
   supported patched versions, verify migration behavior, then run combined browser
   regressions. Draft PR still needs its base corrected; deployment remains last.
+
+## 20 October 2026 — patched map/framework dependencies
+
+- Pinned Next/eslint-config-next16.4.2, MapLibre6.15.0 and Sharp0.35.5; compatible transitive updates. Production npm audit: zero findings. Full tree: five high dev-only braces/lint-chain findings with no compatible patch; no forced downgrade. See docs/DEPENDENCY_SECURITY.md and dated audit JSON.
+- Migrated namespace imports, Next-emitted worker URL, nested GeoJSON/cache formats and public projection/unprojection selection. Escaped additional sweep popup values. Turbopack rejects upstream dynamic worker URL analysis; supported Webpack dev/build now explicit.
+- Checks: 531 passed, 5 skipped; typecheck/targeted lint and Webpack production build passed. Full disposable migration chain with pgvector passed; synthetic-session Presentation browser harness running. No real credentials or production data used; no remote push/deployment.

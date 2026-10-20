@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import maplibregl from 'maplibre-gl';
+import * as maplibregl from 'maplibre-gl';
 import OphanimMap from '@/components/OphanimMap';
 import { atlasFallbackBasemap } from '@/lib/presentation/basemap';
 import { atlasPresentationData, pickPublicMapPoint } from '@/lib/presentation/map-adapter';
@@ -49,7 +49,12 @@ export default function PresentationGlobe({ feeds, hidden, onSelect, locate, pro
         // Pick the nearest visible original observation without decoding tiles.
         const entity = pickPublicMapPoint(feeds,hidden,event.point,
           (lng,lat) => map.project([lng+360*Math.round((map.getCenter().lng-lng)/360),lat]),
-          (lng,lat) => map.transform.isLocationOccluded(new maplibregl.LngLat(lng,lat)));
+          (lng,lat) => {
+            // A back-side globe point projects onto the front hemisphere. Public
+            // unproject must return the original location before it is selectable.
+            const visible = map.unproject(map.project([lng,lat]));
+            return new maplibregl.LngLat(lng,lat).distanceTo(visible) > 10;
+          });
         if (entity) onSelect(entity);
       } catch { /* A tile replaced during a click is not an application failure. */ }
     };

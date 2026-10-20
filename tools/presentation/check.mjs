@@ -8,7 +8,7 @@ import { startTestDatabase,seedReplay } from './test-db.mjs';
 import { checkTools } from './check-tools.mjs';
 
 const port=Number(process.env.PRESENTATION_TEST_PORT ?? 3107),url=`http://127.0.0.1:${port}`;
-const output='presentation-evidence';
+const output=process.env.PRESENTATION_TEST_OUTPUT ?? 'PARITY/presentation-validation';
 await mkdir(`${output}/screenshots`,{recursive:true});
 const database=await startTestDatabase(Number(process.env.PRESENTATION_TEST_DB_PORT ?? 55439));
 let server,browser;const checks=[],errors=[],consoleErrors=[],logs=[];
@@ -33,7 +33,7 @@ async function eventually(fn,timeout=35000) {
 try {
   await seedReplay(database.db);
   const env=Object.fromEntries(Object.entries(process.env).filter(([key])=>!/(KEY|SECRET|TOKEN|PASSWORD|SUPABASE|DATABASE_URL|APP_URL|UMAMI)/i.test(key)));
-  Object.assign(env,{NODE_ENV:'production',NEXT_TELEMETRY_DISABLED:'1',NEXT_DEV_DIST_DIR:'.next-presentation',DATABASE_URL:database.url+'?sslmode=disable',APP_URL:url,NODE_OPTIONS:`--import "${new URL('./network-guard.mjs',import.meta.url).href}"`});
+  Object.assign(env,{NODE_ENV:'production',NEXT_TELEMETRY_DISABLED:'1',NEXT_DEV_DIST_DIR:process.env.PRESENTATION_TEST_DIST_DIR ?? '.next',DATABASE_URL:database.url+'?sslmode=disable',APP_URL:url,NODE_OPTIONS:`--import "${new URL('./network-guard.mjs',import.meta.url).href}"`});
   server=spawn(process.execPath,['node_modules/next/dist/bin/next','start','--hostname','127.0.0.1','--port',String(port)],{env,stdio:['ignore','pipe','pipe'],windowsHide:true});
   for(const stream of [server.stdout,server.stderr])stream.on('data',chunk=>logs.push(chunk.toString()));
   await eventually(async()=>{assert.equal(server.exitCode,null,'Local server exited before readiness');assert.equal((await request('/api/presentation/settings')).status,200);},60000);
@@ -46,7 +46,10 @@ try {
   } else {
   assert.equal((await settings()).enabled,false);
   const originalRoutes=['/','/atlas','/operations','/imports','/logistics','/logistics/rescue','/onboarding','/login'];
-  for(const route of originalRoutes.filter(route=>route!=='/atlas'))assert.equal((await request(route)).status,200,route);
+  for(const route of originalRoutes.filter(route=>!['/','/atlas'].includes(route)))assert.equal((await request(route)).status,200,route);
+  const home=await request('/');
+  assert.equal(home.status,307);
+  assert.equal(new URL(home.headers.get('location'),url).pathname,'/logistics/map');
   assert.equal((await request('/atlas?tool=shodan')).status,307,'Legacy Atlas now aliases the operational map');
   assert.equal((await request('/presentation')).status,307);
   pass('OFF keeps original pages reachable, presentation page redirects home');
@@ -101,9 +104,9 @@ try {
   page.on('console',message=>{if(message.type()==='error')consoleErrors.push(`${message.text()} ${message.location().url}`);});
   await page.goto(url,{waitUntil:'networkidle'});
   assert.equal(await page.getByRole('group',{name:'Presentation view'}).count(),0);
-  await page.keyboard.press('Control+Shift+P');assert.equal(new URL(page.url()).pathname,'/');
+  await page.keyboard.press('Control+Shift+P');assert.equal(new URL(page.url()).pathname,'/logistics/map');
   await page.screenshot({path:`${output}/screenshots/off-original-site.png`});
-  pass('Manual-equivalent OFF browser check: original landing page, no controls or keyboard shortcut');
+  pass('OFF browser check: operational map homepage, no Presentation controls or keyboard switch');
   const warm=Date.now();await save({enabled:true});
   await eventually(async()=>assert.ok(isMapRedirect(await request('/imports'))),6000);
   pass('Runtime database switch without redeploy',{applyMilliseconds:Date.now()-warm});
@@ -202,7 +205,7 @@ try {
   await eventually(async()=>assert.equal((await settings()).enabled,false));
   await page.goto(url);await page.waitForLoadState('networkidle');
   assert.equal(await page.getByRole('group',{name:'Presentation view'}).count(),0);
-  await page.keyboard.press('Control+Shift+P');assert.equal(new URL(page.url()).pathname,'/');
+  await page.keyboard.press('Control+Shift+P');assert.equal(new URL(page.url()).pathname,'/logistics/map');
   pass('Owner dashboard turns OFF without redeploy; normal site returns and controls disappear');
   assert.equal(errors.length,0,errors.join('\n'));assert.equal(consoleErrors.length,0,consoleErrors.join('\n'));pass('No uncaught or console browser errors on map and switch path');
   await writeFile(`${output}/results.json`,JSON.stringify({checkedAt:new Date().toISOString(),checks,browserErrors:errors,consoleErrors,syntheticFixturesOnly:true},null,2));

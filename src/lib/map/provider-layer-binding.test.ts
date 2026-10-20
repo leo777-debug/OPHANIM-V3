@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type maplibregl from 'maplibre-gl';
+import type * as maplibregl from 'maplibre-gl';
 import type { ProviderMapLayer } from '@/lib/providers/types';
 import { bindProviderLayers } from './provider-layer-binding';
 function fakeMap(initiallyReady: boolean) {

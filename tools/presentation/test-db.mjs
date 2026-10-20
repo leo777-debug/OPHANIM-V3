@@ -1,11 +1,12 @@
 import { PGlite } from '@electric-sql/pglite';
 import { pgcrypto } from '@electric-sql/pglite/contrib/pgcrypto';
+import { vector } from '@electric-sql/pglite-pgvector';
 import { PGLiteSocketServer } from '@electric-sql/pglite-socket';
 import { readFile,readdir } from 'node:fs/promises';
 import { createHash,randomBytes,scryptSync } from 'node:crypto';
 
 export async function startTestDatabase(port=55439) {
-  const db=new PGlite({extensions:{pgcrypto}});
+  const db=new PGlite({extensions:{pgcrypto,vector}});
   await db.exec(`create role anon;create role authenticated;create role service_role bypassrls;
     create schema auth;create table auth.users(id uuid primary key);
     create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;

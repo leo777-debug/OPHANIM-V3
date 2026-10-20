@@ -1,6 +1,6 @@
 'use client';
 import { useEffect } from 'react';
-import type maplibregl from 'maplibre-gl';
+import type * as maplibregl from 'maplibre-gl';
 import type { ProviderMapLayer } from '@/lib/providers/types';
 import { bindProviderLayers } from '@/lib/map/provider-layer-binding';
 

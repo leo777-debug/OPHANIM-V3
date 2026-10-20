@@ -1,4 +1,4 @@
-import type maplibregl from 'maplibre-gl';
+import type * as maplibregl from 'maplibre-gl';
 import type { GeoJSONSourceSpecification } from 'maplibre-gl';
 import type { ProviderMapLayer } from '@/lib/providers/types';
 
