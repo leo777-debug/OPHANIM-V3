@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import dynamic from 'next/dynamic';
+import { supportsEntityEnrichment } from '@/lib/map-entities';
 import {
   X, Maximize2, Minimize2, Loader2, AlertTriangle,
   Plane, Ship, Building2, User, Globe, Newspaper, ShieldAlert,
@@ -48,9 +49,10 @@ const TYPE_ICONS: Record<string, typeof Plane> = {
 interface Props {
   entity: { type: string; id: string; label?: string; properties?: Record<string, any> } | null;
   onClose: () => void;
+  embedded?: boolean;
 }
 
-function EntityGraphPanel({ entity, onClose }: Props) {
+function EntityGraphPanel({ entity, onClose, embedded = false }: Props) {
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -108,7 +110,7 @@ function EntityGraphPanel({ entity, onClose }: Props) {
     setExpandedIds(new Set());
     setSelectedNode(root);
     setError(null);
-    expandEntity(entity.type, entity.id, entity.properties);
+    if (supportsEntityEnrichment(entity.type)) expandEntity(entity.type, entity.id, entity.properties);
   }, [entity]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleNodeClick = useCallback((node: any) => {
@@ -195,9 +197,9 @@ function EntityGraphPanel({ entity, onClose }: Props) {
       <motion.div
         initial={{ x: 500, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 500, opacity: 0 }}
         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-        className="fixed top-0 right-0 h-full z-[500] flex flex-col glass-panel"
+        className={embedded ? 'relative h-full min-h-0 flex flex-col' : 'fixed top-0 right-0 h-full z-[500] flex flex-col glass-panel'}
         style={{
-          width: expanded ? '60vw' : '480px', maxWidth: '90vw',
+          width: embedded ? '100%' : expanded ? '60vw' : '480px', maxWidth: embedded ? '100%' : '90vw',
           borderLeft: '1px solid var(--border-primary)',
           borderRight: 'none',
           borderTop: 'none',
@@ -327,7 +329,7 @@ function EntityGraphPanel({ entity, onClose }: Props) {
                   ))}
                 </div>
               )}
-              {!expandedIds.has(`${selectedNode.type}:${selectedNode.id.includes(':') ? selectedNode.id.split(':').slice(1).join(':') : selectedNode.id}`) && (
+              {supportsEntityEnrichment(selectedNode.type) && !expandedIds.has(`${selectedNode.type}:${selectedNode.id.includes(':') ? selectedNode.id.split(':').slice(1).join(':') : selectedNode.id}`) && (
                 <button onClick={() => {
                   const rawId = selectedNode.id.includes(':') ? selectedNode.id.split(':').slice(1).join(':') : selectedNode.id;
                   expandEntity(selectedNode.type, rawId);

@@ -11,7 +11,7 @@ No claim is made about the provenance of historical commits outside this work.
 ## Section 2: central keys
 
 **Partial.** API_KEYS.md documents 63 service entries/groups and `.env.example`
-contains 119 deliberately empty configuration identifiers, generated from source
+contains 118 deliberately empty configuration identifiers, generated from source
 without reading private environment files. The inventory includes keyless services,
 credentials, optional workers, runtime settings and reserved-but-unused keys.
 Some keyless catalogue entries group multiple operators (especially cameras and
@@ -258,3 +258,5 @@ This was discovered during the browser/ancestry audit; previous checks do not
 validate preservation of the current default branch. Integrate in an isolated
 worktree, preserve unrelated local edits, retarget the draft PR appropriately and
 re-run regressions before any merge or deployment. See task 00a in state.json.
+
+Combined default integration (20 October): default d22f6a0 is now reconciled in the isolated managed worktree, preserving Presentation, shared map and current AI behavior with server-only credentials. Anonymous demo auth fallback removed to maintain session requirements. Clean combined suite: 529 passed, 5 skipped; typecheck/build/targeted lint passed. Earlier screenshots/checks remain historical. Dependency audit contains critical Next.js/MapLibre findings; remediation and renewed browser checks are pending. PR base has not yet been retargeted.

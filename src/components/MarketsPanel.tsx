@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import AiOverview from './AiOverview';
 
-interface MarketsPanelProps { data: any; spaceWeather?: any; }
+interface MarketsPanelProps { data: any; spaceWeather?: any; embedded?: boolean; }
 
 const SECTIONS = [
   { key: 'indices', label: 'INDICES', icon: LineChart },
@@ -37,7 +37,7 @@ function Ticker({ name, data: d }: { name: string; data: any }) {
   );
 }
 
-export default function MarketsPanel({ data, spaceWeather }: MarketsPanelProps) {
+export default function MarketsPanel({ data, spaceWeather, embedded = false }: MarketsPanelProps) {
   const [expanded, setExpanded] = useState(true);
   const [maximized, setMaximized] = useState(false);
   const [activeSection, setActiveSection] = useState('stocks');
@@ -49,20 +49,20 @@ export default function MarketsPanel({ data, spaceWeather }: MarketsPanelProps) 
 
   const content = (
     <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.6, duration: 0.6 }} className={`glass-panel p-3 pointer-events-auto transition-all duration-300 flex flex-col ${maximized ? 'fixed inset-4 z-[9999] bg-[#0a0a09]/95 backdrop-blur-3xl' : ''}`}>
-      <button onClick={() => setExpanded(!expanded)} className="flex items-center justify-between w-full mb-2">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between w-full mb-2">
+        <button onClick={() => setExpanded(!expanded)} aria-expanded={expanded} className="flex items-center gap-2">
           <BarChart3 className="w-3.5 h-3.5 text-[var(--gold-primary)]" />
           <span className="hud-text text-[12px] text-[var(--text-primary)]">MARKETS & INTEL</span>
-          <span className="gotham-tag gotham-tag--low" style={{ fontSize: '7px', padding: '1px 4px' }}>LIVE</span>
-        </div>
+          <span className="gotham-tag gotham-tag--low" style={{ fontSize: '7px', padding: '1px 4px' }}>{data.markets ? 'SOURCE DATA' : 'NO CURRENT DATA'}</span>
+        </button>
         <div className="flex items-center gap-2">
           <div className="w-1.5 h-1.5 rounded-full bg-[var(--alert-green)] animate-ophanim-pulse" />
-          <button onClick={(e) => { e.stopPropagation(); setMaximized(!maximized); if (!expanded && !maximized) setExpanded(true); }} className="hover:text-white transition-colors" title={maximized ? "Restore" : "Maximize"}>
+          {!embedded && <button onClick={(e) => { e.stopPropagation(); setMaximized(!maximized); if (!expanded && !maximized) setExpanded(true); }} className="hover:text-white transition-colors" title={maximized ? "Restore" : "Maximize"}>
             {maximized ? <Minimize2 className="w-3.5 h-3.5 text-[var(--text-muted)]" /> : <Maximize2 className="w-3.5 h-3.5 text-[var(--text-muted)]" />}
-          </button>
+          </button>}
           {expanded ? <ChevronUp className="w-3.5 h-3.5 text-[var(--text-muted)]" /> : <ChevronDown className="w-3.5 h-3.5 text-[var(--text-muted)]" />}
         </div>
-      </button>
+      </div>
 
       <AnimatePresence>
         {expanded && (

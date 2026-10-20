@@ -1,11 +1,21 @@
 import { describe, expect, it } from 'vitest';
+import { legacyAtlasDestination } from '@/lib/unified-map';
 import { decodeMapView, encodeMapView, hasMapView, hasPrivateViewLayers, publicMapViewUrl, restorePublicViewLayers, type MapViewSettings } from './view-url';
 const view: MapViewSettings = { viewport: { latitude: 25, longitude: 55, zoom: 4 }, activeLayers: { flights: false, earthquakes: true, cables: true }, projection: 'mercator', mapStyle: 'dark' };
 describe('public map settings links', () => {
-  it('round trips position, projection, basemap and exact public layer selection at the Atlas route', () => {
+  it('round trips position, projection, basemap and exact public layer selection at the unified map route', () => {
     const url = new URL(publicMapViewUrl('https://app.example', view)), restored = decodeMapView(url.searchParams);
-    expect(url.pathname).toBe('/atlas'); expect(restored).toEqual({ viewport: view.viewport, projection: 'mercator', mapStyle: 'dark', layers: ['cables', 'earthquakes'] });
+    expect(url.pathname).toBe('/logistics/map'); expect(url.searchParams.get('view')).toBe('full'); expect(restored).toEqual({ viewport: view.viewport, projection: 'mercator', mapStyle: 'dark', layers: ['cables', 'earthquakes'] });
     expect(hasMapView(url.searchParams)).toBe(true); expect(url.searchParams.has('token')).toBe(false);
+  });
+  it('keeps the Presentation view choice separate from the map settings version', () => {
+    const url = new URL(publicMapViewUrl('https://app.example', view, 'map'));
+    expect(url.pathname).toBe('/presentation');
+    expect(url.searchParams.get('view')).toBe('map');
+    expect(url.searchParams.get('mapVersion')).toBe('1');
+    expect(decodeMapView(url.searchParams).viewport).toEqual(view.viewport);
+    const legacy = new URL('https://app.example' + legacyAtlasDestination(Object.fromEntries(url.searchParams)));
+    expect(decodeMapView(legacy.searchParams)).toEqual(decodeMapView(url.searchParams));
   });
   it('does not turn absent coordinates into zero, and preserves a real zero/legacy lon', () => {
     expect(decodeMapView(new URLSearchParams()).viewport).toBeNull(); expect(hasMapView(new URLSearchParams())).toBe(false);

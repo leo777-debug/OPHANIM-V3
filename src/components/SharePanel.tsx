@@ -13,17 +13,18 @@ interface SharePanelProps {
   mouseCoords?: { lat: number; lng: number } | null;
   projection?: MapProjection;
   mapStyle?: MapStyle;
+  surface?: 'full' | 'map';
 }
 
-export default function SharePanel({ mapView, activeLayers, projection = 'globe', mapStyle = 'dark' }: SharePanelProps) {
+export default function SharePanel({ mapView, activeLayers, projection = 'globe', mapStyle = 'dark', surface = 'full' }: SharePanelProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState('');
 
   const share = useMemo(() => {
-    try { return { url: publicMapViewUrl(typeof window !== 'undefined' ? window.location.origin : 'https://ophanim.live', { viewport: mapView, activeLayers, projection, mapStyle }), error: '' }; }
+    try { return { url: publicMapViewUrl(typeof window !== 'undefined' ? window.location.origin : 'https://ophanim.live', { viewport: mapView, activeLayers, projection, mapStyle }, surface), error: '' }; }
     catch (error) { return { url: '', error: error instanceof Error ? error.message : 'Public view sharing unavailable.' }; }
-  }, [mapView, activeLayers, projection, mapStyle]);
+  }, [mapView, activeLayers, projection, mapStyle, surface]);
 
   const copyToClipboard = useCallback(async () => {
     const url = share.url;
@@ -48,8 +49,10 @@ export default function SharePanel({ mapView, activeLayers, projection = 'globe'
       }
       if (e.key === 'Escape') setIsOpen(false);
     };
+    const open = () => setIsOpen(true);
+    window.addEventListener('ophanim:share-map', open);
     window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    return () => { window.removeEventListener('keydown', handler); window.removeEventListener('ophanim:share-map', open); };
   }, []);
 
   return (
@@ -61,7 +64,7 @@ export default function SharePanel({ mapView, activeLayers, projection = 'globe'
         whileTap={{ scale: 0.95 }}
         className="glass-panel w-8 h-8 flex items-center justify-center pointer-events-auto hover:border-[var(--gold-primary)] transition-colors"
         title="Share view (S)"
-        aria-label="Share public map settings"
+        aria-label="Share map view"
       >
         <Share2 className="w-3.5 h-3.5 text-[var(--gold-primary)]" />
       </motion.button>

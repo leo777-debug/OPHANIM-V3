@@ -11,7 +11,7 @@
     {
       "id": "00a-baseline-alignment",
       "status": "partial",
-      "remaining": "URGENT: align committed parity work with actual default feat/gdacs-weather-ai-overview (d22f6a0 observed, 21 missing commits), preserving Presentation/auth/map/AI fixes. Use an attached isolated worktree; original checkout retains unrelated dirty work. Retarget draft PR after reconciliation and rerun all checks."
+      "remaining": "Default d22f6a0 integrated locally; combined 529 tests/typecheck/build passed. Dependency advisories, combined browser validation and draft PR retarget remain before closing baseline milestone."
     },
     {
       "id": "01-integrations",
@@ -58,14 +58,15 @@
     "baselineTests": "311 passed, 5 skipped",
     "baselineTypecheck": "passed",
     "baselineBuild": "passed",
-    "currentTests": "436 passed, 5 skipped; 106 files passed",
+    "currentTests": "529 passed, 5 skipped; 116 files passed (isolated combined checkout)",
     "typecheck": "passed",
     "build": "passed",
     "targetedLint": "passed",
-    "publicReachability": "14/14; HTTP only, not freshness/payload"
+    "publicReachability": "14/14; HTTP only, not freshness/payload",
+    "dependencyAudit": "12 findings; patched upgrades and validation pending"
   },
   "overallStatus": "in_progress",
-  "resumeInstruction": "Read REPORT.md and PROGRESS.md, then list attached worktrees and use the isolated parity integration checkout if present. Preserve the original checkout's unrelated dirty files. First reconcile the actual default branch's Presentation/auth/map/AI commits (00a-baseline-alignment), then resume 01-integrations and broad parity. Do not mark complete or merge from the old foundation baseline.",
+  "resumeInstruction": "Use the attached parity-default-alignment worktree. Preserve the original detached checkout and unrelated dirty work. Finish dependency updates and combined Presentation/map browser regression, retarget PR25 to actual default, then resume 01-integrations and broad parity. Deployment last; merge only after requested work is complete.",
   "baselineCommit": "e0898ef",
   "pullRequest": "https://github.com/leo777-debug/OPHANIM-V3/pull/25",
   "preserveExistingChanges": true,

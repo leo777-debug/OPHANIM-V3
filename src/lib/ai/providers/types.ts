@@ -16,6 +16,7 @@ export interface AiGenerationRequest {
   input?: string;
   context?: unknown;
   mode?: 'logistics' | 'general';
+  maxOutputTokens?: number;
 }
 
 export interface AiProvider {

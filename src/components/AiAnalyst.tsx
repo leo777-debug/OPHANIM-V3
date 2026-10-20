@@ -106,6 +106,7 @@ interface ChatMessage {
 interface AiAnalystProps {
   data: DashboardData;
   mode?: 'briefing' | 'settings';
+  embedded?: boolean;
 }
 
 const subscribeToHydration = () => () => {};
@@ -196,7 +197,7 @@ function renderMarkdown(text: string): string {
    Component
    ───────────────────────────────────────────────────────────── */
 
-export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
+export default function AiAnalyst({ data, mode = 'briefing', embedded = false }: AiAnalystProps) {
   const isClient = useSyncExternalStore(subscribeToHydration, clientSnapshot, serverSnapshot);
   const [configHydrated, setConfigHydrated] = useState(false);
   const [previousMode, setPreviousMode] = useState(mode);
@@ -214,6 +215,8 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
   const [keySaved, setKeySaved] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('');
   const [testingConnection, setTestingConnection] = useState(false);
+  const [loadingModels, setLoadingModels] = useState(false);
+  const [availableModels, setAvailableModels] = useState<string[]>([]);
   const [monitorMinutes, setMonitorMinutes] = useState(0);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -378,6 +381,26 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
     finally { setTestingConnection(false); }
   };
 
+  const loadModels = async () => {
+    setLoadingModels(true);
+    setAvailableModels([]);
+    setConnectionStatus('Checking provider model access...');
+    try {
+      const response = await fetch('/api/ai/models', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ baseUrl: baseUrlInput, model: modelInput }),
+        signal: AbortSignal.timeout(25000),
+      });
+      const result = await response.json() as { models?: string[]; message?: string; error?: string };
+      if (!response.ok) { setConnectionStatus(result.error ?? 'Model access check failed.'); return; }
+      setAvailableModels(result.models ?? []);
+      setConnectionStatus(result.message ?? 'Model list loaded.');
+      // Separate model discovery and completion on providers with a one-request-per-second limit.
+      await new Promise(resolve => setTimeout(resolve, 1200));
+    } catch { setConnectionStatus('Unable to load provider models through Ophanim.'); }
+    finally { setLoadingModels(false); }
+  };
+
   const handleSandboxResearch = useCallback(async () => {
     const subject = inputText.trim();
     if (!subject || isLoading) return;
@@ -503,13 +526,13 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
         {isOpen && (
           <>
             {/* Backdrop on mobile */}
-            <motion.div
+            {!embedded && <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[600] md:hidden"
               onClick={() => setIsOpen(false)}
-            />
+            />}
 
             {/* Main Panel */}
             <motion.div
@@ -517,7 +540,7 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 40, scale: 0.95 }}
               transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-              className="fixed bottom-0 right-0 md:bottom-6 md:right-6 z-[700] w-full md:w-[440px] h-[85vh] md:h-[680px] md:max-h-[85vh] flex flex-col md:rounded-2xl overflow-hidden"
+              className={embedded ? 'relative w-full min-h-full flex flex-col' : 'fixed bottom-0 right-0 md:bottom-6 md:right-6 z-[700] w-full md:w-[440px] h-[85vh] md:h-[680px] md:max-h-[85vh] flex flex-col md:rounded-2xl overflow-hidden'}
               style={{
                 background: 'linear-gradient(180deg, rgba(8, 10, 20, 0.96) 0%, rgba(6, 6, 12, 0.98) 100%)',
                 border: '1px solid rgba(124, 255, 203, 0.2)',
@@ -550,7 +573,7 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
                   <div className="flex flex-col">
                     <span className="hud-text text-[11px] text-[var(--text-heading)]">OPHANIM ANALYST</span>
                     <span className="text-[7px] font-mono tracking-[0.2em] text-[var(--text-muted)]">
-                      GEMINI 2.0 FLASH • ONLINE
+                      CONFIGURED AI PROVIDER
                     </span>
                   </div>
                 </div>
@@ -626,6 +649,8 @@ export default function AiAnalyst({ data, mode = 'briefing' }: AiAnalystProps) {
                         <p className="text-xs">Keys are configured on the server in <a href="/admin/integrations">Admin → Integrations</a>. Browser settings store public model preferences only.</p>
                         <input value={baseUrlInput} onChange={(e) => { setBaseUrlInput(e.target.value); setKeySaved(false); }} placeholder="Base URL, e.g. https://api.openai.com/v1" className="bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded-lg px-3 py-2 text-[11px] font-mono text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--gold-dim)] transition-colors" />
                         <input value={modelInput} onChange={(e) => { setModelInput(e.target.value); setKeySaved(false); }} placeholder="Model, e.g. gpt-4o-mini" className="bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded-lg px-3 py-2 text-[11px] font-mono text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--gold-dim)] transition-colors" />
+                        <button type="button" disabled={loadingModels || testingConnection || !baseUrlInput.trim()} onClick={() => void loadModels()} className="px-3 py-2 border border-[var(--border-secondary)] rounded-lg text-xs disabled:opacity-50">{loadingModels ? 'Checking models…' : 'Load available models'}</button>
+                        {availableModels.length > 0 && <select aria-label="Available provider models" value={availableModels.includes(modelInput) ? modelInput : ''} onChange={event => { setModelInput(event.target.value); setKeySaved(false); }} className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded-lg px-3 py-2 text-xs"><option value="" disabled>Select a provider model</option>{availableModels.map(model => <option key={model} value={model}>{model}</option>)}</select>}
                         <div className="flex flex-wrap gap-2">
                           {AI_TASKS.map((task) => <label key={task} className="flex items-center gap-1 text-[8px] font-mono text-[var(--text-muted)]"><input type="checkbox" checked={enabledTasks.includes(task)} onChange={() => { setEnabledTasks((current) => current.includes(task) ? current.filter((value) => value !== task) : [...current, task]); setKeySaved(false); }} />{task.replace(/_/g, ' ')}</label>)}
                         </div>

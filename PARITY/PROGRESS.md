@@ -388,3 +388,29 @@ verified; never infer completion from a catalog entry or this plan.
   00a is isolated baseline reconciliation; no deployment/merge is authorized by
   these partial results. Use attached worktree for integration and preserve the
   original checkout's unrelated dirty changes. Deployment remains last.
+
+## 20 October 2026 — integrate the actual default branch
+
+- Isolated managed checkout: C:/Users/Leonard/.codex/worktrees/parity-default-alignment/OPHANIM-V3 2.
+  The original OneDrive checkout remains detached at 6959846 with all unrelated
+  dirty changes preserved. No private environment values were copied or read.
+- Integrated default d22f6a0 (21 previously missing commits). Preserved the shared
+  operational map, owner-controlled Presentation Map/Full switch, PIN checks,
+  public replay evidence, fullscreen/entity selection, AI model discovery and
+  Vercel output configuration. New specialist pages are reachable through Ctrl+K.
+- Reconciled AI model discovery with server-only credentials; browser-entered keys
+  are ignored. Tests use only synthetic local credentials. Removed the inherited
+  anonymous presentation-demo actor fallback: private/admin APIs require a valid
+  session even while a temporary demo flag is enabled. Explicit demo sign-in
+  configuration is still unfinished.
+- Public sharing now uses the actual unified map and separate mapVersion/view
+  parameters, preserving camera/projection/style across legacy and Presentation
+  redirects. Existing Atlas screenshots describe the earlier surface; renewed
+  combined browser checks are pending.
+- Clean isolated checks: 529 tests passed, 5 skipped (116 files passed);
+  typecheck, production build and targeted lint passed. API inventory regenerated:
+  63 catalogue services, 118 empty identifiers in this checkout.
+- npm audit identified critical Next.js and MapLibre advisories and additional
+  transitive findings. Raw audit saved in dependency-audit.json. Next task: apply
+  supported patched versions, verify migration behavior, then run combined browser
+  regressions. Draft PR still needs its base corrected; deployment remains last.

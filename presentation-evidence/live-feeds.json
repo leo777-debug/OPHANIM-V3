@@ -1,0 +1,187 @@
+{
+  "checkedAt": "2026-10-16T14:25:18.324Z",
+  "liveSourceCheck": true,
+  "syntheticFixtures": false,
+  "feeds": [
+    {
+      "id": "flights",
+      "state": "live",
+      "markers": 12466,
+      "news": 0,
+      "reference": false,
+      "observedAt": null,
+      "fetchedAt": "2026-10-16T14:25:14.734Z",
+      "note": ""
+    },
+    {
+      "id": "maritime",
+      "state": "live",
+      "markers": 1114,
+      "news": 0,
+      "reference": false,
+      "observedAt": null,
+      "fetchedAt": "2026-10-16T14:25:13.730Z",
+      "note": ""
+    },
+    {
+      "id": "ports",
+      "state": "reference",
+      "markers": 81,
+      "news": 0,
+      "reference": true,
+      "observedAt": null,
+      "fetchedAt": "2026-10-16T14:25:13.735Z",
+      "note": "Reference locations, not live congestion measurements or AIS positions."
+    },
+    {
+      "id": "chokepoints",
+      "state": "reference",
+      "markers": 10,
+      "news": 0,
+      "reference": true,
+      "observedAt": null,
+      "fetchedAt": "2026-10-16T14:25:13.736Z",
+      "note": "Reference locations, not live congestion measurements or AIS positions."
+    },
+    {
+      "id": "cameras",
+      "state": "live",
+      "markers": 4,
+      "news": 0,
+      "reference": false,
+      "observedAt": null,
+      "fetchedAt": "2026-10-16T14:25:12.707Z",
+      "note": "Public camera locations; stream availability is checked by the original source, not guaranteed by a map marker."
+    },
+    {
+      "id": "broadcasts",
+      "state": "reference",
+      "markers": 15,
+      "news": 0,
+      "reference": true,
+      "observedAt": null,
+      "fetchedAt": "2026-10-16T14:25:12.715Z",
+      "note": "Broadcaster studio/reference locations, not verified live broadcasts or event locations."
+    },
+    {
+      "id": "conflicts",
+      "state": "reference",
+      "markers": 15,
+      "news": 0,
+      "reference": true,
+      "observedAt": null,
+      "fetchedAt": "2026-10-16T14:25:13.657Z",
+      "note": "Curated regional anchors, not verified current frontlines or pinpoint incident locations. Unverified RSS coordinate offsets are not plotted."
+    },
+    {
+      "id": "infrastructure",
+      "state": "reference",
+      "markers": 57,
+      "news": 0,
+      "reference": true,
+      "observedAt": null,
+      "fetchedAt": "2026-10-16T14:25:13.490Z",
+      "note": ""
+    },
+    {
+      "id": "war-sanctions",
+      "state": "reference",
+      "markers": 402,
+      "news": 0,
+      "reference": true,
+      "observedAt": null,
+      "fetchedAt": "2026-10-16T14:25:13.420Z",
+      "note": "Source-listed vessel-associated ports, not current vessel positions."
+    },
+    {
+      "id": "earthquakes",
+      "state": "live",
+      "markers": 44,
+      "news": 0,
+      "reference": false,
+      "observedAt": "2026-10-16T13:28:16.970Z",
+      "fetchedAt": "2026-10-16T14:25:13.514Z",
+      "note": ""
+    },
+    {
+      "id": "fires",
+      "state": "live",
+      "markers": 1991,
+      "news": 0,
+      "reference": false,
+      "observedAt": "2026-10-16T10:41:00.000Z",
+      "fetchedAt": "2026-10-16T14:25:18.280Z",
+      "note": ""
+    },
+    {
+      "id": "weather",
+      "state": "live",
+      "markers": 48,
+      "news": 0,
+      "reference": false,
+      "observedAt": "2026-10-16T14:10:00.000Z",
+      "fetchedAt": "2026-10-16T14:25:17.850Z",
+      "note": ""
+    },
+    {
+      "id": "satellites",
+      "state": "live",
+      "markers": 5000,
+      "news": 0,
+      "reference": false,
+      "observedAt": null,
+      "fetchedAt": "2026-10-16T14:25:12.715Z",
+      "note": "Calculated from public orbital elements; not live satellite telemetry."
+    },
+    {
+      "id": "cables",
+      "state": "reference",
+      "markers": 717,
+      "news": 0,
+      "reference": true,
+      "observedAt": null,
+      "fetchedAt": "2026-10-16T14:25:12.810Z",
+      "note": ""
+    },
+    {
+      "id": "incidents",
+      "state": "live",
+      "markers": 234,
+      "news": 0,
+      "reference": false,
+      "observedAt": null,
+      "fetchedAt": "2026-10-16T14:25:12.954Z",
+      "note": ""
+    },
+    {
+      "id": "cyber",
+      "state": "live",
+      "markers": 5,
+      "news": 0,
+      "reference": false,
+      "observedAt": null,
+      "fetchedAt": "2026-10-16T14:25:14.952Z",
+      "note": ""
+    },
+    {
+      "id": "news",
+      "state": "live",
+      "markers": 36,
+      "news": 140,
+      "reference": false,
+      "observedAt": "2026-10-16T14:02:24.000Z",
+      "fetchedAt": "2026-10-16T14:25:13.352Z",
+      "note": "News markers are story-associated locations, not verified incident coordinates."
+    },
+    {
+      "id": "space-weather",
+      "state": "live",
+      "markers": 0,
+      "news": 0,
+      "reference": false,
+      "observedAt": "2026-10-16T10:21:00.000Z",
+      "fetchedAt": "2026-10-16T14:25:13.774Z",
+      "note": "Kp 1 / Quiet"
+    }
+  ]
+}

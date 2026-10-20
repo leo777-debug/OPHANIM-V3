@@ -88,7 +88,6 @@ This table includes credentials, local-service settings, safety gates and runtim
 | Optional services | `AI_SANDBOX_RESEARCH_URL` | Authorized sandbox research |
 | Platform | `APP_INTERNAL_URL` | Optional runtime setting; leave empty to use the documented code default. |
 | Platform | `APP_URL` | Optional runtime setting; leave empty to use the documented code default. |
-| Cyber | `AUTHORIZED_SCAN_TARGETS` | Optional runtime setting; leave empty to use the documented code default. |
 | Maritime | `CUSTOMER_AIS_API_TOKEN` | Server-only credential; configure only for the associated optional feature. |
 | Maritime | `CUSTOMER_AIS_API_URL` | Customer-licensed vessel coverage |
 | Platform | `DARK_WEB_FIXTURES_ENABLED` | Optional runtime setting; leave empty to use the documented code default. |

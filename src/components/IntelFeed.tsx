@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Newspaper, ChevronDown, ChevronUp, ExternalLink, MapPin, Zap, Download, CheckCheck } from 'lucide-react';
+import { Newspaper, ChevronDown, ChevronUp, ExternalLink, MapPin, Zap, Download, CheckCheck, SlidersHorizontal } from 'lucide-react';
 import { filterNews, newsCsv, NEWS_WINDOWS, safeSourceUrl, type NewsItem } from '@/lib/intelligence/news';
 import { useReadNews } from '@/components/intelligence/useReadNews';
 import { trustFor } from '@/lib/intelligence/analysis';
@@ -17,6 +17,7 @@ interface IntelFeedProps {
   data: { news?: NewsItem[] };
   onLocate?: (lat: number, lng: number) => void;
   variant?: 'panel' | 'workbench';
+  compact?: boolean;
 }
 
 function getRiskClass(score: number): string {
@@ -49,7 +50,7 @@ function timeAgo(dateStr: string): string {
   }
 }
 
-export default function IntelFeed({ data, onLocate, variant = 'panel' }: IntelFeedProps) {
+export default function IntelFeed({ data, onLocate, variant = 'panel', compact = false }: IntelFeedProps) {
   const [expanded, setExpanded] = useState(true);
   const [selectedIdx, setSelectedIdx] = useState<string | null>(null);
   const [query, setQuery] = useState('');
@@ -58,6 +59,7 @@ export default function IntelFeed({ data, onLocate, variant = 'panel' }: IntelFe
   const [minRisk, setMinRisk] = useState(0);
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [limit, setLimit] = useState(25);
+  const [showFilters, setShowFilters] = useState(!compact);
   const { seen, markRead } = useReadNews();
   const news: NewsItem[] = data.news || [];
   const filtered = filterNews(news, { query, source, hours, minRisk, unreadOnly, seen });
@@ -75,9 +77,9 @@ export default function IntelFeed({ data, onLocate, variant = 'panel' }: IntelFe
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: 20 }}
+      initial={compact ? false : { opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: 0.6, duration: 0.6 }}
+      transition={compact ? { duration: 0 } : { delay: 0.6, duration: 0.6 }}
       className={`${variant === 'workbench' ? 'ophanim-intel-feed--workbench' : 'glass-panel'} flex flex-col overflow-hidden pointer-events-auto`}
     >
       {/* Header */}
@@ -103,12 +105,13 @@ export default function IntelFeed({ data, onLocate, variant = 'panel' }: IntelFe
       <AnimatePresence>
         {expanded && (
           <motion.div
-            initial={{ height: 0 }}
+            initial={compact ? false : { height: 0 }}
             animate={{ height: 'auto' }}
             exit={{ height: 0 }}
             className="overflow-hidden"
           >
-            <div className={styles.toolbar}>
+            {compact && <button type="button" title="News filters" aria-label="News filters" aria-expanded={showFilters} onClick={()=>setShowFilters(value=>!value)} className="flex items-center gap-2 px-4 py-2 text-xs"><SlidersHorizontal size={14}/>Filters</button>}
+            {showFilters && <div className={styles.toolbar}>
               <input type="search" aria-label="Search news" placeholder="Search news" value={query} onChange={(event) => setQuery(event.target.value)} />
               <select aria-label="News source" value={source} onChange={(event) => setSource(event.target.value)}>
                 <option value="">All sources</option>
@@ -125,7 +128,7 @@ export default function IntelFeed({ data, onLocate, variant = 'panel' }: IntelFe
               <button type="button" title="Mark filtered news as read" aria-label="Mark filtered news as read" disabled={!filtered.length} onClick={() => markRead(filtered.map((item) => item.id))}><CheckCheck size={16} /></button>
               <button type="button" title="Export filtered news as CSV" onClick={() => exportNews('csv')}><Download size={14} />CSV</button>
               <button type="button" title="Export filtered news as JSON" onClick={() => exportNews('json')}><Download size={14} />JSON</button>
-            </div>
+            </div>}
             <div className={styles.count}>{filtered.length} of {news.length} items</div>
             <div className={`${variant === 'workbench' ? 'ophanim-intel-feed--workbench__items' : 'max-h-[400px] divide-y'} overflow-y-auto styled-scrollbar divide-[var(--border-secondary)]`}>
               {filtered.length === 0 ? (

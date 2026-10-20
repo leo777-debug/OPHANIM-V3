@@ -1,7 +1,7 @@
 import type { MapProjection, MapStyle, MapViewport } from '@/lib/map-workspaces';
 
 /** Only public display flags may be encoded. Private records/identifiers are never serialized. */
-export const PUBLIC_VIEW_LAYERS = new Set('flights military maritime ship_cargo ship_tanker ship_passenger ship_fishing ship_military satellites sat_comms sat_military sat_navigation sat_earth sat_science balloons cctv camera_logistics camera_transport live_news news_intel earthquakes fires weather radiation infrastructure global_incidents war_alerts gps_jamming day_night cables war_sanctions terrain_3d malware conflict_zones'.split(' '));
+export const PUBLIC_VIEW_LAYERS = new Set('flights military maritime ship_cargo ship_tanker ship_passenger ship_fishing ship_military satellites sat_comms sat_military sat_navigation sat_earth sat_science balloons cctv camera_logistics camera_transport live_news news_intel earthquakes fires weather radiation infrastructure global_incidents war_alerts gps_jamming day_night cables war_sanctions terrain_3d malware conflict_zones cameras incidents space-weather conflicts war-sanctions cyber ports chokepoints broadcasts news'.split(' '));
 export interface MapViewSettings { viewport: MapViewport; activeLayers: Record<string, boolean>; projection: MapProjection; mapStyle: MapStyle }
 const number = (value: string | null, minimum: number, maximum: number) => {
   if (value === null || !/^-?(?:\d+(?:\.\d*)?|\.\d+)$/.test(value)) return null;
@@ -25,11 +25,12 @@ export function encodeMapView(view: MapViewSettings): URLSearchParams {
   if (hasPrivateViewLayers(view.activeLayers)) throw new Error('Private layers require an authenticated snapshot; public settings sharing is unavailable.');
   const { latitude, longitude, zoom } = view.viewport;
   if (![latitude, longitude, zoom].every(Number.isFinite) || Math.abs(latitude) > 90 || Math.abs(longitude) > 180 || zoom < 0 || zoom > 22) throw new Error('Map view is not ready to share.');
-  params.set('view', 'map-v1'); params.set('lat', latitude.toFixed(5)); params.set('lng', longitude.toFixed(5)); params.set('zoom', zoom.toFixed(2));
+  params.set('mapVersion', '1'); params.set('lat', latitude.toFixed(5)); params.set('lng', longitude.toFixed(5)); params.set('zoom', zoom.toFixed(2));
   params.set('projection', view.projection); params.set('style', view.mapStyle);
   params.set('layers', Object.entries(view.activeLayers).filter(([id, active]) => active === true && PUBLIC_VIEW_LAYERS.has(id)).map(([id]) => id).sort().join(','));
   return params;
 }
-export function publicMapViewUrl(origin: string, view: MapViewSettings) {
-  const url = new URL('/atlas', origin); url.search = encodeMapView(view).toString(); return url.toString();
+export function publicMapViewUrl(origin: string, view: MapViewSettings, surface: 'full' | 'map' = 'full') {
+  const url = new URL(surface === 'map' ? '/presentation' : '/logistics/map', origin), params = encodeMapView(view);
+  params.set('view', surface); url.search = params.toString(); return url.toString();
 }

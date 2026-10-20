@@ -213,3 +213,9 @@ public settings sharing. Data/time snapshots are not implied; current sources ar
 loaded. See MAP_VIEW_LINKS.md. A default-branch discrepancy was found during
 verification: current Presentation/map/AI commits must be reconciled before
 preservation or completed parity can be claimed. PARITY/state.json tracks this.
+
+The current default branch has now been integrated in an isolated checkout,
+including the shared map and Presentation controls. Public sharing targets that
+map; AI discovery retains server-only credentials and private APIs retain session
+requirements. Unit/build checks pass; renewed browser and dependency security
+validation are pending. No World Monitor code, assets or services were used.

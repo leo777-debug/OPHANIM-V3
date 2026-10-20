@@ -129,7 +129,8 @@ export default function SearchBar({ onLocate, onAction, alwaysExpanded = false }
 
   const handleSelect = (r: SearchResult) => {
     if (r.action?.type === 'open_entity') {
-      window.location.assign(r.action.href);
+      if (onAction) onAction(r.action);
+      else window.location.assign(r.action.href);
       return;
     }
     if (r.action) onAction?.(r.action);

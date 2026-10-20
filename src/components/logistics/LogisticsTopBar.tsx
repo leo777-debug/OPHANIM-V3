@@ -5,7 +5,7 @@ import { Bell, Building2, ChevronDown, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import OperationalSearch from "./OperationalSearch";
 
-type Actor = { organizationId: string; role: string };
+type Actor = { organizationId: string; role: string; authProvider?: string };
 type ProviderState = { available: number; total: number };
 
 export default function LogisticsTopBar() {
@@ -45,7 +45,8 @@ export default function LogisticsTopBar() {
     router.refresh();
   };
 
-  const organization = actor?.organizationId
+  const demo = actor?.authProvider === 'presentation-demo';
+  const organization = demo ? 'Presentation demo (public)' : actor?.organizationId
     ? `Organization ${actor.organizationId.slice(0, 8)}`
     : "Organization workspace";
   const health = providers
@@ -78,13 +79,14 @@ export default function LogisticsTopBar() {
           <button
             type="button"
             className="ops-user-menu__trigger"
+            disabled={demo}
             onClick={() => setMenuOpen((open) => !open)}
             aria-expanded={menuOpen}
           >
-            <span>{actor?.role?.replaceAll("_", " ") ?? "User"}</span>
+            <span>{demo ? 'Demo access' : actor?.role?.replaceAll("_", " ") ?? "User"}</span>
             <ChevronDown aria-hidden="true" size={15} />
           </button>
-          {menuOpen && (
+          {menuOpen && !demo && (
             <div className="ops-user-menu__content">
               <button type="button" onClick={() => void logout()}>
                 <LogOut aria-hidden="true" size={15} />

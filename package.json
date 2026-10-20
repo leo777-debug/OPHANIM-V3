@@ -9,7 +9,11 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:live": "RUN_LIVE_TESTS=1 vitest run"
+    "test:live": "RUN_LIVE_TESTS=1 vitest run",
+    "presentation:snapshot": "node tools/presentation/snapshot.mjs",
+    "presentation:preview": "node tools/presentation/preview.mjs",
+    "presentation:poster": "node tools/presentation/poster.mjs",
+    "test:presentation": "node tools/presentation/check.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -21,7 +25,6 @@
     "framer-motion": "^12.38.0",
     "google-libphonenumber": "^3.2.44",
     "hls.js": "^1.6.16",
-    "htmlparser2": "10.0.0",
     "lucide-react": "^1.14.0",
     "maplibre-gl": "^5.24.0",
     "motion": "13.1.0",
@@ -38,11 +41,13 @@
     "server-only": "0.0.1",
     "sharp": "0.35.3",
     "tailwind-merge": "3.6.0",
-    "ws": "^8.21.0"
+    "ws": "^8.21.0",
+    "htmlparser2": "10.0.0"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.8",
-    "@electric-sql/pglite-pgvector": "^0.0.9",
+    "@electric-sql/pglite-socket": "^0.2.11",
+    "@playwright/test": "^1.64.0",
     "@tailwindcss/postcss": "^4",
     "@types/google-libphonenumber": "^7.4.30",
     "@types/node": "^20",
@@ -54,6 +59,7 @@
     "eslint-config-next": "16.3.1",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "4.1.11"
+    "vitest": "4.1.11",
+    "@electric-sql/pglite-pgvector": "^0.0.9"
   }
 }
