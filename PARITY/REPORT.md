@@ -99,7 +99,7 @@ the reason states the missing work rather than implying that keys alone will fix
 | Official embeddable video | Partial | Existing media retained; permitted operator-level catalogue audit pending. |
 | English/Arabic RTL UI | Blocked | Entity matching supports Arabic; full interface localization/RTL not implemented. |
 | Mobile/onboarding | Partial | Existing mobile desk retained; broader responsive/default-layer/welcome redesign pending. |
-| PWA/offline/browser ML | Blocked | App shell/snapshots/service worker/browser inference not implemented. |
+| PWA/offline/browser ML | Partial | Installable manifest, public offline shell, saved filtered official-advisory snapshot and offline banner. APIs/private HTML excluded from caching. Browser server-down fallback verified; device installation, map snapshots and optional browser ML remain unverified/unimplemented. |
 | Optional desktop package | Blocked | Deferred until required web capabilities are implemented. |
 | Organization API keys/OpenAPI/read-only MCP | Blocked | Scoped hashed keys, rotation, limits and agent endpoints not implemented. |
 | Signed webhook subscriptions | Blocked | HMAC/retries/pinned SSRF-safe delivery not implemented. |
@@ -155,7 +155,7 @@ coverage, a successful real-time subscription or every existing camera/operator.
 ## Checks and screenshots
 
 - Before: typecheck/build passed; 311 tests passed, 5 skipped (68 files passed).
-- Continuation milestone: 372 tests passed, 5 skipped (87 files passed); production
+- Continuation milestone: 377 tests passed, 5 skipped (89 files passed); production
   build, standalone typecheck and targeted lint passed. One database-policy test
   timed out during the first unconstrained concurrent build/test run; rerunning
   with two test workers passed. These results include first-seen persistence and
@@ -173,6 +173,10 @@ coverage, a successful real-time subscription or every existing camera/operator.
 - Browser verified official health filtering (21 publications) and connected
   polling-notification status: screenshots/official-health.jpg. A future-dated
   NHC source item is retained with an anomaly warning and excluded from ranking.
+- Offline browser verification saved 21 public records, stopped the local server,
+  navigated to another app page and read the cached offline shell/snapshot. Clear
+  snapshot succeeded. Screenshot: screenshots/offline-public-snapshot.jpg. No
+  organization data was cached or authenticated account used in this check.
 - Full requested Playwright/layout/RTL/mobile/Presentation regression matrix,
   authenticated integration UI and browser-bundle secret scanning remain pending.
 - Signed-out integrations screenshot: `screenshots/integrations-signed-out.jpg`.

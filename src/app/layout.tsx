@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import OfflineShell from "@/components/platform/OfflineShell";
 import "./globals.css";
 
 const SITE_URL = "https://ophanim.live";
@@ -159,6 +160,7 @@ export default function RootLayout({
       </head>
       <body className="antialiased" suppressHydrationWarning>
         <ErrorBoundary name="Ophanim Core">{children}</ErrorBoundary>
+        <OfflineShell />
       </body>
     </html>
   );

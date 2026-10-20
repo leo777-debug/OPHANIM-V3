@@ -168,3 +168,7 @@ provider registry. Founder configuration remains centralized in API_KEYS.md.
 Public advisory updates use Ophanim SSE revision notifications over explicitly
 periodic polling. Source cadence remains visible; no continuous upstream stream
 is implied. See docs/PUBLIC_UPDATES.md for capacity and instance limitations.
+The independent public offline shell now stores a deliberately saved, filtered
+official-advisory snapshot with explicit offline timestamps. It caches no private
+HTML or API responses; offline interactive maps are not implemented. Browser
+server-down fallback was verified. See docs/OFFLINE_MODE.md.

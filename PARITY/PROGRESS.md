@@ -190,3 +190,22 @@ verified; never infer completion from a catalog entry or this plan.
   desktop geometry validation.
 - Checks: 372 passed, 5 skipped (87 files passed); production build, standalone
   typecheck and targeted lint passed. Follow docs/PUBLIC_UPDATES.md.
+
+## 20 October 2026 — public offline shell
+
+- Updated install manifest; registered a service worker that caches only explicit
+  public shell/icon files. API responses and private/navigation HTML are never
+  stored. Network-failed navigations use a clearly labelled standalone shell.
+- Public advisory filters can be saved to a field-whitelisted local snapshot,
+  capped at 150 records. Null organization scope and six approved provider IDs
+  are required. Feed text is rendered with textContent; arbitrary fields and
+  unsafe/non-official links are excluded. Original source and save/check times
+  are preserved. Added offline banner, view and clear controls.
+- Browser saved 21 public health notices, stopped the local app server, navigated
+  to another app page and verified offline shell + saved notices. Clearing the
+  test snapshot worked. Screenshot: screenshots/offline-public-snapshot.jpg.
+- Checks: 377 passed, 5 skipped (89 files passed); production build, standalone
+  typecheck and targeted lint passed. Device installation, multi-tab lifecycle,
+  offline interactive map and optional browser ML remain outside this milestone.
+- Remaining first task is 01-integrations. Broad P2/P4 work and final full
+  regression matrix are unfinished; no merge or deployment has been attempted.

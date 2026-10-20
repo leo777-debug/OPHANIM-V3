@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { NormalizedIntelligenceEvent } from '@/lib/intelligence/event-provider';
 import type { SpecialistSource } from '@/lib/intelligence/specialist-providers';
 import { safeSourceUrl } from '@/lib/intelligence/news';
+import { savePublicSnapshot } from '@/lib/intelligence/offline-snapshot';
 type ResponseData = { events: NormalizedIntelligenceEvent[]; diagnostics: Array<{ providerId: string; status: string; message?: string }>; sources: SpecialistSource[]; coverage: string; checkedAt: string };
 
 export default function PublicIntelligenceWorkspace() {
@@ -10,6 +11,7 @@ export default function PublicIntelligenceWorkspace() {
   const [country, setCountry] = useState(''); const [selectedCountry, setSelectedCountry] = useState('');
   const [kind, setKind] = useState('all'); const [query, setQuery] = useState(''); const [message, setMessage] = useState('');
   const [updates, setUpdates] = useState('Connecting to public update notifications');
+  const [snapshotStatus, setSnapshotStatus] = useState('');
   const revision = useRef('');
   const load = useCallback(async (signal?: AbortSignal) => {
     try {
@@ -34,6 +36,11 @@ export default function PublicIntelligenceWorkspace() {
     const csv = [['id', 'type', 'title', 'publication_time', 'retrieved_at', 'source', 'source_url', 'data_mode'], ...events.map(event => [event.externalId, event.eventType, event.title, event.startedAt, event.sources[0]?.retrievedAt, event.sources[0]?.name, event.sources[0]?.url, event.attributes.dataMode])].map(line => line.map(cell).join(',')).join('\r\n');
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })); const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'ophanim-public-advisories.csv'; anchor.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
+  const saveOffline = async () => {
+    if (!data) return;
+    try { const saved = await savePublicSnapshot(events, data.checkedAt); setSnapshotStatus(`Saved ${saved.events.length} public publications at ${saved.savedAt}. Offline view is a snapshot, not current conditions.`); }
+    catch { setSnapshotStatus('Could not save offline snapshot. Check browser storage and HTTPS availability.'); }
+  };
   return <div className="platform-content"><section className="platform-section">
     <h2>Official warnings, health and travel</h2><p>{data?.coverage ?? 'Loading original official publications…'}</p>
     <p>Public awareness only. Read the current official notice before making safety or travel decisions. Original-language text is retained; no AI translation is applied. Map warnings are not a complete civil-defence siren service.</p>
@@ -43,6 +50,8 @@ export default function PublicIntelligenceWorkspace() {
       <label>Type <select value={kind} onChange={event => setKind(event.target.value)}><option value="all">All types / timeline</option><option value="public_warning">Official public warnings</option><option value="cyclone_advisory">Cyclone advisories</option><option value="health_notice">Health notices</option><option value="travel_advisory">Country travel advice</option></select></label>
     </form>
     <button type="button" onClick={() => void load()}>Refresh</button> <button type="button" onClick={exportCsv}>Export filtered CSV</button>
+    {' '}<button type="button" disabled={!data} onClick={() => void saveOffline()}>Save public snapshot offline</button>{' '}<a href="/offline.html">Open saved snapshot</a>
+    {snapshotStatus && <p role="status">{snapshotStatus}</p>}
     {message && <p role="status">{message}</p>}<p>{events.length} loaded publications · last request {data?.checkedAt ?? 'not completed'} · browser refresh every 300 s; individual sources cache at their stated cadence.</p>
     <p role="status">{updates}. Notifications do not turn periodically published sources into continuous streams. Country-specific advice still follows its hourly source cache.</p>
     <details><summary>Coverage, source rights and gaps</summary>{data?.sources.map(source => {
