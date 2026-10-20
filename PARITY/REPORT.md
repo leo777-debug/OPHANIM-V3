@@ -10,7 +10,7 @@ No claim is made about the provenance of historical commits outside this work.
 
 ## Section 2: central keys
 
-**Partial.** API_KEYS.md documents 62 service entries/groups and `.env.example`
+**Partial.** API_KEYS.md documents 63 service entries/groups and `.env.example`
 contains 119 deliberately empty configuration identifiers, generated from source
 without reading private environment files. The inventory includes keyless services,
 credentials, optional workers, runtime settings and reserved-but-unused keys.
@@ -62,7 +62,7 @@ the reason states the missing work rather than implying that keys alone will fix
 | Capability | Status | Evidence / remaining work |
 | --- | --- | --- |
 | Story clustering and deduplication | Partial | Stories tab, canonical URLs, Unicode titles, token similarity/window, counts and evidence. First-seen persists using atomic earliest-observation writes; explicit memory fallback. No durable cluster membership history. |
-| Entity extraction/correlation | Partial | Dictionary, English/Arabic aliases, valid explicit IMO/MMSI/ICAO24, linked article IDs. Small gazetteer; public-role names require explicit dictionary; not all feeds wired. |
+| Entity extraction/correlation | Partial | Dated ICU/CLDR English/Arabic labels for 249 country/territory codes, conservative ambiguous aliases, longest-country-span matching, explicit IMO/MMSI/ICAO24 and linked article IDs. Asset/city dictionary remains small; public-role names require explicit review; universal cross-feed graph remains pending. |
 | Geographic convergence | Partial | Configurable tested score, independent operators/types, all contributions. Desk wires reported news, seismic and dated FIRMS fire observations; other disruption adapters and alert delivery pending. |
 | Source trust tiers | Partial | Manual tier/affiliation/risk metadata in Stories/news; minimum tier for convergence. Other evidence screens and persisted alert rules pending. |
 | Why it matters | Partial | Labelled deterministic inference in Stories. Broader event/asset exposure integration pending. |
@@ -147,11 +147,14 @@ attribution, rate rules and explicit key requirements. All are keyless.
 | GDACS normalized hazard adapter | GDACS specific terms; commercial reuse unresolved | unknown | off; no requests, flagged in Admin |
 | FAA NAS public airport status facts | US government public domain, FAA-authored metadata; excludes raw third-party/operator NOTAM text | yes | on; US national list, not full NOTAM coverage |
 | NOAA/NWS US K-station METAR and TAF | US government public domain, NWS US products | yes | on; selected US stations, broader international rights gate retained |
+| ICU/CLDR English/Arabic country and territory labels | Unicode License v3, full notice retained | yes | on; packaged reference, generated 2026-10-20 from ICU 78.3 / CLDR 48.0 / Unicode 17.0 |
 
 Source terms and attribution are shown in the public advisory UI and declared in
 `specialist-providers.ts`. Pinned network provenance, SHA-256 hashes, formulas and
 limitations are in `docs/ROUTE_SCENARIO_METHODS.md`; original licence is included.
-The small entity dictionary is manually curated Ophanim reference metadata.
+Country labels are generated from the attributed ICU/CLDR reference. Asset aliases
+and ambiguity rules are manually curated Ophanim metadata. No name match supplies
+event coordinates or a sovereignty/impact finding. See docs/ENTITY_DICTIONARY.md.
 All future connectors must register licence name, yes/no/unknown commercial use,
 attribution, rate limits and key requirement; no/unknown default off. The existing
 provider registries still need comprehensive governance synchronization and audit;
@@ -165,7 +168,7 @@ coverage, a successful real-time subscription or every existing camera/operator.
 ## Checks and screenshots
 
 - Before: typecheck/build passed; 311 tests passed, 5 skipped (68 files passed).
-- Continuation milestone: 428 tests passed, 5 skipped (104 files passed); production
+- Continuation milestone: 433 tests passed, 5 skipped (105 files passed); production
   build, standalone typecheck and targeted lint passed. One database-policy test
   timed out during the first unconstrained concurrent build/test run; rerunning
   with two test workers passed. These results include first-seen persistence and
@@ -213,6 +216,11 @@ coverage, a successful real-time subscription or every existing camera/operator.
   cluster and retained both sea routes with the port layer enabled. Screenshots:
   clustered-reference-ports.jpg, expanded-port-cluster.jpg, routes-with-clustered-ports.jpg.
   This is functional rendering evidence, not a frame-rate or hardware benchmark.
+- Country dictionary tests cover all 249 scoped identities, English/Arabic aliases,
+  Arabic conjunction/preposition matching, withheld ambiguous names, longer-country
+  spans and cross-publisher links. Production Atlas Stories showed 26 linked
+  entities in the available 77-item sample and rendered the source/version/date
+  disclosure. Screenshot: screenshots/country-dictionary-provenance.jpg.
 - Built-client known-token-format scan: 64 JavaScript chunks, zero findings; see
   client-secret-audit.json. This limited pattern scan is not a proof about all
   arbitrary secret formats or every runtime API response.

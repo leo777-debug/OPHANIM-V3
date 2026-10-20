@@ -16,7 +16,7 @@
     {
       "id": "02-core-intelligence",
       "status": "partial",
-      "remaining": "Broad gazetteer, remaining convergence adapters, alert-rule trust integration, regional media catalogue and geographic coverage gaps; persistent first-seen added"
+      "remaining": "249-country/territory English/Arabic reference added; broader city/asset gazetteer, universal cross-feed graph, remaining convergence adapters, alert-rule trust integration, regional media catalogue and geographic coverage gaps remain"
     },
     {
       "id": "03-provider-reliability",
@@ -53,7 +53,7 @@
     "baselineTests": "311 passed, 5 skipped",
     "baselineTypecheck": "passed",
     "baselineBuild": "passed",
-    "currentTests": "428 passed, 5 skipped; 104 files passed",
+    "currentTests": "433 passed, 5 skipped; 105 files passed",
     "typecheck": "passed",
     "build": "passed",
     "targetedLint": "passed",

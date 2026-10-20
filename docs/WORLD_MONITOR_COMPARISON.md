@@ -200,3 +200,10 @@ optionally shows 3,962 dated Apache-2.0 port reference points; these do not asse
 live operations. Production browser rendering/expansion and route coexistence were
 checked. Legacy layer and measured hardware load work remain. See MAP_CLUSTERING.md.
 No World Monitor code, styles, assets, APIs, embeds or data were used.
+Country/territory entity coverage now uses 249 scoped English/Arabic ICU/CLDR
+labels with version/date/licence and a token-trie matcher. Ambiguous bare names
+are withheld; country mentions never create event coordinates. Public-role-only
+person extraction remains enforced. This reference was generated independently
+from the installed Unicode/ICU data, with its original notice retained. Broader
+asset/city gazetteers and a universal feed graph remain incomplete. See
+ENTITY_DICTIONARY.md. No World Monitor code or services were used.

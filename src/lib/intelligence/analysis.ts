@@ -1,5 +1,6 @@
 import { publishedTime, type NewsItem } from './news';
 import type { TrustTier } from '@/lib/verify/types';
+import { COUNTRY_GAZETTEER } from './country-gazetteer';
 
 export const TRUST_RANK: Record<TrustTier, number> = { social: 0, aggregator: 1, established_media: 2, wire: 3, official: 4 };
 export interface SourceTrust {
@@ -101,16 +102,9 @@ export interface GazetteerEntry {
   type: 'country' | 'place' | 'port' | 'airport' | 'organization' | 'public_person';
   publicRole?: string;
 }
-/** Small curated dictionary, not a claim of global geographic coverage. */
+/** Dated country/territory labels plus a small manually curated asset dictionary. */
 export const GAZETTEER: GazetteerEntry[] = [
-  { id: 'country:AE', label: 'United Arab Emirates', aliases: ['United Arab Emirates', 'UAE', 'الإمارات'], type: 'country' },
-  { id: 'country:IR', label: 'Iran', aliases: ['Iran', 'إيران'], type: 'country' },
-  { id: 'country:UA', label: 'Ukraine', aliases: ['Ukraine', 'أوكرانيا'], type: 'country' },
-  { id: 'country:RU', label: 'Russia', aliases: ['Russia', 'روسيا'], type: 'country' },
-  { id: 'country:CN', label: 'China', aliases: ['China', 'الصين'], type: 'country' },
-  { id: 'country:US', label: 'United States', aliases: ['United States', 'USA', 'الولايات المتحدة'], type: 'country' },
-  { id: 'country:IN', label: 'India', aliases: ['India', 'الهند'], type: 'country' },
-  { id: 'country:YE', label: 'Yemen', aliases: ['Yemen', 'اليمن'], type: 'country' },
+  ...COUNTRY_GAZETTEER,
   { id: 'place:hormuz', label: 'Strait of Hormuz', aliases: ['Strait of Hormuz', 'Hormuz', 'مضيق هرمز'], type: 'place' },
   { id: 'place:suez', label: 'Suez Canal', aliases: ['Suez Canal', 'قناة السويس'], type: 'place' },
   { id: 'place:bab-el-mandeb', label: 'Bab el-Mandeb', aliases: ['Bab el-Mandeb', 'Bab al-Mandab', 'باب المندب'], type: 'place' },
@@ -123,12 +117,43 @@ export const GAZETTEER: GazetteerEntry[] = [
   { id: 'organization:who', label: 'World Health Organization', aliases: ['World Health Organization', 'منظمة الصحة العالمية'], type: 'organization' },
 ];
 export interface ExtractedEntity { id: string; label: string; type: GazetteerEntry['type'] | 'imo' | 'mmsi' | 'aircraft'; method: 'dictionary' | 'identifier'; publicRole?: string }
-function escapeRegex(value: string) { return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+type DictionaryNode = { children: Map<string, DictionaryNode>; entries: number[] };
+function dictionaryIndex(dictionary: GazetteerEntry[]) {
+  const root: DictionaryNode = { children: new Map(), entries: [] };
+  dictionary.forEach((entry, index) => {
+    for (const alias of new Set(entry.aliases.map(normalizeTitle))) {
+      if (!alias) continue;
+      let node = root;
+      for (const word of alias.split(' ')) { if (!node.children.has(word)) node.children.set(word, { children: new Map(), entries: [] }); node = node.children.get(word)!; }
+      node.entries.push(index);
+    }
+  });
+  return root;
+}
+const DEFAULT_INDEX = dictionaryIndex(GAZETTEER);
+const ARABIC_PREFIXES = ['و', 'ف', 'ب', 'ك', 'ل', 'وب', 'وك', 'ول', 'فب', 'فك', 'فل'];
+function dictionaryMatches(normalized: string, dictionary: GazetteerEntry[]) {
+  const index = dictionary === GAZETTEER ? DEFAULT_INDEX : dictionaryIndex(dictionary), words = normalized.split(' ');
+  const hits: Array<{ entry: number; start: number; end: number }> = [];
+  for (let start = 0; start < words.length; start++) {
+    const first = words[start], variants = new Set([first]);
+    if (/^\p{Script=Arabic}/u.test(first)) for (const prefix of ARABIC_PREFIXES) if (first.startsWith(prefix) && /^\p{Script=Arabic}/u.test(first.slice(prefix.length))) variants.add(first.slice(prefix.length));
+    for (const variant of variants) {
+      let node = index.children.get(variant);
+      for (let end = start; node; node = node.children.get(words[++end])) for (const entry of node.entries) hits.push({ entry, start, end });
+    }
+  }
+  // A longer explicit country name wins over a contained country token. Equal
+  // spans with competing custom dictionary entries remain unresolved candidates.
+  const countryHits = hits.filter(hit => dictionary[hit.entry].type === 'country');
+  return new Set(hits.filter(hit => dictionary[hit.entry].type !== 'country' || !countryHits.some(other => other.start <= hit.start && other.end >= hit.end && other.end - other.start > hit.end - hit.start)).map(hit => hit.entry));
+}
 export function extractEntities(text: string, dictionary: GazetteerEntry[] = GAZETTEER): ExtractedEntity[] {
   const normalized = normalizeTitle(text), result: ExtractedEntity[] = [];
-  for (const entry of dictionary) {
+  const matched = dictionaryMatches(normalized, dictionary);
+  for (const [index, entry] of dictionary.entries()) {
     if (entry.type === 'public_person' && !entry.publicRole) continue;
-    if (entry.aliases.some(alias => new RegExp(`(?:^|[^\\p{L}\\p{N}])${escapeRegex(normalizeTitle(alias))}(?=$|[^\\p{L}\\p{N}])`, 'u').test(normalized))) result.push({ id: entry.id, label: entry.label, type: entry.type, method: 'dictionary', ...(entry.publicRole ? { publicRole: entry.publicRole } : {}) });
+    if (matched.has(index)) result.push({ id: entry.id, label: entry.label, type: entry.type, method: 'dictionary', ...(entry.publicRole ? { publicRole: entry.publicRole } : {}) });
   }
   for (const match of text.matchAll(/\b(IMO|MMSI)\s*[:#-]?\s*(\d{7}|\d{9})\b/gi)) {
     const type = match[1].toLowerCase() as 'imo' | 'mmsi', value = match[2];
@@ -188,7 +213,7 @@ export function detectConvergence(signals: ConvergenceSignal[], options: { radiu
 
 export function whyItMatters(item: Pick<NewsItem, 'title' | 'description'>) {
   const entities = extractEntities(`${item.title} ${item.description}`);
-  const assets = entities.filter(entity => ['place', 'port', 'airport'].includes(entity.type));
+  const assets = entities.filter(entity => ['country', 'place', 'port', 'airport'].includes(entity.type));
   return { label: 'Rule-based context · INFERENCE', text: assets.length
     ? `Reports mention ${assets.map(entity => entity.label).join(', ')}. Review nearby routes and infrastructure against the source evidence; a mention does not establish a closure or operational impact.`
     : 'Review the source for affected regions and operational assets. This report alone does not establish exposure or disruption.', entities };

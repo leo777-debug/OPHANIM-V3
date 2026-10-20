@@ -343,3 +343,25 @@ verified; never infer completion from a catalog entry or this plan.
   typecheck, targeted lint and whitespace checks passed. Client scan: 64 chunks,
   zero known-token-format findings. Legacy bespoke layers/mobile GPU performance
   and the broader P2/P4 scope remain pending. Deployment remains last; no merge.
+
+## 20 October 2026 — broader deterministic geographic entity coverage
+
+- Added 249 scoped English/Arabic country and territory labels from the local
+  ICU/CLDR runtime, with version, actual generation date, attribution and retained
+  Unicode License v3 notice. Registered reference and integration metadata;
+  inventory now lists 63 service/reference entries and 119 empty variables.
+- Whole-token trie matching supports Arabic conjunction/preposition prefixes and
+  longer country phrases without manufacturing nested country matches. Ambiguous
+  bare names (including Jordan/Chad/Georgia and Arabic Mali/Oman) are withheld;
+  explicit country phrases remain available. Matches never assign event coordinates.
+- Country mentions join existing deterministic inference context and linked news
+  identities. Private people remain excluded; explicit reviewed public-role entries
+  are still required. Broader city/asset dictionaries and universal feed linkage
+  remain unfinished. Reproducible generator: generate-country-gazetteer.mjs.
+- Checks: 433 passed, 5 skipped (105 files passed); production build, standalone
+  typecheck and targeted lint passed. Browser Atlas Stories showed source/version/
+  date and 26 linked entities in its 77 available news items. Screenshot:
+  screenshots/country-dictionary-provenance.jpg. Client scan: 64 chunks, zero findings.
+- Broad parity and end-to-end regression remain unfinished. Deployment stays last;
+  no deployment or merge attempted. Next: continue first unfinished task and audit
+  inherited Atlas status/share/Presentation behavior against current source.

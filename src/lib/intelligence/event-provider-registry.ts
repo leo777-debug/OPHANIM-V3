@@ -4,7 +4,8 @@ import { specialistEventProviders } from './specialist-providers';
 import { gdacsHazardProvider } from './gdacs-provider';
 import { aviationEventProviders } from './aviation-providers';
 import { MARITIME_NETWORK } from '@/lib/route-intelligence/open-network';
-export const registeredReferenceDatasets = [MARITIME_NETWORK];
+import { COUNTRY_REFERENCE } from './country-gazetteer';
+export const registeredReferenceDatasets = [MARITIME_NETWORK, COUNTRY_REFERENCE];
 import {
   validateNormalizedIntelligenceEvent,
   type IntelligenceEventProvider,

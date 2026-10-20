@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { clusterStories, correlateEntities, detectConvergence, trustFor, whyItMatters, type ConvergenceSignal } from '@/lib/intelligence/analysis';
 import { safeSourceUrl, type NewsItem } from '@/lib/intelligence/news';
 import type { ExplorerData } from './IntelligenceExplorer';
+import { COUNTRY_REFERENCE } from '@/lib/intelligence/country-gazetteer';
 import styles from './desk.module.css';
 
 const EMPTY_NEWS: NewsItem[] = [];
@@ -41,7 +42,8 @@ export default function StoryAnalysis({ data, onLocate }: { data: ExplorerData; 
       <label>Title similarity <select value={similarity} onChange={event => setSimilarity(Number(event.target.value))}><option value={0.65}>65%</option><option value={0.8}>80%</option><option value={1}>Exact tokens</option></select></label>
       <label>Convergence minimum trust <select value={minimumTrust} onChange={event => setMinimumTrust(event.target.value as typeof minimumTrust)}><option value="established_media">Established media</option><option value="wire">Wire</option><option value="official">Official</option></select></label>
     </div>
-    <p className={styles.count}>Deterministic URL/title grouping; publisher count is not independent corroboration. First seen is Ophanim’s earliest recorded observation, separate from publication time. Storage is shown with each story; memory fallback resets on restart. Entity dictionary coverage is limited; public-role names require an explicit reviewed dictionary.</p>
+    <p className={styles.count}>Deterministic URL/title grouping; publisher count is not independent corroboration. First seen is Ophanim’s earliest recorded observation, separate from publication time. Storage is shown with each story; memory fallback resets on restart. Country/territory names use 249 scoped English/Arabic labels; asset dictionary coverage is limited. Name matches do not locate an event or establish impact. Public-role names require an explicit reviewed dictionary.</p>
+    <details><summary>Geographic dictionary source and date</summary><p>{COUNTRY_REFERENCE.name} · {COUNTRY_REFERENCE.version} · generated {COUNTRY_REFERENCE.datasetDate} ({COUNTRY_REFERENCE.dateMeaning}). {COUNTRY_REFERENCE.coverage}</p><p>{COUNTRY_REFERENCE.attribution} · commercial use {COUNTRY_REFERENCE.commercialUse} · {COUNTRY_REFERENCE.rateLimits}.</p><a href={COUNTRY_REFERENCE.source} target="_blank" rel="noreferrer">Original source</a>{' · '}<a href="/reference/UNICODE-LICENSE.txt">Unicode licence</a></details>
     <details><summary>Linked entities · {entities.length}</summary><ul>{entities.map(record => <li key={record.entity.id}><strong>{record.entity.label}</strong> · {record.entity.type} · {record.articleIds.length} reports · {record.publishers.join(', ')}</li>)}</ul></details>
     <details><summary>Geographic convergence · {alerts.length}</summary>
       <p>50 km radius, last 6 hours, at least 3 independent source types and score ≥40. Unique type weights: seismic 20, fire 15, aviation 15, maritime 15, news 10, outages 20, GNSS 15; cap 100. One source operator contributes one type. Approximate coordinates are excluded. Reported news, seismic observations and dated NASA fire hotspots are connected. Aviation, maritime, outage and GNSS disruption adapters remain pending.</p>
