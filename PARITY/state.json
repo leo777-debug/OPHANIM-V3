@@ -26,7 +26,7 @@
     {
       "id": "04-specialist-layers",
       "status": "partial",
-      "remaining": "Six official advisory sources added; remaining specialist layers tracked in REPORT.md"
+      "remaining": "Official advisories and hazard matching/map added, GDACS normalized source off by licence; remaining specialist layers tracked in REPORT.md"
     },
     {
       "id": "05-analysis-tools",
@@ -53,7 +53,7 @@
     "baselineTests": "311 passed, 5 skipped",
     "baselineTypecheck": "passed",
     "baselineBuild": "passed",
-    "currentTests": "386 passed, 5 skipped; 92 files passed",
+    "currentTests": "397 passed, 5 skipped; 96 files passed",
     "typecheck": "passed",
     "build": "passed",
     "targetedLint": "passed",

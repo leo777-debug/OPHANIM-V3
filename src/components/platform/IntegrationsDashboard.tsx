@@ -41,6 +41,7 @@ export default function IntegrationsDashboard() {
           <p>{item.area}</p><h3>{item.name}</h3><p><strong>{item.status}</strong></p><p>{item.unlocks}</p>
           <p>{item.variables.length ? item.variables.join(', ') : 'Keyless provider'}</p>
           <p>{item.guidance}</p><p>{item.fallback}</p>
+          {item.licence && <p>Licence: {item.licence.name} · commercial use {item.licence.commercialUse} · {item.licence.attribution} · {item.licence.rateLimits}</p>}
           <p>Last successful connection: {item.observation?.lastSuccessAt ?? 'Never observed'}</p>
           <p>Last checked: {item.observation?.checkedAt ?? 'Not tested'}</p>
           <p>Observation storage: {item.storage ?? 'Not recorded'}</p>

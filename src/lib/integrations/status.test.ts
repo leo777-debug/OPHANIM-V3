@@ -21,6 +21,7 @@ describe('server integration status', () => {
     expect(integrationStatus(service('ai'), { AI_BASE_URL: 'https://hosted.example/v1', AI_MODEL: 'model' }).missing).toEqual(['AI_API_KEY']);
   });
   it('enforces explicit commercial rights for verification sources', () => {
+    expect(integrationStatus(service('gdacs-hazards'), {}).status).toBe('Disabled by licence');
     expect(integrationStatus(service('metar'), {}).status).toBe('Disabled by licence');
     expect(integrationStatus(service('metar'), { VERIFY_METAR_COMMERCIAL_USE: 'yes' }).status).toBe('Configured');
     expect(integrationStatus(service('verify-observations'), { VERIFY_OBSERVATIONS_COMMERCIAL_USE: 'yes' }).status).toBe('Disabled by licence');

@@ -243,3 +243,29 @@ verified; never infer completion from a catalog entry or this plan.
   matches in 61 JavaScript chunks, without reading env files or printing values.
 - Broad specialist coverage, global UX/API and end-to-end validation still need
   work. Deployment remains last; this does not satisfy the condition for merging.
+
+## 20 October 2026 — hazard matching and conflict-location honesty
+
+- Added a public hazard map with source-retaining possible duplicate groups,
+  family-specific spatial/time/name rules and ambiguity preservation. No transitive
+  merging or same-provider different-ID merging. Unknown/future/unlocated records
+  stay separate; tenant records are excluded. See docs/HAZARD_MATCHING.md.
+- GDACS normalized parser/adapter is registered but disabled: commercial reuse
+  remains unknown from the accessible specific terms. Admin Integrations/Health
+  flag it, and direct fetch/registry tests prove it makes no requests. Keyless
+  status is not treated as permission. Legacy GDACS RSS rights still need audit.
+- Local audit: 27 USGS quake records and 100 open NASA EONET metadata records;
+  127 separate groups, zero cross-source matches in this selection. GDACS skipped.
+  That is not a validated-corroboration or complete global-coverage claim.
+- Found and removed legacy conflict coordinate offsets and fetch-time event dates
+  assigned to headline mentions. Conflict references now say REFERENCE, have null
+  update/reference dates, and assert no validated active-warzone count. Actual
+  source-reported news points retain their original coordinates/publication times.
+  Source failure clears points instead of manufacturing fallback incidents.
+- Route/hazard maps disable conflict/private SDK overlays. Disabled conflict layers
+  do not fetch that endpoint. Non-country official source caches are shared across
+  country selections, preserving the intended source cadence.
+- Checks: 397 passed, 5 skipped (96 files passed); production build, standalone
+  typecheck, targeted lint and whitespace check passed. Browser hazard filter/map
+  checked; screenshot screenshots/natural-hazards.jpg, audit hazard-audit.json.
+  Remaining broad P2/P4 and end-to-end checks are still unfinished.

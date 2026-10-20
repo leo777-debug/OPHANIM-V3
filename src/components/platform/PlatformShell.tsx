@@ -38,6 +38,7 @@ export default function PlatformShell({ title, children }: { title: string; chil
       <Link href="/public-intelligence" className="platform-nav__item"><Activity size={17} /><span>Public advisories</span></Link>
       <Link href="/route-explorer" className="platform-nav__item"><Map size={17} /><span>Route Explorer</span></Link>
       <Link href="/forecasts" className="platform-nav__item"><Activity size={17} /><span>Sourced forecasts</span></Link>
+      <Link href="/hazards" className="platform-nav__item"><Activity size={17} /><span>Natural hazards</span></Link>
     </aside>
     <section className="platform-main"><header className="platform-header"><div><p>Configured operational workspace</p><h1>{title}</h1></div><div className="platform-header__actions"><Link href="/onboarding">Configure workspace</Link><Link href="/">Open map</Link></div></header>{children}</section>
   </main>;

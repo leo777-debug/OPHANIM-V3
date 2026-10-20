@@ -1,8 +1,19 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { SPECIALIST_SOURCES, normalizeSpecialist, specialistEventProviders } from './specialist-providers';
 import { validateNormalizedIntelligenceEvent } from './event-provider';
 const raw = (payload: unknown) => ({ payload, fetchedAt: '2026-10-19T12:00:00.000Z', mode: 'stale' as const, staleSince: '2026-10-19T12:05:00.000Z' });
 describe('registered official public intelligence', () => {
+  it('shares non-country source fetches across country selections without defeating the source cadence', async () => {
+    const fetcher = vi.fn(async () => new Response('<rss version="2.0"><channel><title>Test</title><item><title>Official advisory</title><link>https://www.nhc.noaa.gov/</link></item></channel></rss>'));
+    vi.stubGlobal('fetch', fetcher);
+    try {
+      const provider = specialistEventProviders.find(item => item.id === 'nhc-pacific')!;
+      const context = { signal: new AbortController().signal, now: new Date(), since: new Date(), limit: 100 };
+      await provider.fetch({ ...context, parameters: { country: 'united-arab-emirates' } });
+      await provider.fetch({ ...context, parameters: { country: 'united-kingdom' } });
+      expect(fetcher).toHaveBeenCalledTimes(1);
+    } finally { vi.unstubAllGlobals(); }
+  });
   it('records explicit rights, attribution, key and rate rules for every new source', () => {
     for (const source of SPECIALIST_SOURCES) {
       expect(source.commercialUse).toBe('yes'); expect(source.licence).toBeTruthy(); expect(source.termsUrl).toMatch(/^https:/); expect(source.rateLimits).toBeTruthy(); expect(source.keyNeeded).toBe(false);

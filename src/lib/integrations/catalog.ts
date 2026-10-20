@@ -10,12 +10,14 @@ export interface IntegrationDefinition {
   fallback: string;
   /** Optional fixed, public, credential-free health probe. */
   probe?: string;
+  licence?: { name: string; commercialUse: 'yes' | 'no' | 'unknown'; attribution: string; rateLimits: string; keyNeeded: boolean; termsUrl: string };
 }
 
 const entry = (id: string, name: string, area: string, variables: string[], unlocks: string, pricing: string, signup: string, fallback: string, probe?: string): IntegrationDefinition =>
   ({ id, name, area, variables, unlocks, pricing, signup, fallback, ...(probe ? { probe } : {}) });
 
 export const INTEGRATIONS: IntegrationDefinition[] = [
+  { ...entry('gdacs-hazards', 'GDACS normalized hazard events', 'Public intelligence', [], 'Cross-source hazard matching after reuse-rights approval', 'No key; normalized adapter remains disabled while commercial reuse is unresolved.', 'https://www.gdacs.org/About/termofuse.aspx', 'USGS / NASA observations remain available; no fabricated GDACS coverage.'), licence: { name: 'GDACS specific terms; commercial reuse unresolved', commercialUse: 'unknown', attribution: 'Global Disaster Alert and Coordination System, GDACS. Automatic impact estimates require independent validation.', rateLimits: 'Off; proposed cache 360 seconds, matching published feed cadence', keyNeeded: false, termsUrl: 'https://www.gdacs.org/About/termofuse.aspx' } },
   entry('marnet-reference', 'Marnet open sea-route network', 'Reference data', [], 'Sea-route and closure-scenario planning', 'Apache-2.0 packaged network and ports, version 1.6.0; no API quota.', 'https://github.com/genthalili/searoute-py/tree/1.6.0', 'Keyless dated reference dataset; not navigation or live status.'),
   entry('noaa-public-warnings', 'NOAA/NWS public warnings', 'Public intelligence', [], 'Official US weather warnings', 'Keyless public-domain NWS-authored text; five-minute application cache.', 'https://www.weather.gov/documentation/services-web-api', 'Keyless default; US coverage.', 'https://api.weather.gov/alerts/active?status=actual&message_type=alert'),
   entry('nhc-atlantic', 'NHC Atlantic advisories', 'Public intelligence', [], 'Official cyclone advisories', 'Keyless US government text; five-minute cache.', 'https://www.nhc.noaa.gov/aboutrss.shtml', 'Keyless default; Atlantic coverage.', 'https://www.nhc.noaa.gov/index-at.xml'),

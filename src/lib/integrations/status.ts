@@ -28,7 +28,8 @@ export function integrationStatus(service: IntegrationDefinition, env: Record<st
   if (service.id === 'gemini' && Array.from({ length: 8 }, (_, i) => `GEMINI_API_KEY_${i + 1}`).some(present)) missing = [];
   if (service.id === 'ai' && present('AI_BASE_URL') && isLocalCompatible(env.AI_BASE_URL!, env.AI_LOCAL_BASE_URLS)) missing = missing.filter(name => name !== 'AI_API_KEY');
   if (service.id === 'voidaccess' && !present('VOIDACCESS_API_TOKEN') && !(present('VOIDACCESS_API_EMAIL') && present('VOIDACCESS_API_PASSWORD'))) missing.push('VOIDACCESS_API_TOKEN (or service email and password)');
-  const disabled = (service.id === 'metar' && env.VERIFY_METAR_COMMERCIAL_USE !== 'yes')
+  const disabled = (service.licence !== undefined && service.licence.commercialUse !== 'yes')
+    || (service.id === 'metar' && env.VERIFY_METAR_COMMERCIAL_USE !== 'yes')
     || (service.id === 'verify-observations' && !(env.VERIFY_OBSERVATIONS_COMMERCIAL_USE === 'yes' && present('VERIFY_OBSERVATIONS_LICENSE') && present('VERIFY_OBSERVATIONS_ATTRIBUTION') && present('VERIFY_OBSERVATIONS_TERMS_URL')));
   const status: IntegrationState = disabled ? 'Disabled by licence' : missing.length ? 'Not configured' : observation?.error ? 'Error' : 'Configured';
   return { ...service, status, missing, observation,

@@ -176,3 +176,8 @@ An independent organization forecast register stores analyst-entered, source-lin
 probabilities and future horizons, with immutable inputs and one-time sourced
 outcomes. It computes binary Brier scores explicitly; no automated prediction or
 validated accuracy is implied. See docs/FORECASTS.md and the additive RLS migration.
+Natural hazards now retain every contributing source in conservative possible
+duplicate groups. GDACS normalized data remains disabled pending commercial-rights
+review. Legacy conflict news no longer receives fabricated map offsets or current
+event dates; static areas are explicitly undated references. None of this work
+uses World Monitor code or services. See docs/HAZARD_MATCHING.md.

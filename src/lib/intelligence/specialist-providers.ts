@@ -71,7 +71,7 @@ function provider(source: SpecialistSource): IntelligenceEventProvider<Raw> {
     async fetch(context) {
       const country = context.parameters?.country;
       if (source.format === 'govuk' && (!country || !/^[a-z][a-z-]{1,69}$/.test(country))) throw new Error('Select a GOV.UK country slug, for example united-arab-emirates.');
-      const cacheKey = source.id + (country ? `:${country}` : '');
+      const cacheKey = source.id + (source.format === 'govuk' && country ? `:${country}` : '');
       let cache = caches.get(source.id);
       if (!cache) { cache = new ResilientFeed({ ttlMs: source.format === 'govuk' ? 3600000 : source.kind === 'health_notice' ? 900000 : 300000, retries: 0 }); caches.set(source.id, cache); }
       const result = await cache.load(cacheKey, async signal => {

@@ -10,7 +10,7 @@ No claim is made about the provenance of historical commits outside this work.
 
 ## Section 2: central keys
 
-**Partial.** API_KEYS.md documents 59 service entries/groups and `.env.example`
+**Partial.** API_KEYS.md documents 60 service entries/groups and `.env.example`
 contains 119 deliberately empty configuration identifiers, generated from source
 without reading private environment files. The inventory includes keyless services,
 credentials, optional workers, runtime settings and reserved-but-unused keys.
@@ -72,9 +72,9 @@ the reason states the missing work rather than implying that keys alone will fix
 | GNSS interference | Partial | Existing map controls retained outside new catalogue; permitted sourced detector/layer audit pending. |
 | Cable faults/repair monitoring | Partial | Existing reference geometry retained; permitted notices and repair-vessel evidence pending. |
 | Infrastructure cascade | Blocked | Dependency graph/model and UI not implemented. |
-| Corroborated unrest/conflict | Partial | Existing incident discovery retained; permitted conflict dataset/independence scoring pending. No ACLED adapter added. |
+| Corroborated unrest/conflict | Partial | Removed fabricated coordinate offsets/fetch-time event dates from legacy conflict news. Fixed areas now labelled undated reference; reported news points preserve source dates. Corroborated conflict datasets/independence scoring remain pending. No ACLED adapter added. |
 | Regional cyclone warnings | Partial | NHC Atlantic/Eastern Pacific/Spanish official advisories. Arabian Sea, Bay of Bengal and other regional centres remain pending. |
-| Cross-source hazard deduplication | Partial | Existing normalized event keys; dedicated GDACS/EONET/USGS matching pending. |
+| Cross-source hazard deduplication | Partial | Source-retaining hazard groups, anchored spatial/time/name matching, ambiguity preservation and native map. USGS/EONET active; GDACS parser registered but disabled by unresolved commercial rights. |
 | Climate anomalies | Blocked | Open-dataset importer and anomaly calculation not implemented. |
 | Displacement/population exposure | Blocked | Permitted population-grid importer and footprint estimates not implemented. |
 | Official travel/security advisories | Partial | UK FCDO country selection, source date/link, rights and freshness. Additional governments and country-wide aggregation remain pending. |
@@ -137,6 +137,7 @@ attribution, rate rules and explicit key requirements. All are keyless.
 | CDC Travel Health Notices | US government public domain, CDC-authored notices; excludes third-party media | yes | on |
 | UK FCDO country travel advice | Open Government Licence v3.0; stated exclusions apply | yes | on when country selected |
 | Marnet sea edges and ports, searoute-py 1.6.0 data | Apache-2.0 | yes | on; dated reference, no navigation claim |
+| GDACS normalized hazard adapter | GDACS specific terms; commercial reuse unresolved | unknown | off; no requests, flagged in Admin |
 
 Source terms and attribution are shown in the public advisory UI and declared in
 `specialist-providers.ts`. Pinned network provenance, SHA-256 hashes, formulas and
@@ -155,7 +156,7 @@ coverage, a successful real-time subscription or every existing camera/operator.
 ## Checks and screenshots
 
 - Before: typecheck/build passed; 311 tests passed, 5 skipped (68 files passed).
-- Continuation milestone: 386 tests passed, 5 skipped (92 files passed); production
+- Continuation milestone: 397 tests passed, 5 skipped (96 files passed); production
   build, standalone typecheck and targeted lint passed. One database-policy test
   timed out during the first unconstrained concurrent build/test run; rerunning
   with two test workers passed. These results include first-seen persistence and
