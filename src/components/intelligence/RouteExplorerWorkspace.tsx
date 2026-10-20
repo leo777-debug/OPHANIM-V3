@@ -8,7 +8,7 @@ const NativeMap = dynamic(() => import('@/components/OphanimMap'), { ssr: false 
 type Port = { name: string; code: string; country: string; coordinates: Point };
 type Result = Awaited<ReturnType<typeof exploreSeaRoute>> & { scenario: ReturnType<typeof closureScenario> | null; nearbyEvents: ReturnType<typeof eventsAlongRoute>; coverage: Array<{ providerId: string; status: string; message?: string }>; checkedAt: string };
 const EMPTY_DATA = {};
-const LAYERS = {};
+const LAYERS = { conflict_zones: false, sdk_sea: false, sdk_air: false, sdk_naval: false };
 const PASSAGES = [['ormuz', 'Hormuz'], ['babalmandab', 'Bab el-Mandeb'], ['suez', 'Suez'], ['malacca', 'Malacca'], ['panama', 'Panama'], ['gibraltar', 'Gibraltar'], ['bosporus', 'Bosporus'], ['south_africa', 'Cape']] as const;
 function PortPicker({ label, onSelect }: { label: string; onSelect: (port: Port) => void }) {
   const [query, setQuery] = useState(''), [ports, setPorts] = useState<Port[]>([]), [error, setError] = useState('');
