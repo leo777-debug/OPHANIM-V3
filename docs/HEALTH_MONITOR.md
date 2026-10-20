@@ -35,3 +35,10 @@ One alert is sent per failure episode, with recovery resetting the episode. Deli
 failure remains eligible for retry. Missing email configuration is reported without
 pretending an alert was sent. Use restricted transactional credentials and send to
 your own administrators only.
+
+Runtime metadata uses a separate two-connection pool, a three-second connection
+budget and five-second query/statement budgets. A failure opens a 30-second
+storage circuit so a single news response does not repeat slow connection attempts
+for every article bucket. Memory fallback remains explicitly labelled. Production
+runtime connections verify certificates. Organization/application queries use the
+existing separate pool and are not governed by this metadata circuit.

@@ -209,3 +209,18 @@ verified; never infer completion from a catalog entry or this plan.
   offline interactive map and optional browser ML remain outside this milestone.
 - Remaining first task is 01-integrations. Broad P2/P4 work and final full
   regression matrix are unfinished; no merge or deployment has been attempted.
+
+## 20 October 2026 — runtime outage bounds
+
+- Isolated operational metadata into a two-connection pool with 3-second connect
+  and 5-second query/statement budgets. Added a 30-second circuit after failure;
+  public observations fall back honestly rather than repeatedly waiting per bucket.
+  Production runtime TLS verifies certificates. Existing application pool unchanged.
+- Atomic first-seen writes preserve earlier in-memory observations on recovery.
+  Tests execute the revised multi-row PostgreSQL upsert and verify circuit behavior.
+- Checks: 380 passed, 5 skipped (90 files passed); production build, standalone
+  typecheck and targeted lint passed. Repeated contention confirmed that PGlite
+  can exceed 30 seconds when a build runs concurrently. Run CPU-heavy build and
+  database-test milestones sequentially; no test deadline was weakened.
+- Next in progress: organization-scoped, source-linked forecast records and Brier
+  scoring. The forecast migration was generated locally, not applied to a database.

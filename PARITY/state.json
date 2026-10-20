@@ -53,7 +53,7 @@
     "baselineTests": "311 passed, 5 skipped",
     "baselineTypecheck": "passed",
     "baselineBuild": "passed",
-    "currentTests": "377 passed, 5 skipped; 89 files passed",
+    "currentTests": "380 passed, 5 skipped; 90 files passed",
     "typecheck": "passed",
     "build": "passed",
     "targetedLint": "passed",

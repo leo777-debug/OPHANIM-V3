@@ -1,12 +1,18 @@
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { db } from '@/lib/db/pool';
+import { runtimeDb } from '@/lib/db/pool';
 
 export type RuntimeStorage = 'postgres' | 'local-file' | 'memory';
 export type RuntimeRead<T> = { items: Record<string, T>; storage: RuntimeStorage; warning?: string };
 const memory = new Map<string, Record<string, unknown>>();
 let queue = Promise.resolve();
+let databaseRetryAfter = 0;
+async function runtimeQuery<T extends import('pg').QueryResultRow>(sql: string, parameters: unknown[]) {
+  if (Date.now() < databaseRetryAfter) throw new Error('Runtime storage circuit is open.');
+  try { const result = await runtimeDb().query<T>(sql, parameters); databaseRetryAfter = 0; return result; }
+  catch (error) { databaseRetryAfter = Date.now() + 30000; throw error; }
+}
 function valid(value: string) { if (!/^[a-z0-9][a-z0-9_.:-]{0,239}$/i.test(value)) throw new Error('Invalid runtime record identifier.'); }
 function directory() { return process.env.OPHANIM_RUNTIME_DIR || (process.env.VERCEL ? null : path.join(process.cwd(), '.ophanim-runtime')); }
 
@@ -15,7 +21,7 @@ export async function readRuntimeScope<T>(scope: string): Promise<RuntimeRead<T>
   valid(scope);
   if (process.env.DATABASE_URL) {
     try {
-      const result = await db().query<{ id: string; value: T }>('select id,value from ophanim_runtime.entries where scope=$1', [scope]);
+      const result = await runtimeQuery<{ id: string; value: T }>('select id,value from ophanim_runtime.entries where scope=$1', [scope]);
       return { items: Object.fromEntries(result.rows.map(row => [row.id, row.value])), storage: 'postgres' };
     } catch { return { items: (memory.get(scope) ?? {}) as Record<string, T>, storage: 'memory', warning: 'Persistent runtime storage unavailable. Apply the parity runtime migration; observations are currently process-local.' }; }
   }
@@ -30,7 +36,7 @@ export async function writeRuntimeValue<T>(scope: string, id: string, value: T):
   valid(scope); valid(id);
   memory.set(scope, { ...memory.get(scope), [id]: value });
   if (process.env.DATABASE_URL) {
-    try { await db().query('insert into ophanim_runtime.entries(scope,id,value) values($1,$2,$3) on conflict(scope,id) do update set value=excluded.value,updated_at=now()', [scope, id, JSON.stringify(value)]); return { storage: 'postgres' }; }
+    try { await runtimeQuery('insert into ophanim_runtime.entries(scope,id,value) values($1,$2,$3) on conflict(scope,id) do update set value=excluded.value,updated_at=now()', [scope, id, JSON.stringify(value)]); return { storage: 'postgres' }; }
     catch { return { storage: 'memory', warning: 'Runtime database write failed; apply the runtime migration. Observation is process-local.' }; }
   }
   const root = directory();
@@ -58,13 +64,14 @@ export async function recordRuntimeFirstSeen(scope: string, ids: string[], obser
   const remember = (existing: Record<string, string>) => Object.fromEntries(ids.map(id => [id, existing[id] && existing[id] < time ? existing[id] : time]));
   if (process.env.DATABASE_URL) {
     try {
-      const result = await db().query<{ id: string; value: string }>(
+      const remembered = remember((memory.get(scope) ?? {}) as Record<string, string>);
+      const result = await runtimeQuery<{ id: string; value: string }>(
         `insert into ophanim_runtime.entries(scope,id,value)
-         select $1,id,to_jsonb($3::text) from unnest($2::text[]) as id
+         select $1,id,to_jsonb(observed_at) from unnest($2::text[],$3::text[]) as incoming(id,observed_at)
          on conflict(scope,id) do update set
            value=to_jsonb(least(ophanim_runtime.entries.value #>> '{}', excluded.value #>> '{}')),
            updated_at=now()
-         returning id,value`, [scope, ids, time]);
+         returning id,value`, [scope, ids, ids.map(id => remembered[id])]);
       return { items: Object.fromEntries(result.rows.map(row => [row.id, row.value])), storage: 'postgres' };
     } catch {
       const items = remember((memory.get(scope) ?? {}) as Record<string, string>);
