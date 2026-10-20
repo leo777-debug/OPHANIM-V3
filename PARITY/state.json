@@ -11,7 +11,7 @@
     {
       "id": "01-integrations",
       "status": "partial",
-      "remaining": "Remaining protocol connection adapters, per-operator inventory, universal missing-key prompts and setup-test gating"
+      "remaining": "Research/SDK setup guides and diagnostic gating added. Remaining protocol connection adapters, per-operator inventory and universal missing-key prompts/test gating"
     },
     {
       "id": "02-core-intelligence",
@@ -41,7 +41,7 @@
     {
       "id": "07-limitations",
       "status": "partial",
-      "remaining": "Reference refresh importers, other public-layer push and cross-instance fanout, optional service setup wizard, full session/demo UX"
+      "remaining": "Reference refresh importers, other public-layer push/fanout, deployable isolated optional worker profiles, durable/scoped SDK storage, full session/demo UX; research/SDK setup wizard added"
     },
     {
       "id": "08-validation-report-pr",
@@ -53,7 +53,7 @@
     "baselineTests": "311 passed, 5 skipped",
     "baselineTypecheck": "passed",
     "baselineBuild": "passed",
-    "currentTests": "408 passed, 5 skipped; 99 files passed",
+    "currentTests": "424 passed, 5 skipped; 103 files passed",
     "typecheck": "passed",
     "build": "passed",
     "targetedLint": "passed",

@@ -11,6 +11,7 @@ describe('registered connection adapters', () => {
   it('supports aliases, optional worker health paths and configuration-only reserved adapters', () => {
     expect(connectionProbe(service('supabase'), { NEXT_PUBLIC_SUPABASE_URL: 'https://project.example', NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'public' })?.url).toBe('https://project.example/auth/v1/health');
     expect(connectionProbe(service('research'), { AI_SANDBOX_RESEARCH_URL: 'http://sandbox:8080', AI_SANDBOX_RESEARCH_TOKEN: 'test-only' })?.url).toBe('http://sandbox:8080/health');
+    expect(connectionProbe(service('research'), { AI_SANDBOX_RESEARCH_URL: 'https://sandbox.example/private?ignored=yes#fragment', AI_SANDBOX_RESEARCH_TOKEN: 'test-only' })).toMatchObject({ url: 'https://sandbox.example/private/health', expected: 'json' });
     expect(connectionProbe(service('n2yo'), {})).toBeNull();
   });
 });

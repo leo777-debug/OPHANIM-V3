@@ -300,3 +300,27 @@ verified; never infer completion from a catalog entry or this plan.
   typecheck and targeted lint passed. Browser checked METAR points and TAF periods.
   See aviation-audit.json and screenshots/aviation-{metar-map,taf}.jpg. Deployment
   remains last. First unfinished integration task and broad P2/P4 remain pending.
+
+## 20 October 2026 — research and SDK setup safeguards
+
+- Added an admin three-step setup wizard with credential-free drafts, private
+  environment templates, research connection check and synthetic SDK test button.
+  Public readable setup guides are generated from the repository documentation.
+  Keys stay server-side; the wizard saves no credentials or configuration.
+- Research health is authenticated and checked before context leaves Ophanim.
+  Shared transport pins DNS for public/trusted local origins, rejects redirects
+  and metadata targets, bounds response size and applies one DNS/socket/body
+  deadline. A late DNS answer cannot open a request after the deadline.
+- SDK diagnostic uses actual server credential/ingestion validation but never
+  stores/maps/streams the synthetic entity. Admin and matching tenant required;
+  arbitrary credentials/URLs/entities are rejected by the setup-test API.
+- SDK ingestion now bounds actual streamed JSON, preserves unknown/zero confidence,
+  separates observation/receipt times, and keeps update revisions separate from
+  timestamps. Tenant configuration changes clear process data and close old streams.
+- Checks: 424 passed, 5 skipped (103 files passed); production build, standalone
+  typecheck and targeted lint passed. Built-client scan: 64 chunks, zero findings.
+  Production browser checked public guide and sign-in return prompt. HTTP checks
+  cover signed-out APIs; explicit private no-store headers added to denied responses.
+- Authenticated wizard/external worker validation, deployable isolated worker
+  profiles and durable scoped SDK storage remain pending. Broad P2/P4 parity is
+  unfinished; deployment remains last and the PR has not been merged.

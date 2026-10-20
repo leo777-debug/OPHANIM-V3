@@ -1,6 +1,7 @@
 import { request as httpRequest } from 'node:http';
 import { request as httpsRequest } from 'node:https';
 import { isIP, type LookupFunction } from 'node:net';
+import { lookup as resolveHost } from 'node:dns/promises';
 import { validateHost } from '@/lib/ssrf-guard';
 import type { IntegrationDefinition } from './catalog';
 
@@ -23,7 +24,9 @@ export function connectionProbe(service: IntegrationDefinition, env: Env): Probe
   if (fixed[service.id]) return { url: fixed[service.id], expected: ['gdacs', 'news', 'telegram'].includes(service.id) ? 'text' : 'json' };
   if (envUrls[service.id]) {
     const [name, token, suffix] = envUrls[service.id]; if (!env[name]) return null;
-    return { url: env[name]!.replace(/\/$/, '') + (suffix ?? ''), headers: token && env[token] ? { Authorization: `Bearer ${env[token]}` } : undefined };
+    let target = env[name]!;
+    if (suffix) { try { const base = new URL(target); base.pathname = base.pathname.replace(/\/$/, '') + suffix; base.search = ''; base.hash = ''; target = base.toString(); } catch { /* Transport records the invalid configuration without exposing it. */ } }
+    return { url: target, headers: token && env[token] ? { Authorization: `Bearer ${env[token]}` } : undefined, ...(service.id === 'research' ? { expected: 'json' as const } : {}) };
   }
   if (['ai', 'local-model', 'embeddings'].includes(service.id)) {
     const base = env[service.id === 'ai' ? 'AI_BASE_URL' : service.id === 'embeddings' ? 'EMBEDDING_BASE_URL' : 'OPHANIM_LOCAL_BASE_URL'];
@@ -37,23 +40,39 @@ export function connectionProbe(service: IntegrationDefinition, env: Env): Probe
   return null;
 }
 
-/** Pinned, bounded transport. Never follows redirects or prints URL/key/error bodies. */
-export async function runConnectionProbe(input: ProbeRequest, env: Env = process.env): Promise<void> {
+/** Pinned transport with one DNS + socket + body deadline. No redirects or upstream errors. */
+export async function requestIntegration(input: ProbeRequest, env: Env = process.env, budgetMs = 8000): Promise<string> {
   const url = new URL(input.url);
   if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) throw new Error('Invalid configured URL.');
-  const allowed = (env.INTEGRATION_ALLOWED_ORIGINS ?? env.AI_LOCAL_BASE_URLS ?? '').split(',').map(value => value.trim()).filter(Boolean);
-  if (/169\.254\.|metadata\./i.test(url.hostname)) throw new Error('Forbidden service address.');
-  const check = await validateHost(url.hostname);
-  if (!check.ok && !allowed.includes(url.origin)) throw new Error('Service origin is blocked. Configure an explicitly trusted local origin.');
-  const address = check.ok ? check.resolved?.[0] : undefined;
-  const lookup: LookupFunction | undefined = address ? (_host, options, callback) => options.all ? callback(null, [{ address, family: isIP(address) }]) : callback(null, address, isIP(address)) : undefined;
-  await new Promise<void>((resolve, reject) => {
-    const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), 8000);
-    const finish = (error?: Error) => { clearTimeout(timer); if (error) reject(error); else resolve(); };
+  const allowed = [env.INTEGRATION_ALLOWED_ORIGINS, env.AI_LOCAL_BASE_URLS].filter(Boolean).join(',').split(',').map(value => value.trim()).filter(Boolean);
+  const trusted = allowed.includes(url.origin), host = url.hostname.replace(/^\[|\]$/g, '');
+  const forbidden = (value: string) => /^(169\.254\.|fe[89ab][0-9a-f]:|fd00:ec2::254$|::ffff:|64:ff9b:)/i.test(value) || /metadata\./i.test(value);
+  if (forbidden(host)) throw new Error('Forbidden service address.');
+  if (url.protocol !== 'https:' && !trusted) throw new Error('HTTP requires an explicitly trusted service origin.');
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_resolve, reject) => { timer = setTimeout(() => { controller.abort(); reject(new Error('Service not running, unreachable or timed out.')); }, budgetMs); });
+  // A system DNS lookup cannot be cancelled, but a late answer never opens a socket.
+  const resolveAddress = async () => {
+    if (trusted) {
+      const answers = isIP(host) ? [{ address: host }] : await resolveHost(host, { all: true });
+      if (!answers.length || answers.some(answer => forbidden(answer.address))) throw new Error('Forbidden service address.');
+      return answers[0].address;
+    }
+    const check = await validateHost(host);
+    if (!check.ok || !check.resolved?.length) throw new Error('Service origin is blocked. Configure an explicitly trusted local origin.');
+    return check.resolved[0];
+  };
+  try {
+    const address = await Promise.race([resolveAddress(), timeout]);
+    if (controller.signal.aborted) throw new Error('Service timed out.');
+    const lookup: LookupFunction = (_host, options, callback) => options.all ? callback(null, [{ address, family: isIP(address) }]) : callback(null, address, isIP(address));
+    return await Promise.race([new Promise<string>((resolve, reject) => {
+    const finish = (error?: Error, value = '') => { if (error) reject(error); else resolve(value); };
     const send = url.protocol === 'https:' ? httpsRequest : httpRequest;
     const request = send(url, { method: input.method ?? 'GET', signal: controller.signal, agent: false,
       headers: { Accept: 'application/json, application/xml, text/plain', 'Accept-Encoding': 'identity', 'User-Agent': 'Ophanim/1.0 integration test', ...input.headers },
-      ...(lookup ? { lookup } : {}),
+      lookup,
     }, response => {
       if ((response.statusCode ?? 500) < 200 || (response.statusCode ?? 500) >= 300) { response.resume(); finish(new Error(`Provider returned HTTP ${response.statusCode ?? 500}.`)); return; }
       let size = 0; const chunks: Buffer[] = [];
@@ -63,10 +82,15 @@ export async function runConnectionProbe(input: ProbeRequest, env: Env = process
         const text = Buffer.concat(chunks).toString('utf8');
         if (!text.trim()) { finish(new Error('Provider returned no payload.')); return; }
         if (input.expected === 'json') { try { JSON.parse(text); } catch { finish(new Error('Provider returned invalid JSON.')); return; } }
-        finish();
+        finish(undefined, text);
       });
     });
     request.on('error', () => finish(new Error('Service not running, unreachable or timed out.')));
     if (input.body) request.write(input.body); request.end();
-  });
+    }), timeout]);
+  } finally { clearTimeout(timer); controller.abort(); }
+}
+
+export async function runConnectionProbe(input: ProbeRequest, env: Env = process.env): Promise<void> {
+  await requestIntegration(input, env);
 }

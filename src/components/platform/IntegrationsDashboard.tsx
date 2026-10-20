@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import type { IntegrationStatus } from '@/lib/integrations/status';
+import IntegrationSetupWizard from './IntegrationSetupWizard';
 
 export default function IntegrationsDashboard() {
   const [integrations, setIntegrations] = useState<IntegrationStatus[]>([]);
@@ -13,7 +14,7 @@ export default function IntegrationsDashboard() {
   const load = useCallback(async () => {
     try {
       const response = await fetch('/api/platform/integrations', { cache: 'no-store' });
-      if (response.status === 401 || response.status === 403) { setProtectedView(true); setMessage('Sign in with organization administration access to see integrations.'); return; }
+      if (response.status === 401 || response.status === 403) { setIntegrations([]); setProtectedView(true); setMessage('Sign in with organization administration access to see integrations.'); return; }
       if (!response.ok) throw new Error('Integration status unavailable.');
       const body = await response.json(); setIntegrations(body.integrations); setMessage(''); setProtectedView(false);
     } catch { setMessage('Integration status unavailable. Retry when the service is running.'); }
@@ -24,6 +25,7 @@ export default function IntegrationsDashboard() {
     try {
       const response = await fetch('/api/platform/integrations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
       const body = await response.json();
+      if (response.status === 401 || response.status === 403) { setIntegrations([]); setProtectedView(true); throw new Error('Sign in with organization administration access to see integrations.'); }
       if (!response.ok) throw new Error(body.error ?? 'Test unavailable.');
       setIntegrations(current => current.map(item => item.id === id ? body.integration : item));
     } catch (error) { setMessage(error instanceof Error ? error.message : 'Test unavailable.'); }
@@ -35,6 +37,7 @@ export default function IntegrationsDashboard() {
     <p>Configured means settings are present. Each card reports its observation storage and what its test verified. Connection tests do not establish complete data coverage.</p>
     {message && <p role="status" className="platform-notice">{message}</p>}
     {protectedView ? <Link href="/login?returnTo=%2Fadmin%2Fintegrations">Sign in to see your organization’s data</Link> : <>
+      {integrations.length > 0 && <IntegrationSetupWizard integrations={integrations} test={test} pending={pending !== null} />}
       <label>Find an integration <input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder="Service, area or variable" /></label>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: 16, marginTop: 20 }}>
         {integrations.filter(item => `${item.name} ${item.area} ${item.variables.join(' ')}`.toLowerCase().includes(query.toLowerCase())).map(item => <article className="platform-detail__block" key={item.id}>

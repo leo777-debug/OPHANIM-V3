@@ -1,5 +1,7 @@
 import { NextRequest } from 'next/server';
 import { authorizeSdkRead } from '@/lib/integrations/sdk-access';
+import { sdkOrganizationId } from '@/lib/integrations/sdk-access';
+import { sdkState } from '@/lib/sdk/ingestion';
 
 /**
  * ╔══════════════════════════════════════════════════════════════════╗
@@ -11,22 +13,12 @@ import { authorizeSdkRead } from '@/lib/integrations/sdk-access';
  * ╚══════════════════════════════════════════════════════════════════╝
  */
 
-// In-memory entity store shared across the SDK endpoints
-const globalForSDK = globalThis as unknown as {
-  sdkEntityStore: Map<string, unknown>;
-  sdkLastUpdate: number;
-};
-
-if (!globalForSDK.sdkEntityStore) {
-  globalForSDK.sdkEntityStore = new Map();
-  globalForSDK.sdkLastUpdate = 0;
-}
-
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   const denied = await authorizeSdkRead(request);
   if (denied) return denied;
+  const state = sdkState(), organizationId = state.organizationId;
   const encoder = new TextEncoder();
   let cleanup = () => {};
 
@@ -38,10 +30,10 @@ export async function GET(request: NextRequest) {
         timestamp: new Date().toISOString(),
         payload: {
           connected: true,
-          entityCount: globalForSDK.sdkEntityStore.size,
+          entityCount: state.entities.size,
           feedCount: null,
           latticeStatus: 'disconnected',
-          lastUpdate: globalForSDK.sdkLastUpdate ? new Date(globalForSDK.sdkLastUpdate).toISOString() : null,
+          lastUpdate: state.lastUpdate ? new Date(state.lastUpdate).toISOString() : null,
         },
       };
       controller.enqueue(encoder.encode(`data: ${JSON.stringify(statusEvent)}\n\n`));
@@ -49,10 +41,11 @@ export async function GET(request: NextRequest) {
       // Send heartbeat every 15 seconds
       const heartbeat = setInterval(() => {
         try {
+          if (sdkOrganizationId() !== organizationId || !process.env.SDK_INGEST_KEY?.trim()) { cleanup(); controller.close(); return; }
           const hb = {
             type: 'heartbeat',
             timestamp: new Date().toISOString(),
-            payload: { entityCount: globalForSDK.sdkEntityStore.size },
+            payload: { entityCount: state.entities.size },
           };
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(hb)}\n\n`));
         } catch {
@@ -64,9 +57,10 @@ export async function GET(request: NextRequest) {
       let lastSentVersion = 0;
       const entityPush = setInterval(() => {
         try {
-          if (globalForSDK.sdkLastUpdate > lastSentVersion) {
-            lastSentVersion = globalForSDK.sdkLastUpdate;
-            const entities = Array.from(globalForSDK.sdkEntityStore.values()).slice(0, 500);
+          if (sdkOrganizationId() !== organizationId || !process.env.SDK_INGEST_KEY?.trim()) { cleanup(); controller.close(); return; }
+          if (state.revision > lastSentVersion) {
+            lastSentVersion = state.revision;
+            const entities = Array.from(state.entities.values()).slice(0, 500);
             const event = {
               type: 'entity_update',
               timestamp: new Date().toISOString(),

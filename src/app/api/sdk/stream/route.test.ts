@@ -10,7 +10,8 @@ afterEach(() => { vi.unstubAllEnvs(); vi.useRealTimers(); });
 describe('SDK read isolation and stream lifecycle', () => {
   it('rejects signed-out browsers before creating a stream or returning metadata', async () => {
     mocks.actor.mockResolvedValue(null);
-    expect((await GET(new NextRequest('https://app.example/api/sdk/stream'))).status).toBe(401);
+    const denied = await GET(new NextRequest('https://app.example/api/sdk/stream'));
+    expect(denied.status).toBe(401); expect(denied.headers.get('cache-control')).toBe('private, no-store');
     expect((await status(new NextRequest('https://app.example/api/sdk/ingest'))).status).toBe(401);
   });
   it('rejects another organization and incomplete configuration', async () => {
@@ -27,5 +28,11 @@ describe('SDK read isolation and stream lifecycle', () => {
     expect(first).toContain('"feedCount":null'); expect(first).toContain('"lastUpdate":null');
     expect(response.headers.get('cache-control')).toContain('private');
     await reader.cancel(); expect(vi.getTimerCount()).toBe(0);
+  });
+  it('closes an old tenant stream when deployment organization configuration changes', async () => {
+    vi.useFakeTimers();
+    const response = await GET(new NextRequest('https://app.example/api/sdk/stream')), reader = response.body!.getReader();
+    await reader.read(); vi.stubEnv('SDK_ORGANIZATION_ID', '22222222-2222-4222-8222-222222222222');
+    await vi.advanceTimersByTimeAsync(5000); expect((await reader.read()).done).toBe(true); expect(vi.getTimerCount()).toBe(0);
   });
 });

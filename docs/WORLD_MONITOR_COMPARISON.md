@@ -188,3 +188,9 @@ notices do not establish complete airport closures. Raw operator NOTAM text is n
 republished; worldwide NOTAM/weather coverage remains incomplete. Source rights,
 rate rules and limitations are in docs/AVIATION_DISRUPTIONS.md. No World Monitor
 code, styles, assets, APIs or data were used.
+Research/SDK setup now uses Ophanim's own three-step guide with no browser key
+storage. Research passes an authenticated worker health check before context is
+sent through pinned, bounded transport. SDK diagnostics validate a server-supplied
+credential without creating map objects; bounded ingestion preserves unknown
+confidence/times and resets process state on a tenant configuration change.
+External worker isolation and multi-worker SDK persistence remain incomplete.

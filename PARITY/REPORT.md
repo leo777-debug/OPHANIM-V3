@@ -25,7 +25,11 @@ protocols explicitly report configuration-only checks. Observations persist thro
 the private runtime schema, or a reported local-file/memory fallback. Browser AI
 key inputs/storage were removed and server configuration overrides preferences.
 Global key-required prompts, remaining protocol-specific adapters and setup-test
-gating remain. No UI credential-saving feature is exposed.
+gating remain for other services. Research/SDK now have a three-step setup guide
+and credential-free configuration drafts. Research health is checked before each
+context-bearing request; SDK has a protected, tenant-matched synthetic diagnostic
+through real ingestion validation, with no map/stream mutation. No UI
+credential-saving feature is exposed.
 
 Full service/variable/unlock/price/access/fallback tables: [API_KEYS.md](../API_KEYS.md).
 No real keys were invented, requested, inspected or added.
@@ -115,14 +119,17 @@ the reason states the missing work rather than implying that keys alone will fix
 | 4.2 Keys/separate services | Central empty inventory, server-only AI credentials, protected connection adapters, optional Compose health profile | Remaining optional service containers, protocol adapters and universal unavailable-service states |
 | 4.3 Static reference data | Native Logistics reference labels; route dataset pinned by version/date/hash/licence | Scheduled authoritative importers, change history and live asset-status overlays |
 | 4.4 Periodic refresh | News says Every 300 s; public advisories receive SSE revision notifications from shared 300-second polling; source cadence is explicit | Other map layers, cross-instance fanout and universal per-layer labels remain pending; country advice follows hourly cache |
-| 4.5 Research/private SDK | Setup docs; SDK reads require session and matching configured tenant; unset configuration disabled | Wizard, actual connection-test gating, send-test-event, durable/scoped SDK storage |
+| 4.5 Research/private SDK | Three-step setup wizard and public guides; authenticated research health gating and bounded/pinned transport; tenant-matched server SDK diagnostic without map mutation; bounded ingestion and honest unknown confidence/times | Deployable isolated worker profile, durable/scoped multi-tenant SDK storage, external sender and authenticated deployment validation |
 | 4.6 Protected API UX | Integration sign-in prompt; safe login returnTo; SDK metadata/stream 401 signed-out and 403 other tenant | Remember-me choice, demo organization, full private-route regression suite and all protected-screen prompts |
 
 SDK stream no longer invents nine connected feeds or a latest update on connection.
 Unknown observation timestamps remain unknown; receipt time is separate. The
 legacy ingestion credential still authorizes machine-to-server POST without a
 browser session. One tenant per configured worker; no multi-tenant SDK claim.
-Request body streaming limits and full private-data API audit remain outstanding.
+SDK request bodies are now streaming-bounded to 1 MB, with at most 500 entities.
+Changing the configured tenant clears its process-local store and closes old
+streams. Unknown confidence remains null, including preservation of supplied zero.
+Full private-data API audit remains outstanding.
 
 ## Sources and licences
 
@@ -158,7 +165,7 @@ coverage, a successful real-time subscription or every existing camera/operator.
 ## Checks and screenshots
 
 - Before: typecheck/build passed; 311 tests passed, 5 skipped (68 files passed).
-- Continuation milestone: 408 tests passed, 5 skipped (99 files passed); production
+- Continuation milestone: 424 tests passed, 5 skipped (103 files passed); production
   build, standalone typecheck and targeted lint passed. One database-policy test
   timed out during the first unconstrained concurrent build/test run; rerunning
   with two test workers passed. These results include first-seen persistence and
@@ -192,7 +199,15 @@ coverage, a successful real-time subscription or every existing camera/operator.
   readiness. Regression tests cover readiness/style replacement/cleanup. Three
   airport points and both sea-route alternatives visibly rendered in production;
   route screenshot: screenshots/route-rendered.jpg.
-- Built-client known-token-format scan: 63 JavaScript chunks, zero findings; see
+- SDK setup tests cover signed-out/non-admin/wrong-tenant rejection, no arbitrary
+  URL/key input, actual credential validation and diagnostic non-mutation. Transport
+  tests cover DNS deadline/late-answer rejection, socket address pinning, redirects,
+  link-local/mapped-metadata rejection, response bounds and invalid JSON. Research
+  context is withheld when health fails. No actual external worker was used.
+- Public setup guide and signed-out integrations prompt checked in the production
+  browser. Screenshot: screenshots/sdk-setup-guide.jpg. Local HTTP security audit:
+  setup-security-audit.json. Authenticated wizard interaction remains unverified.
+- Built-client known-token-format scan: 64 JavaScript chunks, zero findings; see
   client-secret-audit.json. This limited pattern scan is not a proof about all
   arbitrary secret formats or every runtime API response.
 - Full requested Playwright/layout/RTL/mobile/Presentation regression matrix,
