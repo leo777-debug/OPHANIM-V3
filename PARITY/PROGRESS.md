@@ -269,3 +269,17 @@ verified; never infer completion from a catalog entry or this plan.
   typecheck, targeted lint and whitespace check passed. Browser hazard filter/map
   checked; screenshot screenshots/natural-hazards.jpg, audit hazard-audit.json.
   Remaining broad P2/P4 and end-to-end checks are still unfinished.
+
+## 20 October 2026 — provider map readiness repair
+
+- Fixed provider overlays skipped when data arrives before the MapLibre style is
+  ready. Bindings now wait for readiness, restore after style replacement and
+  remove handlers/layers on cleanup. Invalid layer retries are bounded.
+- Regression tests cover readiness, repeated style events, line/polygon restoration,
+  click cleanup and failure bounds. Production browser visibly rendered all three
+  selected METAR stations and both the Suez baseline and Cape alternative routes.
+  Screenshots: screenshots/aviation-metar-map.jpg, screenshots/route-rendered.jpg.
+- Checks including the in-progress aviation milestone: 408 passed, 5 skipped
+  (99 files passed); production build, standalone typecheck and targeted lint passed.
+  Built-client token-format scan: 63 chunks, zero findings. Broader parity remains
+  unfinished; deployment remains last and no merge was attempted.
