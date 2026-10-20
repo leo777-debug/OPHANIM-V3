@@ -365,3 +365,26 @@ verified; never infer completion from a catalog entry or this plan.
 - Broad parity and end-to-end regression remain unfinished. Deployment stays last;
   no deployment or merge attempted. Next: continue first unfinished task and audit
   inherited Atlas status/share/Presentation behavior against current source.
+
+## 20 October 2026 — public settings links and baseline discrepancy
+
+- Public settings links now target Atlas and preserve camera, projection, basemap
+  and exact public-layer selection. Explicit coordinates override IP/saved views;
+  empty layers disable implicit conflict references too. Zero is not treated as
+  missing; the renderer's existing 1.5–18 zoom clamp remains. Private/unreviewed
+  flags block public sharing, and data snapshots/replay are explicitly not claimed.
+- Desktop sharing and S shortcut repaired, overlap removed with a portal. Selected
+  flags now say LAYERS, not FEEDS; last-request status is separate from source health.
+  Browser verified a generated link in a fresh tab after the geolocation interval;
+  screenshot public-map-share.jpg. Pre-existing Atlas diff remains 51 adds/8 removals,
+  unstaged; only this task's independent Atlas changes were staged.
+- Checks: 436 passed, 5 skipped (106 files passed); production build, standalone
+  typecheck, targeted helper/component lint and whitespace checks passed. Client
+  known-token scan: 64 chunks, zero findings. See docs/MAP_VIEW_LINKS.md.
+- IMPORTANT: verified GitHub default is feat/gdacs-weather-ai-overview, not the PR's
+  foundation base. Fetched current default d22f6a0: 21 upstream commits absent here,
+  including Presentation, map homepage/fullscreen/entity and Vercel/AI fixes.
+  Current checks cannot prove preservation of those features. Immediate next task
+  00a is isolated baseline reconciliation; no deployment/merge is authorized by
+  these partial results. Use attached worktree for integration and preserve the
+  original checkout's unrelated dirty changes. Deployment remains last.

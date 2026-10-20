@@ -12,6 +12,7 @@ import SearchBar from '@/components/SearchBar';
 import ScaleBar from '@/components/ScaleBar';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import SharePanel from '@/components/SharePanel';
+import { decodeMapView, encodeMapView, hasMapView, hasPrivateViewLayers, restorePublicViewLayers } from '@/lib/map/view-url';
 import ViewPresets from '@/components/ViewPresets';
 import KeyboardShortcuts from '@/components/KeyboardShortcuts';
 import GlobalStatusBar from '@/components/GlobalStatusBar';
@@ -191,18 +192,13 @@ export default function Dashboard() {
   const [providerLayers, setProviderLayers] = useState<ProviderMapLayer[]>([]);
 
   useEffect(() => {
-    const query = new URLSearchParams(window.location.search);
-    const lat = Number(query.get('lat'));
-    const lng = Number(query.get('lng'));
-    const zoom = Number(query.get('zoom'));
-    if (Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180) {
-      setFlyToLocation({ lat, lng, zoom: Number.isFinite(zoom) ? zoom : 8, ts: Date.now() });
-      setMapView({
-        latitude: lat,
-        longitude: lng,
-        zoom: Number.isFinite(zoom) ? zoom : 8,
-      });
+    const shared = decodeMapView(new URLSearchParams(window.location.search));
+    if (shared.viewport) {
+      setFlyToLocation({ lat: shared.viewport.latitude, lng: shared.viewport.longitude, zoom: shared.viewport.zoom, ts: Date.now() });
+      setMapView(shared.viewport);
     }
+    if (shared.projection) setMapProjection(shared.projection);
+    if (shared.mapStyle) setMapStyle(shared.mapStyle);
   }, []);
 
   useEffect(() => {
@@ -210,6 +206,7 @@ export default function Dashboard() {
   }, [ophanimTheme]);
 
   useEffect(() => {
+    if (decodeMapView(new URLSearchParams(window.location.search)).mapStyle) return;
     const timer = setTimeout(() => setMapStyle('earth'), 300);
     return () => clearTimeout(timer);
   }, []);
@@ -250,6 +247,7 @@ export default function Dashboard() {
     infrastructure: false,
     global_incidents: true,
     war_alerts: false,
+    conflict_zones: true,
     gps_jamming: false,
     day_night: false,
     cables: true,
@@ -275,7 +273,7 @@ export default function Dashboard() {
   const restoredMapWorkspacesRef = useRef(false);
 
   const applyMapWorkspace = useCallback((workspace: MapWorkspace) => {
-    setActiveLayers({ ...workspace.activeLayers });
+    setActiveLayers({ conflict_zones: true, ...workspace.activeLayers });
     setMapProjection(workspace.projection);
     setMapStyle(workspace.mapStyle);
     setMapView({ ...workspace.viewport });
@@ -297,6 +295,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     try {
+      if (hasMapView(new URLSearchParams(window.location.search))) return;
       const saved = window.sessionStorage.getItem('ophanim-map-workspaces-v1');
       if (!saved) return;
       const parsed: unknown = JSON.parse(saved);
@@ -420,25 +419,19 @@ export default function Dashboard() {
 
     // Restore active layers from URL if present
     const p = new URLSearchParams(window.location.search);
-    const layers = p.get('layers');
-    if (layers) {
-      const active = layers.split(',');
-      const restoredOperationalDefaults = new Set(['flights', 'cables']);
-      setActiveLayers(prev => {
-        const next = { ...prev };
-        Object.keys(next).forEach(k => {
-          (next as any)[k] = active.includes(k) || restoredOperationalDefaults.has(k);
-        });
-        return next;
-      });
+    const shared = decodeMapView(p);
+    if (shared.layers !== null) {
+      setActiveLayers(previous => restorePublicViewLayers(previous, shared.layers!));
     }
+    // Explicit shared coordinates take priority over IP geolocation.
+    if (shared.viewport) return;
 
     // Delay geolocation until map is ready (after splash screen clears)
     const geoTimer = setTimeout(() => {
       fetch('/api/geo')
         .then(r => r.json())
         .then(geo => {
-          if (geo.status === 'success' && geo.lat && geo.lon) {
+          if (geo.status === 'success' && Number.isFinite(geo.lat) && Number.isFinite(geo.lon)) {
             setFlyToLocation({ lat: geo.lat, lng: geo.lon, ts: Date.now() });
             setMapView(v => ({ ...v, zoom: 12 }));
           }
@@ -449,17 +442,19 @@ export default function Dashboard() {
     return () => clearTimeout(geoTimer);
   }, []);
 
-  // URL state: persist active layers only (lat/lon comes from IP geolocation on each load)
+  // Public display settings only; private records and IDs never enter the URL.
   const urlTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || hasPrivateViewLayers(activeLayers)) return;
     if (urlTimer.current) clearTimeout(urlTimer.current);
     urlTimer.current = setTimeout(() => {
-      const active = Object.entries(activeLayers).filter(([,v]) => v).map(([k]) => k).join(',');
-      const url = `${window.location.pathname}?layers=${active}`;
-      window.history.replaceState(null, '', url);
+      try {
+        const params = encodeMapView({ viewport: mapView, activeLayers, projection: mapProjection, mapStyle });
+        window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`);
+      } catch { /* View may not be ready while a workspace is being restored. */ }
     }, 1500);
-  }, [activeLayers]);
+    return () => { if (urlTimer.current) clearTimeout(urlTimer.current); };
+  }, [activeLayers, mapView, mapProjection, mapStyle]);
 
   // Global Stats Fetch
   useEffect(() => {
@@ -483,7 +478,6 @@ export default function Dashboard() {
       if (e.key === 'm') setShowMarkets(p => !p);
       if (e.key === 'c') setShowScmPanel(p => !p);
       if (e.key === 'i') setShowIntel(p => !p);
-      if (e.key === 's') { setShowDesktopSearch(p => !p); setShowIntel(false); setShowMarkets(false); setShowAlerts(false); }
       if (e.key === 'r') setFlyToLocation({ lat: 20, lng: 0, ts: Date.now() });
       if (e.key === 'g') setMapProjection(p => p === 'globe' ? 'mercator' : 'globe');
       if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
@@ -1286,6 +1280,7 @@ export default function Dashboard() {
             <button onClick={() => window.location.assign('/imports')} className="ophanim-command-button" title="Import organization CSV data"><FileUp className="w-4 h-4" /><span>IMPORT</span></button>
             <button onClick={() => setShowProviders((value) => !value)} className="ophanim-command-button" title="View provider and source status"><Database className="w-4 h-4" /><span>SOURCES</span></button>
             <Link href="/verify" className="ophanim-command-button" title="Verify a public event claim" aria-label="Verify a public event claim"><Search className="w-4 h-4" /></Link>
+            <div className="relative"><SharePanel mapView={mapView} activeLayers={activeLayers} projection={mapProjection} mapStyle={mapStyle} /></div>
           </div>
         </motion.div>
       )}
@@ -1308,13 +1303,13 @@ export default function Dashboard() {
           <ZuluClock />
         </span>
 
-        <span className="flex items-center gap-1">SYS: <span className={backendStatus === 'connected' ? 'text-[var(--alert-green)]' : 'text-[var(--alert-red)]'}>{backendStatus.toUpperCase()}</span></span>
+        <span className="flex items-center gap-1">LAST FETCH: <span className={backendStatus === 'connected' ? 'text-[var(--alert-green)]' : 'text-[var(--alert-red)]'}>{backendStatus === 'connected' ? 'OK' : backendStatus.toUpperCase()}</span></span>
 
         {spaceWeather && <span className="hidden lg:inline">SOLAR: <span style={{ color: spaceWeather.storm_color, fontWeight: 700 }}>Kp{spaceWeather.kp_index}</span></span>}
 
         <span className="hidden lg:inline-flex items-center gap-1">
           <span className="text-[var(--cyan-primary)] font-bold">{Object.values(activeLayers).filter(Boolean).length}</span>
-          <span className="text-[var(--text-muted)]/60">FEEDS</span>
+          <span className="text-[var(--text-muted)]/60">LAYERS</span>
         </span>
 
         <UptimeClock />
@@ -1640,7 +1635,7 @@ export default function Dashboard() {
                           setMobilePanel(null);
                         }}
                       />
-                      <SharePanel mapView={mapView} activeLayers={activeLayers} mouseCoords={null} />
+                      <SharePanel mapView={mapView} activeLayers={activeLayers} projection={mapProjection} mapStyle={mapStyle} />
                     </div>
                   )}
                   {mobilePanel === 'recon' && (

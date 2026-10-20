@@ -97,7 +97,7 @@ the reason states the missing work rather than implying that keys alone will fix
 | Panel management | Blocked | General drag/resize/layout persistence not implemented. |
 | Dense marker clustering/LOD | Partial | Provider point layers cluster at 100+ points using one worker source and three draw layers, with count labels/expansion/style restoration. Production browser checked 3,962 dated reference ports and route coexistence. Legacy bespoke layers and measured GPU/mobile load validation remain pending. |
 | Global Ctrl/Cmd+K and shortcut help | Partial | Existing search retained; unified keyboard palette/help pending. |
-| Share links/snapshots | Partial | Existing routing/shared verification retained; full map/time/data snapshots pending. |
+| Share links/snapshots | Partial | Public Atlas settings links restore camera, projection, basemap and exact layer selection; private/unreviewed flags block sharing. Current-data disclosure, no private IDs. Full authenticated map/time/data snapshots and desk filters remain pending. |
 | Seen/unseen activity | Partial | Existing browser news-read IDs; organization/user-wide activity pending. |
 | Custom monitors/email | Partial | Existing watchlists and email retained; universal entity/place highlights pending. |
 | Official embeddable video | Partial | Existing media retained; permitted operator-level catalogue audit pending. |
@@ -168,7 +168,7 @@ coverage, a successful real-time subscription or every existing camera/operator.
 ## Checks and screenshots
 
 - Before: typecheck/build passed; 311 tests passed, 5 skipped (68 files passed).
-- Continuation milestone: 433 tests passed, 5 skipped (105 files passed); production
+- Continuation milestone: 436 tests passed, 5 skipped (106 files passed); production
   build, standalone typecheck and targeted lint passed. One database-policy test
   timed out during the first unconstrained concurrent build/test run; rerunning
   with two test workers passed. These results include first-seen persistence and
@@ -221,6 +221,11 @@ coverage, a successful real-time subscription or every existing camera/operator.
   spans and cross-publisher links. Production Atlas Stories showed 26 linked
   entities in the available 77-item sample and rendered the source/version/date
   disclosure. Screenshot: screenshots/country-dictionary-provenance.jpg.
+- Public map link opened in a fresh production-browser tab, retaining centre,
+  2D/night and all layers off beyond the geolocation timer. Renderer zoom clamps
+  to its existing 1.5–18 range. Fixed zero-zoom fallback, implicit conflict layer,
+  overlapping share panel and selected-layer/health wording. Unit URL/privacy
+  checks passed. Screenshot: screenshots/public-map-share.jpg.
 - Built-client known-token-format scan: 64 JavaScript chunks, zero findings; see
   client-secret-audit.json. This limited pattern scan is not a proof about all
   arbitrary secret formats or every runtime API response.
@@ -243,3 +248,13 @@ disclose that ancestry. The new work does not justify merging unfinished parity.
 Draft pull request: https://github.com/leo777-debug/OPHANIM-V3/pull/25. Not merged.
 All checks above ran against the shared checkout, which includes preserved
 pre-existing uncommitted work. A clean-checkout CI run remains required before merge.
+
+**Baseline reconciliation required.** GitHub reports the actual default branch as
+`feat/gdacs-weather-ai-overview`, fetched at `d22f6a0`; this working branch lacks 21
+of its commits. They contain Presentation mode, operational homepage, fullscreen,
+entity selection, Vercel output and AI reliability/configuration changes. PR #25
+currently targets the older `codex/ophanim-foundation-worldmonitor` instead.
+This was discovered during the browser/ancestry audit; previous checks do not
+validate preservation of the current default branch. Integrate in an isolated
+worktree, preserve unrelated local edits, retarget the draft PR appropriately and
+re-run regressions before any merge or deployment. See task 00a in state.json.

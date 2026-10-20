@@ -207,3 +207,9 @@ person extraction remains enforced. This reference was generated independently
 from the installed Unicode/ICU data, with its original notice retained. Broader
 asset/city gazetteers and a universal feed graph remain incomplete. See
 ENTITY_DICTIONARY.md. No World Monitor code or services were used.
+Public Atlas links now encode only allowed display settings and restore camera,
+projection, basemap and exact layer selection. Private/unreviewed layers block
+public settings sharing. Data/time snapshots are not implied; current sources are
+loaded. See MAP_VIEW_LINKS.md. A default-branch discrepancy was found during
+verification: current Presentation/map/AI commits must be reconciled before
+preservation or completed parity can be claimed. PARITY/state.json tracks this.
