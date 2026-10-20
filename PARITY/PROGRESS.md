@@ -324,3 +324,22 @@ verified; never infer completion from a catalog entry or this plan.
 - Authenticated wizard/external worker validation, deployable isolated worker
   profiles and durable scoped SDK storage remain pending. Broad P2/P4 parity is
   unfinished; deployment remains last and the PR has not been merged.
+
+## 20 October 2026 — dense provider point layers
+
+- Provider point layers with 100+ points now use MapLibre worker clustering,
+  48-pixel radius, zoom-14 cutoff, counted circles and expansion on selection.
+  Original source data/evidence is retained; counts do not imply independent events.
+  Late worker results cannot move a disposed/replaced map binding.
+- Route Explorer optionally displays all 3,962 packaged Marnet port references,
+  default off, with source/licence/dataset/import dates. Port SHA-256 is pinned and
+  tested. No operating status or live vessel count is inferred from reference data.
+- Tests cover 10,000 points with one source/three draw layers, style restoration,
+  cleanup and late expansion results. Production browser rendered actual reference
+  clusters, expanded Europe and retained Suez/Cape route lines with the layer on.
+  Screenshots: clustered-reference-ports.jpg, expanded-port-cluster.jpg and
+  routes-with-clustered-ports.jpg. No frame-rate/hardware benchmark claim.
+- Checks: 428 passed, 5 skipped (104 files passed); production build, standalone
+  typecheck, targeted lint and whitespace checks passed. Client scan: 64 chunks,
+  zero known-token-format findings. Legacy bespoke layers/mobile GPU performance
+  and the broader P2/P4 scope remain pending. Deployment remains last; no merge.

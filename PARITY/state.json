@@ -36,7 +36,7 @@
     {
       "id": "06-platform-ux-api",
       "status": "partial",
-      "remaining": "Public offline shell and advisory snapshots added; panel layouts, global search, sharing, RTL, organization API/agent/webhook/widget and remaining UX pending"
+      "remaining": "Public offline shell/snapshots and provider point clustering added; legacy-layer load checks, panel layouts, global search, sharing, RTL, organization API/agent/webhook/widget and remaining UX pending"
     },
     {
       "id": "07-limitations",
@@ -53,7 +53,7 @@
     "baselineTests": "311 passed, 5 skipped",
     "baselineTypecheck": "passed",
     "baselineBuild": "passed",
-    "currentTests": "424 passed, 5 skipped; 103 files passed",
+    "currentTests": "428 passed, 5 skipped; 104 files passed",
     "typecheck": "passed",
     "build": "passed",
     "targetedLint": "passed",

@@ -95,7 +95,7 @@ the reason states the missing work rather than implying that keys alone will fix
 | Deduce/what-if analyst | Blocked | Sourced structured FACT/INFERENCE analysis experience pending. |
 | Forecast panel/scoring | Partial | Organization-scoped analyst probability register, evidence/horizon, immutable initial record, sourced outcome after horizon and binary Brier score. Forced RLS and API guards tested; live migration/authenticated browser validation pending. No automated predictions or validated accuracy claim. |
 | Panel management | Blocked | General drag/resize/layout persistence not implemented. |
-| Dense marker clustering/LOD | Partial | Existing map preserved; new all-layer clustering/load validation pending. |
+| Dense marker clustering/LOD | Partial | Provider point layers cluster at 100+ points using one worker source and three draw layers, with count labels/expansion/style restoration. Production browser checked 3,962 dated reference ports and route coexistence. Legacy bespoke layers and measured GPU/mobile load validation remain pending. |
 | Global Ctrl/Cmd+K and shortcut help | Partial | Existing search retained; unified keyboard palette/help pending. |
 | Share links/snapshots | Partial | Existing routing/shared verification retained; full map/time/data snapshots pending. |
 | Seen/unseen activity | Partial | Existing browser news-read IDs; organization/user-wide activity pending. |
@@ -165,7 +165,7 @@ coverage, a successful real-time subscription or every existing camera/operator.
 ## Checks and screenshots
 
 - Before: typecheck/build passed; 311 tests passed, 5 skipped (68 files passed).
-- Continuation milestone: 424 tests passed, 5 skipped (103 files passed); production
+- Continuation milestone: 428 tests passed, 5 skipped (104 files passed); production
   build, standalone typecheck and targeted lint passed. One database-policy test
   timed out during the first unconstrained concurrent build/test run; rerunning
   with two test workers passed. These results include first-seen persistence and
@@ -207,6 +207,12 @@ coverage, a successful real-time subscription or every existing camera/operator.
 - Public setup guide and signed-out integrations prompt checked in the production
   browser. Screenshot: screenshots/sdk-setup-guide.jpg. Local HTTP security audit:
   setup-security-audit.json. Authenticated wizard interaction remains unverified.
+- Dense provider-point tests bind 10,000 fixture points without per-point layers,
+  preserve original data and discard late cluster-worker responses after cleanup.
+  Production browser rendered 3,962 packaged reference points, expanded a European
+  cluster and retained both sea routes with the port layer enabled. Screenshots:
+  clustered-reference-ports.jpg, expanded-port-cluster.jpg, routes-with-clustered-ports.jpg.
+  This is functional rendering evidence, not a frame-rate or hardware benchmark.
 - Built-client known-token-format scan: 64 JavaScript chunks, zero findings; see
   client-secret-audit.json. This limited pattern scan is not a proof about all
   arbitrary secret formats or every runtime API response.

@@ -194,3 +194,9 @@ sent through pinned, bounded transport. SDK diagnostics validate a server-suppli
 credential without creating map objects; bounded ingestion preserves unknown
 confidence/times and resets process state on a tenant configuration change.
 External worker isolation and multi-worker SDK persistence remain incomplete.
+Provider point layers now use MapLibre's existing worker clustering API, with
+count labels and expansion, preserving original source records. Route Explorer
+optionally shows 3,962 dated Apache-2.0 port reference points; these do not assert
+live operations. Production browser rendering/expansion and route coexistence were
+checked. Legacy layer and measured hardware load work remain. See MAP_CLUSTERING.md.
+No World Monitor code, styles, assets, APIs, embeds or data were used.

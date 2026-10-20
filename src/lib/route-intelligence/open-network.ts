@@ -1,22 +1,13 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { distanceKm } from '@/lib/intelligence/analysis';
+import { MARITIME_NETWORK } from './reference';
+export { MARITIME_NETWORK } from './reference';
 
 export type Point = [number, number]; // longitude, latitude
 type Edge = { to: number; km: number; passage?: string };
 type Graph = { points: Point[]; edges: Edge[][] };
 type Collection = { features: Array<{ properties?: Record<string, unknown>; geometry: { type: string; coordinates: unknown } }> };
-export const MARITIME_NETWORK = {
-  id: 'marnet-reference', name: 'Marnet / searoute-py reference network',
-  version: '1.6.0', datasetDate: '2026-05-17', importedAt: '2026-10-19',
-  commit: 'dde461382a60ff75f4577f6e06c411bc48cd7efc',
-  source: 'https://github.com/genthalili/searoute-py/tree/dde461382a60ff75f4577f6e06c411bc48cd7efc/searoute/data',
-  licence: 'Apache-2.0', commercialUse: 'yes', keyNeeded: false,
-  attribution: 'Marnet maritime reference network distributed by Gent Halili / searoute-py contributors, based on Eurostat searoute. Apache-2.0; original licence retained.',
-  rateLimits: 'Packaged reference; no runtime upstream requests', refresh: 'Quarterly review; pinned dataset version',
-  sha256: '111a82d949bb949c396a69a08828781314d3afe779c07e9754c3b2834dfca415',
-  purpose: 'Schematic planning and distance estimates; not navigational routing. No draft, vessel class, currents, ice, opening hours or live passage status is modeled.',
-};
 export const PASSAGES: Record<string, string> = { ormuz: 'Strait of Hormuz', babalmandab: 'Bab el-Mandeb', suez: 'Suez Canal', malacca: 'Strait of Malacca', panama: 'Panama Canal', gibraltar: 'Strait of Gibraltar', bosporus: 'Bosporus', south_africa: 'Cape of Good Hope' };
 function validPoint(point: unknown): point is Point { return Array.isArray(point) && point.length === 2 && point.every(Number.isFinite) && Math.abs(point[0]) <= 180 && Math.abs(point[1]) <= 90; }
 const km = (a: Point, b: Point) => distanceKm({ lat: a[1], lng: a[0] }, { lat: b[1], lng: b[0] });

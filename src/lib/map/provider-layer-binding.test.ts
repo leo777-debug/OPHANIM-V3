@@ -11,6 +11,7 @@ function fakeMap(initiallyReady: boolean) {
     removeSource: (id: string) => { sources.delete(id); map.emit('styledata'); },
     addLayer: vi.fn((layer: { id: string; type: string }) => { layers.set(layer.id, layer); map.emit('styledata'); }),
     removeLayer: (id: string) => { layers.delete(id); map.emit('styledata'); },
+    easeTo: vi.fn(),
     on: (event: string, idOrHandler: string | ((event?: unknown) => void), handler?: (event?: unknown) => void) => { const key = typeof idOrHandler === 'string' ? `${event}:${idOrHandler}` : event, fn = typeof idOrHandler === 'string' ? handler! : idOrHandler; if (!listeners.has(key)) listeners.set(key, new Set()); listeners.get(key)!.add(fn); },
     off: (event: string, idOrHandler: string | ((event?: unknown) => void), handler?: (event?: unknown) => void) => { const key = typeof idOrHandler === 'string' ? `${event}:${idOrHandler}` : event, fn = typeof idOrHandler === 'string' ? handler! : idOrHandler; listeners.get(key)?.delete(fn); },
     emit: (event: string, payload?: unknown) => { for (const callback of [...listeners.get(event) ?? []]) callback(payload); },
@@ -42,5 +43,26 @@ describe('provider layers and map style lifecycle', () => {
     for (let index = 0; index < 10; index++) map.emit('idle'); expect(map.addSource).toHaveBeenCalledTimes(3); cleanup();
     const hidden = fakeMap(true), clear = bindProviderLayers(hidden as unknown as maplibregl.Map, [{ ...layer(), visible: false }]);
     hidden.emit('idle'); expect(hidden.addSource).not.toHaveBeenCalled(); clear();
+  });
+  it('sends ten thousand original points to one worker source and uses three draw layers', () => {
+    const dense = layer(); dense.source.features = Array.from({ length: 10000 }, (_, index) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [index % 360 - 180, index % 160 - 80] }, properties: { id: `fixture-${index}` } }));
+    const map = fakeMap(true), cleanup = bindProviderLayers(map as unknown as maplibregl.Map, [dense]);
+    expect(map.addSource).toHaveBeenCalledTimes(1); expect(map.layers.size).toBe(3);
+    expect(map.sources.get('provider-source-point')).toMatchObject({ cluster: true, clusterRadius: 48, clusterMaxZoom: 14 });
+    expect((map.sources.get('provider-source-point') as { data: unknown }).data).toBe(dense.source);
+    expect(map.addLayer.mock.calls[0][0]).toMatchObject({ filter: ['!', ['has', 'point_count']] });
+    map.layers.clear(); map.sources.clear(); map.emit('style.load'); expect(map.layers.size).toBe(3);
+    expect(map.listeners.get('click:provider-layer-point-cluster')?.size).toBe(1);
+    cleanup(); expect(map.layers.size).toBe(0); expect(map.sources.size).toBe(0);
+  });
+  it('expands a cluster but does not move the map from a worker response after disposal', async () => {
+    const dense = layer(); dense.source.features = Array.from({ length: 100 }, () => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [0, 0] }, properties: {} }));
+    const map = fakeMap(true), cleanup = bindProviderLayers(map as unknown as maplibregl.Map, [dense]);
+    const source = map.sources.get('provider-source-point') as { getClusterExpansionZoom: ReturnType<typeof vi.fn> };
+    source.getClusterExpansionZoom = vi.fn().mockResolvedValue(8);
+    const event = { features: [{ properties: { cluster_id: 4 }, geometry: { type: 'Point', coordinates: [0, 0] } }] };
+    map.emit('click:provider-layer-point-cluster', event); await Promise.resolve(); expect(map.easeTo).toHaveBeenCalledExactlyOnceWith({ center: [0, 0], zoom: 8, duration: 350 });
+    let answer!: (zoom: number) => void; source.getClusterExpansionZoom.mockImplementation(() => new Promise<number>(resolve => { answer = resolve; }));
+    map.emit('click:provider-layer-point-cluster', event); cleanup(); answer(12); await Promise.resolve(); expect(map.easeTo).toHaveBeenCalledTimes(1);
   });
 });
