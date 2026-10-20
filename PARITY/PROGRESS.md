@@ -160,3 +160,16 @@ verified; never infer completion from a catalog entry or this plan.
   timed out in PGlite; two-worker rerun passed without weakening the timeout.
 - These checks use the shared checkout with preserved pre-existing edits.
   Deployment stays last. No merge has been attempted; broad parity is unfinished.
+
+## 20 October 2026 — first-observation persistence
+
+- Replaced process-only article observations with canonical public article hashes
+  and an atomic earliest-time register. PostgreSQL resolves concurrent writes
+  with the earlier UTC observation; serialized file writes preserve identities
+  across restarts. Serverless/no-store failures explicitly report memory fallback.
+- Storage mode and persistence warnings travel with news records and appear in
+  Stories. Publication times are never substituted for observation times.
+- Tests execute the real first-seen SQL in PGlite, verify overlapping file writes,
+  URL tracking normalization and fallback reporting. The 368-test/build/typecheck/
+  lint milestone above includes these changes. News, seismic and dated FIRMS fire
+  observations now feed convergence; other disruption adapters remain unfinished.

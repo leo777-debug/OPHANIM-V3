@@ -47,3 +47,47 @@ export async function writeRuntimeValue<T>(scope: string, id: string, value: T):
   });
   queue = operation.catch(() => {}); await operation; return result;
 }
+
+/** Atomic first-observation register. Only public source identities and UTC times belong here. */
+export async function recordRuntimeFirstSeen(scope: string, ids: string[], observedAt: string): Promise<RuntimeRead<string>> {
+  valid(scope); ids = [...new Set(ids)]; ids.forEach(valid);
+  const parsed = Date.parse(observedAt);
+  if (!Number.isFinite(parsed)) throw new Error('Valid observation time required.');
+  const time = new Date(parsed).toISOString();
+  if (!ids.length) return { items: {}, storage: process.env.DATABASE_URL ? 'postgres' : directory() ? 'local-file' : 'memory' };
+  const remember = (existing: Record<string, string>) => Object.fromEntries(ids.map(id => [id, existing[id] && existing[id] < time ? existing[id] : time]));
+  if (process.env.DATABASE_URL) {
+    try {
+      const result = await db().query<{ id: string; value: string }>(
+        `insert into ophanim_runtime.entries(scope,id,value)
+         select $1,id,to_jsonb($3::text) from unnest($2::text[]) as id
+         on conflict(scope,id) do update set
+           value=to_jsonb(least(ophanim_runtime.entries.value #>> '{}', excluded.value #>> '{}')),
+           updated_at=now()
+         returning id,value`, [scope, ids, time]);
+      return { items: Object.fromEntries(result.rows.map(row => [row.id, row.value])), storage: 'postgres' };
+    } catch {
+      const items = remember((memory.get(scope) ?? {}) as Record<string, string>);
+      memory.set(scope, { ...memory.get(scope), ...items });
+      return { items, storage: 'memory', warning: 'First-seen database unavailable; current observations are process-local.' };
+    }
+  }
+  let result: RuntimeRead<string> = { items: {}, storage: 'memory' };
+  const operation = queue.then(async () => {
+    const current = await readRuntimeScope<string>(scope);
+    const items = remember(current.items), all = { ...current.items, ...items };
+    memory.set(scope, all);
+    const root = directory();
+    if (root) {
+      try {
+        await mkdir(root, { recursive: true, mode: 0o700 });
+        const temporary = path.join(root, `${scope}.${randomUUID()}.tmp`);
+        await writeFile(temporary, JSON.stringify(all), { mode: 0o600 });
+        await rename(temporary, path.join(root, `${scope}.json`));
+        result = { items, storage: 'local-file' }; return;
+      } catch { /* Return the actual memory fallback below. */ }
+    }
+    result = { items, storage: 'memory', warning: 'First-seen observations are process-local; configure persistent runtime storage.' };
+  });
+  queue = operation.catch(() => {}); await operation; return result;
+}

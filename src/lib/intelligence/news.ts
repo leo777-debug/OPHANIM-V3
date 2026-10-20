@@ -14,6 +14,8 @@ export interface NewsItem {
   evidence_tier?: string;
   machine_assessment?: string;
   first_seen?: string;
+  first_seen_storage?: string;
+  first_seen_warning?: string | null;
   source_data_mode?: 'fresh' | 'stale' | 'unavailable';
   source_last_success?: string | null;
   source_stale_since?: string | null;

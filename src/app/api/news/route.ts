@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import crypto from 'crypto';
 import Parser from 'rss-parser';
 import { deduplicateNews, publishedTime, safeSourceUrl, type FeedHealth, type NewsItem } from '@/lib/intelligence/news';
 import { newsFeedCache } from '@/lib/intelligence/news-cache';
 import { refreshLabel } from '@/lib/providers/resilient-feed';
+import { articleObservationId, observeArticles } from '@/lib/intelligence/observations';
 
 /**
  * Ophanim supporting news discovery. Each source fails independently.
@@ -87,16 +87,6 @@ const parser = new Parser<Record<string, unknown>, { geoLat?: string; geoLong?: 
   customFields: { item: [['geo:lat', 'geoLat'], ['geo:long', 'geoLong']] },
 });
 
-// Observation time differs from publication time. Lifetime and reset behaviour
-// are explicit in the UI; bounded memory awaits a persistent public ingestion store.
-const firstObservations = new Map<string, string>();
-function firstObserved(id: string) {
-  const existing = firstObservations.get(id);
-  if (existing) return existing;
-  if (firstObservations.size >= 10000) firstObservations.delete(firstObservations.keys().next().value!);
-  const value = new Date().toISOString(); firstObservations.set(id, value); return value;
-}
-
 async function parseRSSItems(xml: string, source: string): Promise<Article[]> {
   const feed = await parser.parseString(xml);
   return feed.items.slice(0, 25).flatMap((item) => {
@@ -146,6 +136,7 @@ export async function GET() {
       ...Object.entries(RSS_FEEDS).map(([name, url]) => load(name, url, (xml) => parseRSSItems(xml, name))),
     ]);
     const allArticles = results.flat();
+    const observations = await observeArticles(allArticles.map(article => articleObservationId(article.source, article.link, article.title)));
 
     const newsItems = deduplicateNews(allArticles.map((article): NewsItem & Record<string, unknown> => {
       const riskScore = scoreRisk(article.description || article.title);
@@ -154,10 +145,12 @@ export async function GET() {
       const region = Object.keys(KEYWORD_COORDS).find((keyword) => text.toLowerCase().includes(keyword));
       const time = publishedTime(article.pubDate);
 
-      const id = crypto.createHash('sha256').update(`${article.source}:${article.link || article.title}`).digest('hex').slice(0, 24);
+      const id = articleObservationId(article.source, article.link, article.title);
       return {
         id,
-        first_seen: firstObserved(id),
+        first_seen: observations.items[id],
+        first_seen_storage: observations.storage,
+        first_seen_warning: observations.warning,
         source_data_mode: article.feedMode,
         source_last_success: article.lastSuccessAt,
         source_stale_since: article.staleSince,
@@ -181,6 +174,8 @@ export async function GET() {
     return NextResponse.json({
       news: newsItems,
       total: newsItems.length,
+      observation_storage: observations.storage,
+      observation_warning: observations.warning,
       news_sources: health.sort((a, b) => a.name.localeCompare(b.name)),
       timestamp: new Date().toISOString(),
     }, {

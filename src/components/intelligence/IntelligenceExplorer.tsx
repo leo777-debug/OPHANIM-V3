@@ -6,7 +6,7 @@ import { buildTimeline, filterNews, NEWS_WINDOWS, regionalCoverage, safeSourceUr
 import styles from './desk.module.css';
 
 export type ExplorerView = 'timeline' | 'regions' | 'sources' | 'clocks';
-export type ExplorerData = { news?: NewsItem[]; earthquakes?: Parameters<typeof buildTimeline>[1]; news_sources?: FeedHealth[] };
+export type ExplorerData = { news?: NewsItem[]; earthquakes?: Parameters<typeof buildTimeline>[1]; news_sources?: FeedHealth[]; fires?: Array<{ lat: number; lng: number; observedAt?: string | null; date?: string; time?: string; title?: string; type?: string }> };
 type Props = {
   view: ExplorerView;
   data: ExplorerData;

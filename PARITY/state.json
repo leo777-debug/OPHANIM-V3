@@ -4,17 +4,60 @@
   "startedAt": "2026-10-19",
   "firstUnfinishedTask": "01-integrations",
   "tasks": [
-    { "id": "00-inventory", "status": "done" },
-    { "id": "01-integrations", "status": "partial", "remaining": "Authenticated connection adapters, durable fetch health, per-operator inventory, all existing credential UIs and missing-key prompts" },
-    { "id": "02-core-intelligence", "status": "partial", "remaining": "Durable first-seen, broad gazetteer, remaining convergence adapters, alert-rule trust integration, vetted multilingual catalogue, regional coverage gaps" },
-    { "id": "03-provider-reliability", "status": "partial", "remaining": "All-provider scheduler, payload/data-age audit, persistent health, critical outage emails, replay snapshots" },
-    { "id": "04-specialist-layers", "status": "pending" },
-    { "id": "05-analysis-tools", "status": "pending" },
-    { "id": "06-platform-ux-api", "status": "pending" },
-    { "id": "07-limitations", "status": "partial", "remaining": "Reference importers, public push, optional Compose services, setup wizard, full session/demo UX" },
-    { "id": "08-validation-report-pr", "status": "partial", "remaining": "Full Playwright/security/load matrix, clean-checkout CI and final completion report; draft PR 25 open" }
+    {
+      "id": "00-inventory",
+      "status": "done"
+    },
+    {
+      "id": "01-integrations",
+      "status": "partial",
+      "remaining": "Remaining protocol connection adapters, per-operator inventory, universal missing-key prompts and setup-test gating"
+    },
+    {
+      "id": "02-core-intelligence",
+      "status": "partial",
+      "remaining": "Broad gazetteer, remaining convergence adapters, alert-rule trust integration, regional media catalogue and geographic coverage gaps; persistent first-seen added"
+    },
+    {
+      "id": "03-provider-reliability",
+      "status": "partial",
+      "remaining": "Complete provider payload/item-age audit, universal last-good persistence and replay snapshots; connection scheduler, persistence and outage emails added"
+    },
+    {
+      "id": "04-specialist-layers",
+      "status": "partial",
+      "remaining": "Six official advisory sources added; remaining specialist layers tracked in REPORT.md"
+    },
+    {
+      "id": "05-analysis-tools",
+      "status": "partial",
+      "remaining": "Sea route alternatives and four organization scenario templates added; actual land routes, Deduce and scored forecasts remain"
+    },
+    {
+      "id": "06-platform-ux-api",
+      "status": "pending"
+    },
+    {
+      "id": "07-limitations",
+      "status": "partial",
+      "remaining": "Reference importers, public push, optional Compose services, setup wizard, full session/demo UX"
+    },
+    {
+      "id": "08-validation-report-pr",
+      "status": "partial",
+      "remaining": "Full Playwright/security/load matrix, clean-checkout CI and final completion report; draft PR 25 open"
+    }
   ],
-  "checks": { "baselineTests": "311 passed, 5 skipped", "baselineTypecheck": "passed", "baselineBuild": "passed", "currentTests": "343 passed, 5 skipped; 75 files passed", "typecheck": "passed", "build": "passed", "targetedLint": "passed", "publicReachability": "14/14; HTTP only, not freshness/payload" },
+  "checks": {
+    "baselineTests": "311 passed, 5 skipped",
+    "baselineTypecheck": "passed",
+    "baselineBuild": "passed",
+    "currentTests": "368 passed, 5 skipped; 85 files passed",
+    "typecheck": "passed",
+    "build": "passed",
+    "targetedLint": "passed",
+    "publicReachability": "14/14; HTTP only, not freshness/payload"
+  },
   "overallStatus": "in_progress",
   "resumeInstruction": "Read REPORT.md and PROGRESS.md, inspect current working tree and preserve pre-existing changes. Resume the first unfinished task 01-integrations. Do not mark broad parity complete from this partial implementation.",
   "baselineCommit": "e0898ef",

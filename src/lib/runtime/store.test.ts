@@ -4,7 +4,9 @@ import path from 'node:path';
 import { readFileSync } from 'node:fs';
 import { PGlite } from '@electric-sql/pglite';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { readRuntimeScope, writeRuntimeValue } from './store';
+import { readRuntimeScope, writeRuntimeValue, recordRuntimeFirstSeen } from './store';
+const query = vi.hoisted(() => vi.fn());
+vi.mock('@/lib/db/pool', () => ({ db: () => ({ query }) }));
 afterEach(() => vi.unstubAllEnvs());
 describe('runtime metadata persistence', () => {
   it('survives independent reads and coalesces file writes without losing records', async () => {
@@ -15,6 +17,12 @@ describe('runtime metadata persistence', () => {
       const result = await readRuntimeScope<{ count: number }>('health');
       expect(result.storage).toBe('local-file'); expect(Object.keys(result.items)).toHaveLength(12);
       expect(result.items['source-5'].count).toBe(5);
+      await Promise.all([
+        recordRuntimeFirstSeen('seen', ['article-a', 'article-b'], '2026-10-20T10:00:00Z'),
+        recordRuntimeFirstSeen('seen', ['article-a', 'article-c'], '2026-10-20T11:00:00Z'),
+      ]);
+      const observations = await readRuntimeScope<string>('seen');
+      expect(observations.items).toEqual({ 'article-a': '2026-10-20T10:00:00.000Z', 'article-b': '2026-10-20T10:00:00.000Z', 'article-c': '2026-10-20T11:00:00.000Z' });
       await expect(writeRuntimeValue('../escape', 'id', {})).rejects.toThrow();
     } finally { await rm(root, { recursive: true, force: true }); }
   });
@@ -23,6 +31,13 @@ describe('runtime metadata persistence', () => {
     try {
       await pg.exec('create role anon; create role authenticated;');
       await pg.exec(readFileSync('supabase/migrations/20261019180612_parity_runtime.sql', 'utf8'));
+      vi.stubEnv('DATABASE_URL', 'test-only');
+      query.mockImplementation((sql: string, parameters: unknown[]) => pg.query(sql, parameters));
+      await recordRuntimeFirstSeen('observed', ['one', 'two'], '2026-10-20T12:00:00Z');
+      await recordRuntimeFirstSeen('observed', ['one'], '2026-10-20T10:00:00Z');
+      const first = await recordRuntimeFirstSeen('observed', ['one', 'two'], '2026-10-20T13:00:00Z');
+      expect(first.storage).toBe('postgres');
+      expect(first.items).toEqual({ one: '2026-10-20T10:00:00.000Z', two: '2026-10-20T12:00:00.000Z' });
       await pg.query("insert into ophanim_runtime.entries(scope,id,value) values('health','one','{}')");
       await pg.exec('grant usage on schema ophanim_runtime to authenticated; grant select,insert on ophanim_runtime.entries to authenticated; set role authenticated;');
       expect((await pg.query('select * from ophanim_runtime.entries')).rows).toEqual([]);

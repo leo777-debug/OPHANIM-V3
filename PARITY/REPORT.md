@@ -1,6 +1,6 @@
 # Parity and reliability report — work in progress
 
-Date: 2026-10-19. Branch: `parity-and-reliability`.
+Updated: 2026-10-20. Branch: `parity-and-reliability`.
 
 This is an interim implementation report, not completed parity. Resume from
 `state.json` and `PROGRESS.md`. No World Monitor code, styles, assets, API, embeds
@@ -10,8 +10,8 @@ No claim is made about the provenance of historical commits outside this work.
 
 ## Section 2: central keys
 
-**Partial.** API_KEYS.md documents 52 service entries/groups and `.env.example`
-contains 111 deliberately empty configuration identifiers, generated from source
+**Partial.** API_KEYS.md documents 59 service entries/groups and `.env.example`
+contains 119 deliberately empty configuration identifiers, generated from source
 without reading private environment files. The inventory includes keyless services,
 credentials, optional workers, runtime settings and reserved-but-unused keys.
 Some keyless catalogue entries group multiple operators (especially cameras and
@@ -19,11 +19,13 @@ maps); an exhaustive operator-level commercial-rights audit remains pending.
 
 Admin → Integrations is owner-protected, searchable and environment-only. Credentials
 are never accepted, echoed or stored by this page/API. Environment presence is
-separate from observation. Five fixed public endpoints have reachability probes;
-all other tests explicitly report configuration-only checks. Observations are
-process-local and disappear on restart. Existing feature-specific credential UIs
-have not yet all been consolidated. Global key-required prompts, authenticated
-test adapters, durable last-fetch/error history and setup-test gating remain.
+separate from observation. Read-only adapters test registered public endpoints,
+compatible model lists and supported authenticated service metadata. Unsupported
+protocols explicitly report configuration-only checks. Observations persist through
+the private runtime schema, or a reported local-file/memory fallback. Browser AI
+key inputs/storage were removed and server configuration overrides preferences.
+Global key-required prompts, remaining protocol-specific adapters and setup-test
+gating remain. No UI credential-saving feature is exposed.
 
 Full service/variable/unlock/price/access/fallback tables: [API_KEYS.md](../API_KEYS.md).
 No real keys were invented, requested, inspected or added.
@@ -55,12 +57,12 @@ the reason states the missing work rather than implying that keys alone will fix
 
 | Capability | Status | Evidence / remaining work |
 | --- | --- | --- |
-| Story clustering and deduplication | Partial | New Stories tab, canonical URLs, Unicode titles, token similarity/window, counts and evidence. First-seen bounded/process-local; no durable cluster history. |
+| Story clustering and deduplication | Partial | Stories tab, canonical URLs, Unicode titles, token similarity/window, counts and evidence. First-seen persists using atomic earliest-observation writes; explicit memory fallback. No durable cluster membership history. |
 | Entity extraction/correlation | Partial | Dictionary, English/Arabic aliases, valid explicit IMO/MMSI/ICAO24, linked article IDs. Small gazetteer; public-role names require explicit dictionary; not all feeds wired. |
-| Geographic convergence | Partial | Configurable tested score, independent operators/types, all contributions. Desk wires news and seismic only; other type adapters and alert delivery pending. |
+| Geographic convergence | Partial | Configurable tested score, independent operators/types, all contributions. Desk wires reported news, seismic and dated FIRMS fire observations; other disruption adapters and alert delivery pending. |
 | Source trust tiers | Partial | Manual tier/affiliation/risk metadata in Stories/news; minimum tier for convergence. Other evidence screens and persisted alert rules pending. |
 | Why it matters | Partial | Labelled deterministic inference in Stories. Broader event/asset exposure integration pending. |
-| Larger vetted multilingual news catalogue | Blocked | Existing nine sources retained. No new feeds enabled; per-source commercial-rights review and translations pending. |
+| Larger vetted multilingual news catalogue | Partial | Six official advisory sources added, including NHC English/Spanish, with explicit source rights. Broad regional media catalogue and optional labelled translations remain pending. |
 | Freshness/intelligence gaps | Partial | Sources tab: actual success/check/newest times, stale cache, errors, empty/undated gaps. Geographic/layer-wide coverage matrices pending. |
 | Aviation disruption | Partial | Existing gated METAR provider. Delays, ground stops, permitted NOTAM and TAF layers pending. |
 | Maritime chokepoint monitoring | Partial | Existing regional AIS/count context retained; global coverage, transit baselines and trends pending. |
@@ -71,21 +73,21 @@ the reason states the missing work rather than implying that keys alone will fix
 | Cable faults/repair monitoring | Partial | Existing reference geometry retained; permitted notices and repair-vessel evidence pending. |
 | Infrastructure cascade | Blocked | Dependency graph/model and UI not implemented. |
 | Corroborated unrest/conflict | Partial | Existing incident discovery retained; permitted conflict dataset/independence scoring pending. No ACLED adapter added. |
-| Regional cyclone warnings | Partial | Existing weather/GDACS context; regional official-centre connectors pending. |
+| Regional cyclone warnings | Partial | NHC Atlantic/Eastern Pacific/Spanish official advisories. Arabian Sea, Bay of Bengal and other regional centres remain pending. |
 | Cross-source hazard deduplication | Partial | Existing normalized event keys; dedicated GDACS/EONET/USGS matching pending. |
 | Climate anomalies | Blocked | Open-dataset importer and anomaly calculation not implemented. |
 | Displacement/population exposure | Blocked | Permitted population-grid importer and footprint estimates not implemented. |
-| Official travel/security advisories | Blocked | Country advisory connectors not implemented. |
-| Civil-defence alerts | Blocked | Licensed official public-warning adapters not implemented. |
-| Disease outbreaks | Blocked | Official health connector/panel not implemented. |
+| Official travel/security advisories | Partial | UK FCDO country selection, source date/link, rights and freshness. Additional governments and country-wide aggregation remain pending. |
+| Civil-defence alerts | Partial | Official NWS public weather warnings with severity mapping; national siren/civil-defence feeds remain pending. Coverage explicitly limited to the United States. |
+| Disease outbreaks | Partial | CDC Travel Health Notices panel, original dates and source links; broader official health-agency coverage remains pending. |
 | Critical minerals/energy | Blocked | Dated licensed reference importers and disruption panel not implemented. |
 | Radiation monitoring | Blocked | Permitted official monitoring adapter not implemented. |
 | Trade/tariffs/supply-chain/tenders | Partial | Existing Logistics workspace preserved; public policy/tender adapters pending. |
 | Markets/crowd forecasts | Partial | Existing price context retained; licensed stress composite/forecasts and edition default review pending. |
 | Country dashboards | Partial | Existing dossier/heuristic country view; unified inputs and transparent score redesign pending. |
 | Unified threat timeline | Partial | Existing news/seismic chronology retained; remaining event types pending. |
-| Route Explorer | Partial | Existing port resolution; open routing network, alternatives and distance/time model pending. |
-| Scenario engine | Blocked | Templates, tenant shipment exposure and CSV/PDF export not implemented. |
+| Route Explorer | Partial | Pinned Apache-2.0 sea network, port search, eight passage choices, alternatives, extra distance/days, public hazard context and native map. Endpoint connectors are explicitly unrouted; road/rail legs remain pending. |
+| Scenario engine | Partial | Four hypothetical templates assess session-scoped organization shipments, with exact port resolution, unknowns, calculations, CSV and browser Print / Save PDF. Up to 200 records; no persisted scenarios or capacity/queue simulation. |
 | Deduce/what-if analyst | Blocked | Sourced structured FACT/INFERENCE analysis experience pending. |
 | Forecast panel/scoring | Blocked | Question/horizon/outcome/probability persistence and scoring pending. |
 | Panel management | Blocked | General drag/resize/layout persistence not implemented. |
@@ -109,9 +111,9 @@ the reason states the missing work rather than implying that keys alone will fix
 
 | Limitation | Fixed here | Still outstanding |
 | --- | --- | --- |
-| 4.1 Feed health | News timeout/backoff/circuit/cache, transparent stale labels; five integration probes; 14 live reachability probes all reached endpoints | Scheduled all-provider/payload audit, durable health metrics, admin outage email and replay snapshots |
-| 4.2 Keys/separate services | Central empty inventory, protected status and clear configuration states | Optional Docker Compose services, actual per-service health tests and universal unavailable-service states |
-| 4.3 Static reference data | Native Logistics controls explicitly label infrastructure/cable reference | Scheduled authoritative importers, versions/history and status overlays |
+| 4.1 Feed health | News timeout/backoff/circuit/cache, persistent connection observations, optional health worker and sustained-outage email; six new official-source payloads parsed in local audit | Complete all-provider/item-age audit, universal durable last-good caches and labelled replay snapshots |
+| 4.2 Keys/separate services | Central empty inventory, server-only AI credentials, protected connection adapters, optional Compose health profile | Remaining optional service containers, protocol adapters and universal unavailable-service states |
+| 4.3 Static reference data | Native Logistics reference labels; route dataset pinned by version/date/hash/licence | Scheduled authoritative importers, change history and live asset-status overlays |
 | 4.4 Periodic refresh | News says Every 300 s; existing SDK SSE remains periodic store checks with cancellation cleanup | Public normalized-event push, cross-instance fanout and per-layer refresh labels |
 | 4.5 Research/private SDK | Setup docs; SDK reads require session and matching configured tenant; unset configuration disabled | Wizard, actual connection-test gating, send-test-event, durable/scoped SDK storage |
 | 4.6 Protected API UX | Integration sign-in prompt; safe login returnTo; SDK metadata/stream 401 signed-out and 403 other tenant | Remember-me choice, demo organization, full private-route regression suite and all protected-screen prompts |
@@ -124,8 +126,21 @@ Request body streaming limits and full private-data API audit remain outstanding
 
 ## Sources and licences
 
-No new external data connector was enabled. New integration metadata/probes refer
-to sources already consumed by Ophanim. No World Monitor request was made.
+The following independently implemented connectors/reference datasets were added.
+No World Monitor request was made. Each new source has an existing-registry entry,
+attribution, rate rules and explicit key requirements. All are keyless.
+
+| Source | Licence | Commercial use | Default |
+| --- | --- | --- | --- |
+| NOAA/NWS public weather warnings | US government public domain, NWS-authored text | yes | on; US coverage |
+| NHC Atlantic, Eastern Pacific and Atlantic Spanish RSS | US government public domain, NHC-authored text | yes | on; stated basin/language coverage |
+| CDC Travel Health Notices | US government public domain, CDC-authored notices; excludes third-party media | yes | on |
+| UK FCDO country travel advice | Open Government Licence v3.0; stated exclusions apply | yes | on when country selected |
+| Marnet sea edges and ports, searoute-py 1.6.0 data | Apache-2.0 | yes | on; dated reference, no navigation claim |
+
+Source terms and attribution are shown in the public advisory UI and declared in
+`specialist-providers.ts`. Pinned network provenance, SHA-256 hashes, formulas and
+limitations are in `docs/ROUTE_SCENARIO_METHODS.md`; original licence is included.
 The small entity dictionary is manually curated Ophanim reference metadata.
 All future connectors must register licence name, yes/no/unknown commercial use,
 attribution, rate limits and key requirement; no/unknown default off. The existing
@@ -140,10 +155,15 @@ coverage, a successful real-time subscription or every existing camera/operator.
 ## Checks and screenshots
 
 - Before: typecheck/build passed; 311 tests passed, 5 skipped (68 files passed).
-- Current: 343 tests passed, 5 skipped (75 files passed); production build passed.
+- Continuation milestone: 368 tests passed, 5 skipped (85 files passed); production
+  build, standalone typecheck and targeted lint passed. One database-policy test
+  timed out during the first unconstrained concurrent build/test run; rerunning
+  with two test workers passed. These results include first-seen persistence and
+  the source-date anomaly correction.
 - Targeted security tests: protected integrations API; no arbitrary URL/key probe
   input; redacted errors; SDK read session/tenant gating; SSE timer cleanup; safe
-  return destinations. No database migration or tenant policy was changed.
+  return destinations. An additive private-runtime migration was added and tested
+  with PGlite; no live migration was applied. Tenant document policies were not changed.
 - Resilience tests include 100 simultaneous callers sharing one source fetch.
   This is not a WebGL marker benchmark or many-browser SSE load test.
 - Full requested Playwright/layout/RTL/mobile/Presentation regression matrix,
