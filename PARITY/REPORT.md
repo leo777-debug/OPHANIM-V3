@@ -10,7 +10,7 @@ No claim is made about the provenance of historical commits outside this work.
 
 ## Section 2: central keys
 
-**Partial.** API_KEYS.md documents 60 service entries/groups and `.env.example`
+**Partial.** API_KEYS.md documents 62 service entries/groups and `.env.example`
 contains 119 deliberately empty configuration identifiers, generated from source
 without reading private environment files. The inventory includes keyless services,
 credentials, optional workers, runtime settings and reserved-but-unused keys.
@@ -64,7 +64,7 @@ the reason states the missing work rather than implying that keys alone will fix
 | Why it matters | Partial | Labelled deterministic inference in Stories. Broader event/asset exposure integration pending. |
 | Larger vetted multilingual news catalogue | Partial | Six official advisory sources added, including NHC English/Spanish, with explicit source rights. Broad regional media catalogue and optional labelled translations remain pending. |
 | Freshness/intelligence gaps | Partial | Sources tab: actual success/check/newest times, stale cache, errors, empty/undated gaps. Geographic/layer-wide coverage matrices pending. |
-| Aviation disruption | Partial | Existing gated METAR provider. Delays, ground stops, permitted NOTAM and TAF layers pending. |
+| Aviation disruption | Partial | FAA public ground-stop/delay/closure metadata and selected US METAR/TAF panel, documented weather thresholds, source dates, optional native map and CSV. Worldwide NOTAM and international weather rights remain pending; conditional notices do not establish full airport closure. |
 | Maritime chokepoint monitoring | Partial | Existing regional AIS/count context retained; global coverage, transit baselines and trends pending. |
 | Vessel density | Blocked | Density aggregation and UI not implemented. |
 | AIS gaps | Blocked | Permitted historical observation store and conservative gap detection pending. |
@@ -138,6 +138,8 @@ attribution, rate rules and explicit key requirements. All are keyless.
 | UK FCDO country travel advice | Open Government Licence v3.0; stated exclusions apply | yes | on when country selected |
 | Marnet sea edges and ports, searoute-py 1.6.0 data | Apache-2.0 | yes | on; dated reference, no navigation claim |
 | GDACS normalized hazard adapter | GDACS specific terms; commercial reuse unresolved | unknown | off; no requests, flagged in Admin |
+| FAA NAS public airport status facts | US government public domain, FAA-authored metadata; excludes raw third-party/operator NOTAM text | yes | on; US national list, not full NOTAM coverage |
+| NOAA/NWS US K-station METAR and TAF | US government public domain, NWS US products | yes | on; selected US stations, broader international rights gate retained |
 
 Source terms and attribution are shown in the public advisory UI and declared in
 `specialist-providers.ts`. Pinned network provenance, SHA-256 hashes, formulas and
@@ -156,7 +158,7 @@ coverage, a successful real-time subscription or every existing camera/operator.
 ## Checks and screenshots
 
 - Before: typecheck/build passed; 311 tests passed, 5 skipped (68 files passed).
-- Continuation milestone: 397 tests passed, 5 skipped (96 files passed); production
+- Continuation milestone: 408 tests passed, 5 skipped (99 files passed); production
   build, standalone typecheck and targeted lint passed. One database-policy test
   timed out during the first unconstrained concurrent build/test run; rerunning
   with two test workers passed. These results include first-seen persistence and
@@ -182,11 +184,19 @@ coverage, a successful real-time subscription or every existing camera/operator.
   gating, immutable probabilities, one-time outcome resolution and browser-role
   RLS denial. Signed-out browser prompt/return link verified in
   screenshots/forecasts-signed-out.jpg. No live forecast migration was applied.
-- Built-client known-token-format scan: 61 JavaScript chunks, zero findings; see
+- Aviation audit parsed 5 FAA closure/restriction notices, 3 METAR observations and
+  3 TAF products with no missing selected stations. No ground stop/delay programme
+  occurred in this sample; those parser branches are fixture-tested. See
+  aviation-audit.json, screenshots/aviation-taf.jpg and aviation-metar-map.jpg.
+- Browser verification found and fixed provider overlays skipped before map style
+  readiness. Regression tests cover readiness/style replacement/cleanup. Three
+  airport points and both sea-route alternatives visibly rendered in production;
+  route screenshot: screenshots/route-rendered.jpg.
+- Built-client known-token-format scan: 63 JavaScript chunks, zero findings; see
   client-secret-audit.json. This limited pattern scan is not a proof about all
   arbitrary secret formats or every runtime API response.
 - Full requested Playwright/layout/RTL/mobile/Presentation regression matrix,
-  authenticated integration UI and browser-bundle secret scanning remain pending.
+  authenticated integration UI and broader runtime-secret checks remain pending.
 - Signed-out integrations screenshot: `screenshots/integrations-signed-out.jpg`.
 - Stories screenshot: `screenshots/stories.jpg`.
 - Sources and native Logistics screenshots: `screenshots/sources.jpg`,

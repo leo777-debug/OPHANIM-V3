@@ -2,6 +2,7 @@ import { defaultIntelligenceEventProviders } from "./event-providers";
 import { verifyEventProviders } from '@/lib/verify/providers';
 import { specialistEventProviders } from './specialist-providers';
 import { gdacsHazardProvider } from './gdacs-provider';
+import { aviationEventProviders } from './aviation-providers';
 import { MARITIME_NETWORK } from '@/lib/route-intelligence/open-network';
 export const registeredReferenceDatasets = [MARITIME_NETWORK];
 import {
@@ -54,7 +55,7 @@ export class IntelligenceEventProviderRegistry {
 }
 
 export const intelligenceEventProviderRegistry =
-  new IntelligenceEventProviderRegistry([...defaultIntelligenceEventProviders, ...verifyEventProviders, ...specialistEventProviders, gdacsHazardProvider]);
+  new IntelligenceEventProviderRegistry([...defaultIntelligenceEventProviders, ...verifyEventProviders, ...specialistEventProviders, gdacsHazardProvider, ...aviationEventProviders]);
 
 async function runProvider(
   provider: IntelligenceEventProvider,

@@ -181,3 +181,10 @@ duplicate groups. GDACS normalized data remains disabled pending commercial-righ
 review. Legacy conflict news no longer receives fabricated map offsets or current
 event dates; static areas are explicitly undated references. None of this work
 uses World Monitor code or services. See docs/HAZARD_MATCHING.md.
+The public aviation workspace independently parses FAA status metadata and selected
+US NOAA/NWS METAR/TAF products, with source times, separate forecast periods,
+documented watch thresholds and an optional source-coordinate map. Conditional FAA
+notices do not establish complete airport closures. Raw operator NOTAM text is not
+republished; worldwide NOTAM/weather coverage remains incomplete. Source rights,
+rate rules and limitations are in docs/AVIATION_DISRUPTIONS.md. No World Monitor
+code, styles, assets, APIs or data were used.

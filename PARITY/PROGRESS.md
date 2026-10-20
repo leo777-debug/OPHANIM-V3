@@ -283,3 +283,20 @@ verified; never infer completion from a catalog entry or this plan.
   (99 files passed); production build, standalone typecheck and targeted lint passed.
   Built-client token-format scan: 63 chunks, zero findings. Broader parity remains
   unfinished; deployment remains last and no merge was attempted.
+
+## 20 October 2026 — US aviation status and weather
+
+- Added fixed official FAA public status metadata plus NOAA/NWS US K-station
+  METAR/TAF providers, registered licence/attribution/rates/keyless defaults, and
+  centralized inventory (62 services, 119 empty configuration identifiers).
+- Public aviation panel filters source categories and documented display priorities,
+  preserves observation/issue/validity/retrieval dates, flags old/future/expired data,
+  shows forecast periods separately, exports CSV and plots source station coordinates.
+  FAA conditional/scheduled notice categories never imply full-airport closure.
+- Audit parsed 5 FAA notices, 3 METAR and 3 TAF products. Ground-stop/delay parsing
+  is fixture-tested, absent from this live sample. No global NOTAM coverage claim.
+  Sources are bounded/cached; AWC requests spaced/capped; last-good data labelled stale.
+- Checks: 408 passed, 5 skipped (99 files passed); production build, standalone
+  typecheck and targeted lint passed. Browser checked METAR points and TAF periods.
+  See aviation-audit.json and screenshots/aviation-{metar-map,taf}.jpg. Deployment
+  remains last. First unfinished integration task and broad P2/P4 remain pending.
