@@ -58,30 +58,31 @@
     "baselineTests": "311 passed, 5 skipped",
     "baselineTypecheck": "passed",
     "baselineBuild": "passed",
-    "currentTests": "583 passed, 5 skipped; 130 files passed",
+    "currentTests": "589 passed, 5 skipped; 131 files passed",
     "typecheck": "passed",
     "build": "passed, Next16.4.2 Webpack",
-    "targetedLint": "New Recon modules/components and touched integration modules passed. Legacy OsintPanel retains the same 27 pre-existing no-explicit-any errors; not suppressed.",
+    "targetedLint": "New/touched worker, API and integration modules passed. Legacy OsintPanel has 27 and EntityGraphPanel has 14 pre-existing errors, confirmed unchanged and not suppressed.",
     "publicReachability": "14/14; HTTP only, not freshness/payload",
     "dependencyAudit": "Zero production findings; five high development-only lint-chain findings without compatible fix. See docs/DEPENDENCY_SECURITY.md.",
-    "browser": "37 combined production-browser checks passed using disposable SQL, synthetic fixtures and blocked external APIs; presentation-validation/results.json",
+    "browser": "38 combined production-browser checks passed using disposable SQL and synthetic fixtures; external API transport blocked. presentation-validation/results.json",
     "integrationsBrowser": "7 recorded checks passed: actual auth/API/storage, key/licence/error gating, research guide including ordered steps and mobile SDK setup",
     "clientSecretScan": "273 browser JavaScript chunks; zero known-token-format findings (limited pattern audit)",
     "nativeBrowser": "Reference geography/attribution, 3962 clustered ports, real route/closure rendering and CSV, Hazard/Aviation recovery passed",
     "researchWorker": "Real local HTTP/adapter/auth/privacy/cache/bounds tests passed; Compose configuration validated. Docker engine stopped: no actual container claim. Two live fixed keyless endpoints passed; research-source-audit.json.",
     "healthWorker": "Seven regression tests including actual local HTTP/auth/redirect/failure contracts; isolated Compose config validated using .env.example without resolving env_file contents. Docker engine unavailable: container runtime remains unverified. See health-worker-validation.json.",
-    "reconWorker": "Actual loopback worker/application transport; pinned-address/credential/privacy/redirect/rate/concurrency and session/permission/tenant/origin tests passed. Compose config validated with synthetic settings; Docker runtime remains unverified."
+    "reconWorker": "Actual loopback worker/application transport; pinned-address/credential/privacy/redirect/rate/concurrency and session/permission/tenant/origin tests passed. Compose config validated with synthetic settings; Docker runtime remains unverified.",
+    "entityWorker": "Real local worker health/auth HTTP, disabled-source and proxy tenant/permission/projection/no-request regression tests passed. Compose validated with synthetic settings. Container runtime unverified; child dependency audit failed twice with registry ECONNRESET."
   },
   "overallStatus": "in_progress",
-  "resumeInstruction": "Use parity-default-alignment worktree on parity-and-reliability. 01e restricted Recon worker and protected POST finished; 583 tests/5 skipped and 37 browser checks. Continue remaining 01 integrations: isolate legacy intel and gate OpenSanctions bulk loading (commercial licence required; currently unconditional), review VoidAccess/protocol adapters and operator inventory, universal configuration/sign-in prompts. Then full P1-P4 in REPORT. Existing OsintPanel has 27 baseline any lint errors; do not suppress. Actual Docker runtime unavailable. Original checkout untouched. PR25 current-default/base/push/CI/review/merge only after completion; deployment last.",
+  "resumeInstruction": "Continue in parity-default-alignment, parity-and-reliability. Restricted Recon and authenticated tenant-bound entity profile complete; OpenSanctions bulk and direct person/IP enrichment disabled. 589 tests/5 skipped, build/type/new-module lint and 38 browser checks. 65 services/122 empty variables. Continue 01: VoidAccess protocol/profile/authorization review, remaining connection adapters, operator licence inventory and universal recovery prompts; then remaining full P1-P4 in REPORT. Broader work is incomplete; do not merge. Docker unavailable; child package audit ECONNRESET twice. CI child dependency install added but remote CI pending. Original checkout untouched. Recheck default/base, push/review/CI/merge only at final delivery; deployment last.",
   "baselineCommit": "d22f6a060a1a98c77343764e785db6b6ec60f7e7",
   "pullRequest": "https://github.com/leo777-debug/OPHANIM-V3/pull/25",
   "preserveExistingChanges": true,
   "worldMonitorCodeUsed": false,
   "originalFoundationCommit": "e0898ef",
   "activeMilestone": {
-    "id": "01e-restricted-recon-profile",
+    "id": "01f-entity-worker-isolation",
     "status": "done",
-    "evidence": "583 tests/5 skipped, typecheck, production build, targeted module lint and 37 combined production-browser checks passed. Legacy UI lint debt unchanged; Docker execution unverified."
+    "evidence": "589 tests/5 skipped; standalone typecheck, new-module lint, production build and 38 production-browser checks passed. Docker execution and child package audit unverified."
   }
 }

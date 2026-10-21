@@ -6,7 +6,7 @@ export interface MapEntity {
 }
 
 export const supportsEntityEnrichment = (type: string): boolean =>
-  ['aircraft', 'vessel', 'company', 'person', 'ip', 'country'].includes(type);
+  ['aircraft', 'vessel', 'company', 'country'].includes(type);
 
 export function mapEntity(item: Record<string, unknown>): MapEntity {
   const type = item.provider === 'maritime' ? 'vessel'

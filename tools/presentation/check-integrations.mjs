@@ -23,6 +23,12 @@ export async function checkIntegrations({browser,url,owner,viewer,credentials,re
   }
   pass('Recon GET cannot submit work; real POST requires sign-in, cyber permission and configured tenant worker');
 
+  for(const [token,status] of [[undefined,401],[owner,503]]) {
+    const response=await request('/api/entity/expand?type=company&id=Synthetic',{token});
+    assert.equal(response.status,status);assert.equal(response.headers.get('Cache-Control'),'private, no-store');
+  }
+  pass('Optional entity enrichment uses real session/config gates and private no-store responses');
+
   const context=await browser.newContext({viewport:{width:1366,height:768}});
   await context.route('**/*',route=>new URL(route.request().url()).origin===url?route.continue():route.fulfill({status:204,body:''}));
   const page=await context.newPage(),errors=[],requests=[];

@@ -1,82 +1,53 @@
-import { NextResponse } from 'next/server';
-import { isRateLimited, getClientIp } from '@/lib/ssrf-guard';
-
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuthenticatedActor } from '@/lib/auth/actor';
+import { OrganizationAccessError } from '@/lib/operations/authorization';
+import { isRateLimited } from '@/lib/ssrf-guard';
+import { requestIntegration } from '@/lib/integrations/probes';
 export const dynamic = 'force-dynamic';
-
-/**
- * Thin proxy to the Ophanim intelligence service (ophanim-intel).
- *
- * In Docker: fetches from http://ophanim-intel:4000/resolve
- * In dev:    fetches from http://localhost:4000/resolve
- *
- * All intelligence logic lives in the intel container — this route
- * just validates the request and forwards it.
- */
-
-const INTEL_URL = process.env.INTEL_URL || (
-  process.env.NODE_ENV === 'production'
-    ? 'http://ophanim-intel:4000'
-    : 'http://localhost:4000'
-);
-
-const ALLOWED_TYPES = new Set(['aircraft', 'vessel', 'company', 'person', 'ip', 'country']);
-
-export async function GET(req: Request) {
-  const clientIp = getClientIp(req);
-  if (isRateLimited(clientIp, 30, 60_000)) {
-    return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
-  }
-
-  const { searchParams } = new URL(req.url);
-  const type = (searchParams.get('type') || '').toLowerCase().trim();
-  const id = (searchParams.get('id') || '').trim();
-
-  if (!type || !ALLOWED_TYPES.has(type)) {
-    return NextResponse.json(
-      { error: `Invalid type. Allowed: ${[...ALLOWED_TYPES].join(', ')}` },
-      { status: 400 },
-    );
-  }
-  if (!id || id.length < 2 || id.length > 200) {
-    return NextResponse.json({ error: 'Invalid id (2-200 chars)' }, { status: 400 });
-  }
-
-  if (process.env.VERCEL && !process.env.INTEL_URL?.trim()) {
-    return NextResponse.json(
-      { error: 'External entity enrichment is not configured. The selected map observation remains available.', nodes: [], links: [] },
-      { status: 503, headers: { 'Cache-Control': 'no-store' } },
-    );
-  }
-
+export const runtime = 'nodejs';
+const headers = { 'Cache-Control': 'private, no-store' };
+const allowedTypes = new Set(['aircraft', 'vessel', 'company', 'country']);
+export async function GET(request: NextRequest) {
   try {
-    const params = new URLSearchParams({ type, id });
-    // Forward extra aircraft properties to the intel brain
+    const actor = await requireAuthenticatedActor(request, 'intelligence:read');
+    if (actor.authProvider === 'presentation-demo') return NextResponse.json({ error: 'Reference enrichment requires sign-in.' }, { status: 403, headers });
+    const token = process.env.INTEL_API_TOKEN ?? '', organization = process.env.INTEL_ORGANIZATION_ID ?? '';
+    if (token.length < 32 || /[\s\x00-\x1f\x7f]/.test(token) || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(organization) || !process.env.INTEL_URL) {
+      return NextResponse.json({ error: 'Configure the entity worker, dedicated token and organization in Admin → Integrations.', nodes: [], links: [], setupHref: '/admin/integrations' }, { status: 503, headers });
+    }
+    if (actor.organizationId !== organization) return NextResponse.json({ error: 'Entity enrichment is unavailable for this organization.' }, { status: 403, headers });
+    if (isRateLimited(`entity:${actor.organizationId}:${actor.userId}`, 20, 60000)) return NextResponse.json({ error: 'Reference lookup limit reached.' }, { status: 429, headers });
+    const type = request.nextUrl.searchParams.get('type')?.trim().toLowerCase() ?? '', id = request.nextUrl.searchParams.get('id')?.trim() ?? '';
+    if (!allowedTypes.has(type) || id.length < 2 || id.length > 200) return NextResponse.json({ error: 'Use a bounded aircraft, vessel, company or country reference. Direct person/IP enrichment is unavailable.' }, { status: 400, headers });
+    const url = new URL(process.env.INTEL_URL);
+    if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.search || url.hash || url.pathname !== '/') throw new Error('Invalid worker origin.');
+    url.pathname = '/resolve'; url.searchParams.set('type', type); url.searchParams.set('id', id);
     for (const key of ['registration', 'model', 'icao24']) {
-      const val = searchParams.get(key);
-      if (val) params.set(key, val);
+      const value = request.nextUrl.searchParams.get(key);
+      if (value && value.length <= 100) url.searchParams.set(key, value);
     }
-    const res = await fetch(`${INTEL_URL}/resolve?${params}`, {
-      signal: AbortSignal.timeout(15000),
-      headers: { 'X-Forwarded-For': clientIp },
+    const raw = JSON.parse(await requestIntegration({ url: url.href, expected: 'json', headers: { Authorization: `Bearer ${token}` } }, process.env, 15000));
+    if (!Array.isArray(raw.nodes) || !Array.isArray(raw.links) || raw.nodes.length > 300 || raw.links.length > 600) throw new Error('Invalid reference graph.');
+    const nodes = raw.nodes.flatMap((node: Record<string, unknown>) => {
+      if (!node || typeof node.id !== 'string' || node.id.length > 300 || typeof node.label !== 'string' || node.label.length > 300 ||
+        typeof node.type !== 'string' || !['aircraft','vessel','company','country','person','event'].includes(node.type)) return [];
+      const properties = node.properties && typeof node.properties === 'object' ? node.properties as Record<string,unknown> : {};
+      if (node.type === 'person' && !['CEO','Head of State'].includes(String(properties.role))) return [];
+      const selected = Object.fromEntries(['source','role','model','registration','icao_code','population','gdp','tld','calling_code'].flatMap<[string,string | number]>(key => {
+        const value = properties[key]; return typeof value === 'string' ? [[key,value.slice(0,500)]] : typeof value === 'number' && Number.isFinite(value) ? [[key,value]] : [];
+      }));
+      return [{id:node.id,label:node.label,type:node.type,properties:selected}];
     });
-
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      return NextResponse.json(
-        { error: body.error || `Intel layer returned ${res.status}`, nodes: [], links: [] },
-        { status: res.status },
-      );
-    }
-
-    const data = await res.json();
-    return NextResponse.json(data, {
-      headers: { 'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200' },
-    });
-  } catch (e) {
-    console.error('[OSIRIS] Intel proxy error:', e instanceof Error ? e.message : e);
-    return NextResponse.json(
-      { error: 'Intelligence layer unavailable', nodes: [], links: [] },
-      { status: 502 },
-    );
+    const ids = new Set([...nodes.map((node: {id:string}) => node.id),`${type}:${id}`]);
+    const links = raw.links.flatMap((link: Record<string,unknown>) => typeof link?.source === 'string' && typeof link.target === 'string' &&
+      ids.has(link.source) && ids.has(link.target) && typeof link.label === 'string' ? [{source:link.source,target:link.target,label:link.label.slice(0,100)}] : []);
+    // Reference facts only. Unknown source dates are not replaced with fetch time.
+    return NextResponse.json({ nodes, links, source: 'Wikidata structured reference enrichment (CC0)', sourcePublishedAt: null,
+      enrichedAt: new Date().toISOString(), limitations: ['Reference matches are not identity verification or live operational observations. Source publication dates are unknown.',
+        'OpenSanctions bulk loading and direct person/IP enrichment are disabled.'] }, { headers });
+  } catch (error) {
+    if (error instanceof OrganizationAccessError) return NextResponse.json({ error: error.message, nodes: [], links: [],
+      ...(error.message === 'Authentication is required.' ? { signInHref: '/login?returnTo=%2Fatlas' } : {}) }, { status: error.message === 'Authentication is required.' ? 401 : 403, headers });
+    return NextResponse.json({ error: 'Reference enrichment unavailable, blocked or timed out. Check Admin → Integrations.', nodes: [], links: [] }, { status: 503, headers });
   }
 }

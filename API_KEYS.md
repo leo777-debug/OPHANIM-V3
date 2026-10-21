@@ -28,7 +28,7 @@ Pricing/quotas vary by plan and may change. “Keyless” describes access, not 
 | Isolated research sandbox | `AI_SANDBOX_RESEARCH_URL`, `AI_SANDBOX_RESEARCH_TOKEN` | Restricted official-feed research or your authorized worker | Self-hosted restricted worker bundled; no model/API fee; external workers have their own costs. | [Provider](https://github.com/leo777-debug/OPHANIM-V3) | Research disabled until configured and tested. |
 | VoidAccess | `VOIDACCESS_API_URL` | Private authorized research worker; requires token or service account | Self-hosted/service-specific terms. | [Provider](https://github.com/leo777-debug/OPHANIM-V3) | Optional worker disabled; public discovery continues. |
 | Restricted Recon diagnostics | `SCANNER_URL`, `SCANNER_KEY`, `SCANNER_ORGANIZATION_ID`, `SCANNER_ALLOWED_TARGETS` | Organization-scoped approved-host HTTPS header/TLS diagnostics | Bundled worker, self-hosted compute; five requests/minute, one HEAD request on port 443; no port sweeps or vulnerability validation. | [Provider](https://github.com/leo777-debug/OPHANIM-V3) | Scanner unavailable until service is running. |
-| Entity resolver | `INTEL_URL` | Optional isolated entity resolver | Self-hosted compute. | [Provider](https://github.com/leo777-debug/OPHANIM-V3) | Local dictionary correlation does not need this service. |
+| Entity resolver | `INTEL_URL`, `INTEL_API_TOKEN`, `INTEL_ORGANIZATION_ID` | Optional isolated entity resolver | Self-hosted compute. | [Provider](https://github.com/leo777-debug/OPHANIM-V3) | Local dictionary correlation does not need this service. |
 | Private SDK ingestion | `SDK_INGEST_KEY`, `SDK_ORGANIZATION_ID` | Authenticated ingestion from your SDK | Self-hosted; application ingestion limits apply. | [Provider](https://github.com/leo777-debug/OPHANIM-V3) | Private ingestion disabled without its key. |
 | Shodan | `SHODAN_API_KEY` | Passive host/service intelligence; active scans also require authorized targets | Paid features and credits vary by subscription; no assumed free search quota. | [Provider](https://account.shodan.io/register) | Other public cyber sources remain available. |
 | abuse.ch ThreatFox | `THREATFOX_AUTH_KEY` | Malware indicators | Authentication required; commercial use subject to current abuse.ch access terms. | [Provider](https://auth.abuse.ch/) | CISA KEV and permitted public indicators. |
@@ -121,6 +121,9 @@ This table includes credentials, local-service settings, safety gates and runtim
 | Platform | `HOSTNAME` | Optional runtime setting; leave empty to use the documented code default. |
 | Platform | `IMPORT_CRON_SECRET` | Server-only credential; configure only for the associated optional feature. |
 | Platform | `INTELLIGENCE_ALERT_CRON_SECRET` | Server-only credential; configure only for the associated optional feature. |
+| Optional services | `INTEL_API_TOKEN` | Optional isolated entity resolver |
+| Optional services | `INTEL_ORGANIZATION_ID` | Optional isolated entity resolver |
+| Platform | `INTEL_PORT` | Optional runtime setting; leave empty to use the documented code default. |
 | Optional services | `INTEL_URL` | Optional isolated entity resolver |
 | Connectivity | `IODA_API_URL` | Outage adapter configuration |
 | Platform | `IP_GEOLOCATION_API_TOKEN` | Server-only credential; configure only for the associated optional feature. |

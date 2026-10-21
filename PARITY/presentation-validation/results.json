@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-10-21T08:18:17.271Z",
+  "checkedAt": "2026-10-21T08:42:17.794Z",
   "checks": [
     {
       "name": "Disposable local database: full migration chain, external APIs blocked"
@@ -30,7 +30,7 @@
     },
     {
       "name": "Runtime database switch without redeploy",
-      "applyMilliseconds": 284
+      "applyMilliseconds": 1291
     },
     {
       "name": "All restored reference and signal layers enabled; dense camera fixture is not dropped"
@@ -43,27 +43,27 @@
             "width": 1920,
             "height": 1080
           },
-          "shellReadyMilliseconds": 1618,
-          "readyMilliseconds": 12603,
-          "pixelCheckedMilliseconds": 17807
+          "shellReadyMilliseconds": 3243,
+          "readyMilliseconds": 12436,
+          "pixelCheckedMilliseconds": 16066
         },
         {
           "viewport": {
             "width": 1366,
             "height": 768
           },
-          "shellReadyMilliseconds": 2277,
-          "readyMilliseconds": 10628,
-          "pixelCheckedMilliseconds": 13100
+          "shellReadyMilliseconds": 2243,
+          "readyMilliseconds": 10929,
+          "pixelCheckedMilliseconds": 15229
         },
         {
           "viewport": {
             "width": 390,
             "height": 844
           },
-          "shellReadyMilliseconds": 1838,
-          "readyMilliseconds": 9789,
-          "pixelCheckedMilliseconds": 13312
+          "shellReadyMilliseconds": 2058,
+          "readyMilliseconds": 9845,
+          "pixelCheckedMilliseconds": 13837
         }
       ]
     },
@@ -120,6 +120,9 @@
     },
     {
       "name": "Recon GET cannot submit work; real POST requires sign-in, cyber permission and configured tenant worker"
+    },
+    {
+      "name": "Optional entity enrichment uses real session/config gates and private no-store responses"
     },
     {
       "name": "Real sign-in returns to Integrations during Presentation; missing AI credentials stay unconfigured and are never displayed"

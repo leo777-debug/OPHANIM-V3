@@ -70,12 +70,18 @@ services:
       - default
 
   ophanim-intel:
+    profiles: [intel]
     build:
-      context: ./intel
-      dockerfile: Dockerfile
-    container_name: ophanim-intel
-    ports:
-      - "4000:4000"
+      context: .
+      dockerfile: intel/Dockerfile
+    environment:
+      INTEL_API_TOKEN: ${INTEL_API_TOKEN:-}
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 32
+    mem_limit: 192m
+    cpus: 0.5
     restart: unless-stopped
     networks:
       - default

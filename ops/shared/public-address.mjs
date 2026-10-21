@@ -7,4 +7,3 @@ const publicV6 = new BlockList(); publicV6.addSubnet('2000::', 3, 'ipv6');
 blocked.addSubnet('2001:db8::', 32, 'ipv6');
 export const publicAddress = address => isIP(address) === 4 ? !blocked.check(address, 'ipv4')
   : isIP(address) === 6 && publicV6.check(address, 'ipv6') && !blocked.check(address, 'ipv6');
-

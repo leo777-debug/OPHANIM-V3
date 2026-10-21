@@ -18,7 +18,7 @@ const envUrls: Record<string, [string, string?, string?]> = {
   'customer-ais': ['CUSTOMER_AIS_API_URL', 'CUSTOMER_AIS_API_TOKEN'], ports: ['PORT_NOTICE_FEED_URL'], sanctions: ['OFFICIAL_SANCTIONS_FEED_URL'],
   'reviewed-osint': ['REVIEWED_OSINT_FEED_URL'], 'verify-observations': ['VERIFY_OBSERVATIONS_URL'], ecmwf: ['ECMWF_FORECAST_URL'], ioda: ['IODA_API_URL'],
   scanner: ['SCANNER_URL', 'SCANNER_KEY', '/health'], research: ['AI_SANDBOX_RESEARCH_URL', 'AI_SANDBOX_RESEARCH_TOKEN', '/health'],
-  voidaccess: ['VOIDACCESS_API_URL', 'VOIDACCESS_API_TOKEN', '/health'], intel: ['INTEL_URL', undefined, '/health'],
+  voidaccess: ['VOIDACCESS_API_URL', 'VOIDACCESS_API_TOKEN', '/health'], intel: ['INTEL_URL', 'INTEL_API_TOKEN', '/health'],
 };
 export function connectionProbe(service: IntegrationDefinition, env: Env): ProbeRequest | null {
   if (service.probe) return { url: service.probe };
@@ -27,7 +27,7 @@ export function connectionProbe(service: IntegrationDefinition, env: Env): Probe
     const [name, token, suffix] = envUrls[service.id]; if (!env[name]) return null;
     let target = env[name]!;
     if (suffix) { try { const base = new URL(target); base.pathname = base.pathname.replace(/\/$/, '') + suffix; base.search = ''; base.hash = ''; target = base.toString(); } catch { /* Transport records the invalid configuration without exposing it. */ } }
-    return { url: target, headers: token && env[token] ? { Authorization: `Bearer ${env[token]}` } : undefined, ...(['research', 'scanner'].includes(service.id) ? { expected: 'json' as const } : {}) };
+    return { url: target, headers: token && env[token] ? { Authorization: `Bearer ${env[token]}` } : undefined, ...(['research', 'scanner', 'intel'].includes(service.id) ? { expected: 'json' as const } : {}) };
   }
   if (['ai', 'local-model', 'embeddings'].includes(service.id)) {
     const base = env[service.id === 'ai' ? 'AI_BASE_URL' : service.id === 'embeddings' ? 'EMBEDDING_BASE_URL' : 'OPHANIM_LOCAL_BASE_URL'];
