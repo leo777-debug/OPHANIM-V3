@@ -1,0 +1,252 @@
+{
+  "auditedHead": "8218ed31107cc1eaf626ca518a6fdb49a0690424",
+  "defaultBranch": "origin/feat/gdacs-weather-ai-overview",
+  "defaultSha": "d22f6a060a1a98c77343764e785db6b6ec60f7e7",
+  "comparisons": [
+    {
+      "ref": "origin/feat/job-file-core",
+      "sha": "2b3a4bb4a14a0cb2f6407a1a3b61828e171c73de",
+      "claudeCommits": [
+        {
+          "sha": "2b3a4bb4a14a0cb2f6407a1a3b61828e171c73de",
+          "subject": "feat(deep-watch): live-shipment watchlist, corridor API, exposure scans and docs (W2)"
+        },
+        {
+          "sha": "76bd1e08d9426d56d66ad53bcd7ebc7f5e93f2c6",
+          "subject": "wip(deep-watch): logistics threat categories, content filter, licensed adapters, scoped scans (W2 partial)"
+        },
+        {
+          "sha": "32f0ee60c298d744b8ea2c18c4087fe64511118d",
+          "subject": "feat(watchtower): public port camera search, catalogue and feed health (W1)"
+        },
+        {
+          "sha": "2fc5184a5f14862a6802d461327f0304edb82e15",
+          "subject": "fix(jobfile): read zoneless email times as Gulf time on any server zone"
+        },
+        {
+          "sha": "1e913403e32b975b90425b0d8bdead5d30c06bc1",
+          "subject": "fix(jobfile): address review findings"
+        },
+        {
+          "sha": "4a0083f4bd6a1507da21cd2a2540f47fff89c392",
+          "subject": "docs(jobfile): record final validation against baseline"
+        },
+        {
+          "sha": "47214ed8654d408f61069f66132ab2abc447de87",
+          "subject": "feat(jobfile): SYNTHETIC DEMO story, end-to-end tests, docs and setup status (4.10)"
+        },
+        {
+          "sha": "6a2dbb33f2eb4950f7535d1b32a0f882e8096373",
+          "subject": "feat(jobfile): Paper Risk, automatic resolution and Checking-our-work receipts (4.9)"
+        },
+        {
+          "sha": "d7f6882734040ce2bc03a4e8d403f7c96cfae48f",
+          "subject": "feat(jobfile): Invoice Desk, PINT AE stub adapter, payment and dispute predictions (4.8)"
+        },
+        {
+          "sha": "19e991a48516b9df8932f0ad47df19e92f369e74",
+          "subject": "feat(jobfile): Today list with alert budget and phone actions (4.7)"
+        },
+        {
+          "sha": "6c1706b1051f302676656cb9f8a769929ecaee2a",
+          "subject": "feat(jobfile): airport weather, City Pulse, Gate Pulse and notices per job (4.6)"
+        },
+        {
+          "sha": "05cce32e77f3793b75e41ae6be88bd98414acf16",
+          "subject": "feat(jobfile): spreadsheet sync, exports, connectors and digest (4.5)"
+        },
+        {
+          "sha": "5244bdc616662cf8659cdf2cb8b1c3ecce1f1a95",
+          "subject": "feat(jobfile): milestones, piece chain, time gaps and Ghost Position (4.4)"
+        },
+        {
+          "sha": "115fa3a66759911d62e4a41180d9d5bd53bedeb3",
+          "subject": "feat(jobfile): draft house AWB, delivery note and client invoice PDFs (4.3)"
+        },
+        {
+          "sha": "45b508c4a528c177eb9bf2b3e255bfc6edc0f73d",
+          "subject": "feat(jobfile): Paper Desk reading, verification, checks and lessons (4.2)"
+        },
+        {
+          "sha": "0520e4d07ad6c8e5dcb24cc13d5d9c16038d9818",
+          "subject": "feat(jobfile): job file core, key ring and intake (4.1)"
+        },
+        {
+          "sha": "b712a1c8c33ef7c19089161852bd684a052968a4",
+          "subject": "feat(jobfile): data model, unified prediction ledger, RLS and paperwork checks"
+        }
+      ],
+      "mergeExitCode": 1,
+      "conflicts": [
+        {
+          "type": "content",
+          "file": ".env.example"
+        },
+        {
+          "type": "content",
+          "file": ".gitignore"
+        },
+        {
+          "type": "add/add",
+          "file": "docs/DEEP_WATCH.md"
+        },
+        {
+          "type": "add/add",
+          "file": "docs/WATCHTOWER.md"
+        },
+        {
+          "type": "add/add",
+          "file": "src/app/api/dark-web/corridor/route.ts"
+        },
+        {
+          "type": "add/add",
+          "file": "src/app/api/forecasts/route.ts"
+        },
+        {
+          "type": "add/add",
+          "file": "src/app/api/watchtower/route.ts"
+        },
+        {
+          "type": "content",
+          "file": "src/app/globals.css"
+        },
+        {
+          "type": "content",
+          "file": "src/components/DynamicProviderLayers.tsx"
+        },
+        {
+          "type": "content",
+          "file": "src/components/map/MapToolDock.tsx"
+        },
+        {
+          "type": "content",
+          "file": "src/components/presentation/PresentationGlobe.tsx"
+        },
+        {
+          "type": "content",
+          "file": "src/lib/dark-web/entity-registry.ts"
+        },
+        {
+          "type": "content",
+          "file": "src/lib/dark-web/index.ts"
+        },
+        {
+          "type": "content",
+          "file": "src/lib/dark-web/provider-framework.ts"
+        },
+        {
+          "type": "content",
+          "file": "src/lib/intelligence/operations.ts"
+        },
+        {
+          "type": "content",
+          "file": "src/lib/providers/types.ts"
+        },
+        {
+          "type": "add/add",
+          "file": "src/lib/route-intelligence/open-network.ts"
+        }
+      ]
+    },
+    {
+      "ref": "origin/master",
+      "sha": "ba55c4df6600f64d039e1d8983a631cd793b3a1c",
+      "claudeCommits": [
+        {
+          "sha": "2fe3b753b9d22543c70ec0ed76db011b897fb8ec",
+          "subject": "fix(docker): publish GHCR image from CI and correct stale image refs (#239)"
+        }
+      ],
+      "mergeExitCode": 1,
+      "conflicts": [
+        {
+          "type": "content",
+          "file": "README.md"
+        },
+        {
+          "type": "content",
+          "file": "docker-compose.yml"
+        },
+        {
+          "type": "add/add",
+          "file": "src/app/api/cctv/iceland.ts"
+        },
+        {
+          "type": "content",
+          "file": "src/app/api/cctv/route.ts"
+        },
+        {
+          "type": "content",
+          "file": "src/app/globals.css"
+        },
+        {
+          "type": "content",
+          "file": "src/app/page.tsx"
+        },
+        {
+          "type": "content",
+          "file": "src/components/GlobalStatusBar.tsx"
+        },
+        {
+          "type": "content",
+          "file": "src/components/LayerPanel.tsx"
+        },
+        {
+          "type": "content",
+          "file": "src/components/OphanimMap.tsx"
+        },
+        {
+          "type": "content",
+          "file": "src/components/OsintPanel.tsx"
+        },
+        {
+          "type": "content",
+          "file": "src/components/ScaleBar.tsx"
+        }
+      ]
+    }
+  ],
+  "checkedAt": "2026-10-21T19:05:10.137764+00:00",
+  "defaultMergeExitCode": 0,
+  "dependencyComparison": {
+    "ref": "origin/parity-and-reliability",
+    "sha": "265f87bb9d2e793b0d2ea234c950b9bda365da5a",
+    "mergeExitCode": 1,
+    "conflicts": [
+      {
+        "type": "content",
+        "file": ".env.example"
+      },
+      {
+        "type": "content",
+        "file": ".gitignore"
+      },
+      {
+        "type": "add/add",
+        "file": "src/app/api/forecasts/route.ts"
+      },
+      {
+        "type": "content",
+        "file": "src/app/globals.css"
+      },
+      {
+        "type": "content",
+        "file": "src/components/DynamicProviderLayers.tsx"
+      },
+      {
+        "type": "content",
+        "file": "src/components/map/MapToolDock.tsx"
+      },
+      {
+        "type": "content",
+        "file": "src/components/presentation/PresentationGlobe.tsx"
+      },
+      {
+        "type": "add/add",
+        "file": "src/lib/route-intelligence/open-network.ts"
+      }
+    ],
+    "note": "Dependency of Claude job-file branch; no Claude co-author attribution inferred for this branch."
+  },
+  "attributionBoundary": "Branch-level merge conflicts include inherited changes. Current Claude commits identified by Co-Authored-By trailers. Historical master has two directly overlapping Docker/docs files; remaining master conflicts reflect older divergent work."
+}
