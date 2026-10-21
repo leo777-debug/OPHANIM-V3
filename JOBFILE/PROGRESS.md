@@ -33,6 +33,28 @@ from local commit `2a2b72e` (parity-and-reliability, unpushed). Read
   trigger, forced RLS on every new table, self-only staff statistics.
 - Tests: `src/lib/jobfile/rls.integration.test.ts` (PGlite, real migrations).
 
+## 4.1 — job file core and intake (done)
+
+- Generic tenant-scoped repository (`src/lib/jobfile/repo.ts`): Postgres with an
+  organization predicate on every statement, or an in-process SYNTHETIC DEMO store
+  when DATABASE_URL is absent. Feature `job_files` (logistics/full editions);
+  new permission `jobfile:approve` for owner/operations manager.
+- Key ring with ISO 6346 / IATA validation; invalid numbers stay on the ring and
+  raise block (check digit) or warn (unknown airline prefix) flags.
+- Intake: inbound-email webhook (signed per-organization address, JSON or raw
+  MIME), IMAP poller for one dedicated mailbox (cron, JOBFILE_CRON_SECRET),
+  WhatsApp Business webhook (signature verified; stub without keys), in-app
+  photo/upload/forward. Matching with reasons; ambiguous/unmatched → review queue;
+  unmatched pre-alert with a valid AWB/B/L/container creates the job.
+- Private storage reuse (Supabase bucket or KNOWLEDGE_STORAGE_DIR; memory in demo),
+  signed URLs (Supabase signed URL or HMAC + session organization re-check).
+- Pages: /jobs, /jobs/[id], /jobs/review, /capture (phone, offline IndexedDB queue,
+  idempotent retries). EN/AR with RTL. Audit trail via ophanim_audit_events.
+- Acceptance (service.test.ts, memory + PGlite): pre-alert with AWB attachment
+  creates the job; follow-up updates it; invalid container flagged block; ambiguous
+  container → review; cross-tenant reads return nothing. Browser-checked in demo
+  mode (EN and AR/RTL).
+
 ## Questions for the founder
 
 1. What exactly are the "landing" and "takeoff" papers? Assumed: air import / export documents (AWB, cargo manifest, delivery order, export declaration).

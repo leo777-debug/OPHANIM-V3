@@ -13,8 +13,8 @@ export class OrganizationAccessError extends Error {
 }
 
 const permissions: Record<OphanimMemberRole, OrganizationPermission[]> = {
-  owner: ['import:read', 'import:write', 'shipment:read', 'shipment:write', 'shipment:archive', 'route:read', 'route:write', 'disruption:read', 'disruption:write', 'rescue:read', 'rescue:write', 'vulnerability:read', 'vulnerability:write', 'cyber:read', 'cyber:write', 'intelligence:read', 'intelligence:write', 'research:run', 'organization:manage'],
-  operations_manager: ['import:read', 'import:write', 'shipment:read', 'shipment:write', 'shipment:archive', 'route:read', 'route:write', 'disruption:read', 'disruption:write', 'rescue:read', 'rescue:write', 'vulnerability:read', 'vulnerability:write', 'cyber:read', 'cyber:write', 'intelligence:read', 'intelligence:write', 'research:run'],
+  owner: ['import:read', 'import:write', 'shipment:read', 'shipment:write', 'shipment:archive', 'route:read', 'route:write', 'disruption:read', 'disruption:write', 'rescue:read', 'rescue:write', 'vulnerability:read', 'vulnerability:write', 'cyber:read', 'cyber:write', 'intelligence:read', 'intelligence:write', 'research:run', 'jobfile:approve', 'organization:manage'],
+  operations_manager: ['import:read', 'import:write', 'shipment:read', 'shipment:write', 'shipment:archive', 'route:read', 'route:write', 'disruption:read', 'disruption:write', 'rescue:read', 'rescue:write', 'vulnerability:read', 'vulnerability:write', 'cyber:read', 'cyber:write', 'intelligence:read', 'intelligence:write', 'research:run', 'jobfile:approve'],
   analyst: ['import:read', 'import:write', 'shipment:read', 'shipment:write', 'route:read', 'route:write', 'disruption:read', 'rescue:read', 'vulnerability:read', 'cyber:read', 'cyber:write', 'intelligence:read', 'intelligence:write', 'research:run'],
   viewer: ['import:read', 'shipment:read', 'route:read', 'disruption:read', 'rescue:read', 'vulnerability:read', 'cyber:read', 'intelligence:read'],
 };

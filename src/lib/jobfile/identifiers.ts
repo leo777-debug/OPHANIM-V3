@@ -62,7 +62,8 @@ export function findReferences(text: string): FoundReference[] {
   for (const { type, pattern } of PATTERNS) {
     for (const match of upper.matchAll(pattern)) {
       const raw = type === 'container' ? match[1] + match[2] + match[3] : type === 'awb' ? match[1] + match[2] + match[3] : match[1];
-      if (type === 'invoice' && /^(DATE|TOTAL|NO)$/.test(raw)) continue;
+      // Reference numbers contain digits; this skips words such as "INVOICE NUMBER".
+      if (!/\d/.test(raw)) continue;
       const validation = validateReference(type, raw);
       const key = `${type}:${validation.normalized}`;
       if (!found.has(key)) found.set(key, { type, value: raw, validation, index: match.index ?? 0 });
