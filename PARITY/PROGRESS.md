@@ -482,3 +482,10 @@ verified; never infer completion from a catalog entry or this plan.
   than network-idle, since provider polling intentionally continues. Current
   full rerun is still in progress. Client known-token-pattern scan: 271 chunks,
   zero findings; this remains a limited pattern audit, not a full secret proof.
+
+## 21 October 2026 — verified combined baseline
+
+- Full production browser aggregate PASSED: 33 checks, with real WebGL pixel/marker checks at desktop/laptop/mobile sizes, map/Full mode and PIN changes, tools, tabs, Ctrl+K, fresh signed-out sharing, fullscreen share dialog, private query isolation, actual Integrations login/rights/error persistence and mobile SDK setup. Expected auth/me401 console messages are recorded separately; no uncaught or unexpected console errors. All external APIs blocked; all records/accounts synthetic and disposable.
+- Evidence: presentation-validation/results.json, integrations-results.json and screenshots/. Latest app unit suite543 passed/5 skipped; typecheck, targeted lint, production build passed. Known-token browser scan271 chunks/zero findings.
+- Task00a local baseline alignment is complete. First unfinished01-integrations remains partial; broad specialist/analysis/platform work is not complete. Draft PR25 base correction/push deferred to final delivery to keep deployment last. No GitHub merge/deployment.
+- Next audit: standalone Route/Hazard/Aviation maps still inherit CARTO style URL; choose working keyless basemap with attribution/fallback. Mobile optional-setup buttons are semantically disabled but need clearer visible configuration/disabled cues. Then resume full source/protocol inventory and remaining parity.

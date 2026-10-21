@@ -1,0 +1,147 @@
+{
+  "checkedAt": "2026-10-21T00:56:51.659Z",
+  "checks": [
+    {
+      "name": "Disposable local database: full migration chain, external APIs blocked"
+    },
+    {
+      "name": "OFF keeps original pages reachable, presentation page redirects home"
+    },
+    {
+      "name": "Anonymous private APIs and viewer settings access rejected in OFF and ON"
+    },
+    {
+      "name": "Anonymous session status remains 401 and cannot be cached"
+    },
+    {
+      "name": "Foreign-origin settings mutations rejected"
+    },
+    {
+      "name": "ON map hides business pages; owner settings and owner login remain reachable"
+    },
+    {
+      "name": "Public replay payloads contain only normalized public evidence; missing snapshots are honest"
+    },
+    {
+      "name": "PIN hashed and rate-limited; rotation revokes grants; PIN never bypasses login; audit contains no PIN"
+    },
+    {
+      "name": "OFF browser check: operational map homepage, no Presentation controls or keyboard switch"
+    },
+    {
+      "name": "Runtime database switch without redeploy",
+      "applyMilliseconds": 198
+    },
+    {
+      "name": "All restored reference and signal layers enabled; dense camera fixture is not dropped"
+    },
+    {
+      "name": "Real WebGL globe, >=3 layers, news, moving ticker and responsive screenshots",
+      "timings": [
+        {
+          "viewport": {
+            "width": 1920,
+            "height": 1080
+          },
+          "shellReadyMilliseconds": 761,
+          "readyMilliseconds": 4253,
+          "pixelCheckedMilliseconds": 7531
+        },
+        {
+          "viewport": {
+            "width": 1366,
+            "height": 768
+          },
+          "shellReadyMilliseconds": 1557,
+          "readyMilliseconds": 5859,
+          "pixelCheckedMilliseconds": 11302
+        },
+        {
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "shellReadyMilliseconds": 1121,
+          "readyMilliseconds": 5657,
+          "pixelCheckedMilliseconds": 9885
+        }
+      ]
+    },
+    {
+      "name": "Clicking a rendered observation opens its source, time and coordinates"
+    },
+    {
+      "name": "Original Ophanim renderer, Night/Earth/Satellite and 2D/3D controls restored"
+    },
+    {
+      "name": "Quick switch and Ctrl+Shift+P both work in both directions"
+    },
+    {
+      "name": "Read-only Shodan opens beside the same globe, without navigation, remount or active scanning"
+    },
+    {
+      "name": "All intelligence tools are docked in the operational layout; replay never mixes in live fusion"
+    },
+    {
+      "name": "A single place/IP/domain search locates results in the existing globe"
+    },
+    {
+      "name": "The existing command palette opens tools in the same workspace"
+    },
+    {
+      "name": "Independent globe tabs retain layers and appearance through PIN-gated Full platform and Back to map"
+    },
+    {
+      "name": "Legacy Atlas links redirect to the same operational map with tool and camera parameters retained"
+    },
+    {
+      "name": "Generated public map link restores appearance and layers in a fresh signed-out browser without private query IDs"
+    },
+    {
+      "name": "Map-only fullscreen, non-overlapping rail/globe/tool dock, and button/Escape exit pass at desktop and laptop sizes"
+    },
+    {
+      "name": "Authenticated shipment detail links still work; public Map view never fetches private query IDs"
+    },
+    {
+      "name": "Mobile globe, collapsible layer rail and bottom intelligence dock fit without horizontal page overflow"
+    },
+    {
+      "name": "Unified map tool path has no uncaught browser errors; no active scan submitted"
+    },
+    {
+      "name": "Integrations API rejects unsigned/viewer access and browser-supplied keys; listing contains metadata only"
+    },
+    {
+      "name": "Real sign-in returns to Integrations during Presentation; missing AI credentials stay unconfigured and are never displayed"
+    },
+    {
+      "name": "Unknown commercial rights disable the source and its connection action"
+    },
+    {
+      "name": "Actual connection failure records its time/error, survives reload, and never invents a successful fetch"
+    },
+    {
+      "name": "Credential-free SDK wizard gates diagnostics when unconfigured and fits the mobile viewport"
+    },
+    {
+      "name": "Owner dashboard turns OFF without redeploy; normal site returns and controls disappear"
+    },
+    {
+      "name": "No uncaught or console browser errors on map and switch path"
+    }
+  ],
+  "browserErrors": [],
+  "consoleErrors": [],
+  "expectedAuthDenials": [
+    {
+      "endpoint": "/api/auth/me",
+      "status": 401
+    },
+    {
+      "endpoint": "/api/auth/me",
+      "status": 401
+    }
+  ],
+  "syntheticFixturesOnly": true
+}

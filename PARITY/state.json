@@ -2,7 +2,7 @@
   "version": 1,
   "branch": "parity-and-reliability",
   "startedAt": "2026-10-19",
-  "firstUnfinishedTask": "00a-baseline-alignment",
+  "firstUnfinishedTask": "01-integrations",
   "tasks": [
     {
       "id": "00-inventory",
@@ -10,8 +10,8 @@
     },
     {
       "id": "00a-baseline-alignment",
-      "status": "partial",
-      "remaining": "Default integrated, dependencies/privacy/provenance fixed. Finish rebuilt canonical-origin integration UI test and full Presentation aggregate. See latest PROGRESS. PR retarget deferred to final deployment phase."
+      "status": "done",
+      "evidence": "Default d22f6a0 integrated at ee7837d. 543 tests, typecheck/lint/build passed; 33 combined Presentation/map/Integrations browser checks passed (synthetic fixtures). PR base correction tracked in final delivery."
     },
     {
       "id": "01-integrations",
@@ -64,14 +64,15 @@
     "targetedLint": "passed",
     "publicReachability": "14/14; HTTP only, not freshness/payload",
     "dependencyAudit": "Zero production findings; five high development-only lint-chain findings without compatible fix. See docs/DEPENDENCY_SECURITY.md.",
-    "browser": "Full strengthened-network-guard Presentation/map aggregate running; do not claim complete until results.json passes.",
+    "browser": "33 combined production-browser checks passed using disposable SQL, synthetic fixtures, blocked external APIs; evidence presentation-validation/results.json",
     "integrationsBrowser": "7 recorded checks passed with real local routes, synthetic sign-in, licence/key gating, connection failure persistence and mobile setup",
     "clientSecretScan": "271 browser JavaScript chunks; zero known-token-format findings (limited pattern audit)"
   },
   "overallStatus": "in_progress",
-  "resumeInstruction": "Use the attached parity-default-alignment worktree. Preserve the original detached checkout and unrelated dirty work. Finish dependency updates and combined Presentation/map browser regression, retarget PR25 to actual default, then resume 01-integrations and broad parity. Deployment last; merge only after requested work is complete.",
-  "baselineCommit": "e0898ef",
+  "resumeInstruction": "Use attached parity-default-alignment worktree on parity-and-reliability; preserve original detached checkout and dirty files. Baseline reconciliation verified. Continue 01-integrations and broad P1-P4 work from report; inspect standalone basemap and optional setup usability next. PR25 remains draft on old base; correct base/push/deployment only in final delivery phase. Merge only after requested work is complete; deployment last.",
+  "baselineCommit": "d22f6a060a1a98c77343764e785db6b6ec60f7e7",
   "pullRequest": "https://github.com/leo777-debug/OPHANIM-V3/pull/25",
   "preserveExistingChanges": true,
-  "worldMonitorCodeUsed": false
+  "worldMonitorCodeUsed": false,
+  "originalFoundationCommit": "e0898ef"
 }
