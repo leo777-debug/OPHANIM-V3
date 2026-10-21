@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "branch": "feat/job-file-core",
+  "baseCommit": "2a2b72e",
+  "worktree": "D:/OPHANIM/worktrees/job-file-core",
+  "current_phase": "4.1",
+  "current_task": "4.1-core-intake",
+  "last_commit": null,
+  "updated_at": "2026-10-21",
+  "tasks": [
+    {
+      "id": "00-baseline",
+      "status": "done"
+    },
+    {
+      "id": "01-data-model",
+      "status": "done"
+    },
+    {
+      "id": "4.1-core-intake",
+      "status": "doing"
+    },
+    {
+      "id": "4.2-paper-desk",
+      "status": "todo"
+    },
+    {
+      "id": "4.3-papers",
+      "status": "todo"
+    },
+    {
+      "id": "4.4-milestones",
+      "status": "todo"
+    },
+    {
+      "id": "4.5-connect",
+      "status": "todo"
+    },
+    {
+      "id": "4.6-congestion",
+      "status": "todo"
+    },
+    {
+      "id": "4.7-today",
+      "status": "todo"
+    },
+    {
+      "id": "4.8-invoice-desk",
+      "status": "todo"
+    },
+    {
+      "id": "4.9-ledger-receipts",
+      "status": "todo"
+    },
+    {
+      "id": "4.10-demo-tests-docs",
+      "status": "todo"
+    },
+    {
+      "id": "05-jobfile-finish",
+      "status": "todo"
+    },
+    {
+      "id": "W1-watchtower",
+      "status": "todo"
+    },
+    {
+      "id": "W2-deep-watch",
+      "status": "todo"
+    },
+    {
+      "id": "W3-route-lens",
+      "status": "todo"
+    },
+    {
+      "id": "W4-the-panel",
+      "status": "todo"
+    },
+    {
+      "id": "06-final-pr",
+      "status": "todo"
+    }
+  ],
+  "resumeInstruction": "Read JOBFILE/DESIGN.md, PROGRESS.md and this file. Work only in the worktree above. Never edit, checkout, reset or pull in C:/Users/Leonard/OneDrive/Documents/OPHANIM-V3 2 or C:/Users/Leonard/.codex/worktrees/parity-default-alignment/OPHANIM-V3 2. One ledger: extend ophanim_forecasts. Commit per task. Open PR; never merge or deploy."
+}
