@@ -13,5 +13,6 @@
  {"code":"BHKBS","name":"Khalifa Bin Salman / Bahrain","aliases":["Bahrain"],"country":"BH","lat":26.20,"lon":50.71},
  {"code":"KWSWK","name":"Shuwaikh / Kuwait","aliases":["Kuwait"],"country":"KW","lat":29.35,"lon":47.93},
  {"code":"SAJED","name":"Jeddah","aliases":[],"country":"SA","lat":21.48,"lon":39.16},
- {"code":"SADMM","name":"Dammam","aliases":[],"country":"SA","lat":26.49,"lon":50.19}
+ {"code":"SADMM","name":"Dammam","aliases":[],"country":"SA","lat":26.49,"lon":50.19},
+ {"code":"OMMNQ","name":"Muscat / Mina Qaboos — nearby Yiti coast","aliases":["Muscat","Mina Qaboos","Sultan Qaboos","Yiti","AIDA Beach"],"country":"OM","lat":23.611633,"lon":58.597252}
 ]

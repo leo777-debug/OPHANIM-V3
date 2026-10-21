@@ -2,7 +2,7 @@
 import { useEffect,useState } from 'react';
 import CameraTile from './CameraTile';
 import CameraViewer from '@/components/CameraViewer';
-import { playable,type CameraFeed } from '@/lib/watchtower/catalogue';
+import { playable,canOpenCamera,type CameraFeed } from '@/lib/watchtower/catalogue';
 import type { ProviderMapLayer } from '@/lib/providers/types';
 type Port={code:string;name:string;lat:number;lon:number;gap:string;cameras:Array<CameraFeed&{distanceKm:number}>};
 export default function WatchtowerPanel({initialPort='',onLayers,onLocate}:{initialPort?:string;onLayers?:(layers:ProviderMapLayer[])=>void;onLocate?:(lat:number,lon:number,zoom?:number)=>void}){
@@ -21,7 +21,7 @@ export default function WatchtowerPanel({initialPort='',onLayers,onLocate}:{init
   {selected&&<><h3>{selected.name}</h3><p>{selected.gap}</p><div className="lens-camera-grid">{selected.cameras.map(c=><article key={c.id}>
    <strong>{c.name}</strong><p>{c.distanceKm.toFixed(1)} km from port · {c.status}</p>
    {playable(c)&&<CameraTile camera={c}/>}
-   {playable(c)?<button onClick={()=>setCamera(c)}>Open public live tile / fullscreen</button>:<p>Playback unavailable or permission not verified.</p>}
+   {canOpenCamera(c)?<><button onClick={()=>setCamera(c)}>Open reviewed public player / fullscreen</button>{c.status!=='online'&&<p>Playback has not been checked recently. Open the publisher player to inspect it; conditions remain unknown.</p>}</>:<p>Playback unavailable or permission not verified.</p>}
    <p>Last online: {c.lastSeen?new Date(c.lastSeen).toLocaleString():'not verified'}</p><p>{c.coverage}</p>
    <a href={c.sourceUrl} target="_blank" rel="noreferrer">Publisher camera page</a><details><summary>Source terms</summary><p>{c.terms}</p><a href={c.termsUrl} target="_blank" rel="noreferrer">Terms/source</a></details>
   </article>)}</div></>}

@@ -5,7 +5,7 @@ from pathlib import Path
 import tempfile
 import unittest
 import numpy as np
-from panel import fit,InsufficientHistory,causal_training_rows,dtw,monte_carlo,save,load_verified,scores,regime_shift
+from panel import fit,InsufficientHistory,causal_training_rows,dtw,monte_carlo,save,load_verified,scores,regime_shift,activation_gate
 
 def history(n=200):
  rng=np.random.default_rng(17);out=[]
@@ -23,6 +23,20 @@ class PanelTests(unittest.TestCase):
  def setUpClass(cls):cls.rows=history();cls.model=fit(cls.rows)
  def test_no_history_no_forecast(self):
   with self.assertRaises(InsufficientHistory):fit([])
+ def test_activation_refuses_unit_metrics_and_small_shock_samples(self):
+  self.assertFalse(activation_gate(self.model.metrics)['eligible'])
+  metrics=dict(self.model.metrics,beats_base_rate=True,beats_carrier_eta=True,beats_active=True,shock_test_n=1,shock_replay={'beats_base_rate':True,'beats_carrier_eta':True})
+  self.assertFalse(activation_gate(metrics)['eligible'])
+  metrics['shock_test_n']=30
+  self.assertTrue(activation_gate(metrics)['eligible']) # Only tests gate arithmetic; never writes a model registry.
+ def test_advanced_families_are_calibrated_and_compared_before_inclusion(self):
+  rows=[dict(r,features={**r['features'],'forecast_horizon_hours':48,'wind_knots':r['features']['queue_hours']/2}) for r in self.rows]
+  metrics=fit(rows).metrics
+  self.assertIn('arrival_survival_aft',metrics['advanced_analyst_gates'])
+  self.assertIn('weather_port_bayesian_association',metrics['advanced_analyst_gates'])
+  for name,gate in metrics['advanced_analyst_gates'].items():
+   self.assertEqual(name in metrics['specialists'],gate['included'])
+   if gate['included']:self.assertLess(gate['weighting_brier'],gate['best_simple_brier'])
  def test_future_and_duplicate_snapshots_cannot_train(self):
   row=dict(self.rows[0]);bad=dict(row,as_of=row['actual_at'])
   self.assertEqual(len(causal_training_rows([bad])),0)

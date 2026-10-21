@@ -20,8 +20,10 @@ from sklearn.metrics import brier_score_loss, log_loss
 from sklearn.neighbors import NearestNeighbors
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
+from datetime import datetime
+from analysts import LogNormalAFT, WeatherPortBayes, mine_precursors, is_subsequence
 
-VERSION = 'panel-v1'
+VERSION = 'panel-v2'
 GROUPS = {
  'port_operations': ['queue_hours','dwell_hours'],
  'chokepoint_security': ['incident_count','transit_change','mention_count','assessment_confidence'],
@@ -29,13 +31,25 @@ GROUPS = {
  'weather_sea': ['wind_knots','wave_metres','weather_count'],
  'freight_bunker': ['rate_change','bunker_change','daily_demurrage'],
  'sanctions_screening': ['sanctions_matches','strongest_match'],
- 'land_corridor': ['border_hours','truck_hours'],
+ 'land_corridor': ['border_hours','truck_hours','planned_truck_hours','road_plan_age_hours'],
  'carrier_behaviour': ['promise_gap_hours','silence_hours','operator_probability','season_index'],
+ 'congestion_timeseries': ['queue_forecast_hours','rate_forecast_change','transit_forecast_change'],
 }
-FEATURES = sorted({f for group in GROUPS.values() for f in group})
+FEATURES = sorted({f for group in GROUPS.values() for f in group} | {'forecast_horizon_hours'})
 
 class InsufficientHistory(ValueError):
  pass
+
+def activation_gate(metrics):
+ """No fixture/small shock sample can authorize a production panel."""
+ checks={
+  'untouched_temporal_holdout':metrics.get('temporal_holdout') is True and metrics.get('holdout_n',0)>=30,
+  'beats_base_rate':metrics.get('beats_base_rate') is True,
+  'beats_carrier_eta':metrics.get('beats_carrier_eta') is True,
+  'beats_active':metrics.get('beats_active') is True,
+  'supported_shock_replay':metrics.get('shock_test_n',0)>=30 and metrics.get('shock_replay',{}).get('beats_base_rate') is True and metrics.get('shock_replay',{}).get('beats_carrier_eta') is True,
+ }
+ return {'eligible':all(checks.values()),'checks':checks}
 
 def regime_shift(values):
  """Conservative recent-vs-reference change sentinel, not a causal conclusion."""
@@ -148,7 +162,8 @@ class Panel:
    drivers=[{'feature':f,'contribution':float(attribution[i]+attribution[i+len(FEATURES)]),'method':'permutation SHAP (approximate)',
              'evidence_ids':features.get('evidence_ids',[])} for i,f in enumerate(FEATURES) if features.get(f) is not None]
    drivers.sort(key=lambda d:abs(d['contribution']),reverse=True)
-  fired=[r for r in self.rules if (features.get(r['feature']) or 0)>r['threshold']]
+  fired=[r for r in self.rules if (is_subsequence(r['sequence'],sequence) if 'sequence' in r else
+         features.get(r['feature']) is not None and features[r['feature']]>r['threshold'])]
   missing=[f for f in FEATURES if features.get(f) is None]
   seasonal=[r for r in self.train if r['features'].get('season')==features.get('season')]
   base_rate=float((sum(r['outcome'] for r in seasonal)+1)/(len(seasonal)+2)) if len(seasonal)>=30 else self.base_rate
@@ -189,6 +204,33 @@ def fit(rows):
   model=CalibratedClassifierCV(FrozenEstimator(estimator),method='sigmoid')
   model.fit(xc[:,ix],yc);specialists.append((name,ix,model))
  if not specialists:raise InsufficientHistory('No specialist has a supported feature group.')
+ # Add a survival opinion only with observed positive durations and frozen horizons.
+ # Separate calibration and weighting sets are retained for every advanced family.
+ advanced=[]
+ horizon=FEATURES.index('forecast_horizon_hours')
+ if all(r['features'].get('forecast_horizon_hours',0)>0 for r in train+cal+weight+test):
+  covariates=['queue_hours','dwell_hours','customs_hours','wind_knots','truck_hours','promise_gap_hours']
+  observed=[f for f in covariates if all(r['features'].get(f) is not None for r in train+cal+weight+test)]
+  durations=np.array([(datetime.fromisoformat(r['actual_at'])-datetime.fromisoformat(r['as_of'])).total_seconds()/3600 for r in train])
+  if observed and np.all(durations>0):
+   ix=[FEATURES.index(f) for f in observed]+[horizon]
+   try:
+    aft=LogNormalAFT().fit_survival(x[:,ix],durations,np.ones(len(train),bool))
+    model=CalibratedClassifierCV(FrozenEstimator(aft),method='sigmoid').fit(xc[:,ix],yc)
+    advanced.append(('arrival_survival_aft',ix,model))
+   except ValueError:pass # Failed optimizer cannot silently become a vote.
+ if all(all(r['features'].get(f) is not None for f in ('wind_knots','queue_hours')) for r in train+cal+weight+test):
+  ix=[FEATURES.index(f) for f in ('wind_knots','queue_hours')]
+  bayes=WeatherPortBayes().fit(x[:,ix],y)
+  model=CalibratedClassifierCV(FrozenEstimator(bayes),method='sigmoid').fit(xc[:,ix],yc)
+  advanced.append(('weather_port_bayesian_association',ix,model))
+ xw=matrix([r['features'] for r in weight]);yw=np.array([r['outcome'] for r in weight])
+ simple_loss=min(brier_score_loss(yw,m.predict_proba(xw[:,ix])[:,1]) for _,ix,m in specialists)
+ analyst_gates={}
+ for name,ix,model in advanced:
+  loss=float(brier_score_loss(yw,model.predict_proba(xw[:,ix])[:,1]))
+  analyst_gates[name]={'weighting_brier':loss,'best_simple_brier':float(simple_loss),'included':loss<simple_loss}
+  if loss<simple_loss:specialists.append((name,ix,model))
  scaler=StandardScaler().fit(x);scaled=scaler.transform(x)
  neighbors=NearestNeighbors(n_neighbors=min(25,len(train))).fit(scaled)
  anomaly=IsolationForest(contamination=.05,random_state=17).fit(scaled)
@@ -203,6 +245,7 @@ def fit(rows):
   if len(hits)>=10:
    rate=float(np.mean([not r['outcome'] for r in hits]))
    if rate>1-y.mean()+.1:rules.append({'name':f'{f.replace("_"," ")} elevated before delay','feature':f,'threshold':threshold,'n':len(hits),'delay_probability':rate})
+ rules.extend(mine_precursors(train))
  likelihoods={}
  for event in {e for r in train for e in r['features'].get('event_sequence',[])}:
   hits=[r for r in train if event in r['features'].get('event_sequence',[])]
@@ -224,6 +267,7 @@ def fit(rows):
   'beats_carrier_eta':metrics['brier']<carrier['brier'],'beats_active':False,
   'interval_coverage':float(np.mean([o['delay_p10_hours']<=r['delay_hours']<=o['delay_p90_hours'] for o,r in zip(outputs,test)])),
   'training_scope':'organization_only','feature_set_version':VERSION,'specialists':[s[0] for s in specialists],
+  'advanced_analyst_gates':analyst_gates,
   'shock_test_n':sum('2026-02-28'<=r['as_of'][:10]<='2026-03-31' for r in test)})
  panel.metrics=metrics;return panel
 

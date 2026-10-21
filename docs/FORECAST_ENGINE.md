@@ -41,8 +41,9 @@ no tenant, lane, model or shipment identifiers. Small cohorts stay private.
 
 ## Models and honest uncertainty
 
-Eight feature groups define port operations, chokepoint/security, customs/paperwork,
-weather/sea, freight/bunker, sanctions screening, trucking and carrier behaviour.
+Nine feature groups define port operations, chokepoint/security, customs/paperwork,
+weather/sea, freight/bunker, sanctions screening, trucking, carrier behaviour and
+congestion/rate/transit time-series projections.
 A specialist is omitted unless its feature group has actual training observations.
 The initial candidates alternate regularized logistic regression and small
 gradient-boosted trees, with Platt calibration on a separate chronological set.
@@ -54,7 +55,12 @@ Supported empirical threshold rules have minimum sample support and observed del
 rates. Event precursor likelihood ratios use smoothed resolved-history counts;
 only the strongest precursor adjusts the pooled odds, once per frozen state,
 to avoid repeatedly multiplying the same observation. Every update is stamped.
-These are initial one-step precursors, not a complete sequential mining engine.
+An ordered-subsequence miner also enumerates length-two/three patterns in each
+shipment's last twelve event tokens, with one support vote per shipment, at least
+ten cases and a delay-rate lift of 0.1 over training base rate. Up to fifty supported
+rules are retained and matched in order at prediction time. This is a bounded
+sequential miner, not unrestricted mining or a causal claim. Longer patterns need
+explicit complexity/support limits and fresh validation.
 
 Specialists and analogs combine through log-odds pooling, weighted by Brier loss
 on a separate chronological weighting set. Correlated agreement is not blindly
@@ -67,9 +73,27 @@ ETA starts with regularized delay regression and split-conformal residual bounds
 The nominal 80% interval requires exchangeability and is **not guaranteed across
 regime shifts**. Joint-row Monte Carlo bootstrap is available for observed journey
 components, retaining shared shocks; it refuses fewer than 30 complete cases.
-It is not substituted for missing customs/truck histories. Survival/AFT, Bayesian
-causal-network and time-series specialists, full sequential mining and richer
-regime segmentation remain analyst extensions requiring suitable data/backtests.
+It is not substituted for missing customs/truck histories.
+
+`analysts.py` adds a penalized lognormal accelerated-failure-time survival model
+using SciPy likelihood optimization with right-censoring support. Its probability
+answers whether the observed journey finishes within the frozen question horizon;
+the horizon is not a label. In the shipment panel it trains on resolved positive
+durations and fully observed selected covariates, followed by separate Platt
+calibration. Censoring is tested but unresolved shipment labels are not fabricated.
+A smoothed discrete weather → queue → arrival Bayesian chain is also available,
+requiring observed weather and queue features. Its edges are observational
+associations, not identified intervention effects. Both families must beat the
+best simple specialist on the separate weighting partition before joining the
+ensemble. Rejected candidates and Brier comparisons remain in model metrics.
+
+Regularized seven-lag autoregression projects each location's queue/rate/transit
+series one step using only that frozen past, with at least thirty observations.
+These derived features feed a calibrated time-series specialist; short/missing
+series produce no projection. Current-versus-reference regime checks remain
+conservative sentinels rather than a complete change-point segmentation system.
+Separate customs/trucking survival targets and richer causal graphs still require
+adequate observed component histories and their own holdout validation.
 
 ## Training, backtests and promotion
 
@@ -85,8 +109,11 @@ An audited historical snapshot dataset is still needed for retrospective replay.
 At least 150 distinct usable cases are required for training, with at least 30
 untouched holdout cases. A candidate must beat both base-rate and carrier ETA
 baselines. Replacement models must also beat the current model on later untouched
-cases. Initial automatic activation additionally requires a real Feb–Mar 2026
-Hormuz shock sample; fixture tests never authorize production activation.
+cases. Initial automatic activation additionally requires at least thirty real
+holdout cases from the Feb–Mar 2026 Hormuz shock, beating both base rate and
+carrier ETA; fixture tests never authorize production activation. The worker
+records each activation-gate result. Version-two model names include the
+feature-set version so an old model cannot be loaded against the new matrix.
 Artifacts are private worker-written joblib files with registry SHA-256 checks
 before deserialization. Never load customer-uploaded serialized models.
 
@@ -116,9 +143,20 @@ carry organization, source, model, lane, question and month. Human calls use the
 
 ## Verification
 
-On 21 October 2026: production Next.js build passed; 348 TypeScript tests passed
-(one existing live test skipped); ten Python tests passed (including the actual SHAP explanation path and regime sentinel). A real HTTP/Python/
+On 21 October 2026 the follow-up added sixteen Python tests covering AFT censoring,
+Bayesian marginalization, ordered patterns, calibration and analyst/activation
+gates as well as the original panel/SHAP path. TypeScript, build, browser and
+live-provider results are recorded in `docs/verification/FOLLOW_UP.md`. A real HTTP/Python/
 Postgres-wire integration check passed for authentication, tenant parent rejection,
 cold-start withholding, immutable snapshot persistence, outcome resolution,
 known-answer Brier/log-loss and repeat scoring. The authenticated browser check also traverses shipment creation, route/corridor drawing, Iranian camera gaps, worker withholding and a stamped human forecast, with no browser runtime exceptions. See `tools/forecast/browser-report.json` and screenshots. All browser/test shipments are synthetic; no real customer data or keys are used. Docker/Render deployment and
 live managed-source credentials require deployment-specific verification.
+
+The connected database was audited read-only: **zero shipments and zero actual
+arrival labels**, with no forecast snapshot table deployed. The user confirmed
+there are no historical files and requested API keys remain blank. See
+`docs/verification/history-readiness.json`. Consequently real shipment replay,
+Hormuz accuracy and production activation remain **blocked**, not completed by
+unit fixtures. Public aggregate port/weather series cannot replace shipment
+outcomes or establish what a customer knew at a historical as-of time. No
+production database/model changes were made to bypass this evidence boundary.

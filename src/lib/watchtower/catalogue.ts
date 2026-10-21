@@ -29,6 +29,12 @@ export function searchCameraPorts(query: string) {
  }));
 }
 export function playable(camera:CameraFeed) {
- if(!camera.publicViewingVerified||!camera.embedAllowed||!camera.streamUrl||camera.status!=='online')return false;
+ if(!camera.publicViewingVerified||!camera.embedAllowed||!camera.streamUrl||effectiveCamera(camera).status!=='online')return false;
  try {const url=new URL(camera.streamUrl);return url.protocol==='https:'&&!url.username&&!url.password;}catch{return false;}
+}
+// A stale status must remain unknown, but an operator may explicitly open an
+// already reviewed public embed to inspect it. This never changes global health.
+export function canOpenCamera(camera:CameraFeed){
+ if(!camera.publicViewingVerified||!camera.embedAllowed||!camera.streamUrl||camera.status==='offline')return false;
+ try{const u=new URL(camera.streamUrl);return u.protocol==='https:'&&!u.username&&!u.password;}catch{return false;}
 }

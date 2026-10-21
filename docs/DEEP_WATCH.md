@@ -24,7 +24,14 @@ labelled `licensed_intelligence`, with source attribution and unverified-claim
 review semantics. Subscription limits/terms apply. The adapter enforces a
 conservative one-request-per-minute process-local cooldown and honors 429
 Retry-After. Distributed deployments must coordinate subscription quota upstream.
-No live subscription was exercised during implementation.
+No live subscription was supplied; its API key remains blank at the user's request.
+The follow-up live audit exercised HIBP's public metadata endpoint (HTTP 200),
+not customer exposure queries. GUR and OpenSanctions were exercised through their
+existing parsers (24 and 20,434 parsed entries respectively). These checks do
+not settle commercial rights or enable production screening. See
+`docs/verification/public-sources.json`; reproduce with
+`RUN_PUBLIC_SOURCE_CHECKS=1 npx vitest run src/lib/providers/public-sources.live.test.ts`
+(PowerShell: set `$env:RUN_PUBLIC_SOURCE_CHECKS='1'` first).
 
 Additional providers implement `DarkWebProvider` and register in `dark-web/index.ts`.
 They must use a managed, lawful API; bind queries to the tenant graph; declare

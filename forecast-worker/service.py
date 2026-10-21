@@ -13,7 +13,8 @@ import time
 import psycopg
 from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
-from panel import VERSION, Panel, fit, save, load_verified, InsufficientHistory, scores, regime_shift
+from panel import VERSION, Panel, fit, save, load_verified, InsufficientHistory, scores, regime_shift, activation_gate
+from analysts import autoregressive_forecast
 
 MODEL_ROOT=Path(os.environ.get('MODEL_ROOT','/models'))
 
@@ -33,6 +34,8 @@ def snapshot(c,organization,shipment):
            'historical':s['historical'],'planned_arrival_at':iso(s['planned_arrival_at']) if s['planned_arrival_at'] else None,
            'regime':'unclassified','event_sequence':[],'evidence_ids':[]}
  features['season_index']=(now.month-1)//3
+ if s['planned_arrival_at']:
+  features['forecast_horizon_hours']=max(0,(s['planned_arrival_at']-now).total_seconds()/3600)
  humans=c.execute("""select distinct on(f.user_id) f.user_id,f.probability,f.id from ophanim_forecasts f
   where f.organization_id=%s and f.shipment_id=%s and f.source_type='human' and f.issued_at<=%s
   order by f.user_id,f.issued_at desc""",(organization,shipment,now)).fetchall()
@@ -51,6 +54,20 @@ def snapshot(c,organization,shipment):
  events=c.execute('select id,event_type,occurred_at from ophanim_shipment_events where organization_id=%s and shipment_id=%s and recorded_at<=%s and occurred_at<=%s order by occurred_at',(organization,shipment,now,now)).fetchall()
  features['event_sequence']=[e['event_type'] for e in events]
  if events:features['silence_hours']=max(0,(now-events[-1]['occurred_at']).total_seconds()/3600)
+ road=c.execute("""select metadata->'road_legs' as legs from ophanim_routes where organization_id=%s and shipment_id=%s
+  and archived_at is null and updated_at<=%s and metadata ? 'road_legs' order by updated_at desc limit 1""",(organization,shipment,now)).fetchone()
+ if road and isinstance(road['legs'],dict):
+  plans=[p for p in road['legs'].values() if isinstance(p,dict) and p.get('provider')=='valhalla'
+   and isinstance(p.get('durationHours'),(int,float)) and 0<=p['durationHours']<=1000]
+  if plans:
+   features['planned_truck_hours']=sum(p['durationHours'] for p in plans)
+   dates=[]
+   for p in plans:
+    try:
+     checked=datetime.fromisoformat(p['checkedAt'].replace('Z','+00:00'))
+     if checked<=now:dates.append((now-checked).total_seconds()/3600)
+    except (KeyError,ValueError,TypeError):pass
+   if dates:features['road_plan_age_hours']=max(dates)
  mentions=c.execute("""select count(distinct m.id) as n,max(x.confidence_contribution) as strongest,max(a.confidence_score) as confidence,
   array_agg(distinct m.id::text) as ids
   from ophanim_dark_web_mentions m join ophanim_mention_entity_matches x on x.mention_id=m.id
@@ -75,6 +92,10 @@ def snapshot(c,organization,shipment):
  for row in series:
   if isinstance(row['value'],(int,float)):groups.setdefault((row['metric'],row['location_code']),[]).append(row['value'])
  changes=[regime_shift(v) for v in groups.values()];changes=[v for v in changes if v]
+ for metric,feature in (('queue_hours','queue_forecast_hours'),('rate_change','rate_forecast_change'),('transit_change','transit_forecast_change')):
+  predictions=[autoregressive_forecast(v) for (m,_),v in groups.items() if m==metric]
+  predictions=[p for p in predictions if p is not None]
+  if predictions:features[feature]=max(predictions)
  if changes:
   shifted=any(v['shifted'] for v in changes);features['regime']='shifted' if shifted else 'reference'
   features['regime_sentinel']={'shifted':shifted,'comparisons':changes}
@@ -102,7 +123,7 @@ def training_rows(c,organization,reference=None):
  return sorted(out,key=lambda r:r['as_of'])
 
 def reference_name(f):
- return 'arrives_by:'+hashlib.sha256(json.dumps({k:f.get(k) for k in ('lane','carrier','cargo_type','regime')},sort_keys=True).encode()).hexdigest()[:24]
+ return VERSION+':arrives_by:'+hashlib.sha256(json.dumps({k:f.get(k) for k in ('lane','carrier','cargo_type','regime')},sort_keys=True).encode()).hexdigest()[:24]
 
 def retrain(c,organization,features):
  rows=training_rows(c,organization,features)
@@ -126,7 +147,8 @@ def retrain(c,organization,features):
   metrics['beats_active']=len(test)>=30 and scores([r['outcome'] for r in test],[panel.predict(r['features'])['probability'] for r in test])['brier']<scores([r['outcome'] for r in test],[old.predict(r['features'])['probability'] for r in test])['brier']
  else:metrics['beats_active']=True
  # Initial release also needs the requested Hormuz shock replay. No fixture can unlock it.
- promote=metrics['beats_base_rate'] and metrics['beats_carrier_eta'] and metrics['beats_active'] and metrics['shock_test_n']>0 and metrics['shock_replay'].get('beats_base_rate',False)
+ metrics['activation_gate']=activation_gate(metrics)
+ promote=metrics['activation_gate']['eligible']
  if promote and active:c.execute("update ophanim_model_versions set status='retired' where id=%s",(active['id'],))
  c.execute("""insert into ophanim_model_versions(organization_id,model_name,version,algorithm,feature_set_version,training_window,training_row_count,training_data_hash,artifact_uri,artifact_sha256,metrics,status)
   values(%s,%s,%s,'calibrated specialists + analog log-odds',%s,tstzrange(%s,%s,'[]'),%s,%s,%s,%s,%s,%s)""",
@@ -146,6 +168,8 @@ def forecast(c,organization,shipment,trigger='operator_request'):
  if len(rows)<30:return {'status':'withheld','question_id':str(q['id']),'reason':'No reference class with 30 resolved frozen shipments. Import history and accumulate prospective snapshots.','reference_n':len(rows)}
  active=c.execute("select * from ophanim_model_versions where organization_id=%s and model_name=%s and status='active'",(organization,reference_name(f))).fetchone()
  if not active:return {'status':'withheld','question_id':str(q['id']),'reason':'No active model has passed temporal, baseline, carrier and shock-replay gates.','reference_n':len(rows)}
+ if not activation_gate(active['metrics'])['eligible']:
+  return {'status':'withheld','question_id':str(q['id']),'reason':'Registered model does not satisfy current activation gates.','reference_n':len(rows)}
  model=load_verified(active['artifact_uri'],active['artifact_sha256'],MODEL_ROOT)
  prediction=model.predict(f,f.get('event_sequence'))
  if prediction['out_of_distribution']:return {'status':'withheld','reason':'Shipment is outside training distribution.','dissent':prediction['dissent']}

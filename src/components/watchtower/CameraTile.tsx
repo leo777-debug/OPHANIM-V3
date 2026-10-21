@@ -18,7 +18,7 @@ export default function CameraTile({camera}:{camera:CameraFeed}){
  const embedAllowed=!youtube||/^https:\/\/(?:www\.)?youtube(?:-nocookie)?\.com\/embed\/[a-zA-Z0-9_-]+(?:\?|$)/.test(url);
  return <div ref={root} className="lens-camera-tile">
   {failed?<p role="status">Feed unavailable; port conditions unknown.</p>:camera.embedType==='hls'?<video ref={video} muted controls playsInline onError={()=>setFailed(true)} style={{width:'100%'}}/>:
-   camera.embedType==='iframe'||youtube?embedAllowed?<iframe title={camera.name} src={url} sandbox="allow-scripts allow-same-origin allow-presentation" allow="fullscreen" allowFullScreen style={{width:'100%',height:220}}/>:<p>Unverified embed format.</p>:
+   camera.embedType==='iframe'||youtube?embedAllowed?<iframe title={camera.name} src={url} referrerPolicy="strict-origin-when-cross-origin" sandbox="allow-scripts allow-same-origin allow-presentation" allow="fullscreen" allowFullScreen style={{width:'100%',height:220}}/>:<p>Unverified embed format.</p>:
    /* Public source images are deliberately direct embeds, never proxied/re-streamed. */
    // eslint-disable-next-line @next/next/no-img-element
    <img alt={camera.name} src={url} onError={()=>setFailed(true)} style={{width:'100%'}}/>}

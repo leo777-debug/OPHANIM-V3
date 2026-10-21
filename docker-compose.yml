@@ -24,6 +24,7 @@ services:
       - HOSTNAME=0.0.0.0
       - FORECAST_WORKER_URL=http://forecast-worker:8081
       - FORECAST_WORKER_TOKEN=${FORECAST_WORKER_TOKEN:-}
+      - ROAD_ROUTER_URL=${ROAD_ROUTER_URL:-}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped

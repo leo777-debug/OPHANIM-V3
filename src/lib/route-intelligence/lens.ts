@@ -7,6 +7,7 @@ import { priorityPorts,searchCameraPorts } from '@/lib/watchtower/catalogue';
 import { shipmentMentions } from '@/lib/dark-web/corridor';
 import { exploreSeaRoute,findReferencePorts,type Point } from './open-network';
 import { corridorDistance,corridorPolygons } from './corridor';
+import type { RoadLeg } from './road';
 
 import { LENS_LAYERS } from './lens-types';
 export { LENS_LAYERS } from './lens-types';
@@ -16,6 +17,7 @@ export interface RouteLens {
  shipmentId:string;label:string;ports:Array<{name:string;code:string;lat:number;lon:number}>;
  layers:ProviderMapLayer[];evidence:LensEvidence[];gaps:string[];counts:Record<LensLayer,number>;
  silenceClock:{hours:number;source:string;typicalHours:number|null};corridorKm:number;updatedAt:string;assumptions:string[];
+ roadLegs:RoadLeg[];
 }
 async function resolvePort(value:string){
  const p=priorityPorts.find(p=>[p.code,p.name,...p.aliases].some(v=>v.toLowerCase()===value.toLowerCase()));
@@ -49,8 +51,19 @@ export async function buildRouteLens(actor:OrganizationActor,shipmentId:string):
    assumptions.push(...route.baseline.assumptions);
   }
  }
- if(corridor.length>1)layers.unshift({id:'route-lens-buffer',provider:'route-lens',name:'50 km evidence corridor',geometry:'polygon',visible:true,interactive:false,style:{color:'#38dfc4',opacity:.08},source:{type:'FeatureCollection',features:[{type:'Feature',geometry:{type:'MultiPolygon',coordinates:corridorPolygons(corridor)},properties:{}}]}});
- gaps.push('Depot/address road legs require recorded road geometry; amber endpoint connectors are unrouted. No live vehicle position inferred.');
+ const roadRecord=await db().query(`select metadata->'road_legs' as legs from ophanim_routes where organization_id=$1 and shipment_id=$2 and archived_at is null and metadata ? 'road_legs' order by updated_at desc limit 1`,[actor.organizationId,shipmentId]);
+ const roadLegs=Object.values(roadRecord.rows[0]?.legs??{}).filter((r):r is RoadLeg=>{
+  const leg=r as RoadLeg;return leg?.provider==='valhalla'&&Array.isArray(leg.coordinates)&&leg.coordinates.length>1&&leg.coordinates.every(p=>Array.isArray(p)&&p.length===2&&p.every(Number.isFinite)&&Math.abs(p[0])<=180&&Math.abs(p[1])<=90);
+ });
+ const corridors= [...(corridor.length>1?[corridor]:[]),...roadLegs.map(r=>r.coordinates)];
+ for(const leg of roadLegs){
+  const layer=lineLayer(`route-lens-road-${leg.side}`,leg.coordinates,'#a2c4ff');
+  for(const f of layer.source.features)f.properties={...f.properties,why:leg.caveat,label:`${leg.from.label} → ${leg.to.label}`,attribution:leg.attribution};
+  layers.push(layer);assumptions.push(leg.caveat,leg.attribution);
+  if(Date.now()-Date.parse(leg.checkedAt)>7*86400000)gaps.push(`${leg.side} road route is older than seven days; recalculate before use.`);
+ }
+ if(corridors.length)layers.unshift({id:'route-lens-buffer',provider:'route-lens',name:'50 km evidence corridor',geometry:'polygon',visible:true,interactive:false,style:{color:'#38dfc4',opacity:.08},source:{type:'FeatureCollection',features:corridors.map(points=>({type:'Feature',geometry:{type:'MultiPolygon',coordinates:corridorPolygons(points)},properties:{}}))}});
+ for(const side of ['origin','destination'])if(!roadLegs.some(r=>r.side===side))gaps.push(`${side} road leg unknown. Select a depot and accessible public port gate to calculate a truck route. Amber sea-network connectors remain unrouted.`);
  for(const port of ports){
   const catalog=searchCameraPorts(port.code)[0];if(!catalog)continue;
   if(!catalog.cameras.length)gaps.push(`${port.name}: public camera coverage unverified.`);
@@ -63,7 +76,7 @@ export async function buildRouteLens(actor:OrganizationActor,shipmentId:string):
   where (e.organization_id=$1 or (e.organization_id is null and e.visibility='global'))
   and e.first_seen_at>now()-interval '7 days' and e.occurred_at<=now() and e.event_status not in ('resolved','cancelled') order by e.first_seen_at desc limit 1000`,[actor.organizationId]);
  for(const e of events.rows){
-  if(e.latitude===null||e.longitude===null||corridor.length<2||corridorDistance([e.longitude,e.latitude],corridor)>50)continue;
+  if(e.latitude===null||e.longitude===null||!corridors.some(points=>corridorDistance([e.longitude,e.latitude],points)<=50))continue;
   const kind=`${e.category} ${e.event_type}`.toLowerCase();const layer:LensLayer=/weather|storm|flood|wave/.test(kind)?'weather':/market|fuel|bunker|rate|demurrage/.test(kind)?'market':/sanction|shadow/.test(kind)?'screening':'news';
   evidence.push({id:`event:${e.id}`,layer,title:e.title,why:'Normalized reported event within 50 km of the planned corridor; proximity does not establish impact.',sourceUrl:e.source_url??undefined,lat:e.latitude,lon:e.longitude,observedAt:e.occurred_at?String(e.occurred_at):undefined,confidence:e.confidence===null?'unverified':`${e.confidence}/100 source confidence`});
  }
@@ -78,5 +91,5 @@ export async function buildRouteLens(actor:OrganizationActor,shipmentId:string):
    return [{type:'Feature' as const,geometry:{type:'Point' as const,coordinates:[e.lon??p.lon,e.lat??p.lat]},properties:{...e,provider:'route-lens',associationOnly:e.lat===undefined}}];
   })}});
  }
- return {silenceClock,shipmentId,label:shipment.shipmentReference,ports,layers,evidence,gaps,counts:Object.fromEntries(LENS_LAYERS.map(l=>[l,evidence.filter(e=>e.layer===l).length])) as Record<LensLayer,number>,corridorKm:50,updatedAt:new Date().toISOString(),assumptions:[...new Set(assumptions)]};
+ return {roadLegs,silenceClock,shipmentId,label:shipment.shipmentReference,ports,layers,evidence,gaps,counts:Object.fromEntries(LENS_LAYERS.map(l=>[l,evidence.filter(e=>e.layer===l).length])) as Record<LensLayer,number>,corridorKm:50,updatedAt:new Date().toISOString(),assumptions:[...new Set(assumptions)]};
 }

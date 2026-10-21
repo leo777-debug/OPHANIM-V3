@@ -1,0 +1,24 @@
+{
+  "checkedAt": "2026-10-21T18:53:19.356Z",
+  "sourceUrl": "https://www.youtube.com/watch?v=lgQ8-E3rJ_4",
+  "publisher": "DarGlobal",
+  "permission": "YouTube standard embedded player only; public publisher stream; branding/controls retained",
+  "method": "Manual IFrame API playback audit; no media stored",
+  "status": "playback_verified",
+  "samples": [
+    {
+      "state": 1,
+      "time": 17610798.638325952,
+      "duration": 17610798.2,
+      "errorCode": null
+    },
+    {
+      "state": 1,
+      "time": 17610801.57299194,
+      "duration": 17610798.2,
+      "errorCode": null
+    }
+  ],
+  "freshnessLimit": "API confirms advancing playback, not the age or geographic truth of camera imagery. UI live badge and waterfront imagery were manually observed separately.",
+  "coverage": "Approximate Yiti/AIDA coastal view near Muscat. Does not cover priority cargo ports or establish all clear."
+}
