@@ -3,9 +3,9 @@
   "branch": "feat/job-file-core",
   "baseCommit": "2a2b72e",
   "worktree": "D:/OPHANIM/worktrees/job-file-core",
-  "current_phase": "05",
-  "current_task": "05-jobfile-finish",
-  "last_commit": "6a2dbb3",
+  "current_phase": "W1",
+  "current_task": "W1-watchtower",
+  "last_commit": "47214ed",
   "updated_at": "2026-10-21",
   "tasks": [
     {
@@ -58,7 +58,7 @@
     },
     {
       "id": "05-jobfile-finish",
-      "status": "doing"
+      "status": "done"
     },
     {
       "id": "W1-watchtower",
@@ -81,5 +81,6 @@
       "status": "todo"
     }
   ],
-  "resumeInstruction": "Read JOBFILE/DESIGN.md, PROGRESS.md and this file. Work only in the worktree above. Never edit, checkout, reset or pull in C:/Users/Leonard/OneDrive/Documents/OPHANIM-V3 2 or C:/Users/Leonard/.codex/worktrees/parity-default-alignment/OPHANIM-V3 2. One ledger: extend ophanim_forecasts. Commit per task. Open PR; never merge or deploy."
+  "resumeInstruction": "Read JOBFILE/DESIGN.md, PROGRESS.md and this file. Work only in the worktree above. Never edit, checkout, reset or pull in C:/Users/Leonard/OneDrive/Documents/OPHANIM-V3 2 or C:/Users/Leonard/.codex/worktrees/parity-default-alignment/OPHANIM-V3 2. One ledger: extend ophanim_forecasts. Commit per task. Open PR; never merge or deploy.",
+  "pullRequest": null
 }
