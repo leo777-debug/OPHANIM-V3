@@ -1,0 +1,39 @@
+{
+  "checkedAt": "2026-10-21T07:36:12.663Z",
+  "milestone": "01d-health-worker-isolation",
+  "unitTests": {
+    "passed": 571,
+    "skipped": 5,
+    "focusedWorkerTests": 7
+  },
+  "typecheck": "passed",
+  "targetedLint": "passed",
+  "productionBuild": "passed",
+  "diffCheck": "passed",
+  "composeConfiguration": {
+    "validated": true,
+    "command": "docker compose --env-file .env.example --profile health config --no-env-resolution --format json",
+    "workerSettings": [
+      "APP_INTERNAL_URL",
+      "HEALTH_CRON_SECRET",
+      "HEALTH_POLL_SECONDS"
+    ],
+    "envFilePassedToWorker": false,
+    "user": "node",
+    "readOnly": true,
+    "noNewPrivileges": true,
+    "heartbeat": "local file only; no additional scheduler request"
+  },
+  "localHttp": [
+    "dedicated Bearer header and fixed cron path",
+    "2xx completion independent of fixture feed failure",
+    "401/500 mark scheduler failed",
+    "302 rejected without following redirect",
+    "response bodies and secrets excluded from heartbeat/logs"
+  ],
+  "containerRuntime": "Not verified: Docker Desktop Linux engine pipe unavailable",
+  "browser": "Not rerun: no app route/UI changes; previous 34 browser checks remain historical evidence",
+  "upstreamRequests": "None made by focused worker tests; loopback fixtures only",
+  "scope": "Scheduler reachability/completion only, not individual source availability, payload freshness or full parity",
+  "worldMonitorCodeUsed": false
+}

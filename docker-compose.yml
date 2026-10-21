@@ -6,9 +6,25 @@ services:
     command: [node, /app/health-worker.mjs]
     volumes:
       - ./ops/health-worker.mjs:/app/health-worker.mjs:ro
-    env_file:
-      - path: .env
-        required: false
+    environment:
+      HEALTH_CRON_SECRET: ${HEALTH_CRON_SECRET:-}
+      HEALTH_POLL_SECONDS: ${HEALTH_POLL_SECONDS:-300}
+      APP_INTERNAL_URL: ${APP_INTERNAL_URL:-http://ophanim:3000}
+    user: node
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=1m,uid=1000,gid=1000,mode=0700
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 32
+    mem_limit: 128m
+    cpus: 0.25
+    healthcheck:
+      test: [CMD, node, /app/health-worker.mjs, --healthcheck]
+      interval: 30s
+      timeout: 5s
+      start_period: 190s
+      retries: 2
     depends_on: [ophanim]
     restart: unless-stopped
   ophanim:

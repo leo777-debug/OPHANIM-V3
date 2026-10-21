@@ -58,7 +58,7 @@
     "baselineTests": "311 passed, 5 skipped",
     "baselineTypecheck": "passed",
     "baselineBuild": "passed",
-    "currentTests": "564 passed, 5 skipped; 127 files passed",
+    "currentTests": "571 passed, 5 skipped; 128 files passed",
     "typecheck": "passed",
     "build": "passed, Next16.4.2 Webpack",
     "targetedLint": "passed",
@@ -68,18 +68,19 @@
     "integrationsBrowser": "7 recorded checks passed: actual auth/API/storage, key/licence/error gating, research guide including ordered steps and mobile SDK setup",
     "clientSecretScan": "273 browser JavaScript chunks; zero known-token-format findings (limited pattern audit)",
     "nativeBrowser": "Reference geography/attribution, 3962 clustered ports, real route/closure rendering and CSV, Hazard/Aviation recovery passed",
-    "researchWorker": "Real local HTTP/adapter/auth/privacy/cache/bounds tests passed; Compose configuration validated. Docker engine stopped: no actual container claim. Two live fixed keyless endpoints passed; research-source-audit.json."
+    "researchWorker": "Real local HTTP/adapter/auth/privacy/cache/bounds tests passed; Compose configuration validated. Docker engine stopped: no actual container claim. Two live fixed keyless endpoints passed; research-source-audit.json.",
+    "healthWorker": "Seven regression tests including actual local HTTP/auth/redirect/failure contracts; isolated Compose config validated using .env.example without resolving env_file contents. Docker engine unavailable: container runtime remains unverified. See health-worker-validation.json."
   },
   "overallStatus": "in_progress",
-  "resumeInstruction": "Use attached parity-default-alignment worktree on parity-and-reliability. Current 01c committed after 564 tests, type/lint/build and 34 browser checks. Continue 01-integrations: health-worker least-privilege environment and robust poll interval/healthcheck, other optional profiles/adapters, universal missing-key/sign-in prompts. Then broad P1-P4 in REPORT. Preserve original detached dirty checkout. PR25 draft still old base. Deployment, remote push/base correction and merge stay final.",
+  "resumeInstruction": "Use parity-default-alignment worktree on parity-and-reliability. 01d health-worker isolation committed after 571 tests/5 skipped, type/lint/build. Continue 01-integrations: remaining optional profiles/adapters, operator licence inventory and universal missing-key/sign-in prompts; then broad P1-P4 in REPORT. Legacy intel service publishes port 4000 and loads an external sanctions dataset at startup: source/access/transport review is needed before packaging approval. Actual Docker runtime remains unverified. Preserve original dirty checkout. PR25 still needs current-default recheck/base correction/push/CI/review at final delivery. Merge only after completion; deployment last.",
   "baselineCommit": "d22f6a060a1a98c77343764e785db6b6ec60f7e7",
   "pullRequest": "https://github.com/leo777-debug/OPHANIM-V3/pull/25",
   "preserveExistingChanges": true,
   "worldMonitorCodeUsed": false,
   "originalFoundationCommit": "e0898ef",
   "activeMilestone": {
-    "id": "01c-restricted-research-profile",
+    "id": "01d-health-worker-isolation",
     "status": "done",
-    "evidence": "564 tests/5 skipped, standalone typecheck, targeted lint, production build and 34 combined browser checks passed. Container execution unverified; Docker engine unavailable. See research-worker-validation.json."
+    "evidence": "571 tests/5 skipped; standalone typecheck, targeted lint, production build and diff check passed. Scheduler health is separate from source health. Container runtime unverified."
   }
 }
