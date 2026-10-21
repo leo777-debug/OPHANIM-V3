@@ -143,6 +143,18 @@ from local commit `2a2b72e` (parity-and-reliability, unpushed). Read
 - Acceptance (congestion.test.ts): seeded fog TAF at DXB flags an air import
   arriving that morning; three driver trips give "~2h40" wait for the site.
 
+## 4.7 — Today list (done)
+
+- One prioritised list per person (/jobs/today, "Mine") and per team ("Team"):
+  flags, expected-but-missing milestones, documents to confirm, senior review
+  requests, intake to review, chasers. Priority = probability × cost, boosted when due.
+- Phone: swipe right = done, swipe left = snooze (mirrored in RTL); buttons for
+  done / snooze / escalate / not a problem. Acting on a time-gap warning records an
+  "acted"/"dismissed" interaction on its prediction (intervention handling).
+- Alert budget: at most JOBFILE_ALERT_BUDGET (default 5) interruptions per person
+  per Gulf day; the rest wait in the list. Re-raised items keep people's decisions.
+- Tests: today.test.ts.
+
 ## Questions for the founder
 
 1. What exactly are the "landing" and "takeoff" papers? Assumed: air import / export documents (AWB, cargo manifest, delivery order, export declaration).

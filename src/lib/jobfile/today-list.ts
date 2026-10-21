@@ -14,15 +14,18 @@ export async function rankToday(ctx: Ctx, options: { scope: 'me' | 'team' } = { 
     && (options.scope === 'team' || !item.assigneeUserId || item.assigneeUserId === me));
   const score = (item: TodayItem) => item.priority * (item.dueAt ? (Date.parse(item.dueAt) < now ? 2 : Date.parse(item.dueAt) - now < 4 * 36e5 ? 1.5 : 1) : 1) * (item.state === 'escalated' ? 1.5 : 1);
   const ranked = [...visible].sort((a, b) => score(b) - score(a));
-  const today = new Date(now).toISOString().slice(0, 10);
-  const used = all.filter(item => item.interrupt && item.updatedAt.slice(0, 10) === today && (item.assigneeUserId ?? null) === (options.scope === 'me' ? me : item.assigneeUserId)).length;
+  // Interruptions are counted per person per Gulf day, from when each one was raised.
+  const day = (at: number) => new Date(at + 4 * 36e5).toISOString().slice(0, 10), today = day(now);
+  const interruptedToday = (item: TodayItem) => item.interrupt && typeof item.payload.interruptedAt === 'string' && day(Date.parse(item.payload.interruptedAt)) === today;
+  const used = all.filter(item => interruptedToday(item) && (options.scope === 'team' || !item.assigneeUserId || item.assigneeUserId === me)).length;
   let budget = Math.max(0, ALERT_BUDGET - used);
   for (const item of ranked) {
     if (budget <= 0) break;
     if (item.interrupt || item.priority < 100) continue;
-    await ctx.repo.update('ophanim_today_items', org, { id: item.id }, { interrupt: true }); item.interrupt = true; budget--;
+    const payload = { ...item.payload, interruptedAt: new Date(now).toISOString() };
+    await ctx.repo.update('ophanim_today_items', org, { id: item.id }, { interrupt: true, payload }); item.interrupt = true; item.payload = payload; budget--;
   }
-  return { items: ranked, interruptions: ranked.filter(item => item.interrupt).length, waiting: ranked.filter(item => !item.interrupt).length, budget: ALERT_BUDGET };
+  return { items: ranked, interruptions: ranked.filter(interruptedToday).length, waiting: ranked.filter(item => !interruptedToday(item)).length, budget: ALERT_BUDGET };
 }
 
 export type TodayAction = 'done' | 'snooze' | 'escalate' | 'not_a_problem';

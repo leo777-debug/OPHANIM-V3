@@ -83,6 +83,7 @@ export async function receiveAndProcess(ctx: Ctx, input: IntakeInput, options: {
     if (profile) input = { ...input, attachments: input.attachments.filter(item => !sheets.includes(item)) };
   }
   const result = await receiveIntake(ctx, input, { ...options, ...paperHooks(ctx) });
+  if (result.intake.status === 'review') await upsertTodayItem(ctx, { kind: 'intake_review', sourceKey: `intake:${result.intake.id}`, titleEn: `Review ${input.channel} item: ${result.decision.reason.replace('_', ' ')}`, titleAr: 'مراجعة عنصر وارد', probability: 1, cost: 150, payload: { intakeId: result.intake.id } });
   // Milestone times written in emails and messages (rules first, optional AI second).
   if (result.intake.matchedJobFileId && (input.channel === 'email' || input.channel === 'whatsapp')) {
     const { applyEmailMilestones } = await import('./milestones');
@@ -91,8 +92,12 @@ export async function receiveAndProcess(ctx: Ctx, input: IntakeInput, options: {
   }
   return result;
 }
-export const attachAndProcess = (ctx: Ctx, intakeId: string, jobFileId: string) => attachIntake(ctx, intakeId, jobFileId, paperHooks(ctx));
-export const createFromIntakeAndProcess = (ctx: Ctx, intakeId: string, input: JobInput) => createJobFromIntake(ctx, intakeId, input, paperHooks(ctx));
+export async function attachAndProcess(ctx: Ctx, intakeId: string, jobFileId: string) {
+  const job = await attachIntake(ctx, intakeId, jobFileId, paperHooks(ctx)); await closeTodayItem(ctx, `intake:${intakeId}`); return job;
+}
+export async function createFromIntakeAndProcess(ctx: Ctx, intakeId: string, input: JobInput) {
+  const job = await createJobFromIntake(ctx, intakeId, input, paperHooks(ctx)); await closeTodayItem(ctx, `intake:${intakeId}`); return job;
+}
 
 const linesOf = (document: JobDocument & { fields?: ExtractedField[] }) => { const field = document.fields?.find(item => item.field === 'invoice_lines' && item.status !== 'rejected'); try { return field?.value ? JSON.parse(field.value) : undefined; } catch { return undefined; } };
 /** The values checks use: confirmed/corrected first, then auto-accepted, then suggestions. Rejected values never count. */

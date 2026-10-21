@@ -16,7 +16,7 @@ export async function upsertTodayItem(ctx: Ctx, item: Pick<TodayItem, 'kind' | '
   const [existing] = await ctx.repo.select<TodayItem>('ophanim_today_items', organizationId, { sourceKey: item.sourceKey });
   const fields = { jobFileId: item.jobFileId ?? null, kind: item.kind, titleEn: item.titleEn, titleAr: item.titleAr, probability: item.probability ?? null, cost: item.cost ?? null,
     priority: priorityOf(item.probability ?? null, item.cost ?? null), dueAt: item.dueAt ?? null, assigneeUserId: item.assigneeUserId ?? null, team: item.team ?? null, payload: item.payload ?? {} };
-  if (existing) return (await ctx.repo.update<TodayItem>('ophanim_today_items', organizationId, { id: existing.id }, fields))[0];
+  if (existing) return (await ctx.repo.update<TodayItem>('ophanim_today_items', organizationId, { id: existing.id }, { ...fields, payload: { ...existing.payload, ...fields.payload } }))[0];
   return ctx.repo.insert<TodayItem>('ophanim_today_items', organizationId, { ...fields, sourceKey: item.sourceKey, state: 'open', interrupt: false });
 }
 export async function closeTodayItem(ctx: Ctx, sourceKey: string) {
