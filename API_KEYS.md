@@ -81,6 +81,9 @@ Pricing/quotas vary by plan and may change. “Keyless” describes access, not 
 | Job files: local OCR (Tesseract) | `TESSERACT_PATH`, `TESSERACT_LANGUAGES` | Offline English + Arabic OCR fallback with word boxes (lower confidence, never auto-accepts) | Open source (Apache-2.0); install the binary and eng/ara language data. | [Provider](https://github.com/tesseract-ocr/tesseract) | Typed values on the Paper Desk. |
 | Job files: e-invoice ASP adapter | `EINVOICE_ASP_URL`, `EINVOICE_ASP_TOKEN`, `EINVOICE_ASP_VALIDATED`, `EINVOICE_SELLER_NAME`, `EINVOICE_SELLER_TRN` | Submits PINT AE invoices through an accredited service provider after validation against the UAE MoF specification | ASP contract pricing; Ophanim is not an e-invoicing provider. | [Provider](https://mof.gov.ae/en/public-finance/tax/e-invoicing/) | Stub: PINT AE-shaped XML export marked unvalidated; nothing is sent. |
 | Job files: watched upload folder | `JOBFILE_WATCH_DIR`, `JOBFILE_WATCH_ORGANIZATION_ID` | Scheduled import of tracking sheets dropped into a folder | Self-hosted; no fee. | [Provider](https://github.com/leo777-debug/OPHANIM-V3/blob/feat/job-file-core/docs/JOB_FILE.md) | Upload sheets in the app or email them from a remembered sender. |
+| Watchtower: Windy Webcams API | `WINDY_WEBCAMS_API_KEY` | Public webcams near Gulf and Hormuz ports, embedded with the publisher player | Free and paid tiers; attribution and link required; publisher terms apply. | [Provider](https://api.windy.com/webcams) | Curated catalogue only (unverified leads); no live tiles. |
+| Deep Watch: Have I Been Pwned domain search | `HIBP_API_KEY` | Breached accounts at your own verified email domains (counts only) | Paid subscription; domains must be verified in the HIBP dashboard. | [Provider](https://haveibeenpwned.com/API/Key) | Development fixtures in tests; no breach monitoring. |
+| Deep Watch: licensed threat-intelligence feed | `DEEPWATCH_FEED_URL`, `DEEPWATCH_FEED_TOKEN`, `DEEPWATCH_FEED_CATEGORY`, `DEEPWATCH_FEED_NAME` | Your contracted dark-web / breach monitoring vendor, queried only with your own identifiers | Vendor contract pricing; review commercial-use terms. | [Provider](https://github.com/leo777-debug/OPHANIM-V3/blob/feat/job-file-core/docs/DEEP_WATCH.md) | No licensed dark-web coverage; nothing is crawled. |
 | Umami | `UMAMI_ENDPOINT`, `UMAMI_WEBSITE_ID` | Optional private analytics | Self-hosted or hosted-plan pricing. | [Provider](https://umami.is/) | No analytics requests when absent. |
 
 ## All configuration identifiers
@@ -103,6 +106,10 @@ This table includes credentials, local-service settings, safety gates and runtim
 | Maritime | `CUSTOMER_AIS_API_URL` | Customer-licensed vessel coverage for the configured organization |
 | Platform | `DARK_WEB_FIXTURES_ENABLED` | Optional runtime setting; leave empty to use the documented code default. |
 | Platform | `DATABASE_URL` | Organization data, audit records, watchlists |
+| Cyber | `DEEPWATCH_FEED_CATEGORY` | Your contracted dark-web / breach monitoring vendor, queried only with your own identifiers |
+| Cyber | `DEEPWATCH_FEED_NAME` | Your contracted dark-web / breach monitoring vendor, queried only with your own identifiers |
+| Cyber | `DEEPWATCH_FEED_TOKEN` | Your contracted dark-web / breach monitoring vendor, queried only with your own identifiers |
+| Cyber | `DEEPWATCH_FEED_URL` | Your contracted dark-web / breach monitoring vendor, queried only with your own identifiers |
 | Platform | `DISRUPTION_SYNC_CRON_SECRET` | Server-only credential; configure only for the associated optional feature. |
 | Hazards | `ECMWF_FORECAST_URL` | Configured forecast endpoint |
 | Job files | `EINVOICE_ASP_TOKEN` | Submits PINT AE invoices through an accredited service provider after validation against the UAE MoF specification |
@@ -132,6 +139,7 @@ This table includes credentials, local-service settings, safety gates and runtim
 | Platform | `HEALTH_ALERT_AFTER_MINUTES` | Optional runtime setting; leave empty to use the documented code default. |
 | Platform | `HEALTH_CRITICAL_INTEGRATIONS` | Optional runtime setting; leave empty to use the documented code default. |
 | Platform | `HEALTH_CRON_SECRET` | Server-only credential; configure only for the associated optional feature. |
+| Cyber | `HIBP_API_KEY` | Breached accounts at your own verified email domains (counts only) |
 | Platform | `HOSTNAME` | Optional runtime setting; leave empty to use the documented code default. |
 | Job files | `IMAP_HOST` | Polls one dedicated mailbox (self-hosted friendly) for one organization |
 | Job files | `IMAP_MAILBOX` | Polls one dedicated mailbox (self-hosted friendly) for one organization |
@@ -241,6 +249,7 @@ This table includes credentials, local-service settings, safety gates and runtim
 | Job files | `WHATSAPP_ORGANIZATION_ID` | Photos and messages sent to the business number become intake items; optional digest messages |
 | Job files | `WHATSAPP_PHONE_NUMBER_ID` | Photos and messages sent to the business number become intake items; optional digest messages |
 | Job files | `WHATSAPP_VERIFY_TOKEN` | Photos and messages sent to the business number become intake items; optional digest messages |
+| Media | `WINDY_WEBCAMS_API_KEY` | Public webcams near Gulf and Hormuz ports, embedded with the publisher player |
 
 ## Scope and configuration notes
 

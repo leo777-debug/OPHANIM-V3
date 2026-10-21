@@ -3,9 +3,9 @@
   "branch": "feat/job-file-core",
   "baseCommit": "2a2b72e",
   "worktree": "D:/OPHANIM/worktrees/job-file-core",
-  "current_phase": "W2",
-  "current_task": "W2-deep-watch",
-  "last_commit": "32f0ee6",
+  "current_phase": "W4",
+  "current_task": "W4-the-panel",
+  "last_commit": "76bd1e0",
   "updated_at": "2026-10-21",
   "tasks": [
     {
@@ -66,7 +66,7 @@
     },
     {
       "id": "W2-deep-watch",
-      "status": "doing"
+      "status": "done"
     },
     {
       "id": "W3-route-lens",
@@ -83,5 +83,5 @@
   ],
   "resumeInstruction": "Read JOBFILE/DESIGN.md, PROGRESS.md and this file. Work only in the worktree above. Never edit, checkout, reset or pull in C:/Users/Leonard/OneDrive/Documents/OPHANIM-V3 2 or C:/Users/Leonard/.codex/worktrees/parity-default-alignment/OPHANIM-V3 2. One ledger: extend ophanim_forecasts. Commit per task. Open PR; never merge or deploy.",
   "pullRequest": null,
-  "resumeNext": "W2 remaining: extend registerShipmentEntity/synchronizeOperationalEntities with ports (UN/LOCODE), job-file references and client domains; add /api/dark-web/corridor route and exposure-scan cron using deep-watch.ts; tests for threat categories, content filter, licensed adapters. Then W4a/W4b Panel, W3 Route Lens, docs, catalog env vars (WINDY_WEBCAMS_API_KEY, HIBP_API_KEY, DEEPWATCH_FEED_*), regenerate .env.example, update PR 26."
+  "resumeNext": "Next: W4 The Panel (tenant-isolation tests for 028 tables, Python forecast-worker, snapshot builder, backtest report, docs/FORECAST_ENGINE.md), then W3 Route Lens (route + corridor layers reusing Watchtower, Deep Watch corridor API, war-sanctions provider, Forecast Card), docs/ROUTE_LENS.md, update PR 26."
 }

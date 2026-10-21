@@ -53,7 +53,9 @@ function assessmentFrom(row: Record<string, unknown>): SignalAssessment {
 }
 
 function alertSummary(candidate: CorrelationCandidate): string {
-  return `An unverified intelligence signal matched ${candidate.signals.length} stored ${candidate.subjectType.replace('_', ' ')} identifier${candidate.signals.length === 1 ? '' : 's'} for ${candidate.subjectLabel}. Analyst verification is required before action.`;
+  // "Why this matched": the identifiers that matched, strongest first.
+  const why = [...candidate.signals].sort((a, b) => b.score - a.score).slice(0, 3).map(signal => `${signal.kind.replace(/_/g, ' ')} "${signal.value}"`).join('; ');
+  return `An unverified intelligence signal matched ${candidate.signals.length} stored ${candidate.subjectType.replace('_', ' ')} identifier${candidate.signals.length === 1 ? '' : 's'} for ${candidate.subjectLabel}${why ? ` (why: ${why})` : ''}. Analyst verification is required before action.`;
 }
 
 async function activeMentions(actor: OrganizationActor): Promise<MentionRow[]> {

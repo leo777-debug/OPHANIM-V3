@@ -39,18 +39,64 @@ export async function findRegisteredEntities(actor: OrganizationActor, id?: stri
   return entities.rows.map((entity) => entityFrom(entity, aliases.rows));
 }
 
-export async function registerShipmentEntity(actor: OrganizationActor, shipment: { id: string; shipmentReference: string; vesselName?: string; imoNumber?: string; mmsiNumber?: string; carrier?: string }): Promise<void> {
-  await registerEntity(actor, { entityType: 'shipment', canonicalName: shipment.shipmentReference, normalizedKey: shipment.id, attributes: { shipmentId: shipment.id }, aliases: [{ alias: shipment.shipmentReference, identifierType: 'shipment_reference', identifierValue: shipment.shipmentReference }] });
+type ShipmentForEntities = {
+  id: string; shipmentReference: string; vesselName?: string | null; imoNumber?: string | null; mmsiNumber?: string | null; carrier?: string | null;
+  containerNumber?: string | null; billOfLadingReference?: string | null; originPortName?: string | null; originPortCode?: string | null; destinationPortName?: string | null; destinationPortCode?: string | null;
+  transshipmentPorts?: unknown[]; customerContact?: string | null;
+};
+const UNLOCODE = /^[A-Z]{2}[A-Z2-9]{3}$/;
+/** Ports (UN/LOCODE), transshipment ports and the customer's email domain, so Deep Watch follows the live route. */
+export async function registerRouteEntities(actor: OrganizationActor, shipment: Pick<ShipmentForEntities, 'originPortName' | 'originPortCode' | 'destinationPortName' | 'destinationPortCode' | 'transshipmentPorts' | 'customerContact'>) {
+  const ports = [[shipment.originPortName, shipment.originPortCode], [shipment.destinationPortName, shipment.destinationPortCode],
+    ...(shipment.transshipmentPorts ?? []).map(port => typeof port === 'string' ? [UNLOCODE.test(port) ? null : port, UNLOCODE.test(port) ? port : null] : [(port as { name?: string })?.name ?? null, (port as { code?: string })?.code ?? null])];
+  for (const [name, rawCode] of ports) {
+    const code = rawCode?.trim().toUpperCase();
+    if (!name && !(code && UNLOCODE.test(code))) continue;
+    await registerEntity(actor, { entityType: 'port', canonicalName: name?.trim() || code!, normalizedKey: code && UNLOCODE.test(code) ? code.toLowerCase() : undefined,
+      aliases: [...(name ? [{ alias: name.trim() }] : []), ...(code && UNLOCODE.test(code) ? [{ alias: code, identifierType: 'unlocode', identifierValue: code }] : [])] });
+  }
+  const domain = shipment.customerContact?.match(/@([a-z0-9-]+(?:\.[a-z0-9-]+)+)/i)?.[1]?.toLowerCase();
+  if (domain && !/^(gmail|yahoo|hotmail|outlook|icloud|live)\./.test(domain)) await registerEntity(actor, { entityType: 'domain', canonicalName: domain, aliases: [{ alias: domain, identifierType: 'domain', identifierValue: domain }] });
+}
+
+export async function registerShipmentEntity(actor: OrganizationActor, shipment: ShipmentForEntities): Promise<void> {
+  await registerEntity(actor, { entityType: 'shipment', canonicalName: shipment.shipmentReference, normalizedKey: shipment.id, attributes: { shipmentId: shipment.id }, aliases: [
+    { alias: shipment.shipmentReference, identifierType: 'shipment_reference', identifierValue: shipment.shipmentReference },
+    ...(shipment.containerNumber ? [{ alias: shipment.containerNumber, identifierType: 'container', identifierValue: shipment.containerNumber }] : []),
+    ...(shipment.billOfLadingReference ? [{ alias: shipment.billOfLadingReference, identifierType: 'bill_of_lading', identifierValue: shipment.billOfLadingReference }] : []),
+  ] });
+  await registerRouteEntities(actor, shipment);
   if (shipment.vesselName) await registerEntity(actor, { entityType: 'vessel', canonicalName: shipment.vesselName, aliases: [{ alias: shipment.vesselName }, ...(shipment.imoNumber ? [{ alias: shipment.imoNumber, identifierType: 'imo', identifierValue: shipment.imoNumber }] : []), ...(shipment.mmsiNumber ? [{ alias: shipment.mmsiNumber, identifierType: 'mmsi', identifierValue: shipment.mmsiNumber }] : [])] });
   if (shipment.carrier) await registerEntity(actor, { entityType: 'carrier', canonicalName: shipment.carrier });
 }
 
-export async function synchronizeOperationalEntities(actor: OrganizationActor): Promise<{ shipments: number; clients: number; assets: number; dependencies: number }> {
+export async function synchronizeOperationalEntities(actor: OrganizationActor): Promise<{ shipments: number; jobFiles: number; clients: number; assets: number; dependencies: number }> {
   requireOrganizationAccess(actor, actor.organizationId, 'intelligence:write');
   const [shipments, clients, assets, dependencies] = await Promise.all([listShipments(actor), listCyberClients(actor), listCyberAssets(actor), listVendorDependencies(actor)]);
-  for (const shipment of shipments) await registerShipmentEntity(actor, shipment);
+  // Only live shipments: the watchlist follows what is moving now.
+  const active = shipments.filter(shipment => !['delivered', 'cancelled', 'archived'].includes(String((shipment as { currentStatus?: string }).currentStatus)));
+  for (const shipment of active) await registerShipmentEntity(actor, shipment);
+  const jobFiles = await synchronizeJobFileEntities(actor);
   for (const item of clients) await registerEntity(actor, { entityType: 'client', canonicalName: item.name, normalizedKey: item.id, attributes: { clientId: item.id, serviceTier: item.serviceTier }, aliases: [{ alias: item.reference, identifierType: 'client_identifier', identifierValue: item.reference }] });
   for (const item of assets) await registerEntity(actor, { entityType: 'asset', canonicalName: item.assetName, normalizedKey: item.id, attributes: { assetId: item.id, clientId: item.customerId, product: item.product, version: item.productVersion }, aliases: [...(item.hostname ? [{ alias: item.hostname, identifierType: 'hostname', identifierValue: item.hostname }] : []), ...(item.domain ? [{ alias: item.domain, identifierType: 'domain', identifierValue: item.domain }] : []), ...(item.ipAddress ? [{ alias: item.ipAddress, identifierType: 'ip', identifierValue: item.ipAddress }] : [])] });
   for (const item of dependencies) await registerEntity(actor, { entityType: 'vendor_dependency', canonicalName: item.vendor, normalizedKey: item.id, attributes: { dependencyId: item.id, clientId: item.customerId, productOrService: item.productOrService }, aliases: item.productOrService ? [{ alias: `${item.vendor} ${item.productOrService}`, identifierType: 'vendor_product', identifierValue: `${item.vendor} ${item.productOrService}` }] : [] });
-  return { shipments: shipments.length, clients: clients.length, assets: assets.length, dependencies: dependencies.length };
+  return { shipments: active.length, jobFiles, clients: clients.length, assets: assets.length, dependencies: dependencies.length };
+}
+
+/** Open job files: their references (AWB, B/L, container), ports and the client's email domain become watched entities. */
+export async function synchronizeJobFileEntities(actor: OrganizationActor): Promise<number> {
+  requireOrganizationAccess(actor, actor.organizationId, 'intelligence:write');
+  const jobs = (await db().query<{ id: string; job_number: string; origin: string | null; destination: string | null; client_email: string | null }>(
+    `select j.id, j.job_number, j.origin, j.destination, c.email as client_email from ophanim_job_files j left join ophanim_counterparties c on c.id = j.client_counterparty_id and c.organization_id = j.organization_id
+      where j.organization_id = $1 and j.status not in ('closed', 'cancelled', 'delivered') and not j.is_synthetic order by j.created_at desc limit 500`, [actor.organizationId]).catch(() => ({ rows: [] }))).rows;
+  if (!jobs.length) return 0;
+  const references = (await db().query<{ job_file_id: string; type: string; normalized_value: string }>(
+    `select job_file_id, type, normalized_value from ophanim_job_references where organization_id = $1 and validated and job_file_id = any($2::uuid[]) and type in ('awb', 'hawb', 'bl', 'hbl', 'container', 'booking')`, [actor.organizationId, jobs.map(job => job.id)])).rows;
+  for (const job of jobs) {
+    await registerEntity(actor, { entityType: 'shipment', canonicalName: job.job_number, normalizedKey: `job:${job.id}`, attributes: { jobFileId: job.id }, aliases: [{ alias: job.job_number, identifierType: 'job_number', identifierValue: job.job_number },
+      ...references.filter(reference => reference.job_file_id === job.id).map(reference => ({ alias: reference.normalized_value, identifierType: reference.type, identifierValue: reference.normalized_value }))] });
+    const code = (place: string | null) => place && /^[A-Z]{2}[A-Z2-9]{3}$/.test(place.trim().toUpperCase()) ? place.trim().toUpperCase() : null;
+    await registerRouteEntities(actor, { originPortName: code(job.origin) ? null : job.origin, originPortCode: code(job.origin), destinationPortName: code(job.destination) ? null : job.destination, destinationPortCode: code(job.destination), transshipmentPorts: [], customerContact: job.client_email });
+  }
+  return jobs.length;
 }
