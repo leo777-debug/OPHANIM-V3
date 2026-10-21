@@ -97,3 +97,6 @@ scanner_backend_backup.js
 /presentation-evidence/screenshots/failed-tools.png
 /presentation-evidence/preview*.log
 /presentation-evidence/reference-video*.png
+/PARITY/presentation-validation/failure.json
+/PARITY/presentation-validation/debug-dom.html
+/PARITY/presentation-validation/screenshots/failed-*.png

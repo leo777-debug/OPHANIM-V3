@@ -36,7 +36,7 @@ export default function IntegrationsDashboard() {
     <p>Put keys in your server’s uncommitted .env or hosting dashboard using API_KEYS.md, then restart. Credentials are never displayed here. Environment configuration is the source of truth.</p>
     <p>Configured means settings are present. Each card reports its observation storage and what its test verified. Connection tests do not establish complete data coverage.</p>
     {message && <p role="status" className="platform-notice">{message}</p>}
-    {protectedView ? <Link href="/login?returnTo=%2Fadmin%2Fintegrations">Sign in to see your organization’s data</Link> : <>
+    {protectedView ? <Link href="/login?admin=1&returnTo=%2Fadmin%2Fintegrations">Sign in to see your organization’s data</Link> : <>
       {integrations.length > 0 && <IntegrationSetupWizard integrations={integrations} test={test} pending={pending !== null} />}
       <label>Find an integration <input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder="Service, area or variable" /></label>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: 16, marginTop: 20 }}>

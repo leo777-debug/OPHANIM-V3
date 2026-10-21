@@ -83,7 +83,7 @@ export default function PresentationGlobe({ feeds, hidden, onSelect, locate, pro
     return () => { clearInterval(timer); for (const event of ['pointerdown','pointermove','wheel','keydown']) target.removeEventListener(event,pause); };
   }, [map,projection]);
   return <>
-    <div className={styles.globe} style={embedded?{position:'absolute',inset:0,width:'100%',height:'100%'}:undefined} aria-label="Live intelligence globe" data-testid="presentation-globe" data-ready={ready} data-renderer="ophanim-atlas" data-map-style={mapStyle} data-projection={projection}>
+    <div className={styles.globe} style={embedded?{position:'absolute',inset:0,width:'100%',height:'100%'}:undefined} aria-label="Operational intelligence globe" data-testid="presentation-globe" data-ready={ready} data-renderer="ophanim-atlas" data-map-style={mapStyle} data-projection={projection}>
       {publicPresentation && <OphanimMap data={atlas.data} activeLayers={activeLayers} initialView={initialView} projection={projection} mapStyle={mapStyle} flyToLocation={flyTo} publicPresentation={publicPresentation} onViewStateChange={onNativeViewport} />}
     </div>
     {!ready && <div className={styles.globePoster} style={embedded?{inset:0}:undefined} data-testid="globe-starter"><span>Starting Ophanim map...</span></div>}

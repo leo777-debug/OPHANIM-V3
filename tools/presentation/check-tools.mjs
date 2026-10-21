@@ -129,11 +129,18 @@ export async function checkTools({browser,url,owner,save,output,pass}) {
     for(const field of ['shipment','token','organization','apiKey'])assert.equal(shared.searchParams.has(field),false);
     assert.ok(!shared.searchParams.get('layers').includes('sdk_'));
     await page.getByRole('button',{name:'Close map sharing',exact:true}).click();
-    await page.goto(sharedUrl,{waitUntil:'domcontentloaded'});
-    await geography();
-    assert.equal(await workspace.getByRole('button',{name:'Earth colored basemap',exact:true}).getAttribute('aria-pressed'),'true');
-    assert.equal(await workspace.getByRole('checkbox',{name:'Aircraft',exact:true}).isChecked(),false);
-    pass('Generated public map link restores unified map appearance and selected layers without private query IDs');
+    const sharedContext=await browser.newContext({viewport:{width:1366,height:768}});
+    await sharedContext.route('**/*',route=>new URL(route.request().url()).origin===url?route.continue():route.fulfill({status:204,body:''}));
+    try {
+      const sharedPage=await sharedContext.newPage();
+      sharedPage.on('pageerror',error=>errors.push(error.message));
+      await sharedPage.goto(sharedUrl,{waitUntil:'domcontentloaded'});
+      await sharedPage.locator('[data-testid="presentation-globe"][data-ready="true"]').waitFor();
+      assert.equal(await sharedPage.getByRole('button',{name:'Earth colored basemap',exact:true}).getAttribute('aria-pressed'),'true');
+      assert.equal(await sharedPage.getByRole('checkbox',{name:'Aircraft',exact:true}).isChecked(),false);
+      await sharedPage.screenshot({path:`${output}/screenshots/share-restored.png`});
+    } finally {await sharedContext.close();}
+    pass('Generated public map link restores appearance and layers in a fresh signed-out browser without private query IDs');
     for(const viewport of [{width:1920,height:1080},{width:1366,height:768}]) {
       await page.setViewportSize(viewport);
       await workspace.getByRole('button',{name:'Fullscreen map',exact:true}).click();
@@ -146,6 +153,9 @@ export async function checkTools({browser,url,owner,save,output,pass}) {
         return canvas&&parent&&Math.abs(canvas.clientWidth-parent.clientWidth)<2&&Math.abs(canvas.clientHeight-parent.clientHeight)<2;
       });
       await geography();
+      await workspace.getByRole('button',{name:'Share map view',exact:true}).click();
+      assert.equal(await page.getByRole('textbox',{name:'Public map view URL',exact:true}).isVisible(),true,'Sharing remains visible inside the fullscreen map');
+      await page.getByRole('button',{name:'Close map sharing',exact:true}).click();
       await workspace.getByRole('button',{name:'Intel Desk',exact:true}).click();
       await dock.getByRole('tab',{name:'news',exact:true}).waitFor();
       const bounds=await Promise.all([page.getByTestId('unified-map-canvas').boundingBox(),dock.boundingBox(),workspace.getByRole('complementary',{name:'Visible layers'}).boundingBox()]);

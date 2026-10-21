@@ -443,3 +443,42 @@ verified; never infer completion from a catalog entry or this plan.
   119 empty identifiers. Full disposable Presentation browser run restarted after
   the earlier interrupted run; no completion result claimed yet.
 - See docs/PUBLIC_MAP_PRIVACY.md. No World Monitor code or services were used.
+
+## 21 October 2026 — combined browser regression (in progress)
+
+- Actual WebGL rendering passed at 1920×1080, 1366×768 and 390×844 using
+  explicitly synthetic replay fixtures and a disposable database. Rendered-marker
+  selection, all basemaps/projections, PIN-gated mode switches, globe tabs, tools,
+  command palette, share restoration, fullscreen and mobile dock checks passed.
+  The aggregate run failed only at its final generic console assertion: two
+  expected unsigned auth/me HTTP 401 resource messages. The session API remains
+  protected; the harness now records only that exact expected denial separately.
+  A complete passing aggregate report has not yet been produced.
+- Visual review removed unconditional live branding, corrected the public AIS
+  source label, and fixed the share dialog portal for fullscreen. Admin sign-in
+  links now retain the Presentation admin route exception and return destination.
+  Session-status responses are private/no-store, including 401 and sanitized 503.
+- Added real Integrations browser coverage (no route mocks): session/role checks,
+  rejecting browser credentials, actual sign-in/return, unconfigured/disabled
+  sources, persisted connection failures, and mobile SDK setup. Its first run
+  found valid connection actions rejected by nextUrl.origin normalization.
+  A shared origin check now uses configured APP_URL or the original Host header
+  with the request protocol, rejects cross-site/foreign origins and malformed
+  hosts, and is shared by Presentation/Integrations/SDK diagnostics/forecasts.
+- Latest unit suite: 543 passed, 5 skipped (121 files passed); typecheck and
+  targeted lint passed. Rebuild and renewed Integrations/aggregate browser runs
+  are pending. No deployment, remote push or GitHub merge.
+
+- Follow-up checks: rebuilt production app passes 543 tests (5 skipped), standalone
+  typecheck and targeted lint. The real Integrations browser run now passes all
+  seven recorded checks, including real synthetic-account sign-in and reload
+  persistence. See presentation-validation/integrations-results.json.
+- Hardened the test-only network guard to cover DNS promises and raw/pinned Node
+  sockets as well as fetch. A small executable check proves external DNS/raw-IP
+  sockets are rejected and local HTTP works. An earlier attempt reached a keyless
+  FAA endpoint through that guard gap; no real credential or organization data
+  was involved. The passing rerun blocks external APIs.
+- Full map regression uses visible workspace/hydrated clock readiness rather
+  than network-idle, since provider polling intentionally continues. Current
+  full rerun is still in progress. Client known-token-pattern scan: 271 chunks,
+  zero findings; this remains a limited pattern audit, not a full secret proof.

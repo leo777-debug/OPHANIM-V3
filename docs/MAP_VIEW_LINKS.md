@@ -34,3 +34,8 @@ Unit checks cover URL round trips, empty/all-off states, coordinate validation,
 legacy longitude, Presentation parameter separation and private/unreviewed-layer
 rejection. Earlier browser evidence covers the former Atlas surface; the unified
 map integration requires renewed browser verification before completion.
+
+Unified-map regression now checks restored appearance/layers in a fresh signed-out
+browser and sharing inside fullscreen. The share dialog portals into the active
+fullscreen element when present. These checks use synthetic replay fixtures; they
+do not establish live upstream availability.

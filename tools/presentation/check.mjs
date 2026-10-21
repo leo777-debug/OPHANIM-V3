@@ -6,12 +6,13 @@ import { chromium } from '@playwright/test';
 import sharp from 'sharp';
 import { startTestDatabase,seedReplay } from './test-db.mjs';
 import { checkTools } from './check-tools.mjs';
+import { checkIntegrations } from './check-integrations.mjs';
 
 const port=Number(process.env.PRESENTATION_TEST_PORT ?? 3107),url=`http://127.0.0.1:${port}`;
 const output=process.env.PRESENTATION_TEST_OUTPUT ?? 'PARITY/presentation-validation';
 await mkdir(`${output}/screenshots`,{recursive:true});
 const database=await startTestDatabase(Number(process.env.PRESENTATION_TEST_DB_PORT ?? 55439));
-let server,browser;const checks=[],errors=[],consoleErrors=[],logs=[];
+let server,browser;const checks=[],errors=[],consoleErrors=[],expectedAuthDenials=[],logs=[];
 const pass=(name,details={})=>{checks.push({name,...details});console.log(`PASS ${name}`);};
 async function request(route,{method='GET',body,token,headers={}}={}) {
   return fetch(url+route,{method,headers:{Origin:url,...(body?{'Content-Type':'application/json'}:{}),...(token?{Cookie:`ophanim_session=${token}`} : {}),...headers},body:body?JSON.stringify(body):undefined,redirect:'manual',signal:AbortSignal.timeout(25000)});
@@ -38,11 +39,13 @@ try {
   for(const stream of [server.stdout,server.stderr])stream.on('data',chunk=>logs.push(chunk.toString()));
   await eventually(async()=>{assert.equal(server.exitCode,null,'Local server exited before readiness');assert.equal((await request('/api/presentation/settings')).status,200);},60000);
   pass('Disposable local database: full migration chain, external APIs blocked');
-  if(process.argv.includes('--tools-only')) {
+  if(process.argv.includes('--tools-only') || process.argv.includes('--integrations-only')) {
     await save({enabled:true,replay:'on'});
     browser=await chromium.launch({headless:true,args:['--enable-unsafe-swiftshader']});
-    await checkTools({browser,url,owner,save,output,pass});
-    await writeFile(`${output}/tools-results.json`,JSON.stringify({checkedAt:new Date().toISOString(),checks,syntheticFixturesOnly:true},null,2));
+    const integrationsOnly=process.argv.includes('--integrations-only');
+    if(integrationsOnly)await checkIntegrations({browser,url,owner,viewer:database.sessions.viewer,credentials:database.credentials.owner,request,output,pass});
+    else await checkTools({browser,url,owner,save,output,pass});
+    await writeFile(`${output}/${integrationsOnly?'integrations':'tools'}-results.json`,JSON.stringify({checkedAt:new Date().toISOString(),checks,syntheticFixturesOnly:true},null,2));
   } else {
   assert.equal((await settings()).enabled,false);
   const originalRoutes=['/','/atlas','/operations','/imports','/logistics','/logistics/rescue','/onboarding','/login'];
@@ -62,6 +65,10 @@ try {
     assert.equal((await request('/api/presentation/settings',{method:'PATCH',token:database.sessions.viewer,body:{}})).status,403);
   }
   pass('Anonymous private APIs and viewer settings access rejected in OFF and ON');
+  const sessionStatus=await request('/api/auth/me');
+  assert.equal(sessionStatus.status,401);
+  assert.equal(sessionStatus.headers.get('Cache-Control'),'private, no-store');
+  pass('Anonymous session status remains 401 and cannot be cached');
   assert.equal((await request('/api/presentation/settings',{method:'PATCH',token:owner,headers:{Origin:'https://evil.invalid'},body:{}})).status,403);
   pass('Foreign-origin settings mutations rejected');
   await eventually(async()=>assert.ok(isMapRedirect(await request('/'))),6000);
@@ -101,8 +108,17 @@ try {
   const page=await context.newPage();
   page.on('pageerror',error=>errors.push(error.message));
   page.on('console',message=>{if(message.type()==='warning' && message.text().includes('Presentation map')){logs.push(message.text());console.log(message.text());}});
-  page.on('console',message=>{if(message.type()==='error')consoleErrors.push(`${message.text()} ${message.location().url}`);});
-  await page.goto(url,{waitUntil:'networkidle'});
+  page.on('console',message=>{
+    if(message.type()!=='error')return;
+    const location=message.location().url;
+    if(location===url+'/api/auth/me' && /status of 401 \(Unauthorized\)/.test(message.text())) {
+      expectedAuthDenials.push({endpoint:'/api/auth/me',status:401});return;
+    }
+    consoleErrors.push(`${message.text()} ${location}`);
+  });
+  await page.goto(url,{waitUntil:'domcontentloaded'});
+  await page.getByTestId('operational-map-workspace').waitFor();
+  await page.locator('time').filter({hasText:/\d{2}:\d{2}:\d{2} UTC/}).first().waitFor();
   assert.equal(await page.getByRole('group',{name:'Presentation view'}).count(),0);
   await page.keyboard.press('Control+Shift+P');assert.equal(new URL(page.url()).pathname,'/logistics/map');
   await page.screenshot({path:`${output}/screenshots/off-original-site.png`});
@@ -199,16 +215,19 @@ try {
   // context runs; two hidden WebGL loops needlessly contend in headless CI.
   await page.goto(url+'/admin/presentation');
   await checkTools({browser,url,owner,save,output,pass});
+  await checkIntegrations({browser,url,owner,viewer:database.sessions.viewer,credentials:database.credentials.owner,request,output,pass});
   await page.goto(url+'/admin/presentation');await page.getByRole('switch',{name:'Presentation mode'}).waitFor();
   await page.screenshot({path:`${output}/screenshots/admin-settings.png`});
   await page.getByRole('switch',{name:'Presentation mode'}).click();await page.getByRole('button',{name:'Confirm OFF'}).click();
   await eventually(async()=>assert.equal((await settings()).enabled,false));
-  await page.goto(url);await page.waitForLoadState('networkidle');
+  await page.goto(url,{waitUntil:'domcontentloaded'});
+  await page.getByTestId('operational-map-workspace').waitFor();
+  await page.locator('time').filter({hasText:/\d{2}:\d{2}:\d{2} UTC/}).first().waitFor();
   assert.equal(await page.getByRole('group',{name:'Presentation view'}).count(),0);
   await page.keyboard.press('Control+Shift+P');assert.equal(new URL(page.url()).pathname,'/logistics/map');
   pass('Owner dashboard turns OFF without redeploy; normal site returns and controls disappear');
   assert.equal(errors.length,0,errors.join('\n'));assert.equal(consoleErrors.length,0,consoleErrors.join('\n'));pass('No uncaught or console browser errors on map and switch path');
-  await writeFile(`${output}/results.json`,JSON.stringify({checkedAt:new Date().toISOString(),checks,browserErrors:errors,consoleErrors,syntheticFixturesOnly:true},null,2));
+  await writeFile(`${output}/results.json`,JSON.stringify({checkedAt:new Date().toISOString(),checks,browserErrors:errors,consoleErrors,expectedAuthDenials,syntheticFixturesOnly:true},null,2));
   console.log(`${checks.length} presentation integration checks passed.`);
   }
 }catch(error) {

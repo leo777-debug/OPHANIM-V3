@@ -3,6 +3,7 @@ import { requireAuthenticatedActor } from '@/lib/auth/actor';
 import { can, OrganizationAccessError } from '@/lib/operations/authorization';
 import { createForecast, listForecasts, resolveForecast, ForecastInputError } from '@/lib/intelligence/forecasts';
 import { boundedJson } from '@/lib/http/body';
+import { sameOrigin } from '@/lib/http/origin';
 import { isRateLimited } from '@/lib/ssrf-guard';
 export const dynamic = 'force-dynamic';
 const headers = { 'Cache-Control': 'private, no-store' };
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
 }
 async function mutate(request: NextRequest, resolve: boolean) {
   try {
-    if (request.headers.get('origin') && request.headers.get('origin') !== request.nextUrl.origin) return NextResponse.json({ error: 'Cross-origin request blocked.' }, { status: 403, headers });
+    if (!sameOrigin(request)) return NextResponse.json({ error: 'Cross-origin request blocked.' }, { status: 403, headers });
     const actor = await requireAuthenticatedActor(request, 'intelligence:write');
     if (isRateLimited(`forecasts:${actor.organizationId}`, 20)) return NextResponse.json({ error: 'Please retry later.' }, { status: 429, headers });
     let body: unknown; try { body = await boundedJson(request, 12000); } catch { throw new ForecastInputError('A JSON body of at most 12 KB is required.'); }

@@ -11,7 +11,7 @@
     {
       "id": "00a-baseline-alignment",
       "status": "partial",
-      "remaining": "Current default integrated. Dependencies patched, public maritime privacy/provenance fixed, 538 tests/typecheck/build passed. Combined Presentation browser run in progress. PR base retarget deferred with deployment last."
+      "remaining": "Default integrated, dependencies/privacy/provenance fixed. Finish rebuilt canonical-origin integration UI test and full Presentation aggregate. See latest PROGRESS. PR retarget deferred to final deployment phase."
     },
     {
       "id": "01-integrations",
@@ -58,13 +58,15 @@
     "baselineTests": "311 passed, 5 skipped",
     "baselineTypecheck": "passed",
     "baselineBuild": "passed",
-    "currentTests": "538 passed, 5 skipped; 119 files passed (isolated checkout, TSX included)",
+    "currentTests": "543 passed, 5 skipped; 121 files passed",
     "typecheck": "passed",
     "build": "passed, Next16.4.2 Webpack (Turbopack dynamic URL incompatibility documented)",
     "targetedLint": "passed",
     "publicReachability": "14/14; HTTP only, not freshness/payload",
     "dependencyAudit": "Zero production findings; five high development-only lint-chain findings without compatible fix. See docs/DEPENDENCY_SECURITY.md.",
-    "browser": "Disposable Presentation browser validation restarted 2026-10-21; completion pending. Earlier interrupted run is not a pass."
+    "browser": "Full strengthened-network-guard Presentation/map aggregate running; do not claim complete until results.json passes.",
+    "integrationsBrowser": "7 recorded checks passed with real local routes, synthetic sign-in, licence/key gating, connection failure persistence and mobile setup",
+    "clientSecretScan": "271 browser JavaScript chunks; zero known-token-format findings (limited pattern audit)"
   },
   "overallStatus": "in_progress",
   "resumeInstruction": "Use the attached parity-default-alignment worktree. Preserve the original detached checkout and unrelated dirty work. Finish dependency updates and combined Presentation/map browser regression, retarget PR25 to actual default, then resume 01-integrations and broad parity. Deployment last; merge only after requested work is complete.",

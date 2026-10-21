@@ -5,7 +5,7 @@ import type { FeedId, PublicFeed } from './types';
 
 export const PRESENTATION_FEEDS: Record<FeedId, { name: string; color: string; source: string; url: string; reference?: boolean }> = {
   flights: { name:'Aircraft',color:'#75baff',source:'ADS-B / configured aviation sources',url:'https://adsb.lol/' },
-  maritime: { name:'Vessels',color:'#40dbb0',source:'Digitraffic / AISStream public positions',url:'https://www.digitraffic.fi/en/marine-traffic/' },
+  maritime: { name:'Vessels',color:'#40dbb0',source:'Digitraffic Marine AIS (regional)',url:'https://www.digitraffic.fi/en/marine-traffic/' },
   ports: { name:'Ports & harbours',color:'#26a69a',source:'Ophanim port reference',url:'https://www.digitraffic.fi/en/marine-traffic/',reference:true },
   chokepoints: { name:'Maritime chokepoints',color:'#ff9500',source:'Ophanim chokepoint reference',url:'https://www.digitraffic.fi/en/marine-traffic/',reference:true },
   cameras: { name:'Public cameras',color:'#00e676',source:'Existing public transport camera directories',url:'https://tfl.gov.uk/' },

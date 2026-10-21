@@ -4,6 +4,7 @@ import { OrganizationAccessError } from '@/lib/operations/authorization';
 import { sdkOrganizationId } from '@/lib/integrations/sdk-access';
 import { isRateLimited } from '@/lib/ssrf-guard';
 import { boundedJson } from '@/lib/http/body';
+import { sameOrigin } from '@/lib/http/origin';
 import { writeRuntimeValue } from '@/lib/runtime/store';
 import { POST as ingest } from '@/app/api/sdk/ingest/route';
 export const dynamic = 'force-dynamic';
@@ -12,7 +13,7 @@ const headers = { 'Cache-Control': 'private, no-store' };
 export async function POST(request: NextRequest) {
   try {
     const actor = await requireAuthenticatedActor(request, 'organization:manage');
-    if (request.headers.get('origin') && request.headers.get('origin') !== request.nextUrl.origin) return NextResponse.json({ error: 'Cross-origin test rejected.' }, { status: 403, headers });
+    if (!sameOrigin(request)) return NextResponse.json({ error: 'Cross-origin test rejected.' }, { status: 403, headers });
     if (isRateLimited(`sdk-setup:${actor.organizationId}`, 5)) return NextResponse.json({ error: 'Test limit reached. Wait a minute.' }, { status: 429, headers });
     const body = await boundedJson(request, 1000);
     if (!body || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).length) return NextResponse.json({ error: 'Send an empty object. Credentials, entities and URLs are not accepted.' }, { status: 400, headers });

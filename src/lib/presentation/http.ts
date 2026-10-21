@@ -1,15 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuthenticatedActor } from '@/lib/auth/actor';
 import { OrganizationAccessError } from '@/lib/operations/authorization';
+import { sameOrigin } from '@/lib/http/origin';
+export { sameOrigin } from '@/lib/http/origin';
 
 export class PresentationError extends Error {
   constructor(message: string, readonly status = 400) { super(message); }
-}
-export function sameOrigin(request: NextRequest): boolean {
-  const origin = request.headers.get('origin');
-  if (request.headers.get('sec-fetch-site') === 'cross-site') return false;
-  if (!origin) return true;
-  try { return new URL(origin).origin === new URL(process.env.APP_URL ?? request.url).origin; } catch { return false; }
 }
 export async function presentationAdmin(request: NextRequest) {
   if (!['GET', 'HEAD'].includes(request.method) && !sameOrigin(request)) throw new PresentationError('Cross-origin changes are not permitted.', 403);

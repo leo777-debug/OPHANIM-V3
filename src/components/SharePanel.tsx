@@ -157,7 +157,7 @@ export default function SharePanel({ mapView, activeLayers, projection = 'globe'
             </div>
           </motion.div>
         )}
-      </AnimatePresence>, document.body)}
+      </AnimatePresence>, document.fullscreenElement ?? document.body)}
     </>
   );
 }
