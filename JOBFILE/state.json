@@ -3,9 +3,9 @@
   "branch": "feat/job-file-core",
   "baseCommit": "2a2b72e",
   "worktree": "D:/OPHANIM/worktrees/job-file-core",
-  "current_phase": "4.10",
-  "current_task": "4.10-demo-tests-docs",
-  "last_commit": "d7f6882",
+  "current_phase": "05",
+  "current_task": "05-jobfile-finish",
+  "last_commit": "6a2dbb3",
   "updated_at": "2026-10-21",
   "tasks": [
     {
@@ -54,11 +54,11 @@
     },
     {
       "id": "4.10-demo-tests-docs",
-      "status": "doing"
+      "status": "done"
     },
     {
       "id": "05-jobfile-finish",
-      "status": "todo"
+      "status": "doing"
     },
     {
       "id": "W1-watchtower",

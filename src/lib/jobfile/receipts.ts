@@ -13,7 +13,9 @@ const WEIGHTS: Array<{ label: string; weight: number; test: (aggregate: JobAggre
   { label: 'HS code looks unusual for the goods', weight: 0.8, test: a => Number(a.flags.some(flag => flag.status === 'open' && flag.checkCode === 'hs_code_plausibility')) },
   { label: 'required document missing', weight: 0.9, test: a => Math.min(2, a.flags.filter(flag => flag.status === 'open' && flag.checkCode === 'missing_document').length) },
   { label: 'invoice arithmetic, currency or VAT problem', weight: 0.7, test: a => Number(a.flags.some(flag => flag.status === 'open' && /invoice_lines_total|currency_inconsistent|vat_sensible/.test(flag.checkCode))) },
-  { label: 'values still waiting for confirmation', weight: 0.3, test: a => Math.min(3, a.documents.filter(document => document.fields?.some(field => field.status === 'suggested')).length) },
+  // Values already behind an open flag are counted by that flag, not again here.
+  { label: 'values still waiting for confirmation', weight: 0.3, test: a => { const flagged = new Set(a.flags.filter(flag => flag.status === 'open').flatMap(flag => (flag.details?.fields ?? []).map(field => `${field.documentId}:${field.field}`)));
+    return Math.min(3, a.documents.filter(document => document.fields?.some(field => field.status === 'suggested' && field.field !== 'invoice_lines' && !flagged.has(`${document.id}:${field.field}`))).length); } },
 ];
 export const PAPER_RISK_INTERCEPT = -2.2;
 /** Odds that the paperwork leads to a customs query, amendment, rejection or invoice dispute, with the top reasons. */
@@ -65,7 +67,8 @@ export async function checkingOurWork(ctx: Ctx) {
   const byQuestion = new Map(questions.map(question => [question.id, question])), byOutcome = new Map(outcomes.map(outcome => [outcome.questionId, outcome]));
   const rows = scores.flatMap(score => {
     const forecast = forecasts.find(item => item.id === score.forecastId), question = forecast && byQuestion.get(forecast.questionId);
-    if (!forecast || !question || forecast.sourceType === 'human') return [];
+    // Analyst forecasts have their own page; delay-cost labels are training outcomes, not predictions.
+    if (!forecast || !question || forecast.sourceType === 'human' || forecast.prediction?.label_only) return [];
     const outcome = byOutcome.get(question.id);
     // Ghost Position outcomes are judged per forecast (happened before it was issued?).
     const truth = question.questionType === 'ghost_position' && outcome?.outcomeAt ? Date.parse(outcome.outcomeAt) <= Date.parse(forecast.issuedAt) : outcome?.outcomeBool ?? null;

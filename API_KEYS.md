@@ -73,6 +73,14 @@ Pricing/quotas vary by plan and may change. “Keyless” describes access, not 
 | Resend | `RESEND_API_KEY`, `RESEND_FROM` | Alert and watchlist email | Free and paid plans; verify current monthly/daily quotas. | [Provider](https://resend.com/pricing) | In-app results work; email waits for configuration. |
 | Supabase | `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` | Managed authentication and private storage (public aliases supported) | Free/paid project quotas vary; see plan. | [Provider](https://supabase.com/pricing) | Legacy database authentication may be used where configured. |
 | PostgreSQL | `DATABASE_URL` | Organization data, audit records, watchlists | Hosting-specific; local PostgreSQL has no API fee. | [Provider](https://www.postgresql.org/download/) | Public map feeds work without organization storage. |
+| Job files: platform settings | `JOBFILE_CRON_SECRET`, `JOBFILE_URL_SIGNING_SECRET`, `JOBFILE_AUTO_ACCEPT_CONFIDENCE`, `JOBFILE_HIGH_VALUE_AED`, `JOBFILE_ALERT_BUDGET` | Job-file cron jobs (IMAP poll, watched folder, digest), signed private-file links and Paper Desk thresholds | No external cost; dedicated secrets only. | [Provider](https://github.com/leo777-debug/OPHANIM-V3/blob/feat/job-file-core/docs/JOB_FILE.md) | Cron routes refuse requests; Supabase signed URLs still work; defaults 0.92 confidence, AED 200,000, 5 alerts/day. |
+| Job files: inbound email webhook | `INBOUND_EMAIL_SECRET`, `INBOUND_EMAIL_DOMAIN` | One signed inbound address per organization; forwarded emails and attachments become job-file intake | Inbound-email provider pricing varies; the webhook itself has no fee. | [Provider](https://github.com/leo777-debug/OPHANIM-V3/blob/feat/job-file-core/docs/JOB_FILE.md) | Stub: upload or forward items in the app instead. |
+| Job files: IMAP mailbox | `IMAP_HOST`, `IMAP_PORT`, `IMAP_TLS`, `IMAP_USER`, `IMAP_PASSWORD`, `IMAP_MAILBOX`, `IMAP_ORGANIZATION_ID` | Polls one dedicated mailbox (self-hosted friendly) for one organization | Your mail server; no Ophanim fee. | [Provider](https://github.com/leo777-debug/OPHANIM-V3/blob/feat/job-file-core/docs/JOB_FILE.md) | Stub: the poll route reports not configured. |
+| Job files: WhatsApp Business (Cloud API) | `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN`, `WHATSAPP_ORGANIZATION_ID`, `WHATSAPP_PHONE_NUMBER_ID`, `JOBFILE_DIGEST_WHATSAPP_TO` | Photos and messages sent to the business number become intake items; optional digest messages | Meta conversation-based pricing; business verification required. | [Provider](https://developers.facebook.com/docs/whatsapp/cloud-api) | Stub: staff forward photos with the in-app capture page. |
+| Job files: vision document reader | `JOBFILE_VISION_MODEL` | Reads photographed papers with the configured OpenAI-compatible vision model (uses AI_* settings; enable classify_document or an extract_* task) | Provider-specific; local vision models have no API fee. | [Provider](https://docs.mistral.ai/capabilities/vision/) | Tesseract OCR if configured, otherwise typed values. |
+| Job files: local OCR (Tesseract) | `TESSERACT_PATH`, `TESSERACT_LANGUAGES` | Offline English + Arabic OCR fallback with word boxes (lower confidence, never auto-accepts) | Open source (Apache-2.0); install the binary and eng/ara language data. | [Provider](https://github.com/tesseract-ocr/tesseract) | Typed values on the Paper Desk. |
+| Job files: e-invoice ASP adapter | `EINVOICE_ASP_URL`, `EINVOICE_ASP_TOKEN`, `EINVOICE_ASP_VALIDATED`, `EINVOICE_SELLER_NAME`, `EINVOICE_SELLER_TRN` | Submits PINT AE invoices through an accredited service provider after validation against the UAE MoF specification | ASP contract pricing; Ophanim is not an e-invoicing provider. | [Provider](https://mof.gov.ae/en/public-finance/tax/e-invoicing/) | Stub: PINT AE-shaped XML export marked unvalidated; nothing is sent. |
+| Job files: watched upload folder | `JOBFILE_WATCH_DIR`, `JOBFILE_WATCH_ORGANIZATION_ID` | Scheduled import of tracking sheets dropped into a folder | Self-hosted; no fee. | [Provider](https://github.com/leo777-debug/OPHANIM-V3/blob/feat/job-file-core/docs/JOB_FILE.md) | Upload sheets in the app or email them from a remembered sender. |
 | Umami | `UMAMI_ENDPOINT`, `UMAMI_WEBSITE_ID` | Optional private analytics | Self-hosted or hosted-plan pricing. | [Provider](https://umami.is/) | No analytics requests when absent. |
 
 ## All configuration identifiers
@@ -97,6 +105,11 @@ This table includes credentials, local-service settings, safety gates and runtim
 | Platform | `DATABASE_URL` | Organization data, audit records, watchlists |
 | Platform | `DISRUPTION_SYNC_CRON_SECRET` | Server-only credential; configure only for the associated optional feature. |
 | Hazards | `ECMWF_FORECAST_URL` | Configured forecast endpoint |
+| Job files | `EINVOICE_ASP_TOKEN` | Submits PINT AE invoices through an accredited service provider after validation against the UAE MoF specification |
+| Job files | `EINVOICE_ASP_URL` | Submits PINT AE invoices through an accredited service provider after validation against the UAE MoF specification |
+| Job files | `EINVOICE_ASP_VALIDATED` | Submits PINT AE invoices through an accredited service provider after validation against the UAE MoF specification |
+| Job files | `EINVOICE_SELLER_NAME` | Submits PINT AE invoices through an accredited service provider after validation against the UAE MoF specification |
+| Job files | `EINVOICE_SELLER_TRN` | Submits PINT AE invoices through an accredited service provider after validation against the UAE MoF specification |
 | AI | `EMBEDDING_API_KEY` | Server-only credential; configure only for the associated optional feature. |
 | AI | `EMBEDDING_BASE_URL` | Knowledge semantic search |
 | AI | `EMBEDDING_MODEL` | Knowledge semantic search |
@@ -120,7 +133,16 @@ This table includes credentials, local-service settings, safety gates and runtim
 | Platform | `HEALTH_CRITICAL_INTEGRATIONS` | Optional runtime setting; leave empty to use the documented code default. |
 | Platform | `HEALTH_CRON_SECRET` | Server-only credential; configure only for the associated optional feature. |
 | Platform | `HOSTNAME` | Optional runtime setting; leave empty to use the documented code default. |
+| Job files | `IMAP_HOST` | Polls one dedicated mailbox (self-hosted friendly) for one organization |
+| Job files | `IMAP_MAILBOX` | Polls one dedicated mailbox (self-hosted friendly) for one organization |
+| Job files | `IMAP_ORGANIZATION_ID` | Polls one dedicated mailbox (self-hosted friendly) for one organization |
+| Job files | `IMAP_PASSWORD` | Polls one dedicated mailbox (self-hosted friendly) for one organization |
+| Job files | `IMAP_PORT` | Polls one dedicated mailbox (self-hosted friendly) for one organization |
+| Job files | `IMAP_TLS` | Polls one dedicated mailbox (self-hosted friendly) for one organization |
+| Job files | `IMAP_USER` | Polls one dedicated mailbox (self-hosted friendly) for one organization |
 | Platform | `IMPORT_CRON_SECRET` | Server-only credential; configure only for the associated optional feature. |
+| Job files | `INBOUND_EMAIL_DOMAIN` | One signed inbound address per organization; forwarded emails and attachments become job-file intake |
+| Job files | `INBOUND_EMAIL_SECRET` | One signed inbound address per organization; forwarded emails and attachments become job-file intake |
 | Platform | `INTELLIGENCE_ALERT_CRON_SECRET` | Server-only credential; configure only for the associated optional feature. |
 | Optional services | `INTEL_API_TOKEN` | Optional isolated entity resolver |
 | Optional services | `INTEL_ORGANIZATION_ID` | Optional isolated entity resolver |
@@ -129,6 +151,15 @@ This table includes credentials, local-service settings, safety gates and runtim
 | Connectivity | `IODA_API_URL` | Outage adapter configuration |
 | Platform | `IP_GEOLOCATION_API_TOKEN` | Server-only credential; configure only for the associated optional feature. |
 | Discovery | `IP_GEOLOCATION_API_URL` | Licensed IP geolocation enrichment |
+| Job files | `JOBFILE_ALERT_BUDGET` | Job-file cron jobs (IMAP poll, watched folder, digest), signed private-file links and Paper Desk thresholds |
+| Job files | `JOBFILE_AUTO_ACCEPT_CONFIDENCE` | Job-file cron jobs (IMAP poll, watched folder, digest), signed private-file links and Paper Desk thresholds |
+| Job files | `JOBFILE_CRON_SECRET` | Job-file cron jobs (IMAP poll, watched folder, digest), signed private-file links and Paper Desk thresholds |
+| Job files | `JOBFILE_DIGEST_WHATSAPP_TO` | Photos and messages sent to the business number become intake items; optional digest messages |
+| Job files | `JOBFILE_HIGH_VALUE_AED` | Job-file cron jobs (IMAP poll, watched folder, digest), signed private-file links and Paper Desk thresholds |
+| Job files | `JOBFILE_URL_SIGNING_SECRET` | Job-file cron jobs (IMAP poll, watched folder, digest), signed private-file links and Paper Desk thresholds |
+| Job files | `JOBFILE_VISION_MODEL` | Reads photographed papers with the configured OpenAI-compatible vision model (uses AI_* settings; enable classify_document or an extract_* task) |
+| Job files | `JOBFILE_WATCH_DIR` | Scheduled import of tracking sheets dropped into a folder |
+| Job files | `JOBFILE_WATCH_ORGANIZATION_ID` | Scheduled import of tracking sheets dropped into a folder |
 | AI | `KNOWLEDGE_CRON_SECRET` | Server-only credential; configure only for the associated optional feature. |
 | AI | `KNOWLEDGE_EXTRACTOR_URL` | Optional runtime setting; leave empty to use the documented code default. |
 | AI | `KNOWLEDGE_PYTHON` | Optional runtime setting; leave empty to use the documented code default. |
@@ -184,6 +215,8 @@ This table includes credentials, local-service settings, safety gates and runtim
 | Platform | `SUPABASE_SECRET_KEY` | Server-only credential; configure only for the associated optional feature. |
 | Platform | `SUPABASE_SERVICE_ROLE_KEY` | Optional runtime setting; leave empty to use the documented code default. |
 | Platform | `SUPABASE_URL` | Managed authentication and private storage (public aliases supported) |
+| Job files | `TESSERACT_LANGUAGES` | Offline English + Arabic OCR fallback with word boxes (lower confidence, never auto-accepts) |
+| Job files | `TESSERACT_PATH` | Offline English + Arabic OCR fallback with word boxes (lower confidence, never auto-accepts) |
 | Cyber | `THREATFOX_AUTH_KEY` | Malware indicators |
 | Platform | `UMAMI_ENDPOINT` | Optional private analytics |
 | Platform | `UMAMI_WEBSITE_ID` | Optional private analytics |
@@ -203,6 +236,11 @@ This table includes credentials, local-service settings, safety gates and runtim
 | Optional services | `VOIDACCESS_API_URL` | Private authorized research worker; requires token or service account |
 | Optional services | `VOIDACCESS_ENABLED` | Optional runtime setting; leave empty to use the documented code default. |
 | Platform | `WATCHLIST_CRON_SECRET` | Server-only credential; configure only for the associated optional feature. |
+| Job files | `WHATSAPP_ACCESS_TOKEN` | Photos and messages sent to the business number become intake items; optional digest messages |
+| Job files | `WHATSAPP_APP_SECRET` | Photos and messages sent to the business number become intake items; optional digest messages |
+| Job files | `WHATSAPP_ORGANIZATION_ID` | Photos and messages sent to the business number become intake items; optional digest messages |
+| Job files | `WHATSAPP_PHONE_NUMBER_ID` | Photos and messages sent to the business number become intake items; optional digest messages |
+| Job files | `WHATSAPP_VERIFY_TOKEN` | Photos and messages sent to the business number become intake items; optional digest messages |
 
 ## Scope and configuration notes
 

@@ -1,19 +1,28 @@
-// SYNTHETIC DEMO data. Every name, number and party below is invented and labelled.
-import { receiveIntake } from './service';
+// SYNTHETIC DEMO data for demo mode (no database). Every name, number and party is invented.
+import { recordPrediction, resolveQuestion } from './ledger';
+import { playStory } from './story';
 import type { Ctx } from './types';
 
 export const DEMO_LABEL = 'SYNTHETIC DEMO';
-export const DEMO_AWB = '176-12345675';
+const H = 36e5;
+
+/** Deterministic pseudo-random numbers so the synthetic history is the same on every start. */
+function random(seed: number) { let state = seed; return () => { state = (state * 1664525 + 1013904223) % 4294967296; return state / 4294967296; }; }
 
 export async function seedDemo(ctx: Ctx) {
-  const pdf = (text: string) => Buffer.from(`%PDF-1.4\n% ${DEMO_LABEL}\nBT (${text}) Tj ET\n`);
-  await receiveIntake(ctx, {
-    channel: 'email', externalId: 'synthetic-demo-prealert-1', sender: 'SYNTHETIC DEMO origin agent <agent@origin.example>',
-    subject: `[${DEMO_LABEL}] PRE-ALERT MAWB ${DEMO_AWB} / HAWB SZX44871 — 12 pcs to DXB`,
-    bodyText: `${DEMO_LABEL}. Dear team, pre-alert for 12 pcs, 1,240 kg, flight EK 9881 SZX-DXB. Invoice No: INV-SZ-2026-118.`,
-    attachments: [
-      { fileName: 'SYNTHETIC-MAWB-176-12345675.pdf', mimeType: 'application/pdf', bytes: pdf(`AIR WAYBILL ${DEMO_AWB} NOT NEGOTIABLE ${DEMO_LABEL}`), text: `AIR WAYBILL ${DEMO_AWB} NOT NEGOTIABLE ${DEMO_LABEL}` },
-      { fileName: 'SYNTHETIC-invoice-INV-SZ-2026-118.pdf', mimeType: 'application/pdf', bytes: pdf(`COMMERCIAL INVOICE Invoice No INV-SZ-2026-118 ${DEMO_LABEL}`), text: `COMMERCIAL INVOICE Invoice No INV-SZ-2026-118 Unit price Amount ${DEMO_LABEL}` },
-    ],
-  });
+  const now = Date.now(), org = ctx.actor.organizationId;
+  // A finished job on the same lane: every step, invoice paid, predictions scored.
+  const past = { now: now - 41 * 864e5 };
+  const done = await playStory(ctx, past, { jobNumber: 'JF-1000', arrivalAt: now - 40 * 864e5 });
+  await ctx.repo.update('ophanim_job_files', org, { id: done.jobId }, { status: 'closed' });
+  // Synthetic resolved history so "Checking our work" has something to show.
+  const next = random(20261021);
+  for (let index = 0; index < 60; index++) {
+    const type = index % 2 ? 'paper_risk' : 'ghost_position', probability = Math.round(next() * 100) / 100, happened = next() < probability * 0.9 + 0.05;
+    await recordPrediction({ ...ctx, now: () => now - (90 - index) * 864e5 }, { questionType: type, outcomeKind: 'binary', subjectKey: `synthetic-history:${index}`, textEn: `${DEMO_LABEL} history ${type.replace('_', ' ')} #${index + 1}`, probability, modelVersion: type === 'paper_risk' ? 'paper-risk@1' : 'ghost-position@1', inputs: { synthetic: true, index } });
+    await resolveQuestion({ ...ctx, now: () => now - (89 - index) * 864e5 }, `synthetic-history:${index}`, { bool: happened, source: type === 'paper_risk' ? 'query_received' : 'milestone', evidence: { synthetic: true } });
+  }
+  await ctx.repo.insert('ophanim_city_pulse_events', org, { emirate: 'Dubai', kind: 'truck_curfew', titleEn: `${DEMO_LABEL} example truck restriction (not a real rule)`, titleAr: `${DEMO_LABEL} مثال على حظر الشاحنات (ليست قاعدة حقيقية)`, weekly: { days: [0, 1, 2, 3, 4], from: '06:30', to: '09:00' }, appliesTo: 'truck', isSynthetic: true });
+  // The live job: landed 6.5 hours ago, terminal receipt not yet reported.
+  await playStory(ctx, { now: now - 26 * H }, { jobNumber: 'JF-1001', arrivalAt: now - 6.5 * H, stopAfter: 4 });
 }

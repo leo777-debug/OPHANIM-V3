@@ -193,6 +193,25 @@ from local commit `2a2b72e` (parity-and-reliability, unpushed). Read
   baseline, coverage, resolved/excluded counts.
 - Tests: receipts.test.ts.
 
+## 4.10 — demo data, tests and docs (done)
+
+- `story.ts` plays the SYNTHETIC DEMO story on a controllable clock (synthetic PNG
+  papers rendered with sharp, values printed where their crop boxes are). Demo mode
+  seeds JF-1000 (complete: delivered, invoiced, paid, scored, closed), 60 synthetic
+  resolved predictions for calibration, an example City Pulse entry, and JF-1001
+  live at the ghost stage: 36 kg weight flag, Paper Risk 1 in 4, fog ESTIMATE,
+  short-landed 11 of 12, ghost 80% + chaser.
+- End-to-end test (`story.test.ts`) on the in-memory store (all 8 steps, every
+  prediction resolved and scored) and on PGlite with the real migrations (steps 1–4).
+- Unit tests: check digits, cross-document checks, matching, piece chain, time
+  gaps, scoring, plus RLS isolation, intake adapters, Paper Desk, papers, sync,
+  congestion, Today, invoices, receipts.
+- `docs/JOB_FILE.md`; eight "Job files" integrations in the catalog (Admin →
+  Integrations shows configured/not configured); `.env.example` and API_KEYS.md
+  regenerated with the generator (additions only, every variable commented).
+- Fixes found in the browser check: strictly increasing issue time per question
+  (latest prediction unambiguous); delay-cost labels excluded from Receipts.
+
 ## Questions for the founder
 
 1. What exactly are the "landing" and "takeoff" papers? Assumed: air import / export documents (AWB, cargo manifest, delivery order, export declaration).

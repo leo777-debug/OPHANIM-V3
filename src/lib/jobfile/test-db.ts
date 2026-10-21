@@ -16,6 +16,10 @@ export async function jobFileDatabase() {
       mime_type text not null, file_size_bytes bigint not null, file_sha256 text not null, status text not null default 'stored', created_by_user_id uuid,
       created_at timestamptz not null default now(), updated_at timestamptz not null default now());
     create table ophanim_audit_events(id uuid primary key default gen_random_uuid(), organization_id uuid not null, actor_user_id uuid, action text not null, subject_type text not null, subject_id uuid, metadata jsonb not null default '{}', created_at timestamptz not null default now());
+    create table ophanim_events(id uuid primary key default gen_random_uuid(), organization_id uuid, event_type text not null default 'notice', category text not null default 'other', title text not null, description text,
+      event_status text not null default 'active', occurred_at timestamptz, updated_at timestamptz not null default now(), geometry jsonb, attributes jsonb not null default '{}', metadata jsonb not null default '{}');
+    create table ophanim_import_mapping_profiles(id uuid primary key default gen_random_uuid(), organization_id uuid not null, name text not null, entity_type text not null, delimiter text not null default ',', encoding text not null default 'utf-8',
+      field_mapping jsonb not null default '{}', relationship_mapping jsonb not null default '{}', custom_field_mapping jsonb not null default '{}', created_by_user_id uuid, created_at timestamptz not null default now(), updated_at timestamptz not null default now(), unique (organization_id, name));
     create function app_private.is_organization_member(target uuid) returns boolean language sql stable as $$select target = nullif(current_setting('test.org', true), '')::uuid$$;
     create function app_private.current_ophanim_user_id() returns uuid language sql stable as $$select nullif(current_setting('test.user', true), '')::uuid$$;
     insert into ophanim_organizations values('${ORG_A}','Org A'),('${ORG_B}','Org B');

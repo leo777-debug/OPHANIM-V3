@@ -39,13 +39,15 @@ export async function recordPrediction(ctx: Ctx, input: PredictionInput): Promis
   const [latest] = await ctx.repo.select<Forecast>('ophanim_forecasts', org, { questionId: question.id, sourceType: input.sourceType ?? 'rule' }, { order: 'issuedAt desc', limit: 1 });
   if (latest && latest.inputsHash === hash) return { question, forecast: latest, created: false };
   if (question.status !== 'open') return { question, forecast: latest!, created: false };
+  // Issue times strictly increase per question, so "latest" is never ambiguous.
+  const issuedAt = latest && Date.parse(latest.issuedAt) >= Date.parse(at) ? new Date(Date.parse(latest.issuedAt) + 1).toISOString() : at;
   const snapshot = await ctx.repo.insert<{ id: string }>('ophanim_feature_snapshots', org, { jobFileId: input.jobFileId ?? null, shipmentId: input.shipmentId ?? null, asOf: at, featureSetVersion: input.modelVersion, features: input.inputs, inputsHash: hash });
   const forecast = await ctx.repo.insert<Forecast>('ophanim_forecasts', org, {
     questionId: question.id, jobFileId: input.jobFileId ?? null, shipmentId: input.shipmentId ?? null, sourceType: input.sourceType ?? 'rule', predictionType: input.questionType,
     question: input.textEn.padEnd(10, '.').slice(0, 500), horizon: input.resolveBy ?? new Date(Date.parse(at) + 30 * 864e5).toISOString(),
     probability: input.probability === undefined || input.probability === null ? null : Math.round(input.probability * 10000) / 10000, prediction: input.prediction ?? null,
     p10At: input.p10At ?? null, p50At: input.p50At ?? null, p90At: input.p90At ?? null, baseRate: input.baseRate ?? null, drivers: input.drivers ?? [], rulesFired: input.rulesFired ?? [], analogs: [],
-    inputsHash: hash, featureSnapshotId: snapshot.id, modelVersion: input.modelVersion, trigger: input.trigger ?? null, issuedAt: at, rationale: '',
+    inputsHash: hash, featureSnapshotId: snapshot.id, modelVersion: input.modelVersion, trigger: input.trigger ?? null, issuedAt, rationale: '',
   });
   return { question, forecast, created: true };
 }
@@ -103,7 +105,7 @@ export async function jobPredictions(ctx: Ctx, jobFileId: string) {
   const outcomes = await ctx.repo.select<Outcome>('ophanim_forecast_outcomes', org, { questionId: questions.map(item => item.id) });
   const scores = await ctx.repo.select<Score>('ophanim_forecast_scores', org, { forecastId: forecasts.map(item => item.id) });
   return questions.flatMap(question => {
-    const forecast = forecasts.find(item => item.questionId === question.id && item.sourceType !== 'human');
+    const forecast = forecasts.find(item => item.questionId === question.id && item.sourceType !== 'human' && !item.prediction?.label_only);
     if (!forecast) return [];
     const outcome = outcomes.find(item => item.questionId === question.id), score = scores.find(item => item.forecastId === forecast.id);
     const status = !outcome || !score ? 'pending' : score.excludedReason ? 'excluded' : score.intervalHit !== null ? (score.intervalHit ? 'called' : 'missed') : score.brier !== null ? (score.brier < 0.25 ? 'called' : 'missed') : 'pending';
