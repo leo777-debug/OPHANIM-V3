@@ -15,6 +15,7 @@ export interface ShipmentRecord extends ShipmentInput {
 interface ShipmentRow {
   id: string;
   organization_id: string;
+  historical: boolean;
   customer_id: string | null;
   shipment_reference: string;
   booking_number: string | null;
@@ -44,7 +45,7 @@ interface ShipmentRow {
 }
 
 const fields = `
-  id, organization_id, customer_id, shipment_reference, booking_number, container_number, bill_of_lading_reference, carrier,
+  id, organization_id, historical, customer_id, shipment_reference, booking_number, container_number, bill_of_lading_reference, carrier,
   vessel_name, imo_number, mmsi_number, origin_port_name, origin_port_code, destination_port_name, destination_port_code, transshipment_ports, customer_contact,
   operational_timezone, planned_departure_at, planned_arrival_at, actual_departure_at, actual_arrival_at,
   cargo_type, priority, current_status, owner_user_id, created_at, updated_at
@@ -58,6 +59,7 @@ function toRecord(row: ShipmentRow): ShipmentRecord {
   return {
     id: row.id,
     organizationId: row.organization_id,
+    historical:row.historical,
     customerId: nullable(row.customer_id),
     shipmentReference: row.shipment_reference,
     bookingNumber: nullable(row.booking_number),
@@ -113,10 +115,11 @@ async function replaceMilestones(client: PoolClient, organizationId: string, shi
   await client.query('delete from ophanim_shipment_milestones where shipment_id = $1 and source_type in (\'manual\', \'import\')', [shipmentId]);
   for (const milestone of milestones) {
     await client.query(
-      `insert into ophanim_shipment_milestones (organization_id, shipment_id, milestone_type, deadline_at, source_type)
-       values ($1, $2, $3, $4, 'manual')`,
-      [organizationId, shipmentId, milestone.milestoneType, milestone.deadlineAt],
+      `insert into ophanim_shipment_milestones (organization_id, shipment_id, milestone_type, deadline_at, source_type, actual_at, actual_source)
+       values ($1, $2, $3, $4, 'manual', $5, $6)`,
+      [organizationId, shipmentId, milestone.milestoneType, milestone.deadlineAt, milestone.actualAt??null, milestone.actualSource??null],
     );
+    if(milestone.actualAt)await client.query(`insert into ophanim_shipment_events(organization_id,shipment_id,event_type,occurred_at,source,provenance) values($1,$2,$3,$4,$5,$6) on conflict do nothing`,[organizationId,shipmentId,milestone.milestoneType,milestone.actualAt,milestone.actualSource,JSON.stringify({source:'shipment_milestone',deadlineAt:milestone.deadlineAt})]);
   }
 }
 
@@ -156,13 +159,15 @@ export async function createShipment(actor: OrganizationActor, input: unknown): 
       returning ${fields}`,
       values(actor, shipment),
     );
-    const record = toRecord(created.rows[0]);
+    if(shipment.historical)await client.query('update ophanim_shipments set historical=true where id=$1 and organization_id=$2',[created.rows[0].id,actor.organizationId]);
+    const record = toRecord({...created.rows[0],historical:shipment.historical??false});
     if (shipment.milestones) await replaceMilestones(client, actor.organizationId, record.id, shipment.milestones);
     await client.query(
       `insert into ophanim_audit_events (organization_id, actor_user_id, action, subject_type, subject_id, metadata)
        values ($1, $2, 'shipment.created', 'shipment', $3, $4)`,
       [actor.organizationId, actor.userId, record.id, JSON.stringify({ shipmentReference: record.shipmentReference })],
     );
+    for(const [eventType,at] of [['departure',shipment.actualDepartureAt],['arrival',shipment.actualArrivalAt]] as const)if(at)await client.query(`insert into ophanim_shipment_events(organization_id,shipment_id,event_type,occurred_at,source,provenance) values($1,$2,$3,$4,$5,$6) on conflict do nothing`,[actor.organizationId,record.id,eventType,at,shipment.historical?'shipment_import':'shipment_record',JSON.stringify({actorUserId:actor.userId,historical:shipment.historical??false})]);
     await client.query('commit');
     return record;
   } catch (error) {
@@ -203,6 +208,7 @@ export async function updateShipment(actor: OrganizationActor, shipmentId: strin
        values ($1, $2, 'shipment.updated', 'shipment', $3, $4)`,
       [actor.organizationId, actor.userId, record.id, JSON.stringify({ shipmentReference: record.shipmentReference })],
     );
+    for(const [eventType,at] of [['departure',shipment.actualDepartureAt],['arrival',shipment.actualArrivalAt]] as const)if(at)await client.query(`insert into ophanim_shipment_events(organization_id,shipment_id,event_type,occurred_at,source,provenance) values($1,$2,$3,$4,$5,$6) on conflict do nothing`,[actor.organizationId,record.id,eventType,at,shipment.historical?'shipment_import':'shipment_record',JSON.stringify({actorUserId:actor.userId,historical:shipment.historical??false})]);
     await client.query('commit');
     return record;
   } catch (error) {

@@ -683,7 +683,7 @@ function ShipmentDetail({
             </dl>
           </section>
           <section className="ops-panel ops-detail-panel">
-            <h2>Operational timeline</h2>
+            <h2>Operational timeline</h2><Link className="ops-button" href={`/logistics/map?tool=route-lens&shipment=${shipment.id}`}>Route Lens + forecast</Link><Link className="ops-button" href={`/logistics/map?tool=watchtower&port=${shipment.destinationPortCode??''}`}>Destination cameras</Link><Link className="ops-button" href={`/logistics/map?tool=route-lens&shipment=${shipment.id}`}>Route Lens + forecast</Link><Link className="ops-button" href={`/logistics/map?tool=watchtower&port=${shipment.destinationPortCode??''}`}>Destination cameras</Link>
             <OperationalTimeline events={timeline(shipment)} />
           </section>
           <section className="ops-panel ops-detail-panel">

@@ -8,6 +8,10 @@ services:
     envVars:
       - key: DATABASE_URL
         fromDatabase: { name: ophanim-db, property: connectionString }
+      - key: FORECAST_WORKER_HOST
+        fromService: { type: pserv, name: ophanim-forecast-worker, property: host }
+      - key: FORECAST_WORKER_TOKEN
+        fromService: { type: pserv, name: ophanim-forecast-worker, envVarKey: FORECAST_WORKER_TOKEN }
       - key: APP_URL
         sync: false
       - key: RESEND_API_KEY
@@ -66,6 +70,26 @@ services:
         sync: false
       - key: INTELLIGENCE_ALERT_CRON_SECRET
         sync: false
+  - type: pserv
+    name: ophanim-forecast-worker
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./forecast-worker/Dockerfile
+    dockerContext: ./forecast-worker
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: { name: ophanim-db, property: connectionString }
+      - key: FORECAST_WORKER_TOKEN
+        generateValue: true
+      - key: PORT
+        value: 8081
+      - key: MODEL_ROOT
+        value: /models
+    disk:
+      name: ophanim-models
+      mountPath: /models
+      sizeGB: 1
+
 databases:
   - name: ophanim-db
     plan: basic-256mb

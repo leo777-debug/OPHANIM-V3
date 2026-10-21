@@ -1,0 +1,11 @@
+{
+  "syntheticFixturesOnly": true,
+  "checkedAt": "2026-10-21T18:29:12.054Z",
+  "checks": [
+    "Authenticated shipment → existing sea network → corridor layers",
+    "Anonymous read and foreign-origin write rejected",
+    "Browser Watchtower search displays Iranian coverage gap",
+    "Evidence view → Python cold-start withholding → human call persisted in immutable ledger",
+    "No browser runtime exceptions"
+  ]
+}

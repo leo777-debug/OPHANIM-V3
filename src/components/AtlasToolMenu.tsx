@@ -5,7 +5,7 @@ import { Activity, BarChart3, Bell, Brain, Crosshair, Globe2, Network, Radar, Se
 import { ATLAS_TOOLS, type AtlasTool } from '@/lib/atlas-tools';
 import styles from './intelligence-tools.module.css';
 
-const icons = { analyst: Brain, fusion: Activity, recon: Radar, markets: BarChart3, alerts: Bell, entities: Network, search: Search, shodan: Globe2, ip: Crosshair, tracking: Ship, news:Newspaper, settings:Settings, watchlists:Bookmark, sources:Database, logistics:Ship };
+const icons = { watchtower:Globe2, 'route-lens':Ship, analyst: Brain, fusion: Activity, recon: Radar, markets: BarChart3, alerts: Bell, entities: Network, search: Search, shodan: Globe2, ip: Crosshair, tracking: Ship, news:Newspaper, settings:Settings, watchlists:Bookmark, sources:Database, logistics:Ship };
 
 export default function AtlasToolMenu({ onChoose }: { onChoose: (tool: AtlasTool) => void }) {
   const ref = useRef<HTMLDetailsElement>(null);

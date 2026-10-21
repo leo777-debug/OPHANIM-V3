@@ -224,3 +224,15 @@ versions and scripts.
 MIT; see [LICENSE](LICENSE). Ophanim builds on the original Osiris work by
 [simplifaisoul](https://github.com/simplifaisoul). Existing copyright and license
 notices are preserved. External tools, datasets and media retain their own terms.
+
+### Route intelligence and The Panel
+
+Watchtower and Route Lens open inside the existing operational map. Deep Watch
+extends the tenant entity/mentions/review pipeline. The local Python Panel adds
+immutable forecasts, outcomes, scoring, model gates and a public aggregate
+[Receipts ledger](/receipts). No LLM or paid AI API runs in its forecast path.
+Real-history backtesting and public-camera/source verification remain launch gates;
+missing history or coverage is explicitly reported.
+
+[Watchtower](docs/WATCHTOWER.md) · [Deep Watch](docs/DEEP_WATCH.md) ·
+[Route Lens](docs/ROUTE_LENS.md) · [Forecast engine and backtest status](docs/FORECAST_ENGINE.md)

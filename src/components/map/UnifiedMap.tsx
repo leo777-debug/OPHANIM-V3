@@ -13,6 +13,7 @@ import { createMapWorkspace, type MapViewport } from '@/lib/map-workspaces';
 import { defaultUnifiedMapState, patchUnifiedWorkspace, restoreUnifiedMapState, UNIFIED_MAP_STORAGE } from '@/lib/unified-map';
 import { feedIds, PRESENTATION_FEEDS, publicUrl } from '@/lib/presentation/feeds';
 import type { FeedId, PresentationSettings } from '@/lib/presentation/types';
+import type { ProviderMapLayer } from '@/lib/providers/types';
 import type { SearchAction } from '@/lib/providers/types';
 import { requestJson } from '@/lib/logistics/client';
 import { mapEntity } from '@/lib/map-entities';
@@ -25,7 +26,7 @@ import MapToolDock from './MapToolDock';
 import styles from './unified-map.module.css';
 
 const Globe = dynamic(() => import('@/components/presentation/PresentationGlobe'), { ssr: false });
-const toolIcons = { analyst:Brain, fusion:Activity, recon:Radar, markets:ChartNoAxesColumn, alerts:Bell, entities:Network, search:Search, shodan:Shield, ip:MapPin, tracking:Ship, news:Newspaper, settings:Settings, watchlists:Bookmark, sources:Database, logistics:Layers3 };
+const toolIcons = { watchtower:Camera, 'route-lens':Ship, analyst:Brain, fusion:Activity, recon:Radar, markets:ChartNoAxesColumn, alerts:Bell, entities:Network, search:Search, shodan:Shield, ip:MapPin, tracking:Ship, news:Newspaper, settings:Settings, watchlists:Bookmark, sources:Database, logistics:Layers3 };
 const layerIcons:Partial<Record<FeedId,typeof Globe2>> = { flights:Plane, maritime:Ship, cameras:Camera, news:Newspaper, satellites:Satellite, weather:CloudLightning, cyber:Shield, cables:Network };
 const regions = [ ['Global',24,42,1.35], ['Gulf',25,53,4], ['Europe',52,14,3.1], ['Asia',30,100,2.35], ['Americas',15,-79,2.1], ['Africa',2,21,2.7], ['Oceania',-24,141,2.65] ] as const;
 const groups = { All:feedIds, Transport:['flights','maritime','ports','chokepoints','cameras','cables'], Hazards:['earthquakes','fires','weather','incidents','space-weather'], Intelligence:['news','broadcasts','conflicts','war-sanctions','cyber','infrastructure','satellites'] };
@@ -51,6 +52,7 @@ export default function UnifiedMap({ publicSurface=false, settings: suppliedSett
   const [clock,setClock]=useState('UTC');
   const [notice,setNotice]=useState('');
   const [marketData,setMarketData]=useState<Record<string,unknown>>({});
+  const [lensLayers,setLensLayers]=useState<ProviderMapLayer[]>([]);
   const [shipment,setShipment]=useState<ShipmentRecord|null>(null);
   const [disruption,setDisruption]=useState<DisruptionRecord|null>(null);
   const tool=parseAtlasTool(query.get('tool'));
@@ -94,7 +96,7 @@ export default function UnifiedMap({ publicSurface=false, settings: suppliedSett
     if(![lat,lng,zoom].every(Number.isFinite)||Math.abs(lat)>90||Math.abs(lng)>180)return;
     setLocate({lat,lng,zoom,sequence:Date.now()});
   },[]);
-  const onSelect=useCallback((entity:Record<string,unknown>)=>{setSelected(entity);setFollow(false);},[]);
+  const onSelect=useCallback((entity:Record<string,unknown>)=>{setSelected(entity);setFollow(false);if(entity.provider==='watchtower'&&typeof entity.port==='string'){const p=new URLSearchParams(location.search);p.set('tool','watchtower');p.set('port',entity.port);window.history.replaceState(null,'',pathname+'?'+p.toString());}},[pathname]);
   const openTool=useCallback((next:AtlasTool|null)=>{
     const params=new URLSearchParams(location.search);
     if(next)params.set('tool',next);else params.delete('tool');
@@ -113,6 +115,7 @@ export default function UnifiedMap({ publicSurface=false, settings: suppliedSett
     return()=>controller.abort();
   },[activeTool,replay.length]);
   const shipmentId=query.get('shipment'), disruptionId=query.get('disruption');
+  useEffect(()=>{setLensLayers([]);},[activeTool]);
   useEffect(()=>{
     if(publicSurface)return;
     let cancelled=false;
@@ -162,15 +165,15 @@ export default function UnifiedMap({ publicSurface=false, settings: suppliedSett
     <section className={`${styles.stage} ${activeTool?styles.stageWithDock:''}`}>
       <aside className={`${styles.layers} ${layersOpen?styles.layersOpen:''}`} aria-label="Visible layers"><header><Layers3 size={17}/>Visible layers<b>{feedIds.length}</b></header><input className={styles.layerSearch} aria-label="Search layers" placeholder="Search layers" value={layerSearch} onChange={event=>setLayerSearch(event.target.value)}/><div className={styles.groups}>{(Object.keys(groups)as Array<keyof typeof groups>).map(name=><button key={name} aria-pressed={group===name} onClick={()=>setGroup(name)}>{name}</button>)}</div><div className={styles.layerList}>{rows.map(id=>{const definition=PRESENTATION_FEEDS[id],feed=feeds[id],Icon=layerIcons[id]??MapPin;const count=id==='news'?feed?.news.length:feed?.features.length;return <label className={styles.layer} key={id}><input type="checkbox" aria-label={definition.name} checked={!hidden.has(id)} disabled={!feed||feed.state==='unavailable'} onChange={()=>setState(current=>patchUnifiedWorkspace(current,{activeLayers:{...workspace.activeLayers,[id]:hidden.has(id)}}))}/><Icon size={17}/><span>{definition.name}<small>{feed?.state==='replay'?'Replay':definition.reference?'Reference':id==='satellites'?'Calculated positions':feed?.state??'Connecting'} / {definition.source}{feed?.state==='unavailable'?' - no data':''}{id==='space-weather'&&feed?.state!=='unavailable'?` / ${feed?.note??''}`:''}</small></span><b>{count===undefined?'...':count}</b></label>;})}</div></aside>
       <div className={styles.canvas} data-testid="unified-map-canvas">
-        {restored&&<Globe feeds={feeds} hidden={hidden} onSelect={onSelect} locate={locate} projection={workspace.projection} mapStyle={workspace.mapStyle} dayNight={dayNight} embedded initialViewport={workspace.viewport} onViewportChange={onViewport}/>}
+        {restored&&<Globe feeds={feeds} hidden={hidden} onSelect={onSelect} locate={locate} projection={workspace.projection} mapStyle={workspace.mapStyle} dayNight={dayNight} embedded initialViewport={workspace.viewport} onViewportChange={onViewport} providerLayers={lensLayers}/>}
         <div className={styles.badge}><i/>{available}/{feedIds.length} feeds responding{replay.length>0&&<div className={styles.replay} data-testid="replay-label">Replay of live data recorded at {timeText(replay[0].recordedAt)}{replay.some(feed=>feed.testFixture)?' / Test replay fixture':''}</div>}</div>
         <div className={styles.appearance} role="group" aria-label="Map appearance">{([{id:'dark',name:'Night basemap',label:'Night',Icon:Moon},{id:'earth',name:'Earth colored basemap',label:'Earth',Icon:Globe2},{id:'satellite',name:'Satellite imagery',label:'Satellite',Icon:Satellite}]as const).map(({id,name,label,Icon})=><button key={id} title={name} aria-label={name} aria-pressed={workspace.mapStyle===id} onClick={()=>setState(current=>patchUnifiedWorkspace(current,{mapStyle:id}))}><Icon size={15}/><span>{label}</span></button>)}<button title="2D / 3D projection" aria-label="2D / 3D projection" aria-pressed={workspace.projection==='globe'} onClick={()=>setState(current=>patchUnifiedWorkspace(current,{projection:workspace.projection==='globe'?'mercator':'globe'}))}>{workspace.projection==='globe'?'3D':'2D'}</button><button title="Day and night overlay" aria-label="Day and night overlay" aria-pressed={dayNight} onClick={()=>setDayNight(value=>!value)}><Sun size={15}/></button></div>
         {selected&&<section className={styles.selection} role="region" aria-label="Object details"><button title="Close details" aria-label="Close details" onClick={()=>{setSelected(null);setFollow(false);}}><X size={17}/></button><h2>{String(selected.name??selected.id??'Map observation')}</h2><p>{String(selected.source??selectedFeed?.source??'Public source')}</p><dl>{Object.entries(selected).filter(([key,value])=>!['sourceUrl','source','name','provider'].includes(key)&&['string','number','boolean'].includes(typeof value)&&value!==null).slice(0,14).map(([key,value])=><div key={key}><dt>{key.replaceAll('_',' ')}</dt><dd>{String(value)}</dd></div>)}</dl><p>Observed: {timeText(selected.observedAt)}</p><p>Retrieved: {timeText(selectedFeed?.fetchedAt)}</p>{publicUrl(selected.sourceUrl??selectedFeed?.sourceUrl)&&<p><a href={publicUrl(selected.sourceUrl??selectedFeed?.sourceUrl)} target="_blank" rel="noopener noreferrer">Open source</a></p>}<div className={styles.selectionActions}><button onClick={()=>openTool('entities')}>Entities</button>{['flights','maritime'].includes(String(selected.provider))&&<button aria-pressed={follow} onClick={()=>setFollow(value=>!value)}>{follow?'Stop following':'Follow updates'}</button>}</div></section>}
       </div>
-      {activeTool&&<MapToolDock key={activeTool} tool={activeTool} data={replay.length?feedData:data} feeds={feeds} entity={entity} replaying={replay.length>0} onClose={()=>openTool(null)} onLocate={onLocate} onSelect={onSelect}/>}
+      {activeTool&&<MapToolDock key={activeTool} tool={activeTool} onLayers={setLensLayers} shipmentId={shipmentId} data={replay.length?feedData:data} feeds={feeds} entity={entity} replaying={replay.length>0} onClose={()=>openTool(null)} onLocate={onLocate} onSelect={onSelect}/>}
     </section>
     <footer className={styles.footer}><span>{objectCount.toLocaleString('en-GB')} objects / {loading?'Connecting':replay.length?'Replay + reference':'Source updates'}{notice&&<button className={styles.iconButton} title={notice} aria-label="Dismiss notification" onClick={()=>setNotice('')}>{notice}<X size={12}/></button>}</span><div className={styles.ticker}><div data-testid="ticker-track">{[0,1].flatMap(copy=>headlines.map((title,index)=><span key={`${copy}-${index}`} aria-hidden={copy===1}>{title}</span>))}</div></div></footer>
-    {!publicSurface&&(shipment||disruption)&&<DetailDrawer title={shipment?'Shipment route':'Disruption'} onClose={()=>{setShipment(null);setDisruption(null);}}>{shipment?<><ShipmentRoute origin={shipment.originPortName} destination={shipment.destinationPortName} transshipments={shipment.transshipmentPorts}/><p>Only recorded shipment route data is shown; coordinates are not inferred.</p></>:<p>{disruption?.description??'No recorded description.'}</p>}</DetailDrawer>}
+    {!publicSurface&&activeTool!=='route-lens'&&(shipment||disruption)&&<DetailDrawer title={shipment?'Shipment route':'Disruption'} onClose={()=>{setShipment(null);setDisruption(null);}}>{shipment?<><a href={`/logistics/map?tool=route-lens&shipment=${shipment.id}`}>Open Route Lens + forecast</a><a href={`/logistics/map?tool=watchtower&port=${shipment.destinationPortCode??''}`}>Show destination cameras</a><ShipmentRoute origin={shipment.originPortName} destination={shipment.destinationPortName} transshipments={shipment.transshipmentPorts}/><p>Only recorded shipment route data is shown; coordinates are not inferred.</p></>:<p>{disruption?.description??'No recorded description.'}</p>}</DetailDrawer>}
     <CommandPalette commands={[
       ...ATLAS_TOOLS.map(item=>({id:`tool:${item.id}`,title:item.label,subtitle:item.description,group:'Tools',run:()=>openTool(item.id)})),
       ...regions.map(item=>({id:`region:${item[0]}`,title:item[0],group:'Regions',run:()=>onLocate(item[1],item[2],item[3])})),

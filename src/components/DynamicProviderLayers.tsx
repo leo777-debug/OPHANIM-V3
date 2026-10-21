@@ -40,7 +40,9 @@ export default function DynamicProviderLayers({ map, layers, onEntityClick }: Dy
   const renderedRef = useRef<ProviderMapLayer[]>([]);
 
   useEffect(() => {
-    if (!map || !isStyleReady(map)) return;
+    if (!map) return;
+    let drawing=false;
+    let removeRendered=()=>{};
 
     const remove = (layer: ProviderMapLayer) => {
       const source = sourceId(layer);
@@ -56,6 +58,10 @@ export default function DynamicProviderLayers({ map, layers, onEntityClick }: Dy
       });
     };
 
+    const sync=()=>{
+    if(drawing||!isStyleReady(map)||layers.filter(l=>l.visible).every(l=>map.getSource(sourceId(l))&&map.getLayer(layerId(l))))return;
+    drawing=true;
+    removeRendered();
     renderedRef.current.forEach(remove);
     const listeners: Array<{ id: string; handler: (event: maplibregl.MapLayerMouseEvent) => void }> = [];
 
@@ -103,13 +109,19 @@ export default function DynamicProviderLayers({ map, layers, onEntityClick }: Dy
     }
 
     renderedRef.current = layers;
-    return () => {
+    removeRendered=() => {
       listeners.forEach(({ id, handler }) => {
         safelyRunMapOperation(() => map.off('click', id, handler));
       });
       renderedRef.current.forEach(remove);
       renderedRef.current = [];
     };
+    drawing=false;
+    };
+    // Initial provider data can arrive before style readiness; style changes also
+    // remove custom sources. Re-attach only missing layers, without a render loop.
+    sync();map.on('styledata',sync);map.on('idle',sync);
+    return()=>{drawing=true;map.off('styledata',sync);map.off('idle',sync);removeRendered();};
   }, [map, layers, onEntityClick]);
 
   return null;

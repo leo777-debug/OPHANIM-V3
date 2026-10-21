@@ -1,0 +1,11 @@
+[
+ {
+  "id":"dubai-marina-skyline", "name":"Dubai Marina from Princess Tower", "port":"AEJEA", "country":"AE",
+  "lat":25.0887,"lon":55.1466,"type":"marina","streamUrl":null,"embedType":"iframe",
+  "sourceUrl":"https://www.skylinewebcams.com/en/webcam/united-arab-emirates/dubai/dubai/dubai-marina.html",
+  "terms":"Publisher copyright. Link to public page only; embed/redistribution rights not verified. Nearby marina, NOT a view of Jebel Ali berths.",
+  "termsUrl":"https://www.skylinewebcams.com/", "lastSeen":null,"status":"offline",
+  "verifiedAt":"2026-10-21T00:00:00Z","publicViewingVerified":true,"embedAllowed":false,
+  "healthCheckAllowed":false,"coverage":"Nearby waterfront only; source page explicitly displayed OFFLINE at verification."
+ }
+]

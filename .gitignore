@@ -79,3 +79,9 @@ scanner_backend_backup.js
 /presentation-evidence/screenshots/failed-tools.png
 /presentation-evidence/preview*.log
 /presentation-evidence/reference-video*.png
+
+.venv-forecast/
+forecast-worker/__pycache__/
+forecast-worker/.pytest_cache/
+
+.forecast-test-models/
