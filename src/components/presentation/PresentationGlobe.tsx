@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as maplibregl from 'maplibre-gl';
 import OphanimMap from '@/components/OphanimMap';
 import { atlasFallbackBasemap } from '@/lib/presentation/basemap';
+import { OPEN_FREE_MAP } from '@/lib/map/basemap-sources';
 import { atlasPresentationData, pickPublicMapPoint } from '@/lib/presentation/map-adapter';
 import type { FeedId, PresentationFeed } from '@/lib/presentation/types';
 import type { MapProjection, MapStyle, MapViewport } from '@/lib/map-workspaces';
@@ -31,7 +32,7 @@ export default function PresentationGlobe({ feeds, hidden, onSelect, locate, pro
   useEffect(() => {
     const controller = new AbortController();
     // Keep the original dark cartography without CARTO's API-key watermark.
-    void fetch('https://tiles.openfreemap.org/styles/dark', { signal: AbortSignal.any([controller.signal,AbortSignal.timeout(1800)]) })
+    void fetch(OPEN_FREE_MAP.styleUrl, { signal: AbortSignal.any([controller.signal,AbortSignal.timeout(1800)]) })
       .then(async response => { if (!response.ok) throw new Error('Style unavailable'); const style = await response.json(); if (style.version !== 8 || !Array.isArray(style.layers)) throw new Error('Invalid style'); if (!controller.signal.aborted) setBasemap(style); })
       .catch(() => { if (!controller.signal.aborted) { setBasemap(atlasFallbackBasemap); setFallback(true); } });
     return () => controller.abort();

@@ -225,3 +225,11 @@ licensed access is session- and organization-scoped. First-observation and sourc
 freshness metadata survive the unified news adapter; replay cannot produce current
 convergence alerts. Unit/type/build checks pass; full browser validation continues.
 No World Monitor code, assets, API or data were used.
+
+Standalone Route Explorer, Hazard and Aviation maps now use a keyless basemap,
+with a labelled, attributed Natural Earth startup fallback. Source metadata is
+registered and cluster font compatibility is checked. A production-browser test
+rendered the actual 3,962 reference ports alongside a real schematic sea-route
+calculation and CSV export, with upstream map/event requests blocked. This is
+not a hardware frame-rate guarantee or live source-availability claim. No World
+Monitor code, styles, assets or services were used. See BASEMAP_RELIABILITY.md.

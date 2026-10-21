@@ -489,3 +489,37 @@ verified; never infer completion from a catalog entry or this plan.
 - Evidence: presentation-validation/results.json, integrations-results.json and screenshots/. Latest app unit suite543 passed/5 skipped; typecheck, targeted lint, production build passed. Known-token browser scan271 chunks/zero findings.
 - Task00a local baseline alignment is complete. First unfinished01-integrations remains partial; broad specialist/analysis/platform work is not complete. Draft PR25 base correction/push deferred to final delivery to keep deployment last. No GitHub merge/deployment.
 - Next audit: standalone Route/Hazard/Aviation maps still inherit CARTO style URL; choose working keyless basemap with attribution/fallback. Mobile optional-setup buttons are semantically disabled but need clearer visible configuration/disabled cues. Then resume full source/protocol inventory and remaining parity.
+
+## 21 October 2026 — standalone map/source recovery (in progress)
+
+- Replaced the standalone CARTO default with the shared keyless OpenFreeMap Dark
+  source. Initial style errors/four-second startup failures recover to the bundled,
+  attributed Natural Earth reference; recovery listeners are removed after load,
+  so later tile failures cannot reset an operational map. Tests cover bounded,
+  one-shot recovery and loaded/unmounted-map preservation.
+- Both map sources are now explicit catalogue/registry entries with reviewed
+  licences, attribution, rates, key requirements and unknown upstream dates.
+  Natural Earth geometry is hash-pinned. API inventory is now 65 entries/119 empty
+  identifiers. Primary documentation is linked in docs/BASEMAP_RELIABILITY.md.
+- Actual font endpoint check: Open Sans Bold404, Noto Sans Regular200. Cluster
+  label font changed accordingly; see map-source-audit.json. This HTTP observation
+  is not a GPU/freshness claim.
+- Optional setup step3 now explains configuration/missing identifiers, and disabled
+  platform actions are visibly dimmed. Added dedicated native browser checks for
+  real reference-port clustering, Dubai–Rotterdam calculation/CSV and Hazard/
+  Aviation fallback maps. Browser checks have not run on the new build yet.
+- Latest 548 tests passed, 5 skipped; typecheck passed. Final build/lint in progress.
+  Then run native-only and integrations-only browser checks, inspect evidence,
+  update report/state and commit this task. Broader01 and parity remain partial.
+
+- Final checks passed: production build, standalone typecheck, targeted lint and
+  548 unit tests (5 skipped). Native browser run passed reference geography/
+  attribution, 3,962 clustered ports, real Dubai–Rotterdam model/closure rendering,
+  CSV export and Hazard/Aviation startup recovery. Updated Integrations run passed
+  its seven checks, including the visible missing-configuration/disabled cues.
+- Removed an inherited global CSS rule hiding attribution. Native screenshots
+  and native-results.json are in presentation-validation/. Reference data is the
+  actual bundled dataset; organization/session/event test records are synthetic.
+  Remote API access is blocked, so this is not a live-feed or full-GPU/FPS claim.
+- Client known-token scan: 271 chunks, zero findings. Next: resume remaining
+  protocol tests/setup profiles/universal missing-key states and broader P1–P4.

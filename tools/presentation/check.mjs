@@ -7,6 +7,7 @@ import sharp from 'sharp';
 import { startTestDatabase,seedReplay } from './test-db.mjs';
 import { checkTools } from './check-tools.mjs';
 import { checkIntegrations } from './check-integrations.mjs';
+import { checkNativeMaps } from './check-native-maps.mjs';
 
 const port=Number(process.env.PRESENTATION_TEST_PORT ?? 3107),url=`http://127.0.0.1:${port}`;
 const output=process.env.PRESENTATION_TEST_OUTPUT ?? 'PARITY/presentation-validation';
@@ -39,13 +40,15 @@ try {
   for(const stream of [server.stdout,server.stderr])stream.on('data',chunk=>logs.push(chunk.toString()));
   await eventually(async()=>{assert.equal(server.exitCode,null,'Local server exited before readiness');assert.equal((await request('/api/presentation/settings')).status,200);},60000);
   pass('Disposable local database: full migration chain, external APIs blocked');
-  if(process.argv.includes('--tools-only') || process.argv.includes('--integrations-only')) {
+  if(process.argv.includes('--tools-only') || process.argv.includes('--integrations-only') || process.argv.includes('--native-only')) {
     await save({enabled:true,replay:'on'});
     browser=await chromium.launch({headless:true,args:['--enable-unsafe-swiftshader']});
     const integrationsOnly=process.argv.includes('--integrations-only');
-    if(integrationsOnly)await checkIntegrations({browser,url,owner,viewer:database.sessions.viewer,credentials:database.credentials.owner,request,output,pass});
+    const nativeOnly=process.argv.includes('--native-only');
+    if(nativeOnly)await checkNativeMaps({browser,url,output,pass});
+    else if(integrationsOnly)await checkIntegrations({browser,url,owner,viewer:database.sessions.viewer,credentials:database.credentials.owner,request,output,pass});
     else await checkTools({browser,url,owner,save,output,pass});
-    await writeFile(`${output}/${integrationsOnly?'integrations':'tools'}-results.json`,JSON.stringify({checkedAt:new Date().toISOString(),checks,syntheticFixturesOnly:true},null,2));
+    await writeFile(`${output}/${nativeOnly?'native':integrationsOnly?'integrations':'tools'}-results.json`,JSON.stringify({checkedAt:new Date().toISOString(),checks,syntheticFixturesOnly:true},null,2));
   } else {
   assert.equal((await settings()).enabled,false);
   const originalRoutes=['/','/atlas','/operations','/imports','/logistics','/logistics/rescue','/onboarding','/login'];

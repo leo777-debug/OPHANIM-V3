@@ -1,0 +1,35 @@
+{
+  "openFreeMap": {
+    "id": "openfreemap-dark",
+    "name": "OpenFreeMap Dark basemap",
+    "version": "Remote service; unpinned source style",
+    "datasetDate": null,
+    "termsReviewedAt": "2026-10-21",
+    "source": "https://openfreemap.org/",
+    "termsUrl": "https://openfreemap.org/tos/",
+    "styleUrl": "https://tiles.openfreemap.org/styles/dark",
+    "licence": "OpenFreeMap terms; OSM ODbL; style BSD-3-Clause / design CC BY 4.0, derived CC BY 3.0; Noto Sans SIL OFL 1.1",
+    "clusterFont": "Noto Sans Regular",
+    "commercialUse": "yes",
+    "keyNeeded": false,
+    "attribution": "OpenFreeMap / OpenMapTiles / OpenStreetMap contributors; Dark design derived from Stamen, Paul Norman / CartoDB.",
+    "rateLimits": "Public map display has no stated view/request quota; no bulk harvesting. Offline packages are not implemented.",
+    "refresh": "Browser map assets on demand; provider publication date is not supplied."
+  },
+  "naturalEarth": {
+    "id": "natural-earth-basemap",
+    "name": "Natural Earth reference basemap",
+    "version": "Bundled 1:110m country geometry; upstream release unknown",
+    "datasetDate": null,
+    "termsReviewedAt": "2026-10-21",
+    "source": "https://www.naturalearthdata.com/about/terms-of-use/",
+    "termsUrl": "https://www.naturalearthdata.com/about/terms-of-use/",
+    "licence": "Public domain",
+    "commercialUse": "yes",
+    "keyNeeded": false,
+    "attribution": "Made with Natural Earth.",
+    "rateLimits": "Packaged reference asset; no upstream runtime request.",
+    "refresh": "Bundled reference; this work adds no scheduled upstream refresh.",
+    "sha256": "bd9dd6a5811166dd9b6a87bf23968b073f0ffd1a54f7668d391737631af2ca3f"
+  }
+}

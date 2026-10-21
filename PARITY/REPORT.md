@@ -10,7 +10,7 @@ No claim is made about the provenance of historical commits outside this work.
 
 ## Section 2: central keys
 
-**Partial.** API_KEYS.md documents 63 service entries/groups and `.env.example`
+**Partial.** API_KEYS.md documents 65 service entries/groups and `.env.example`
 contains 119 deliberately empty configuration identifiers, generated from source
 without reading private environment files. The inventory includes keyless services,
 credentials, optional workers, runtime settings and reserved-but-unused keys.
@@ -268,3 +268,5 @@ Dependency remediation: Next16.4.2/MapLibre6.15.0/Sharp0.35.5 pinned, compatible
 21 October browser follow-up: real Integrations suite passed seven checks using local production routes, disposable SQL and synthetic accounts. Actual sign-in returns during Presentation, keys are not accepted or displayed, licence gating applies, blocked connections persist Error across reload, and SDK setup fits mobile. Shared canonical-origin checks fix valid mutation rejection behind normalized Next hosts; foreign/cross-site origins remain rejected. Latest 543 tests, typecheck, lint and rebuild passed. Full map aggregate is still running. Client pattern audit: 271 chunks, zero findings.
 
 Combined baseline verification completed21 October:33 production-browser integration checks passed. This includes actual rendered globe/click details, 1920/1366/390 layouts, map/Full/PIN controls, tools, tabs, command palette, fresh unsigned public settings links, fullscreen sharing, private query isolation and real Integrations sign-in/licence/failure-persistence/mobile setup. Synthetic fixtures only, external API transport blocked; no upstream availability claim. No uncaught or unexpected browser console errors. Evidence: PARITY/presentation-validation/results.json and screenshots. Local default alignment is complete; broad parity is still partial.
+
+Standalone-map milestone: 548 tests passed/5 skipped, typecheck/lint/build passed. Keyless basemap and bounded initial fallback now apply to Route/Hazard/Aviation maps; original hidden-attribution CSS removed. Metadata for two permitted map sources added, bringing inventory to65 services/119 empty identifiers. Actual font404 repaired with an available Noto font. Native browser verified attributed fallback,3962 real reference ports, Dubai–Rotterdam/Suez alternative model, CSV and Hazard/Aviation recovery. Updated Integrations mobile configuration/disabled cues passed. Source dates remain unknown when not supplied. See docs/BASEMAP_RELIABILITY.md and PARITY/presentation-validation/native-results.json. Broad parity remains incomplete.

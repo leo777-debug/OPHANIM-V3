@@ -1,6 +1,7 @@
 import type * as maplibregl from 'maplibre-gl';
 import type { GeoJSONSourceSpecification } from 'maplibre-gl';
 import type { ProviderMapLayer } from '@/lib/providers/types';
+import { OPEN_FREE_MAP } from './basemap-sources';
 
 const sourceId = (layer: ProviderMapLayer) => `provider-source-${layer.id}`;
 const layerId = (layer: ProviderMapLayer, suffix = 'main') => `provider-layer-${layer.id}-${suffix}`;
@@ -39,7 +40,7 @@ export function bindProviderLayers(map: maplibregl.Map, layers: ProviderMapLayer
           if (useClusters) {
             const clusterId = layerId(layer, 'cluster');
             map.addLayer({ id: clusterId, type: 'circle', source, filter: ['has', 'point_count'], paint: { 'circle-color': paint.color, 'circle-radius': ['interpolate', ['linear'], ['get', 'point_count'], 2, 14, 100, 22, 1000, 30], 'circle-opacity': paint.opacity ?? 0.85, 'circle-stroke-color': '#0b131b', 'circle-stroke-width': 2 } });
-            map.addLayer({ id: layerId(layer, 'cluster-label'), type: 'symbol', source, filter: ['has', 'point_count'], layout: { 'text-field': ['to-string', ['get', 'point_count_abbreviated']], 'text-font': ['Open Sans Bold'], 'text-size': 12, 'text-allow-overlap': true }, paint: { 'text-color': '#081011' } });
+            map.addLayer({ id: layerId(layer, 'cluster-label'), type: 'symbol', source, filter: ['has', 'point_count'], layout: { 'text-field': ['to-string', ['get', 'point_count_abbreviated']], 'text-font': [OPEN_FREE_MAP.clusterFont], 'text-size': 12, 'text-allow-overlap': true }, paint: { 'text-color': '#081011' } });
             const handler = (event: maplibregl.MapLayerMouseEvent) => {
               const feature = event.features?.[0], id = feature?.properties?.cluster_id;
               if (feature?.geometry.type !== 'Point' || typeof id !== 'number' || !Number.isFinite(id)) return;

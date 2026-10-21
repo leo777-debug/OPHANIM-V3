@@ -75,6 +75,8 @@ export async function checkIntegrations({browser,url,owner,viewer,credentials,re
     await page.getByLabel('Optional organization UUID draft',{exact:true}).fill('10000000-0000-4000-8000-000000000001');
     await page.getByRole('button',{name:'Next step',exact:true}).click();
     assert.equal(await page.getByRole('button',{name:'Send synthetic test event',exact:true}).isDisabled(),true);
+    await page.getByText(/Configuration: Not configured/).waitFor();
+    assert.ok(await page.getByRole('button',{name:'Send synthetic test event',exact:true}).evaluate(button=>Number(getComputedStyle(button).opacity)<=.6));
     await page.setViewportSize({width:390,height:844});
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
     await page.screenshot({path:`${output}/screenshots/integrations-mobile-setup.png`});

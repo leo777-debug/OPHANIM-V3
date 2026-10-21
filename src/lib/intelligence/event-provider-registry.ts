@@ -5,7 +5,8 @@ import { gdacsHazardProvider } from './gdacs-provider';
 import { aviationEventProviders } from './aviation-providers';
 import { MARITIME_NETWORK } from '@/lib/route-intelligence/open-network';
 import { COUNTRY_REFERENCE } from './country-gazetteer';
-export const registeredReferenceDatasets = [MARITIME_NETWORK, COUNTRY_REFERENCE];
+import { OPEN_FREE_MAP, NATURAL_EARTH_BASEMAP } from '@/lib/map/basemap-sources';
+export const registeredReferenceDatasets = [MARITIME_NETWORK, COUNTRY_REFERENCE, OPEN_FREE_MAP, NATURAL_EARTH_BASEMAP];
 import {
   validateNormalizedIntelligenceEvent,
   type IntelligenceEventProvider,

@@ -1,0 +1,3 @@
+"model","origin","destination","sea_km","sea_days","closed_passage","closure_days","dataset_version"
+"baseline_model","AEDXB","NLRTM","11613.043342176996","18.662326670936494","suez","7","1.6.0"
+"hypothetical_alternative","AEDXB","NLRTM","20471.238788745162","32.89757339032635","suez","7","1.6.0"

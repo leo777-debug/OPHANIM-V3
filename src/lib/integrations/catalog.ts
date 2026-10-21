@@ -1,4 +1,6 @@
 import countryData from '../intelligence/country-gazetteer.json' with { type: 'json' };
+import basemapSources from '../map/basemap-sources.json' with { type: 'json' };
+const OPEN_FREE_MAP = basemapSources.openFreeMap, NATURAL_EARTH_BASEMAP = basemapSources.naturalEarth;
 const COUNTRY_REFERENCE = countryData.metadata;
 /** Public metadata only. Never put credential values in this module. */
 export interface IntegrationDefinition {
@@ -19,6 +21,13 @@ const entry = (id: string, name: string, area: string, variables: string[], unlo
   ({ id, name, area, variables, unlocks, pricing, signup, fallback, ...(probe ? { probe } : {}) });
 
 export const INTEGRATIONS: IntegrationDefinition[] = [
+  ...[OPEN_FREE_MAP,NATURAL_EARTH_BASEMAP].map(source=>({
+    ...entry(source.id,source.name,'Maps',[],source.id==='openfreemap-dark'?'Keyless interactive basemap':'Labelled local reference fallback',
+      source.id==='openfreemap-dark'?'Free public map display, no account or API key; no promised SLA.':'Bundled public-domain reference, no fee or key.',
+      source.source,'Bundled Natural Earth geography; operational source status is separate.',
+      source.id==='openfreemap-dark'?OPEN_FREE_MAP.styleUrl:undefined),
+    licence:{name:source.licence,commercialUse:source.commercialUse==='yes'?'yes' as const:source.commercialUse==='no'?'no' as const:'unknown' as const,attribution:source.attribution,rateLimits:source.rateLimits,keyNeeded:false,termsUrl:source.termsUrl},
+  })),
   { ...entry('icu-country-labels', COUNTRY_REFERENCE.name, 'Reference data', [], 'Deterministic English/Arabic country and territory dictionary', 'Bundled ICU/CLDR reference, no key, no runtime requests or paid quota.', COUNTRY_REFERENCE.source, 'Local dictionary works offline; ambiguous bare names are withheld.'), licence: { name: COUNTRY_REFERENCE.licence, commercialUse: 'yes', attribution: COUNTRY_REFERENCE.attribution, rateLimits: COUNTRY_REFERENCE.rateLimits, keyNeeded: false, termsUrl: COUNTRY_REFERENCE.termsUrl } },
   { ...entry('faa-public-status', 'FAA public NAS airport status', 'Aviation', [], 'US ground stops, delay programmes and published closure/restriction metadata', 'Keyless public FAA status facts; application cache 120 seconds. Full third-party/operator NOTAM text is not republished.', 'https://nasstatus.faa.gov/', 'Keyless US status metadata; not full NOTAM coverage or flight planning.', 'https://nasstatus.faa.gov/api/airport-status-information'), licence: { name: 'US government public domain, FAA-authored public status metadata', commercialUse: 'yes', attribution: 'Federal Aviation Administration public NAS status; no endorsement. Consult the original notice for scope and exceptions.', rateLimits: 'Published rate limit not specified; one cached fetch per 120 seconds/instance, bounded response', keyNeeded: false, termsUrl: 'https://resources.data.gov/open-licenses/' } },
   { ...entry('awc-us-weather', 'NOAA US airport METAR / TAF', 'Aviation', [], 'Selected continental-US airport weather and forecast watch thresholds', 'Keyless NWS products; upstream maximum 100 requests/minute. App cap 40/minute with spaced requests and 5/10-minute METAR/TAF caches.', 'https://aviationweather.gov/data/api/', 'Keyless K-station subset; broader international reports retain the existing commercial-rights gate.', 'https://aviationweather.gov/api/data/metar?ids=KJFK&format=json'), licence: { name: 'US government public domain, NWS US METAR/TAF products', commercialUse: 'yes', attribution: 'NOAA / National Weather Service Aviation Weather Center. Unaltered raw products; Ophanim watch thresholds are separate and not official decisions.', rateLimits: 'Upstream 100 requests/minute, normally 400 results maximum; app ≤40/minute with ≥800 ms spacing; 20 selected K-stations; METAR 300 s, TAF 600 s caches', keyNeeded: false, termsUrl: 'https://www.weather.gov/disclaimer' } },

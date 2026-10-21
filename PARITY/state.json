@@ -58,21 +58,27 @@
     "baselineTests": "311 passed, 5 skipped",
     "baselineTypecheck": "passed",
     "baselineBuild": "passed",
-    "currentTests": "543 passed, 5 skipped; 121 files passed",
+    "currentTests": "548 passed, 5 skipped; 123 files passed",
     "typecheck": "passed",
-    "build": "passed, Next16.4.2 Webpack (Turbopack dynamic URL incompatibility documented)",
+    "build": "passed, Next16.4.2 Webpack",
     "targetedLint": "passed",
     "publicReachability": "14/14; HTTP only, not freshness/payload",
     "dependencyAudit": "Zero production findings; five high development-only lint-chain findings without compatible fix. See docs/DEPENDENCY_SECURITY.md.",
     "browser": "33 combined production-browser checks passed using disposable SQL, synthetic fixtures, blocked external APIs; evidence presentation-validation/results.json",
     "integrationsBrowser": "7 recorded checks passed with real local routes, synthetic sign-in, licence/key gating, connection failure persistence and mobile setup",
-    "clientSecretScan": "271 browser JavaScript chunks; zero known-token-format findings (limited pattern audit)"
+    "clientSecretScan": "271 browser JavaScript chunks; zero known-token-format findings (limited pattern audit)",
+    "nativeBrowser": "Reference geography/attribution, 3962 clustered ports, real route/closure rendering and CSV, Hazard/Aviation recovery passed"
   },
   "overallStatus": "in_progress",
-  "resumeInstruction": "Use attached parity-default-alignment worktree on parity-and-reliability; preserve original detached checkout and dirty files. Baseline reconciliation verified. Continue 01-integrations and broad P1-P4 work from report; inspect standalone basemap and optional setup usability next. PR25 remains draft on old base; correct base/push/deployment only in final delivery phase. Merge only after requested work is complete; deployment last.",
+  "resumeInstruction": "Use attached parity-default-alignment worktree on parity-and-reliability. Preserve original detached checkout/dirty files. Baseline and standalone map recovery verified. Continue 01-integrations (remaining protocol adapters, optional service profiles, universal configuration prompts), then broad P1-P4 tasks in REPORT. PR25 still draft on old base; final push/base correction/deployment/merge remain. Deployment last.",
   "baselineCommit": "d22f6a060a1a98c77343764e785db6b6ec60f7e7",
   "pullRequest": "https://github.com/leo777-debug/OPHANIM-V3/pull/25",
   "preserveExistingChanges": true,
   "worldMonitorCodeUsed": false,
-  "originalFoundationCommit": "e0898ef"
+  "originalFoundationCommit": "e0898ef",
+  "activeMilestone": {
+    "id": "01a-keyless-standalone-maps",
+    "status": "done",
+    "evidence": "548 tests/5 skipped, typecheck/lint/build passed; native and updated integrations browser checks passed. See presentation-validation/native-results.json."
+  }
 }

@@ -7,6 +7,9 @@ import DynamicProviderLayers from './DynamicProviderLayers';
 import type { ProviderMapLayer } from '@/lib/providers';
 import type { MapViewport } from '@/lib/map-workspaces';
 import { geoJsonArray } from '@/lib/map/geojson-properties';
+import { atlasFallbackBasemap } from '@/lib/presentation/basemap';
+import { bindBasemapFallback } from '@/lib/map/basemap-fallback';
+import { OPEN_FREE_MAP } from '@/lib/map/basemap-sources';
 
 maplibregl.setWorkerUrl(new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url).toString());
 
@@ -65,6 +68,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
   const mapRef = useRef<maplibregl.Map | null>(null);
   const popupRef = useRef<maplibregl.Popup | null>(null);
   const [mapReady, setMapReady] = useState(false);
+  const [basemapFallback, setBasemapFallback] = useState(false);
   const prevStyleRef = useRef<'dark' | 'earth' | 'satellite'>('dark');
 
   // Create aircraft icon on canvas (for WebGL symbol layer)
@@ -182,7 +186,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     if (!containerRef.current || mapRef.current) return;
 
     // Select basemap style
-    const styleUrl = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
+    const styleUrl = OPEN_FREE_MAP.styleUrl;
 
     const map = new maplibregl.Map({
       container: containerRef.current,
@@ -191,17 +195,12 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
       zoom: initialView?.zoom ?? 6.5,
       minZoom: publicPresentation ? .5 : 1.5,
       maxZoom: 18,
-      attributionControl: false,
+      attributionControl: publicPresentation ? false : { compact: false },
       maxPitch: 85,
-      // Load CARTO basemap tiles DIRECTLY in the browser. Previously every tile
-      // was routed through /api/proxy-tiles, so the map fired dozens of server-side
-      // tile fetches per pan/zoom — when CARTO was momentarily slow these hung and
-      // poisoned the Next server's shared outbound connection pool, which silently
-      // broke the data feeds (CCTV, earthquakes, malware, …). CARTO's public tiles
-      // are CORS-enabled (Access-Control-Allow-Origin: *), so direct loading is
-      // correct, faster, and keeps the server's fetch pool healthy for real data.
+      // Browser tile requests stay separate from the backend data-feed pool.
       transformRequest: (url: string) => ({ url }),
     });
+    const releaseFallback = publicPresentation ? () => {} : bindBasemapFallback(map, atlasFallbackBasemap, () => setBasemapFallback(true));
 
     map.on('error', (event) => {
       // Switching a raster layer can cancel an obsolete tile request. MapLibre
@@ -1217,7 +1216,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     });
 
     }
-    return () => { map.remove(); mapRef.current = null; };
+    return () => { releaseFallback(); map.remove(); mapRef.current = null; };
   }, []);
 
   // Day/Night
@@ -1833,6 +1832,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
 
   return <>
     <div ref={containerRef} className="absolute inset-0 w-full h-full" />
+    {basemapFallback && <p role="status" className="absolute left-2 top-2 z-10 max-w-[80%] rounded bg-black/80 px-2 py-1 text-xs text-white">Natural Earth reference basemap · remote basemap unavailable. Operational data freshness is separate.</p>}
     <DynamicProviderLayers map={mapReady ? mapRef.current : null} layers={providerLayers} onEntityClick={onEntityClick} />
   </>;
 }
