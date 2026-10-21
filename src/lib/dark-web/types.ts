@@ -26,7 +26,8 @@ export interface DarkWebProviderMetadata {
 }
 
 export interface DarkWebSearchQuery { query: string; entityTypes: DarkWebEntityType[]; limit: number; historical?: boolean; }
-export interface DarkWebProviderContext { signal: AbortSignal; organizationId: string; }
+/** allowedTerms: the tenant's own registered identifiers (domains, IMOs, ports, names). Licensed adapters only query these. */
+export interface DarkWebProviderContext { signal: AbortSignal; organizationId: string; allowedTerms?: string[]; }
 export interface DarkWebRawMention {
   providerDocumentId: string;
   sourceCategory: DarkWebSourceCategory;

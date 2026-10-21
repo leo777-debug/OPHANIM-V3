@@ -5,7 +5,7 @@
   "worktree": "D:/OPHANIM/worktrees/job-file-core",
   "current_phase": "W2",
   "current_task": "W2-deep-watch",
-  "last_commit": "2fc5184",
+  "last_commit": "32f0ee6",
   "updated_at": "2026-10-21",
   "tasks": [
     {
@@ -82,5 +82,6 @@
     }
   ],
   "resumeInstruction": "Read JOBFILE/DESIGN.md, PROGRESS.md and this file. Work only in the worktree above. Never edit, checkout, reset or pull in C:/Users/Leonard/OneDrive/Documents/OPHANIM-V3 2 or C:/Users/Leonard/.codex/worktrees/parity-default-alignment/OPHANIM-V3 2. One ledger: extend ophanim_forecasts. Commit per task. Open PR; never merge or deploy.",
-  "pullRequest": null
+  "pullRequest": null,
+  "resumeNext": "W2 remaining: extend registerShipmentEntity/synchronizeOperationalEntities with ports (UN/LOCODE), job-file references and client domains; add /api/dark-web/corridor route and exposure-scan cron using deep-watch.ts; tests for threat categories, content filter, licensed adapters. Then W4a/W4b Panel, W3 Route Lens, docs, catalog env vars (WINDY_WEBCAMS_API_KEY, HIBP_API_KEY, DEEPWATCH_FEED_*), regenerate .env.example, update PR 26."
 }
