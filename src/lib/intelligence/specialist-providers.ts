@@ -3,6 +3,7 @@ import Parser from 'rss-parser';
 import { ResilientFeed } from '@/lib/providers/resilient-feed';
 import { safeSourceUrl } from './news';
 import type { IntelligenceEventProvider, NormalizedIntelligenceEvent } from './event-provider';
+import researchSources from './research-sources.json';
 
 export interface SpecialistSource {
   id: string; name: string; url: string; licence: string; commercialUse: 'yes' | 'no' | 'unknown';
@@ -11,7 +12,7 @@ export interface SpecialistSource {
 }
 const nwsTerms = 'https://www.weather.gov/disclaimer';
 export const SPECIALIST_SOURCES: SpecialistSource[] = [
-  { id: 'noaa-public-warnings', name: 'NOAA/NWS public weather warnings', url: 'https://api.weather.gov/alerts/active?status=actual&message_type=alert', licence: 'US government public domain (NWS-authored text)', commercialUse: 'yes', termsUrl: nwsTerms, attribution: 'NOAA / National Weather Service; no endorsement. Source-authored warning text.', rateLimits: 'Upstream limit not published; application cache 5 minutes, one concurrent request/source/instance', keyNeeded: false, language: 'en', region: 'United States', kind: 'public_warning', format: 'nws' },
+  researchSources.find(source => source.id === 'noaa-public-warnings') as SpecialistSource,
   ...[
     ['nhc-atlantic', 'NHC Atlantic cyclone advisories', 'https://www.nhc.noaa.gov/index-at.xml', 'en', 'Atlantic'],
     ['nhc-pacific', 'NHC Eastern Pacific cyclone advisories', 'https://www.nhc.noaa.gov/index-ep.xml', 'en', 'Eastern Pacific'],

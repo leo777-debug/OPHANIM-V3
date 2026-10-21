@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-10-21T01:20:47.030Z",
+  "checkedAt": "2026-10-21T02:00:28.777Z",
   "checks": [
     {
       "name": "Disposable local database: full migration chain, external APIs blocked"
@@ -15,6 +15,9 @@
     },
     {
       "name": "Actual connection failure records its time/error, survives reload, and never invents a successful fetch"
+    },
+    {
+      "name": "Research setup opens the actual guide with its one-command restricted profile and explicit uncertainty"
     },
     {
       "name": "Credential-free SDK wizard gates diagnostics when unconfigured and fits the mobile viewport"

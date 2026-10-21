@@ -15,6 +15,8 @@ export interface SandboxResearchSource {
   url: string;
   publishedAt?: string;
   excerpt?: string;
+  attribution?: string;
+  licence?: string;
 }
 
 export interface SandboxResearchResult {
@@ -83,8 +85,11 @@ function normalizeResult(value: unknown): SandboxResearchResult {
     return url && title ? [{
       title,
       url,
-      ...(text(source.publishedAt, 80) ? { publishedAt: text(source.publishedAt, 80) } : {}),
+      ...(typeof source.publishedAt === 'string' && Number.isFinite(Date.parse(source.publishedAt)) && Date.parse(source.publishedAt) <= Date.now() + 300000
+        ? { publishedAt: new Date(source.publishedAt).toISOString() } : {}),
       ...(text(source.excerpt, 1_200) ? { excerpt: text(source.excerpt, 1_200) } : {}),
+      ...(text(source.attribution, 300) ? { attribution: text(source.attribution, 300) } : {}),
+      ...(text(source.licence, 300) ? { licence: text(source.licence, 300) } : {}),
     }] : [];
   }) : [];
   const riskIndicator = ['low', 'moderate', 'high'].includes(String(raw.riskIndicator))

@@ -22,6 +22,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import type { IntelligenceContext } from '@/lib/ai-engine';
+import type { SandboxResearchResult } from '@/lib/ai/sandbox-research';
 
 /* ═══════════════════════════════════════════════════════════════
    OPHANIM — AI Intelligence Analyst Panel
@@ -100,7 +101,7 @@ interface ChatMessage {
   content: string;
   timestamp: string;
   isError?: boolean;
-  sources?: Array<{ title: string; url: string }>;
+  sources?: SandboxResearchResult['sources'];
 }
 
 interface AiAnalystProps {
@@ -426,14 +427,14 @@ export default function AiAnalyst({ data, mode = 'briefing', embedded = false }:
       });
       const payload = await response.json() as {
         error?: string;
-        research?: { summary: string; riskIndicator: string; uncertainty: string; sources: Array<{ title: string; url: string }> };
+        research?: SandboxResearchResult;
       };
       if (!response.ok || !payload.research) throw new Error(payload.error || `HTTP ${response.status}`);
       const research = payload.research;
       setMessages((previous) => [...previous, {
         id: generateId(),
         role: 'analyst',
-        content: `SANDBOX SOURCE ASSESSMENT\n\nRisk indicator: ${research.riskIndicator.toUpperCase()}\n\n${research.summary}\n\nUncertainty: ${research.uncertainty}`,
+        content: `SOURCE RESEARCH\n\nRisk indicator: ${research.riskIndicator.toUpperCase()}\n\n${research.summary}\n\nUncertainty: ${research.uncertainty}\n\nSource retrieval: ${research.collectedAt ?? 'unknown'}. Response received: ${research.retrievedAt}.\n\nLimitations:\n${research.limitations.join('\n')}`,
         timestamp: new Date().toISOString(),
         sources: research.sources,
       }]);
@@ -842,9 +843,10 @@ export default function AiAnalyst({ data, mode = 'briefing', embedded = false }:
                           <span className="text-[8px] font-mono tracking-[0.14em] text-[var(--text-muted)]">SANDBOX SOURCES</span>
                           <div className="mt-1.5 space-y-1">
                             {msg.sources.map((source) => (
-                              <a key={source.url} href={source.url} target="_blank" rel="noreferrer" className="block truncate text-[9px] font-mono text-[var(--cyan-primary)] hover:underline">
-                                {source.title}
-                              </a>
+                              <div key={source.url} className="break-words text-[9px] font-mono">
+                                <a href={source.url} target="_blank" rel="noreferrer" className="block text-[var(--cyan-primary)] hover:underline">{source.title}</a>
+                                <p className="text-[var(--text-muted)]">Published: {source.publishedAt ?? 'unknown'}{source.attribution ? ` · ${source.attribution}` : ''}{source.licence ? ` · ${source.licence}` : ''}</p>
+                              </div>
                             ))}
                           </div>
                         </div>

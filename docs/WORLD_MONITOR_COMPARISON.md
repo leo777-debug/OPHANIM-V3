@@ -238,3 +238,11 @@ Integration model probes now isolate hosted and embedding credentials and keep
 local inference keyless. Invalid server configuration is recorded as a redacted
 Error observation without network activity. A real loopback transport test
 verifies the headers received by each provider. No World Monitor code was used.
+
+The optional research Compose profile now packages Ophanim's own restricted
+official-feed worker. It performs deterministic subject-token lookup of the
+registered USGS and NWS feeds, preserves source dates/attribution and reports
+unknown risk, outages and limited coverage. It does not run browser tasks, code
+or AI. The worker receives only a dedicated secret and cannot fetch caller URLs.
+The public setup guides remain reachable during Presentation Map mode without
+unlocking protected features. No World Monitor code or services were used.

@@ -25,4 +25,12 @@ describe('sandbox research adapter', () => {
     await expect(researchInSandbox({ subject: 'Port closure', purpose: 'confirm' })).rejects.toThrow('Service not running'); expect(mocks.transport).toHaveBeenCalledTimes(1);
     vi.stubEnv('AI_SANDBOX_RESEARCH_TOKEN', ''); await expect(researchInSandbox({ subject: 'Port closure', purpose: 'confirm' })).rejects.toThrow('not configured'); expect(mocks.transport).toHaveBeenCalledTimes(1);
   });
+  it('leaves invalid and future publication timestamps unknown', async () => {
+    mocks.transport.mockResolvedValueOnce('{}').mockResolvedValueOnce(JSON.stringify({
+      summary: 'Fixture', sources: ['invalid', '2999-01-01'].map(publishedAt => ({ title: 'Fixture source', url: 'https://source.example/notice', publishedAt })),
+    }));
+    const result = await researchInSandbox({ subject: 'Public notice', purpose: 'confirm' });
+    expect(result.sources).toHaveLength(2);
+    expect(result.sources.every(source => source.publishedAt === undefined)).toBe(true);
+  });
 });

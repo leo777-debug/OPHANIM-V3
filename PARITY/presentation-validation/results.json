@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-10-21T00:56:51.659Z",
+  "checkedAt": "2026-10-21T07:20:03.313Z",
   "checks": [
     {
       "name": "Disposable local database: full migration chain, external APIs blocked"
@@ -30,7 +30,7 @@
     },
     {
       "name": "Runtime database switch without redeploy",
-      "applyMilliseconds": 198
+      "applyMilliseconds": 730
     },
     {
       "name": "All restored reference and signal layers enabled; dense camera fixture is not dropped"
@@ -43,27 +43,27 @@
             "width": 1920,
             "height": 1080
           },
-          "shellReadyMilliseconds": 761,
-          "readyMilliseconds": 4253,
-          "pixelCheckedMilliseconds": 7531
+          "shellReadyMilliseconds": 2444,
+          "readyMilliseconds": 12403,
+          "pixelCheckedMilliseconds": 18564
         },
         {
           "viewport": {
             "width": 1366,
             "height": 768
           },
-          "shellReadyMilliseconds": 1557,
-          "readyMilliseconds": 5859,
-          "pixelCheckedMilliseconds": 11302
+          "shellReadyMilliseconds": 2316,
+          "readyMilliseconds": 11035,
+          "pixelCheckedMilliseconds": 17222
         },
         {
           "viewport": {
             "width": 390,
             "height": 844
           },
-          "shellReadyMilliseconds": 1121,
-          "readyMilliseconds": 5657,
-          "pixelCheckedMilliseconds": 9885
+          "shellReadyMilliseconds": 2956,
+          "readyMilliseconds": 10754,
+          "pixelCheckedMilliseconds": 16466
         }
       ]
     },
@@ -120,6 +120,9 @@
     },
     {
       "name": "Actual connection failure records its time/error, survives reload, and never invents a successful fetch"
+    },
+    {
+      "name": "Research setup opens the actual guide with its one-command restricted profile and explicit uncertainty"
     },
     {
       "name": "Credential-free SDK wizard gates diagnostics when unconfigured and fits the mobile viewport"

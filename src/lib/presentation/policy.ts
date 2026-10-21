@@ -7,6 +7,8 @@ export function resolvePresentationView(settings: PresentationSettings, requeste
 }
 
 export function presentationDestination(path: string, settings: PresentationSettings, view: PresentationView, adminLogin = false): string | null {
+  // Public setup instructions contain no organization data or full-platform tools.
+  if (path === '/docs/research-setup' || path === '/docs/sdk-setup') return null;
   if (!settings.enabled || path.startsWith('/api/') || path.startsWith('/admin') || (path === '/login' && adminLogin)) return null;
   if (path.startsWith('/presentation')) return view === 'full' && path === '/presentation' ? '/operations?view=full' : null;
   if (view === 'full') return null;

@@ -1,0 +1,32 @@
+[
+  {
+    "id": "usgs-earthquakes",
+    "name": "USGS Earthquake Hazards",
+    "url": "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_day.geojson",
+    "licence": "US government public domain (USGS-produced earthquake data)",
+    "commercialUse": "yes",
+    "termsUrl": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits",
+    "attribution": "U.S. Geological Survey. No endorsement; excludes third-party media.",
+    "rateLimits": "Research worker cache 5 minutes, one request/source/instance; upstream summary publishes every minute, no universal request quota assumed",
+    "keyNeeded": false,
+    "language": "en",
+    "region": "Global; magnitude 4.5+ earthquakes in the past day only",
+    "kind": "earthquake",
+    "format": "usgs"
+  },
+  {
+    "id": "noaa-public-warnings",
+    "name": "NOAA/NWS public weather warnings",
+    "url": "https://api.weather.gov/alerts/active?status=actual&message_type=alert",
+    "licence": "US government public domain (NWS-authored text)",
+    "commercialUse": "yes",
+    "termsUrl": "https://www.weather.gov/disclaimer",
+    "attribution": "NOAA / National Weather Service; no endorsement. Source-authored warning text.",
+    "rateLimits": "Upstream limit not published; application cache 5 minutes, one concurrent request/source/instance",
+    "keyNeeded": false,
+    "language": "en",
+    "region": "United States",
+    "kind": "public_warning",
+    "format": "nws"
+  }
+]

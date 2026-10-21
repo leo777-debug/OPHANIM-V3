@@ -23,6 +23,28 @@ are recorded as redacted Error observations without sending a request. A real
 loopback transport test verifies credential isolation. No real keys were read or
 used. See docs/INTEGRATION_CREDENTIALS.md.
 
+The optional research profile now bundles a restricted deterministic official-feed
+worker. Compose configuration and real local HTTP worker/application tests pass;
+actual container execution remains unverified because Docker's engine is stopped.
+It uses no model/keyed upstream and returns unknown risk, explicit limited coverage
+and dated evidence. A dedicated founder-supplied token still gates use. Broader
+browser research, VoidAccess/Recon packaging and other optional profiles remain.
+
+The worker reuses two existing registry sources; shared metadata is also visible
+in Integrations. Its source requests use fixed URLs, pinned public DNS, no redirects,
+eight-second deadlines, 4 MB bounds and five-minute caches including failures.
+It never forwards subject/context or application credentials upstream.
+
+| Worker source | Licence | Commercial use | Attribution / refresh | Default |
+| --- | --- | --- | --- | --- |
+| USGS M4.5+ past-day earthquakes | Public domain, USGS-produced data; excludes third-party media | yes | U.S. Geological Survey; worker cache 5 minutes, upstream summary every minute | Existing public source on; research off until dedicated configuration |
+| Active US NWS warning text | US government public domain, NWS-authored text | yes | NOAA/NWS; worker cache 5 minutes, source cadence varies | Existing public source on; research off until dedicated configuration |
+
+A local pinned-source GET audit at 01:45 UTC on 21 October returned 22 USGS events
+and 166 NWS warnings with source timestamps. This is point-in-time availability,
+not a continuing guarantee. No credentials/queries/context were sent. See
+research-source-audit.json and docs/RESEARCH_SETUP.md. No World Monitor code used.
+
 Admin → Integrations is owner-protected, searchable and environment-only. Credentials
 are never accepted, echoed or stored by this page/API. Environment presence is
 separate from observation. Read-only adapters test registered public endpoints,
@@ -252,18 +274,18 @@ changes are preserved. `.env.example` was intentionally consolidated. The branch
 inherits local committed work newer than the remote foundation branch; its PR must
 disclose that ancestry. The new work does not justify merging unfinished parity.
 Draft pull request: https://github.com/leo777-debug/OPHANIM-V3/pull/25. Not merged.
-All checks above ran against the shared checkout, which includes preserved
-pre-existing uncommitted work. A clean-checkout CI run remains required before merge.
+Current combined checks run in the attached isolated parity-default-alignment
+worktree. Original checkout changes remain preserved. Earlier shared-checkout
+results below are historical; clean remote CI remains required before merge.
 
-**Baseline reconciliation required.** GitHub reports the actual default branch as
-`feat/gdacs-weather-ai-overview`, fetched at `d22f6a0`; this working branch lacks 21
-of its commits. They contain Presentation mode, operational homepage, fullscreen,
+**Baseline reconciled; PR correction pending.** The actual default branch is
+`feat/gdacs-weather-ai-overview`, fetched at `d22f6a0`; its 21 missing commits
+were integrated at `ee7837d`. They contain Presentation mode, operational homepage, fullscreen,
 entity selection, Vercel output and AI reliability/configuration changes. PR #25
 currently targets the older `codex/ophanim-foundation-worldmonitor` instead.
-This was discovered during the browser/ancestry audit; previous checks do not
-validate preservation of the current default branch. Integrate in an isolated
-worktree, preserve unrelated local edits, retarget the draft PR appropriately and
-re-run regressions before any merge or deployment. See task 00a in state.json.
+The combined baseline has passed unit/build and Presentation browser regressions.
+Retarget the draft PR and run remote CI at final delivery. Deployment stays last,
+as requested. Full parity must be completed before the authorized merge.
 
 Combined default integration (20 October): default d22f6a0 is now reconciled in the isolated managed worktree, preserving Presentation, shared map and current AI behavior with server-only credentials. Anonymous demo auth fallback removed to maintain session requirements. Clean combined suite: 529 passed, 5 skipped; typecheck/build/targeted lint passed. Earlier screenshots/checks remain historical. Dependency audit contains critical Next.js/MapLibre findings; remediation and renewed browser checks are pending. PR base has not yet been retargeted.
 
@@ -276,3 +298,5 @@ Dependency remediation: Next16.4.2/MapLibre6.15.0/Sharp0.35.5 pinned, compatible
 Combined baseline verification completed21 October:33 production-browser integration checks passed. This includes actual rendered globe/click details, 1920/1366/390 layouts, map/Full/PIN controls, tools, tabs, command palette, fresh unsigned public settings links, fullscreen sharing, private query isolation and real Integrations sign-in/licence/failure-persistence/mobile setup. Synthetic fixtures only, external API transport blocked; no upstream availability claim. No uncaught or unexpected browser console errors. Evidence: PARITY/presentation-validation/results.json and screenshots. Local default alignment is complete; broad parity is still partial.
 
 Standalone-map milestone: 548 tests passed/5 skipped, typecheck/lint/build passed. Keyless basemap and bounded initial fallback now apply to Route/Hazard/Aviation maps; original hidden-attribution CSS removed. Metadata for two permitted map sources added, bringing inventory to65 services/119 empty identifiers. Actual font404 repaired with an available Noto font. Native browser verified attributed fallback,3962 real reference ports, Dubai–Rotterdam/Suez alternative model, CSV and Hazard/Aviation recovery. Updated Integrations mobile configuration/disabled cues passed. Source dates remain unknown when not supplied. See docs/BASEMAP_RELIABILITY.md and PARITY/presentation-validation/native-results.json. Broad parity remains incomplete.
+
+Latest 01c checkpoint: 564 tests passed, 5 skipped; typecheck, targeted lint and production build passed. Fresh full production-browser run passed 34 checks, including the public research setup guide and unchanged map/Presentation/auth flows. Screenshots inspected; see research-worker-validation.json and presentation-validation/results.json. Earlier combined network-suspension failure was followed by a fresh successful run; assertions were retained. Broad P1-P4 coverage remains partial and the PR is not ready to merge.

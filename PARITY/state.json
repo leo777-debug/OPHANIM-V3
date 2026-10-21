@@ -16,7 +16,7 @@
     {
       "id": "01-integrations",
       "status": "partial",
-      "remaining": "Research/SDK setup guides and diagnostic gating added. Remaining protocol connection adapters, per-operator inventory and universal missing-key prompts/test gating"
+      "remaining": "Restricted research Compose worker and SDK wizard added. Remaining optional service packaging, protocol adapters, operator inventory and universal missing-key/sign-in prompts; actual Docker runtime verification remains pending."
     },
     {
       "id": "02-core-intelligence",
@@ -58,27 +58,28 @@
     "baselineTests": "311 passed, 5 skipped",
     "baselineTypecheck": "passed",
     "baselineBuild": "passed",
-    "currentTests": "552 passed, 5 skipped; 124 files passed",
+    "currentTests": "564 passed, 5 skipped; 127 files passed",
     "typecheck": "passed",
     "build": "passed, Next16.4.2 Webpack",
     "targetedLint": "passed",
     "publicReachability": "14/14; HTTP only, not freshness/payload",
     "dependencyAudit": "Zero production findings; five high development-only lint-chain findings without compatible fix. See docs/DEPENDENCY_SECURITY.md.",
-    "browser": "33 combined production-browser checks passed using disposable SQL, synthetic fixtures, blocked external APIs; evidence presentation-validation/results.json",
-    "integrationsBrowser": "7 recorded checks passed with real local routes, synthetic sign-in, licence/key gating, connection failure persistence and mobile setup",
-    "clientSecretScan": "271 browser JavaScript chunks; zero known-token-format findings (limited pattern audit)",
-    "nativeBrowser": "Reference geography/attribution, 3962 clustered ports, real route/closure rendering and CSV, Hazard/Aviation recovery passed"
+    "browser": "34 combined production-browser checks passed using disposable SQL, synthetic fixtures and blocked external APIs; presentation-validation/results.json",
+    "integrationsBrowser": "7 recorded checks passed: actual auth/API/storage, key/licence/error gating, research guide including ordered steps and mobile SDK setup",
+    "clientSecretScan": "273 browser JavaScript chunks; zero known-token-format findings (limited pattern audit)",
+    "nativeBrowser": "Reference geography/attribution, 3962 clustered ports, real route/closure rendering and CSV, Hazard/Aviation recovery passed",
+    "researchWorker": "Real local HTTP/adapter/auth/privacy/cache/bounds tests passed; Compose configuration validated. Docker engine stopped: no actual container claim. Two live fixed keyless endpoints passed; research-source-audit.json."
   },
   "overallStatus": "in_progress",
-  "resumeInstruction": "Use attached parity-default-alignment worktree on parity-and-reliability. Preserve original detached checkout/dirty files. Baseline and standalone map recovery verified. Continue 01-integrations (remaining protocol adapters, optional service profiles, universal configuration prompts), then broad P1-P4 tasks in REPORT. PR25 still draft on old base; final push/base correction/deployment/merge remain. Deployment last.",
+  "resumeInstruction": "Use attached parity-default-alignment worktree on parity-and-reliability. Current 01c committed after 564 tests, type/lint/build and 34 browser checks. Continue 01-integrations: health-worker least-privilege environment and robust poll interval/healthcheck, other optional profiles/adapters, universal missing-key/sign-in prompts. Then broad P1-P4 in REPORT. Preserve original detached dirty checkout. PR25 draft still old base. Deployment, remote push/base correction and merge stay final.",
   "baselineCommit": "d22f6a060a1a98c77343764e785db6b6ec60f7e7",
   "pullRequest": "https://github.com/leo777-debug/OPHANIM-V3/pull/25",
   "preserveExistingChanges": true,
   "worldMonitorCodeUsed": false,
   "originalFoundationCommit": "e0898ef",
   "activeMilestone": {
-    "id": "01b-credential-probe-isolation",
+    "id": "01c-restricted-research-profile",
     "status": "done",
-    "evidence": "552 tests/5 skipped, typecheck, targeted lint and production build passed. Real loopback transport confirms isolated credentials; malformed configuration produces redacted observations without egress."
+    "evidence": "564 tests/5 skipped, standalone typecheck, targeted lint, production build and 34 combined browser checks passed. Container execution unverified; Docker engine unavailable. See research-worker-validation.json."
   }
 }

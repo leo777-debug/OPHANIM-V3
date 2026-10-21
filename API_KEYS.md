@@ -25,7 +25,7 @@ Pricing/quotas vary by plan and may change. “Keyless” describes access, not 
 | Google Gemini | `GEMINI_API_KEY_1` | Legacy Gemini briefings; numbered key slots 1–8 | Free and paid quotas vary by model/project; consult the linked pricing. | [Provider](https://ai.google.dev/gemini-api/docs/pricing) | OpenAI-compatible or local AI; otherwise deterministic views. |
 | Local / compatible embeddings | `EMBEDDING_BASE_URL`, `EMBEDDING_MODEL` | Knowledge semantic search | Local compute or provider-specific billing; no universal free quota. | [Provider](https://docs.ollama.com/) | Keyword search; semantic indexing waits for a model server. |
 | Ollama / LM Studio | `OPHANIM_LOCAL_BASE_URL`, `OPHANIM_LOCAL_MODEL` | Private model inference | Self-hosted compute; model licences vary. | [Provider](https://docs.ollama.com/) | Public feeds and deterministic analysis work without inference. |
-| Isolated research sandbox | `AI_SANDBOX_RESEARCH_URL`, `AI_SANDBOX_RESEARCH_TOKEN` | Authorized sandbox research | Self-hosted; no bundled hosted service or free quota. | [Provider](https://github.com/leo777-debug/OPHANIM-V3) | Research disabled until configured and tested. |
+| Isolated research sandbox | `AI_SANDBOX_RESEARCH_URL`, `AI_SANDBOX_RESEARCH_TOKEN` | Restricted official-feed research or your authorized worker | Self-hosted restricted worker bundled; no model/API fee; external workers have their own costs. | [Provider](https://github.com/leo777-debug/OPHANIM-V3) | Research disabled until configured and tested. |
 | VoidAccess | `VOIDACCESS_API_URL` | Private authorized research worker; requires token or service account | Self-hosted/service-specific terms. | [Provider](https://github.com/leo777-debug/OPHANIM-V3) | Optional worker disabled; public discovery continues. |
 | Recon scanner | `SCANNER_URL`, `SCANNER_KEY` | Authorized defensive scanning | Self-hosted compute; no hosted quota. | [Provider](https://github.com/leo777-debug/OPHANIM-V3) | Scanner unavailable until service is running. |
 | Entity resolver | `INTEL_URL` | Optional isolated entity resolver | Self-hosted compute. | [Provider](https://github.com/leo777-debug/OPHANIM-V3) | Local dictionary correlation does not need this service. |
@@ -56,7 +56,7 @@ Pricing/quotas vary by plan and may change. “Keyless” describes access, not 
 | Official sanctions feeds | `OFFICIAL_SANCTIONS_FEED_URL` | Authoritative sanctions updates | Source-specific permissions and limits; not a compliance certification. | [Provider](https://ofac.treasury.gov/sanctions-list-service) | Existing reference screening has separate provenance. |
 | Reviewed public observations | `REVIEWED_OSINT_FEED_URL` | Organization-approved public incident discovery | Source-specific permissions and limits. | [Provider](https://github.com/leo777-debug/OPHANIM-V3) | Other public hazard feeds continue. |
 | Verification observations | `VERIFY_OBSERVATIONS_URL` | Corroborating public evidence | Disabled unless explicit licence and commercial-use review pass. | [Provider](https://github.com/leo777-debug/OPHANIM-V3) | No fabricated corroboration. |
-| USGS Earthquake Hazards | None | Earthquake observations | Keyless public feed; app polls every 15 minutes. | [Provider](https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php) | Keyless default. |
+| USGS Earthquake Hazards | None | Earthquake observations | Keyless public feed; app polls every 15 minutes; optional research worker caches five minutes. | [Provider](https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php) | Keyless default. |
 | NASA FIRMS / EONET | None | Public fires and natural events | Keyless public datasets; optional FIRMS map key has its own transaction quota. | [Provider](https://eonet.gsfc.nasa.gov/docs/v3) | Keyless CSV/EONET. |
 | NASA FIRMS area API (reserved) | `FIRMS_API_KEY` | Optional area API; current CSV ingestion does not consume this key | Free map key; documented transaction limits apply. | [Provider](https://firms.modaps.eosdis.nasa.gov/api/map_key/) | Keyless FIRMS CSV; reserved variable is not an implemented adapter. |
 | GDACS | None | Disaster alerts | Keyless RSS; commercial redistribution requires terms review. | [Provider](https://www.gdacs.org/) | USGS/EONET overlap only; no guaranteed replacement. |
@@ -87,8 +87,8 @@ This table includes credentials, local-service settings, safety gates and runtim
 | AI | `AI_ENABLED_TASKS` | Optional runtime setting; leave empty to use the documented code default. |
 | AI | `AI_LOCAL_BASE_URLS` | Optional runtime setting; leave empty to use the documented code default. |
 | AI | `AI_MODEL` | Optional labelled summaries and explanations |
-| Optional services | `AI_SANDBOX_RESEARCH_TOKEN` | Authorized sandbox research |
-| Optional services | `AI_SANDBOX_RESEARCH_URL` | Authorized sandbox research |
+| Optional services | `AI_SANDBOX_RESEARCH_TOKEN` | Restricted official-feed research or your authorized worker |
+| Optional services | `AI_SANDBOX_RESEARCH_URL` | Restricted official-feed research or your authorized worker |
 | Platform | `APP_INTERNAL_URL` | Optional runtime setting; leave empty to use the documented code default. |
 | Platform | `APP_URL` | Optional runtime setting; leave empty to use the documented code default. |
 | Maritime | `CUSTOMER_AIS_API_TOKEN` | Server-only credential; configure only for the associated optional feature. |

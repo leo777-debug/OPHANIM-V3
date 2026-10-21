@@ -18,8 +18,10 @@ export async function checkIntegrations({browser,url,owner,viewer,credentials,re
 
   const context=await browser.newContext({viewport:{width:1366,height:768}});
   await context.route('**/*',route=>new URL(route.request().url()).origin===url?route.continue():route.fulfill({status:204,body:''}));
-  const page=await context.newPage(),errors=[];
+  const page=await context.newPage(),errors=[],requests=[];
   page.on('pageerror',error=>errors.push(error.message));
+  page.on('response',response=>{const path=new URL(response.url()).pathname;if(['/api/platform/integrations','/api/auth/me'].includes(path))requests.push({path,status:response.status()});});
+  page.on('requestfailed',request=>requests.push({path:new URL(request.url()).pathname,error:request.failure()?.errorText}));
   try {
     await page.goto(url+'/admin/integrations',{waitUntil:'domcontentloaded'});
     const login=page.getByRole('link',{name:'Sign in to see your organization’s data',exact:true});
@@ -70,6 +72,17 @@ export async function checkIntegrations({browser,url,owner,viewer,credentials,re
     await page.screenshot({path:`${output}/screenshots/integrations-owner.png`});
     pass('Actual connection failure records its time/error, survives reload, and never invents a successful fetch');
 
+    await page.getByLabel(/^Service to configure/).selectOption('research');
+    await page.getByText(/Use the bundled research Compose profile/).waitFor();
+    await page.getByRole('link',{name:'Read the full setup guide',exact:true}).click();
+    await page.getByRole('heading',{name:'Research service setup',exact:true}).waitFor();
+    await page.getByText('docker compose -f docker-compose.yml -f docker-compose.research.yml --profile research up -d --build',{exact:true}).waitFor();
+    await page.getByText(/Risk always remains unknown/).waitFor();
+    assert.deepEqual(await page.locator('article ol').evaluateAll(lists=>lists.slice(0,5).map(list=>list.start)),[1,2,3,4,5]);
+    await page.screenshot({path:`${output}/screenshots/research-setup-guide.png`});
+    await page.goto(url+'/admin/integrations',{waitUntil:'domcontentloaded'});
+    await page.getByRole('heading',{name:'External services',exact:true}).waitFor();
+    pass('Research setup opens the actual guide with its one-command restricted profile and explicit uncertainty');
     await page.getByLabel(/^Service to configure/).selectOption('sdk');
     await page.getByRole('button',{name:'Next step',exact:true}).click();
     await page.getByLabel('Optional organization UUID draft',{exact:true}).fill('10000000-0000-4000-8000-000000000001');
@@ -83,5 +96,9 @@ export async function checkIntegrations({browser,url,owner,viewer,credentials,re
     assert.equal(await page.getByRole('heading',{name:'3. Test the configured deployment',exact:true}).count(),1);
     assert.equal(errors.length,0,errors.join('\n'));
     pass('Credential-free SDK wizard gates diagnostics when unconfigured and fits the mobile viewport');
+  } catch(error) {
+    await page.screenshot({path:`${output}/screenshots/failed-integrations.png`,timeout:5000}).catch(()=>{});
+    error.message+=`\nIntegrations page: ${new URL(page.url()).pathname}; request observations: ${JSON.stringify(requests.slice(-20))}; page errors: ${JSON.stringify(errors)}`;
+    throw error;
   } finally {await context.close();}
 }
