@@ -6,7 +6,7 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { readPrivateFile, storePrivateFile } from '@/lib/knowledge/storage';
 
 const memory = ((globalThis as { __ophanimJobFiles?: Map<string, { bytes: Buffer; mime: string }> }).__ophanimJobFiles ??= new Map());
-export const ALLOWED_UPLOAD_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'application/pdf', 'text/plain', 'message/rfc822']);
+export const ALLOWED_UPLOAD_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'application/pdf', 'text/plain', 'message/rfc822', 'text/csv', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']);
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 export const sha256 = (bytes: Buffer | string) => createHash('sha256').update(bytes).digest('hex');
 

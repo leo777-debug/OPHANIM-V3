@@ -107,6 +107,23 @@ from local commit `2a2b72e` (parity-and-reliability, unpushed). Read
 - Acceptance (milestones.test.ts): landed + no terminal receipt after the window →
   Today item, ghost ~0.6–1, chaser; 11 of 12 → short-landed flag.
 
+## 4.5 — connecting their software (done)
+
+- Tracking-sheet sync reuses the existing parser and ophanim_import_mapping_profiles
+  (one profile per source, `jobfile-sync:<source>`). Renamed columns detected by
+  name similarity + value shape (AWB/B/L/container/number patterns) and re-mapped.
+- Scheduled imports: sheets emailed by a sender with a remembered profile
+  (`email:<domain>`) are synced on intake; watched folder cron (JOBFILE_WATCH_DIR).
+- Exports: CSV (formula-safe) and multi-sheet .xlsx (fflate, no new dependency)
+  for job files, milestones, documents, flags, invoices: /api/jobfiles/export.
+- ForwardingConnector interface + example CSV-export connector. No real
+  CargoWise/Magaya/Zoho/Tally connectors (no access).
+- Daily digest (Today list) via Resend (RESEND_API_KEY/RESEND_FROM) and WhatsApp
+  (WHATSAPP_PHONE_NUMBER_ID, 24-hour window limit); stub returns text only.
+- Today ranking + alert budget module (`today-list.ts`) written here for the digest.
+- Acceptance (sync.test.ts): sheet imported twice with renamed AWB column is
+  detected and re-mapped; job exports to xlsx and reads back through the importer.
+
 ## Questions for the founder
 
 1. What exactly are the "landing" and "takeoff" papers? Assumed: air import / export documents (AWB, cargo manifest, delivery order, export declaration).

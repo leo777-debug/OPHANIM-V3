@@ -73,12 +73,21 @@ export function paperHooks(ctx: Ctx): IntakeHooks {
   };
 }
 export async function receiveAndProcess(ctx: Ctx, input: IntakeInput, options: { autoCreateFromPreAlert?: boolean } = {}) {
+  // Scheduled imports: a sheet emailed by a sender whose mapping we already remember is synced, not filed as a document.
+  const domain = input.sender?.match(/@([a-z0-9.-]+)/i)?.[1]?.toLowerCase();
+  const sheets = input.attachments.filter(item => /\.(csv|xlsx)$/i.test(item.fileName));
+  if (sheets.length && domain && input.channel === 'email') {
+    const { importTrackingSheet } = await import('./sync');
+    const [profile] = await ctx.repo.select('ophanim_import_mapping_profiles', org(ctx), { name: `jobfile-sync:email:${domain}` });
+    if (profile) for (const sheet of sheets) await importTrackingSheet(ctx, { sourceKey: `email:${domain}`, fileName: sheet.fileName, mimeType: sheet.mimeType, bytes: sheet.bytes });
+    if (profile) input = { ...input, attachments: input.attachments.filter(item => !sheets.includes(item)) };
+  }
   const result = await receiveIntake(ctx, input, { ...options, ...paperHooks(ctx) });
   // Milestone times written in emails and messages (rules first, optional AI second).
   if (result.intake.matchedJobFileId && (input.channel === 'email' || input.channel === 'whatsapp')) {
     const { applyEmailMilestones } = await import('./milestones');
-    const domain = input.sender?.match(/@([a-z0-9.-]+)/i)?.[1]?.toLowerCase() ?? input.sender ?? null;
-    await applyEmailMilestones(ctx, result.intake.matchedJobFileId, [input.subject, input.bodyText].filter(Boolean).join('\n'), domain ? `${input.channel}:${domain}` : null);
+    const from = domain ?? input.sender ?? null;
+    await applyEmailMilestones(ctx, result.intake.matchedJobFileId, [input.subject, input.bodyText].filter(Boolean).join('\n'), from ? `${input.channel}:${from}` : null);
   }
   return result;
 }

@@ -40,6 +40,7 @@ export const TABLES = {
   ophanim_forecast_outcomes: { json: ['evidence'], numeric: ['outcome_value'] },
   ophanim_forecast_scores: { numeric: ['brier', 'log_loss', 'abs_error_hours'] },
   ophanim_audit_events: { json: ['metadata'] },
+  ophanim_import_mapping_profiles: { json: ['field_mapping', 'relationship_mapping', 'custom_field_mapping'] },
 } satisfies Record<string, Spec>;
 export type Table = keyof typeof TABLES;
 export type Row = Record<string, unknown>;
