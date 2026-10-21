@@ -75,6 +75,10 @@ async function onMilestoneConfirmed(ctx: Ctx, job: JobFile, code: string, actual
   await resolveQuestion(ctx, `ghost:${job.id}:${code}`, { at: actualAt, bool: true, source: 'milestone', evidence: { code } });
   await resolveQuestion(ctx, `gap:${job.id}:${code}`, { bool: true, source: 'milestone', evidence: { code, actualAt } });
   await closeTodayItem(ctx, `missing:${job.id}:${code}`);
+  if (code === 'arrived' && job.plannedArrivalAt) {
+    const lateMinutes = (Date.parse(actualAt) - Date.parse(job.plannedArrivalAt)) / 6e4;
+    await resolveQuestion(ctx, `weather:${job.id}:arrival`, { bool: lateMinutes >= 60, source: 'actual_arrival', evidence: { plannedArrivalAt: job.plannedArrivalAt, actualAt, lateMinutes: Math.round(lateMinutes) } });
+  }
   if (sourceKey) {
     const org = ctx.actor.organizationId, lag = Math.max(0, (Date.parse(reportedAt) - Date.parse(actualAt)) / 36e5);
     const [row] = await ctx.repo.select<{ id: string; lagSamplesHours: number[] }>('ophanim_source_report_lags', org, { sourceKey, milestoneCode: code });

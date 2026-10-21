@@ -3,9 +3,9 @@
   "branch": "feat/job-file-core",
   "baseCommit": "2a2b72e",
   "worktree": "D:/OPHANIM/worktrees/job-file-core",
-  "current_phase": "4.6",
-  "current_task": "4.6-congestion",
-  "last_commit": "5244bdc",
+  "current_phase": "4.7",
+  "current_task": "4.7-today",
+  "last_commit": "05cce32",
   "updated_at": "2026-10-21",
   "tasks": [
     {
@@ -38,11 +38,11 @@
     },
     {
       "id": "4.6-congestion",
-      "status": "doing"
+      "status": "done"
     },
     {
       "id": "4.7-today",
-      "status": "todo"
+      "status": "doing"
     },
     {
       "id": "4.8-invoice-desk",

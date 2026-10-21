@@ -124,6 +124,25 @@ from local commit `2a2b72e` (parity-and-reliability, unpushed). Read
 - Acceptance (sync.test.ts): sheet imported twice with renamed AWB column is
   detected and re-mapped; job exports to xlsx and reads back through the importer.
 
+## 4.6 — congestion and delays (done)
+
+- Airport weather: TAF parser (base/FM/TEMPO/BECMG/PROB) + rules (fog, low
+  visibility, wind ≥25 kt or gusts ≥35, dust/sand) over the job's arrival/departure
+  morning (±3 h). Reads ophanim_airport_weather (shared or customer-private rows).
+  **Licence gate preserved**: no new international METAR/TAF fetch; UAE stations need
+  a rights-reviewed feed or customer data. Weather-impact prediction (`weather-rules@1`)
+  resolves from the actual arrival (≥60 min late).
+- City Pulse: admin-editable calendar (weekly windows in Gulf time or dated) per
+  emirate, applied to truck legs/delivery times. API /api/jobfiles/settings.
+- Gate Pulse: driver links (token carries the organization; sha256 stored; expires),
+  /d/[token] page with Arrived/Loaded/Left; location only if link opt-in AND driver
+  consent per tap. Waiting time per site by hour of week (median).
+  Presentation policy: `/d/` exempt from the presentation redirect (only change).
+- Notices: provider-registry events (ophanim_events, org + global) matched by the
+  job's places and date window. Impact-first lines labelled FACT / ESTIMATE.
+- Acceptance (congestion.test.ts): seeded fog TAF at DXB flags an air import
+  arriving that morning; three driver trips give "~2h40" wait for the site.
+
 ## Questions for the founder
 
 1. What exactly are the "landing" and "takeoff" papers? Assumed: air import / export documents (AWB, cargo manifest, delivery order, export declaration).
