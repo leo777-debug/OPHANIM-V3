@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { boundedJson } from '@/lib/http/body';
 import { headers, isDemoMode, jobError, systemContext } from '@/lib/jobfile/context';
 import { organizationFromRecipients, parseInboundWebhook, verifyInboundSecret } from '@/lib/jobfile/intake/adapters';
-import { receiveIntake } from '@/lib/jobfile/service';
+import { receiveAndProcess } from '@/lib/jobfile/paper-desk';
 export const dynamic = 'force-dynamic';
 
 /** Inbound-email provider webhook. Authenticated with INBOUND_EMAIL_SECRET; tenant from the signed address. */
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     const organizationId = demo ? '' : organizationFromRecipients(recipients);
     if (organizationId === null) return NextResponse.json({ error: 'Recipient is not a known organization inbox.' }, { status: 422, headers });
     const ctx = await systemContext(organizationId);
-    const result = await receiveIntake(ctx, input);
+    const result = await receiveAndProcess(ctx, input);
     return NextResponse.json({ intakeId: result.intake.id, status: result.intake.status, jobFileId: result.intake.matchedJobFileId, demo: ctx.actor.demo }, { headers });
   } catch (error) { return jobError(error); }
 }

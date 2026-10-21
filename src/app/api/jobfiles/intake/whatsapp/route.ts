@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { headers, jobError, systemContext } from '@/lib/jobfile/context';
 import { downloadWhatsappMedia, parseWhatsappWebhook, verifyWhatsappChallenge, verifyWhatsappSignature, whatsappConfigured, whatsappIntake } from '@/lib/jobfile/intake/adapters';
-import { receiveIntake } from '@/lib/jobfile/service';
+import { receiveAndProcess } from '@/lib/jobfile/paper-desk';
 export const dynamic = 'force-dynamic';
 
 /** WhatsApp Business Cloud API webhook verification. */
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     for (const message of parseWhatsappWebhook(JSON.parse(raw)).slice(0, 20)) {
       const files = [];
       for (const media of message.media.slice(0, 5)) files.push({ fileName: media.fileName, mimeType: media.mimeType, bytes: await downloadWhatsappMedia(media.id) });
-      results.push((await receiveIntake(ctx, whatsappIntake(message, files))).intake.status);
+      results.push((await receiveAndProcess(ctx, whatsappIntake(message, files))).intake.status);
     }
     return NextResponse.json({ status: 'ok', results }, { headers });
   } catch (error) { return jobError(error); }

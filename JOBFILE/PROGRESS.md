@@ -55,6 +55,25 @@ from local commit `2a2b72e` (parity-and-reliability, unpushed). Read
   container → review; cross-tenant reads return nothing. Browser-checked in demo
   mode (EN and AR/RTL).
 
+## 4.2 — Paper Desk (done)
+
+- Document reader interface (`reader.ts`): OpenAI-compatible vision model via the
+  central AI config (requires `classify_document` or an `extract_*` task enabled;
+  optional JOBFILE_VISION_MODEL), local Tesseract OCR eng+ara via TESSERACT_PATH
+  (TSV word boxes, labelled lower confidence, never auto-accepts), text reader, and
+  a no-reader state that asks for typing. All return field, confidence, page, bbox.
+- 13 document types (6 v1 + 7 configurable) with merge from ophanim_document_types.
+- Intake reads documents before matching, then adopts printed references, runs checks.
+- Auto-accept only at ≥0.92 confidence AND deterministic field checks AND no flag on
+  the field. Crop view (FieldCrop) shows the photographed region of each value.
+- Flag fix / accept-difference (remembered per client) / false alarm; block flags
+  need a senior to accept or dismiss; fixing returns a 30-second EN/AR lesson.
+- Senior review routing: block flag, new staff, high-value job, Tired-Hands
+  (late shift in Asia/Dubai, ≥15 files/hour, last-minute consignee/weight change).
+- Private streak; team totals by document type and step only. Search + version chain.
+- Acceptance (paper-desk.test.ts): 9 kg invoice/packing-list gap → exactly one warn
+  flag with EN/AR fix; crop page/bbox kept; fix returns lesson with the 9 kg example.
+
 ## Questions for the founder
 
 1. What exactly are the "landing" and "takeoff" papers? Assumed: air import / export documents (AWB, cargo manifest, delivery order, export declaration).

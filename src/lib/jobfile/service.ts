@@ -133,30 +133,46 @@ export type IntakeInput = { channel: IntakeItem['channel']; externalId?: string 
 export type IntakeResult = { intake: IntakeItem; decision: MatchDecision; documents: JobDocument[]; createdJob: JobFile | null };
 
 /** Store an email/WhatsApp/photo item and its files, then match it to a job. */
-export async function receiveIntake(ctx: Ctx, input: IntakeInput, options: { autoCreateFromPreAlert?: boolean } = {}): Promise<IntakeResult> {
+export type IntakeHooks = {
+  /** Read a stored document (OCR/vision/text); returned text joins the matching corpus. */
+  read?: (documentId: string) => Promise<string>;
+  /** After documents are attached to a job: adopt field references and run checks. */
+  afterAttach?: (jobFileId: string, documentIds: string[]) => Promise<void>;
+};
+export async function receiveIntake(ctx: Ctx, input: IntakeInput, options: { autoCreateFromPreAlert?: boolean } & IntakeHooks = {}): Promise<IntakeResult> {
   if (input.externalId) {
     const [duplicate] = await ctx.repo.select<IntakeItem>('ophanim_intake_items', org(ctx), { channel: input.channel, externalId: input.externalId });
     if (duplicate) return { intake: duplicate, decision: { status: duplicate.status === 'matched' ? 'matched' : 'review', jobFileId: duplicate.matchedJobFileId, candidates: duplicate.matchCandidates as MatchDecision['candidates'], reason: 'single_strong_match' }, documents: [], createdJob: null };
   }
-  const corpus = [input.subject, input.bodyText, ...input.attachments.map(item => item.text), ...input.attachments.map(item => item.fileName)].filter(Boolean).join('\n');
-  const found = findReferences(corpus);
-  const decision = matchReferences(found, await keyRing(ctx));
   let intake = await ctx.repo.insert<IntakeItem>('ophanim_intake_items', org(ctx), {
     channel: input.channel, externalId: input.externalId ?? null, sender: text(input.sender, 320), subject: text(input.subject, 500), bodyText: input.bodyText?.slice(0, 100000) ?? null,
-    receivedAt: input.receivedAt ?? now(ctx), status: decision.status === 'matched' ? 'matched' : 'review', matchedJobFileId: decision.jobFileId,
-    referencesFound: found.map(item => ({ type: item.type, value: item.validation.normalized, valid: item.validation.valid, code: item.validation.code ?? null })), matchCandidates: decision.candidates,
+    receivedAt: input.receivedAt ?? now(ctx), status: 'new', matchedJobFileId: null, referencesFound: [], matchCandidates: [],
   });
-  const documents: JobDocument[] = [];
-  for (const attachment of input.attachments) documents.push(await storeDocument(ctx, { jobFileId: decision.jobFileId, intakeItemId: intake.id, receivedVia: input.channel, ...attachment }));
+  // Store and read files first, so reference numbers printed on photos help matching.
+  const documents: JobDocument[] = [], readText: string[] = [];
+  for (const attachment of input.attachments) {
+    const document = await storeDocument(ctx, { jobFileId: null, intakeItemId: intake.id, receivedVia: input.channel, ...attachment });
+    documents.push(document);
+    if (options.read) readText.push(await options.read(document.id).catch(() => ''));
+  }
+  const corpus = [input.subject, input.bodyText, ...input.attachments.map(item => item.text), ...readText, ...input.attachments.map(item => item.fileName)].filter(Boolean).join('\n');
+  const found = findReferences(corpus);
+  const decision = matchReferences(found, await keyRing(ctx));
   let createdJob: JobFile | null = null, jobFileId = decision.jobFileId;
   const strong = found.filter(item => item.validation.valid && ['awb', 'bl', 'container'].includes(item.type));
   if (!jobFileId && decision.reason === 'no_match' && options.autoCreateFromPreAlert !== false && strong.length && /PRE[- ]?ALERT|ARRIVAL NOTICE|SHIPPING ADVICE/i.test(corpus)) {
     createdJob = await createJobFile(ctx, { mode: inferMode(found, corpus), createdFrom: input.channel === 'email' ? 'email' : input.channel === 'whatsapp' ? 'whatsapp' : 'photo', references: [] });
     jobFileId = createdJob.id;
-    intake = (await ctx.repo.update<IntakeItem>('ophanim_intake_items', org(ctx), { id: intake.id }, { status: 'created_job', matchedJobFileId: jobFileId }))[0];
-    for (const document of documents) { await ctx.repo.update('ophanim_documents', org(ctx), { id: document.id }, { jobFileId }); document.jobFileId = jobFileId; }
   }
-  if (jobFileId) await adoptReferences(ctx, jobFileId, found, input.channel);
+  intake = (await ctx.repo.update<IntakeItem>('ophanim_intake_items', org(ctx), { id: intake.id }, {
+    status: createdJob ? 'created_job' : decision.status === 'matched' ? 'matched' : 'review', matchedJobFileId: jobFileId,
+    referencesFound: found.map(item => ({ type: item.type, value: item.validation.normalized, valid: item.validation.valid, code: item.validation.code ?? null })), matchCandidates: decision.candidates,
+  }))[0];
+  if (jobFileId) {
+    for (const document of documents) { await ctx.repo.update('ophanim_documents', org(ctx), { id: document.id }, { jobFileId }); await ctx.repo.update('ophanim_extracted_fields', org(ctx), { documentId: document.id }, { jobFileId }); document.jobFileId = jobFileId; }
+    await adoptReferences(ctx, jobFileId, found, input.channel);
+    if (options.afterAttach) await options.afterAttach(jobFileId, documents.map(document => document.id));
+  }
   await audit(ctx, 'intake.received', 'job_file', jobFileId, { intakeId: intake.id, channel: input.channel, status: intake.status, reason: decision.reason, documents: documents.length });
   return { intake, decision, documents, createdJob };
 }
@@ -189,19 +205,21 @@ export async function listIntake(ctx: Ctx, status?: string) {
   return ctx.repo.select<IntakeItem>('ophanim_intake_items', org(ctx), status ? { status } : {}, { order: 'receivedAt desc', limit: 200 });
 }
 /** Attach a reviewed intake item (and its documents) to a job. */
-export async function attachIntake(ctx: Ctx, intakeId: string, jobFileId: string) {
+export async function attachIntake(ctx: Ctx, intakeId: string, jobFileId: string, hooks: IntakeHooks = {}) {
   const [intake] = await ctx.repo.select<IntakeItem>('ophanim_intake_items', org(ctx), { id: intakeId });
   const [job] = await ctx.repo.select<JobFile>('ophanim_job_files', org(ctx), { id: jobFileId });
   if (!intake || !job) throw new JobFileInputError('Intake item or job file not found.');
   await ctx.repo.update('ophanim_intake_items', org(ctx), { id: intakeId }, { status: 'matched', matchedJobFileId: jobFileId });
-  await ctx.repo.update('ophanim_documents', org(ctx), { intakeItemId: intakeId }, { jobFileId });
+  const moved = await ctx.repo.update<JobDocument>('ophanim_documents', org(ctx), { intakeItemId: intakeId }, { jobFileId });
+  for (const document of moved) await ctx.repo.update('ophanim_extracted_fields', org(ctx), { documentId: document.id }, { jobFileId });
   await adoptReferences(ctx, jobFileId, findReferences([intake.subject, intake.bodyText].filter(Boolean).join('\n')), intake.channel);
+  if (hooks.afterAttach) await hooks.afterAttach(jobFileId, moved.map(document => document.id));
   await audit(ctx, 'intake.attached', 'job_file', jobFileId, { intakeId });
   return job;
 }
-export async function createJobFromIntake(ctx: Ctx, intakeId: string, input: JobInput) {
+export async function createJobFromIntake(ctx: Ctx, intakeId: string, input: JobInput, hooks: IntakeHooks = {}) {
   const job = await createJobFile(ctx, { ...input, createdFrom: 'email' });
-  await attachIntake(ctx, intakeId, job.id);
+  await attachIntake(ctx, intakeId, job.id, hooks);
   await ctx.repo.update('ophanim_intake_items', org(ctx), { id: intakeId }, { status: 'created_job' });
   return job;
 }

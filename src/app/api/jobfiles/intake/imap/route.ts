@@ -3,7 +3,7 @@ import { cronAuthorized, headers, jobError, systemContext } from '@/lib/jobfile/
 import { textOf } from '@/lib/jobfile/intake/text';
 import { fetchUnseen, imapConfig, markSeen } from '@/lib/jobfile/intake/imap';
 import { parseEmail } from '@/lib/jobfile/intake/mime';
-import { receiveIntake } from '@/lib/jobfile/service';
+import { receiveAndProcess } from '@/lib/jobfile/paper-desk';
 export const dynamic = 'force-dynamic';
 
 /** Cron: poll the one dedicated IMAP mailbox that belongs to IMAP_ORGANIZATION_ID. */
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     const ctx = await systemContext(organizationId), processed: number[] = [], results = [];
     for (const message of await fetchUnseen(config)) {
       const email = parseEmail(message.raw);
-      const result = await receiveIntake(ctx, { channel: 'email', externalId: email.messageId ?? `imap-uid-${message.uid}`, sender: email.from, subject: email.subject, bodyText: email.text, receivedAt: email.date ?? undefined,
+      const result = await receiveAndProcess(ctx, { channel: 'email', externalId: email.messageId ?? `imap-uid-${message.uid}`, sender: email.from, subject: email.subject, bodyText: email.text, receivedAt: email.date ?? undefined,
         attachments: email.attachments.slice(0, 20).map(item => ({ ...item, text: textOf(item) })) });
       processed.push(message.uid); results.push({ uid: message.uid, status: result.intake.status });
     }

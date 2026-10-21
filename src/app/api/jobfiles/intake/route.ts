@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { mutation, query } from '@/lib/jobfile/context';
-import { attachIntake, JobFileInputError, listIntake, receiveIntake } from '@/lib/jobfile/service';
+import { attachAndProcess, receiveAndProcess } from '@/lib/jobfile/paper-desk';
+import { JobFileInputError, listIntake } from '@/lib/jobfile/service';
 import { ALLOWED_UPLOAD_TYPES, MAX_UPLOAD_BYTES } from '@/lib/jobfile/storage';
 import { textOf } from '@/lib/jobfile/intake/text';
 import { isRateLimited } from '@/lib/ssrf-guard';
@@ -25,7 +26,7 @@ export const POST = (request: NextRequest) => mutation(request, 'shipment:write'
   }
   const bodyText = String(form.get('text') ?? '').slice(0, 20000);
   if (!attachments.length && !bodyText.trim()) throw new JobFileInputError('Add a photo, a file or some text.');
-  const result = await receiveIntake(ctx, { channel: channel as 'photo', externalId: clientId ? `client:${clientId}` : null, sender: ctx.actor.displayName ?? null, subject: String(form.get('subject') ?? '') || null, bodyText, attachments });
-  if (jobFileId && result.intake.matchedJobFileId !== jobFileId) await attachIntake(ctx, result.intake.id, jobFileId);
+  const result = await receiveAndProcess(ctx, { channel: channel as 'photo', externalId: clientId ? `client:${clientId}` : null, sender: ctx.actor.displayName ?? null, subject: String(form.get('subject') ?? '') || null, bodyText, attachments });
+  if (jobFileId && result.intake.matchedJobFileId !== jobFileId) await attachAndProcess(ctx, result.intake.id, jobFileId);
   return { intake: result.intake, decision: result.decision, createdJob: result.createdJob, documents: result.documents.map(document => ({ id: document.id, docTypeCode: document.docTypeCode })) };
 }, 201);

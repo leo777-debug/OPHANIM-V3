@@ -3,9 +3,9 @@
   "branch": "feat/job-file-core",
   "baseCommit": "2a2b72e",
   "worktree": "D:/OPHANIM/worktrees/job-file-core",
-  "current_phase": "4.2",
-  "current_task": "4.2-paper-desk",
-  "last_commit": "b712a1c",
+  "current_phase": "4.3",
+  "current_task": "4.3-papers",
+  "last_commit": "0520e4d",
   "updated_at": "2026-10-21",
   "tasks": [
     {
@@ -22,11 +22,11 @@
     },
     {
       "id": "4.2-paper-desk",
-      "status": "doing"
+      "status": "done"
     },
     {
       "id": "4.3-papers",
-      "status": "todo"
+      "status": "doing"
     },
     {
       "id": "4.4-milestones",
