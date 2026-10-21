@@ -39,6 +39,8 @@ export default function PlatformShell({ title, children }: { title: string; chil
       <Link href="/public-intelligence" className="platform-nav__item"><Activity size={17} /><span>Public advisories</span></Link>
       <Link href="/route-explorer" className="platform-nav__item"><Map size={17} /><span>Route Explorer</span></Link>
       <Link href="/jobs" className="platform-nav__item"><Activity size={17} /><span>Job files</span></Link>
+      <Link href="/watchtower" className="platform-nav__item"><Activity size={17} /><span>Watchtower</span></Link>
+      <Link href="/route-lens" className="platform-nav__item"><Map size={17} /><span>Route Lens</span></Link>
       <Link href="/forecasts" className="platform-nav__item"><Activity size={17} /><span>Sourced forecasts</span></Link>
       <Link href="/hazards" className="platform-nav__item"><Activity size={17} /><span>Natural hazards</span></Link>
       <Link href="/aviation" className="platform-nav__item"><Activity size={17} /><span>Aviation disruptions</span></Link>

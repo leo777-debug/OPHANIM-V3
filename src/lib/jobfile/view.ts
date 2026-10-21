@@ -9,6 +9,7 @@ import { ensureMilestones, milestoneLabels, scanTimeGaps } from './milestones';
 import { listPapers } from './papers';
 import { loadJob } from './service';
 import { signedUrl } from './storage';
+import { searchPorts } from '@/lib/watchtower/cameras';
 import type { Ctx } from './types';
 
 export async function jobView(ctx: Ctx, id: string, options: { refresh?: boolean } = {}) {
@@ -27,5 +28,7 @@ export async function jobView(ctx: Ctx, id: string, options: { refresh?: boolean
     ...aggregate, documents, papers: await listPapers(ctx, id), predictions, milestoneLabels: milestoneLabels(aggregate.job.mode), events, margin: margin(aggregate.invoices),
     ghosts: gaps.ghost ? [{ milestoneCode: gaps.ghost.code, probability: gaps.ghost.probability, label: 'ESTIMATE' }] : [],
     chasers: gaps.gaps.map(gap => ({ milestoneCode: gap.code, ...gap.chaser })),
+    // Watchtower: "show me the cameras for this port".
+    cameraPorts: [aggregate.job.origin, aggregate.job.destination].flatMap(place => place && place.trim().length >= 3 ? searchPorts(place).slice(0, 1).map(port => ({ code: port.code, name: port.name })) : []),
   };
 }

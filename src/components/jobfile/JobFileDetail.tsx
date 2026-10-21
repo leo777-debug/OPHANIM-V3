@@ -16,7 +16,7 @@ type Chaser = { milestoneCode: string; subject: string; body: string; to: string
 type View = {
   job: JobFile; references: JobReference[]; legs: JobLeg[]; milestones: JobMilestone[]; pieces: PieceCount[]; documents: Array<JobDocument & { url: string | null; fields?: ExtractedField[] }>;
   flags: FlagRecord[]; invoices: Invoice[]; activity: Activity[]; demo: boolean; ghosts?: Ghost[]; predictions?: Prediction[]; lessons?: Lesson[]; papers?: Paper[]; chasers?: Chaser[];
-  milestoneLabels?: Record<string, string>; events?: Array<{ title: string; label: 'FACT' | 'ESTIMATE'; detail: string }>; margin?: { revenue: number; cost: number; currency: string } | null;
+  milestoneLabels?: Record<string, string>; cameraPorts?: Array<{ code: string; name: string }>; events?: Array<{ title: string; label: 'FACT' | 'ESTIMATE'; detail: string }>; margin?: { revenue: number; cost: number; currency: string } | null;
 };
 const REF_TYPES = ['awb', 'hawb', 'bl', 'hbl', 'container', 'booking', 'invoice', 'customs_dec', 'delivery_order', 'client_ref', 'other'];
 const severityClass = (severity: string) => severity === 'block' ? `${styles.flag} ${styles.flagBlock}` : severity === 'info' ? `${styles.flag} ${styles.flagInfo}` : styles.flag;
@@ -42,7 +42,9 @@ export default function JobFileDetail({ id }: { id: string }) {
         <span className={styles.chip}>{t('job.client')}: {job.clientName ?? '—'}</span><span className={styles.chip}>{t('job.route')}: {job.origin ?? '?'} → {job.destination ?? '?'}</span>
         {job.plannedArrivalAt && <span className={styles.chip}>ETA {new Date(job.plannedArrivalAt).toLocaleString()}</span>}
         <Link href={`/capture?job=${job.id}`} className={`${styles.button} ${styles.secondary}`}>{t('capture.take')}</Link>
-        <Link href={`/floor?job=${job.id}`} className={`${styles.button} ${styles.secondary}`}>Floor taps / tally</Link></div>
+        <Link href={`/floor?job=${job.id}`} className={`${styles.button} ${styles.secondary}`}>Floor taps / tally</Link>
+        <Link href={`/route-lens?job=${job.id}`} className={`${styles.button} ${styles.secondary}`}>Route Lens</Link>
+        {(view.cameraPorts ?? []).map(port => <Link key={port.code} href={`/watchtower?port=${port.code}`} className={`${styles.button} ${styles.secondary}`}>Cameras: {port.name}</Link>)}</div>
       {(view.events ?? []).map(event => <p key={event.title} className={styles.muted}><span className={`${styles.chip} ${event.label === 'FACT' ? styles.ok : styles.warn}`}>{t(event.label === 'FACT' ? 'app.fact' : 'app.estimate')}</span> {event.title} — {event.detail}</p>)}
     </section>
 

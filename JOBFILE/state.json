@@ -3,9 +3,9 @@
   "branch": "feat/job-file-core",
   "baseCommit": "2a2b72e",
   "worktree": "D:/OPHANIM/worktrees/job-file-core",
-  "current_phase": "W1",
-  "current_task": "W1-watchtower",
-  "last_commit": "47214ed",
+  "current_phase": "W2",
+  "current_task": "W2-deep-watch",
+  "last_commit": "2fc5184",
   "updated_at": "2026-10-21",
   "tasks": [
     {
@@ -62,11 +62,11 @@
     },
     {
       "id": "W1-watchtower",
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": "W2-deep-watch",
-      "status": "todo"
+      "status": "doing"
     },
     {
       "id": "W3-route-lens",

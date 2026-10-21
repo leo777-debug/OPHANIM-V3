@@ -4,7 +4,7 @@ export const PROVIDER_ENTITY_TYPES = [
 ] as const;
 export type ProviderEntityType = (typeof PROVIDER_ENTITY_TYPES)[number];
 
-export type ProviderCategory = 'geospatial' | 'maritime' | 'aviation' | 'infrastructure' | 'sanctions' | 'network' | 'identity' | 'dark_web' | 'command' | 'other';
+export type ProviderCategory = 'geospatial' | 'maritime' | 'aviation' | 'infrastructure' | 'sanctions' | 'network' | 'identity' | 'dark_web' | 'camera' | 'command' | 'other';
 
 export interface ProviderCapabilities {
   search: boolean;

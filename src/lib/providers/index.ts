@@ -15,6 +15,7 @@ import { submarineCablesProvider } from './providers/submarine-cables-provider';
 import { infrastructureMapProvider } from './providers/infrastructure-map-provider';
 import { warSanctionsProvider } from './providers/war-sanctions-provider';
 import { voidAccessProvider } from './providers/voidaccess-provider';
+import { cameraProvider } from './providers/camera-provider';
 import { ProviderRegistry } from './provider-registry';
 import { classifySearch, type SearchInput } from './query-classifier';
 import type { ProviderExecutionContext, ProviderQuery } from './types';
@@ -38,6 +39,7 @@ const registry = new ProviderRegistry([
   nominatimProvider,
   maritimeMapProvider,
   infrastructureMapProvider,
+  cameraProvider,
   submarineCablesProvider,
 ]);
 const enrichmentManager = new EnrichmentManager();

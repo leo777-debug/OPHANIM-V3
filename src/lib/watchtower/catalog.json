@@ -1,0 +1,34 @@
+{
+  "metadata": {
+    "id": "watchtower-camera-catalogue",
+    "version": "1",
+    "updated": "2026-10-21",
+    "policy": "Public, lawful OSINT only: feeds already published for public viewing (port-authority webcam pages, Windy and other webcam aggregators, public YouTube livestreams, tourism/marina cams, public traffic cameras). No private CCTV, no default-credential or exposed-RTSP scanning, no bypassing logins, geofencing, paywalls or robots.txt, no scraping where terms forbid it. Every feed records its source URL and terms.",
+    "verification": "A feed is 'verified' only after a person has opened its public source page, confirmed it is intended for public viewing and recorded its terms. Entries without that check are 'unverified' leads and carry no stream URL. As of this version no fixed feed has been verified; live coverage comes from the Windy Webcams API when WINDY_WEBCAMS_API_KEY is set."
+  },
+  "ports": [
+    { "code": "IRBND", "name": "Bandar Abbas (Shahid Rajaee)", "country": "Iran", "lat": 27.11, "lon": 56.06, "aliases": ["Bandar Abbas", "Shahid Rajaee", "Shahid Rajaei", "بندر عباس"], "radiusKm": 25 },
+    { "code": "IRBDH", "name": "Bandar Lengeh", "country": "Iran", "lat": 26.56, "lon": 54.88, "aliases": ["Bandar Lengeh", "Lengeh"], "radiusKm": 15 },
+    { "code": "IRBUZ", "name": "Bushehr", "country": "Iran", "lat": 28.97, "lon": 50.84, "aliases": ["Bushehr", "Bushire"], "radiusKm": 15 },
+    { "code": "IRZBR", "name": "Chabahar", "country": "Iran", "lat": 25.30, "lon": 60.62, "aliases": ["Chabahar", "Shahid Beheshti"], "radiusKm": 15 },
+    { "code": "AEJEA", "name": "Jebel Ali", "country": "United Arab Emirates", "lat": 25.01, "lon": 55.06, "aliases": ["Jebel Ali", "Jebel Ali gate", "Jebel Ali port", "JAFZA", "ميناء جبل علي"], "radiusKm": 15 },
+    { "code": "AEKLF", "name": "Khor Fakkan", "country": "United Arab Emirates", "lat": 25.35, "lon": 56.36, "aliases": ["Khor Fakkan", "Khor Al Fakkan", "خورفكان"], "radiusKm": 12 },
+    { "code": "AEFJR", "name": "Fujairah", "country": "United Arab Emirates", "lat": 25.17, "lon": 56.36, "aliases": ["Fujairah", "Fujairah anchorage", "الفجيرة"], "radiusKm": 20 },
+    { "code": "AEPRA", "name": "Port Rashid", "country": "United Arab Emirates", "lat": 25.27, "lon": 55.27, "aliases": ["Port Rashid", "Mina Rashid", "ميناء راشد"], "radiusKm": 8 },
+    { "code": "OMSOH", "name": "Sohar", "country": "Oman", "lat": 24.51, "lon": 56.62, "aliases": ["Sohar", "Port of Sohar"], "radiusKm": 15 },
+    { "code": "OMSLL", "name": "Salalah", "country": "Oman", "lat": 16.94, "lon": 54.00, "aliases": ["Salalah", "Port of Salalah", "Raysut"], "radiusKm": 15 },
+    { "code": "QAHMD", "name": "Hamad Port", "country": "Qatar", "lat": 25.00, "lon": 51.62, "aliases": ["Hamad", "Hamad Port", "Doha port"], "radiusKm": 15 },
+    { "code": "BHKBS", "name": "Khalifa Bin Salman Port", "country": "Bahrain", "lat": 26.20, "lon": 50.71, "aliases": ["Khalifa Bin Salman", "Bahrain port", "Hidd"], "radiusKm": 12 },
+    { "code": "KWSWK", "name": "Shuwaikh", "country": "Kuwait", "lat": 29.36, "lon": 47.93, "aliases": ["Shuwaikh", "Kuwait port", "Shuaiba"], "radiusKm": 20 },
+    { "code": "SAJED", "name": "Jeddah Islamic Port", "country": "Saudi Arabia", "lat": 21.47, "lon": 39.17, "aliases": ["Jeddah", "Jeddah Islamic Port"], "radiusKm": 15 },
+    { "code": "SADMM", "name": "King Abdulaziz Port, Dammam", "country": "Saudi Arabia", "lat": 26.50, "lon": 50.20, "aliases": ["Dammam", "King Abdulaziz Port"], "radiusKm": 15 }
+  ],
+  "feeds": [
+    { "id": "lead-aejea-windy", "name": "Webcam aggregator search near Jebel Ali", "port": "AEJEA", "type": "port", "status": "unverified", "streamUrl": null, "embedType": "iframe", "sourceUrl": "https://www.windy.com/-Webcams/webcams", "terms": "Windy terms of use (linked from windy.com); each webcam publisher may add its own terms. Confirm before embedding.", "note": "Lead only: check public webcams near the port in the aggregator and record any that show the waterfront." },
+    { "id": "lead-aeklf-windy", "name": "Webcam aggregator search near Khor Fakkan", "port": "AEKLF", "type": "tourist", "status": "unverified", "streamUrl": null, "embedType": "iframe", "sourceUrl": "https://www.windy.com/-Webcams/webcams", "terms": "Windy terms of use (linked from windy.com); each webcam publisher may add its own terms. Confirm before embedding.", "note": "Lead only: the corniche and beach webcams are candidates if their publishers allow embedding." },
+    { "id": "lead-aefjr-windy", "name": "Webcam aggregator search near Fujairah anchorage", "port": "AEFJR", "type": "tourist", "status": "unverified", "streamUrl": null, "embedType": "iframe", "sourceUrl": "https://www.windy.com/-Webcams/webcams", "terms": "Windy terms of use (linked from windy.com); each webcam publisher may add its own terms. Confirm before embedding.", "note": "Lead only." },
+    { "id": "lead-aepra-windy", "name": "Webcam aggregator search near Port Rashid", "port": "AEPRA", "type": "marina", "status": "unverified", "streamUrl": null, "embedType": "iframe", "sourceUrl": "https://www.windy.com/-Webcams/webcams", "terms": "Windy terms of use (linked from windy.com); each webcam publisher may add its own terms. Confirm before embedding.", "note": "Lead only: Dubai waterfront and marina cams are candidates." },
+    { "id": "lead-irbnd-windy", "name": "Webcam aggregator search near Bandar Abbas", "port": "IRBND", "type": "port", "status": "unverified", "streamUrl": null, "embedType": "iframe", "sourceUrl": "https://www.windy.com/-Webcams/webcams", "terms": "Windy terms of use (linked from windy.com); each webcam publisher may add its own terms. Confirm before embedding.", "note": "Lead only. Public coverage of Iranian ports is rare and erratic." },
+    { "id": "lead-omsll-windy", "name": "Webcam aggregator search near Salalah", "port": "OMSLL", "type": "tourist", "status": "unverified", "streamUrl": null, "embedType": "iframe", "sourceUrl": "https://www.windy.com/-Webcams/webcams", "terms": "Windy terms of use (linked from windy.com); each webcam publisher may add its own terms. Confirm before embedding.", "note": "Lead only." }
+  ]
+}
