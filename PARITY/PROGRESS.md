@@ -609,3 +609,19 @@ verified; never infer completion from a catalog entry or this plan.
   prompts also overlap each other's ledgers, shipment milestones and imports.
   Separate worktrees avoid direct overwrites but require shared schema/API design
   before integration. No Claude implementation, remote push, merge or deployment.
+
+## 21 October — authorized GitHub checkpoint push
+
+- User explicitly authorized publishing the current branch, separately from the
+  unfinished full-scope merge. Clean intelligence checkpoint2a2b72e is validated
+  by599 tests/5 skipped, typecheck, targeted lint, build and16 tools browser checks.
+- Default remains feat/gdacs-weather-ai-overview atd22f6a0, already integrated
+  locally. PR25 is still draft against the older foundation branch; correct its
+  base and perform final review only at full delivery, before merge.
+- Existing PR shows Vercel Git integration. Added vercel.json with only
+  git.deploymentEnabled[parity-and-reliability]=false, using the official
+  https://vercel.com/docs/project-configuration/git-configuration contract,
+  to suppress branch auto-deployment on the authorized push. Unspecified branches
+  keep their default behavior. GitHub CI remains enabled. No app code changed.
+- Push/remote SHA and GitHub CI results must be checked after publication. Do not
+  treat a successful push as completed parity, a merge or deployment validation.
