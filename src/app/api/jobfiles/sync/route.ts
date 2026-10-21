@@ -15,7 +15,8 @@ export const POST = (request: NextRequest) => mutation(request, 'import:write', 
   const file = form.get('file'), source = String(form.get('source') ?? '').trim().toLowerCase().replace(/[^a-z0-9:._@-]/g, '-').slice(0, 120);
   if (!(file instanceof File) || !source) throw new JobFileInputError('A file and a source name are required.');
   if (file.size > 5 * 1024 * 1024) throw new JobFileInputError('Sheets up to 5 MB.');
-  const mapping = form.get('mapping') ? JSON.parse(String(form.get('mapping'))) as Mapping : undefined;
+  let mapping: Mapping | undefined;
+  try { mapping = form.get('mapping') ? JSON.parse(String(form.get('mapping'))) as Mapping : undefined; } catch { throw new JobFileInputError('The column mapping must be valid JSON.'); }
   const connector = String(form.get('connector') ?? '');
   const bytes = new Uint8Array(await file.arrayBuffer());
   const target = CONNECTORS.find(item => item.id === connector);

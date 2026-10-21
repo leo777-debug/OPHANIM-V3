@@ -147,7 +147,8 @@ export function ghostProbability(input: { startAt: number; now: number; p10: num
 export type GapResult = { code: string; labelEn: string; overdueHours: number; ghost: number; dueAt: string; reporter: TemplateStep['reporter']; chaser: { subject: string; body: string; to: string | null; channel: 'email' | 'whatsapp' } };
 type Duration = { fromCode: string; toCode: string; p10Hours: number; p50Hours: number; p90Hours: number; graceHours: number };
 /** For each job: the next unreported step after the last confirmed one. Past p90 + grace → Today item, ghost badge and drafted chaser. */
-export async function scanTimeGaps(ctx: Ctx, aggregate: JobAggregate): Promise<{ ghost: { code: string; probability: number } | null; gaps: GapResult[] }> {
+export async function scanTimeGaps(ctx: Ctx, aggregate: JobAggregate, options: { persist?: boolean } = {}): Promise<{ ghost: { code: string; probability: number } | null; gaps: GapResult[] }> {
+  const persist = options.persist !== false;
   const { job } = aggregate, org = ctx.actor.organizationId, now = ctx.now?.() ?? Date.now();
   const template = await steps(ctx, job.mode), byCode = new Map(aggregate.milestones.map(item => [item.code, item]));
   const durations = await ctx.repo.select<Duration>('ophanim_step_durations', org, { mode: job.mode });
@@ -166,10 +167,10 @@ export async function scanTimeGaps(ctx: Ctx, aggregate: JobAggregate): Promise<{
   const dueAt = startAt + (range.p90 + range.grace) * 36e5;
   const ghost = ghostProbability({ startAt, now, ...range, lagsHours: lagRow?.lagSamplesHours });
   // Ghost Position is logged while the milestone is unreported, from the end of its usual window.
-  if (now >= startAt + range.p50 * 36e5) await recordPrediction(ctx, {
+  if (persist && now >= startAt + range.p50 * 36e5) await recordPrediction(ctx, {
     questionType: 'ghost_position', outcomeKind: 'binary', subjectKey: `ghost:${job.id}:${next.code}`, jobFileId: job.id, resolveBy: new Date(dueAt + 72 * 36e5).toISOString(),
     textEn: `${job.jobNumber}: "${next.labelEn}" has already happened although not reported`, textAr: `${job.jobNumber}: حدث "${next.labelAr}" بالفعل رغم عدم الإبلاغ`,
-    probability: ghost, modelVersion: 'ghost-position@1', inputs: { startAt: new Date(startAt).toISOString(), hoursElapsed: Math.round((now - startAt) / 36e3) / 100, range, lags: lagRow?.lagSamplesHours ?? 'default', sourceKey },
+    probability: ghost, modelVersion: 'ghost-position@1', inputs: { startAt: new Date(startAt).toISOString(), hoursElapsed: Math.floor((now - startAt) / 36e5), range, lags: lagRow?.lagSamplesHours ?? 'default', sourceKey },
     drivers: [{ label: 'hours since previous step', value: Math.round((now - startAt) / 36e3) / 100 }, { label: 'usual report lag (h)', value: lagRow ? 'learned' : 'default' }], trigger: 'time_gap_scan',
   });
   const ghostView = now >= startAt + range.p50 * 36e5 ? { code: next.code, probability: ghost } : null;
@@ -179,9 +180,9 @@ export async function scanTimeGaps(ctx: Ctx, aggregate: JobAggregate): Promise<{
   const expected = new Date(startAt + range.p90 * 36e5).toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
   const chaser = { subject: t('en', 'chaser.subject', { job: job.jobNumber, milestone: next.labelEn }), body: t('en', 'chaser.body', { name: counterparty?.name ?? 'team', refs, milestone: next.labelEn, expected }), to: counterparty?.email ?? null, channel: counterparty?.email ? 'email' as const : 'whatsapp' as const };
   const overdueHours = Math.round((now - dueAt) / 36e3) / 100;
-  await recordPrediction(ctx, { questionType: 'time_gap_risk', outcomeKind: 'binary', subjectKey: `gap:${job.id}:${next.code}`, jobFileId: job.id, resolveBy: new Date(dueAt + 72 * 36e5).toISOString(),
-    textEn: `${job.jobNumber}: "${next.labelEn}" will be confirmed within 72 hours of its usual window`, probability: Math.max(0.05, Math.min(0.95, ghost)), modelVersion: 'time-gap@1', inputs: { range, overdueHours, ghost }, trigger: 'time_gap_scan' });
-  await upsertTodayItem(ctx, { kind: 'missing_milestone', jobFileId: job.id, sourceKey: `missing:${job.id}:${next.code}`, dueAt: new Date(dueAt).toISOString(),
+  if (persist) await recordPrediction(ctx, { questionType: 'time_gap_risk', outcomeKind: 'binary', subjectKey: `gap:${job.id}:${next.code}`, jobFileId: job.id, resolveBy: new Date(dueAt + 72 * 36e5).toISOString(),
+    textEn: `${job.jobNumber}: "${next.labelEn}" will be confirmed within 72 hours of its usual window`, probability: Math.max(0.05, Math.min(0.95, ghost)), modelVersion: 'time-gap@1', inputs: { range, overdueWholeHours: Math.floor(overdueHours) }, trigger: 'time_gap_scan' });
+  if (persist) await upsertTodayItem(ctx, { kind: 'missing_milestone', jobFileId: job.id, sourceKey: `missing:${job.id}:${next.code}`, dueAt: new Date(dueAt).toISOString(),
     titleEn: `${job.jobNumber}: ${next.labelEn} expected but missing (${overdueHours.toFixed(1)} h late)`, titleAr: `${job.jobNumber}: ${next.labelAr} متوقع لكنه غير مسجل`, probability: ghost, cost: 1500, payload: { code: next.code, chaser } });
   results.push({ code: next.code, labelEn: next.labelEn, overdueHours, ghost, dueAt: new Date(dueAt).toISOString(), reporter: next.reporter, chaser });
   return { ghost: ghostView, gaps: results };

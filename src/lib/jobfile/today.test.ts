@@ -19,6 +19,9 @@ describe('Today list', () => {
     expect(first.interruptions).toBe(ALERT_BUDGET); expect(first.waiting).toBe(10 - ALERT_BUDGET);
     await upsertTodayItem(ctx, { kind: 'flag', sourceKey: 'late', titleEn: 'Late urgent', titleAr: 'عاجل', probability: 1, cost: 5000 });
     expect((await rankToday(ctx)).interruptions).toBe(ALERT_BUDGET); // budget already used today
+    // A colleague has their own budget: my view did not spend it.
+    const colleague = await rankToday({ ...ctx, actor: { ...ctx.actor, userId: 'u2' } });
+    expect(colleague.interruptions).toBe(ALERT_BUDGET); expect(colleague.items[0].titleEn).toBe('Late urgent');
     // Re-raising the same source refreshes it without undoing a person's decision.
     const [item] = await ctx.repo.select<TodayItem>('ophanim_today_items', ORG, { sourceKey: 'k8' });
     await actOnToday(ctx, item.id, 'snooze', 2);

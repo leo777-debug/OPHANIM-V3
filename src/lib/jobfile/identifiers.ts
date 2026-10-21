@@ -48,7 +48,8 @@ export function validateReference(type: ReferenceType, value: string, extraPrefi
 export type FoundReference = { type: ReferenceType; value: string; validation: ReferenceValidation; index: number };
 const PATTERNS: Array<{ type: ReferenceType; pattern: RegExp }> = [
   { type: 'container', pattern: /\b([A-Z]{3}[UJZ])[\s-]?(\d{6})[\s-]?(\d)\b/g },
-  { type: 'awb', pattern: /\b(?:MAWB|AWB|M\/AWB)?[\s:#.]*(\d{3})[\s-]?(\d{4})[\s-]?(\d{4})\b/gi },
+  // Labelled ("MAWB 176 1234 5675") or the printed hyphen form ("176-12345675"); bare digit runs such as phone numbers are not AWBs.
+  { type: 'awb', pattern: /\b(?:(?:MAWB|AWB|M\/AWB)\b[\s:#.]*(?:NO\.?)?[\s:#.]*(\d{3})[\s-]?(\d{4})[\s-]?(\d{4})|(\d{3})-(\d{4})\s?(\d{4}))\b/gi },
   { type: 'hawb', pattern: /\bHAWB[\s:#.]*([A-Z0-9-]{5,20})\b/gi },
   { type: 'hbl', pattern: /\bHB\/?L[\s:#.]*(?:NO\.?)?[\s:#.]*([A-Z0-9-]{6,20})\b/gi },
   { type: 'bl', pattern: /\b(?:MB\/?L|B\/L|BL|BILL OF LADING)[\s:#.]*(?:NO\.?)?[\s:#.]*([A-Z]{4}\d{6,12})\b/gi },
@@ -61,7 +62,7 @@ export function findReferences(text: string): FoundReference[] {
   const upper = text.toUpperCase(), found = new Map<string, FoundReference>();
   for (const { type, pattern } of PATTERNS) {
     for (const match of upper.matchAll(pattern)) {
-      const raw = type === 'container' ? match[1] + match[2] + match[3] : type === 'awb' ? match[1] + match[2] + match[3] : match[1];
+      const raw = type === 'container' ? match[1] + match[2] + match[3] : type === 'awb' ? (match[1] ? match[1] + match[2] + match[3] : match[4] + match[5] + match[6]) : match[1];
       // Reference numbers contain digits; this skips words such as "INVOICE NUMBER".
       if (!/\d/.test(raw)) continue;
       const validation = validateReference(type, raw);

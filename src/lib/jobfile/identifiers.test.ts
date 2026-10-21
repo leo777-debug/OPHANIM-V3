@@ -43,4 +43,8 @@ describe('reference extraction', () => {
     expect(found.find(item => item.type === 'invoice')?.value).toBe('INV-2026-0411');
     expect(found.find(item => item.type === 'container')?.validation).toMatchObject({ valid: false, code: 'check_digit' });
   });
+  it('does not read phone numbers or totals as air waybills', () => {
+    expect(findReferences('Call us on 800 1234 5678 or +971 4 123 4567. Total 1240 5678 9012').filter(item => item.type === 'awb')).toEqual([]);
+    expect(findReferences('see 176-12345675 attached').find(item => item.type === 'awb')?.validation.normalized).toBe('176-12345675');
+  });
 });

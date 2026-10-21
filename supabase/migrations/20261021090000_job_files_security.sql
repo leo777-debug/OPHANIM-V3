@@ -125,7 +125,12 @@ create index if not exists ophanim_forecasts_job_idx on public.ophanim_forecasts
 -- Sourced forecasts API already enforces.
 create or replace function app_private.ophanim_forecasts_append_only() returns trigger language plpgsql as $$
 begin
-  if tg_op = 'DELETE' then raise exception 'ophanim_forecasts is append-only'; end if;
+  -- Cascades from deleting an organization, job file or question run inside a
+  -- referential-action trigger (depth > 1) and are allowed; direct deletes are not.
+  if tg_op = 'DELETE' then
+    if pg_trigger_depth() > 1 then return old; end if;
+    raise exception 'ophanim_forecasts is append-only';
+  end if;
   if old.question_id is null and old.source_type = 'human' and old.outcome is null and new.outcome is not null
      and (to_jsonb(new) - array['outcome', 'outcome_source_url', 'resolved_at']) = (to_jsonb(old) - array['outcome', 'outcome_source_url', 'resolved_at']) then
     return new;

@@ -170,8 +170,8 @@ export async function routeForSeniorReview(ctx: Ctx, job: JobFile, openFlags: Fl
 }
 
 // ---- Verification: confirm / correct --------------------------------------------
-export async function confirmField(ctx: Ctx, fieldId: string, action: 'confirm' | 'correct' | 'reject', value?: string) {
-  const [field] = await ctx.repo.select<ExtractedField>('ophanim_extracted_fields', org(ctx), { id: fieldId });
+export async function confirmField(ctx: Ctx, fieldId: string, action: 'confirm' | 'correct' | 'reject', value?: string, jobFileId?: string) {
+  const [field] = await ctx.repo.select<ExtractedField>('ophanim_extracted_fields', org(ctx), { id: fieldId, ...(jobFileId ? { jobFileId } : {}) });
   if (!field) throw new JobFileInputError('Field not found.');
   const corrected = action === 'correct' && typeof value === 'string' && value.trim() !== (field.value ?? '');
   const status = action === 'reject' ? 'rejected' : corrected ? 'corrected' : 'confirmed';

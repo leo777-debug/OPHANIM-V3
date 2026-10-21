@@ -5,7 +5,7 @@ import { rankToday } from './today-list';
 import type { Ctx } from './types';
 
 export async function buildDigest(ctx: Ctx) {
-  const items = (await rankToday(ctx, { scope: 'team' })).items.slice(0, 15);
+  const items = (await rankToday(ctx, { scope: 'team', persist: false })).items.slice(0, 15);
   const lines = items.map((item, index) => `${index + 1}. ${item.titleEn}${item.dueAt ? ` (due ${item.dueAt.slice(0, 16).replace('T', ' ')} UTC)` : ''}`);
   const subject = `Ophanim Today: ${items.length} item${items.length === 1 ? '' : 's'}${ctx.actor.demo ? ' [SYNTHETIC DEMO]' : ''}`;
   return { subject, text: lines.length ? `${lines.join('\n')}\n\nOpen the Today list for details.` : 'Nothing waiting today.', count: items.length };

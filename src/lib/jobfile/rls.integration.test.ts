@@ -47,6 +47,10 @@ describe('job-file tenant isolation (RLS)', () => {
       await seed(pg, ORG_A, USER_A, 'A');
       await expect(pg.query('update ophanim_forecasts set probability=0.9')).rejects.toThrow('append-only');
       await expect(pg.query('delete from ophanim_forecasts')).rejects.toThrow('append-only');
+      // Deleting the owning job (cascade) still works.
+      await pg.query(`delete from ophanim_job_files where organization_id=$1`, [ORG_A]);
+      expect((await pg.query(`select id from ophanim_forecasts where question_id is not null`)).rows).toEqual([]);
+      await seed(pg, ORG_A, USER_A, 'A2');
       const legacy = (await pg.query<{ id: string }>(`insert into ophanim_forecasts(organization_id,created_by,question,horizon,probability,source_url) values($1,$2,'Will the public route reopen?',now()-interval '1 hour',0.7,'https://example.com/a') returning id`, [ORG_A, USER_A])).rows[0].id;
       await pg.query(`update ophanim_forecasts set outcome=true,outcome_source_url='https://example.com/b',resolved_at=now() where id=$1`, [legacy]);
       await expect(pg.query(`update ophanim_forecasts set outcome=false where id=$1`, [legacy])).rejects.toThrow('append-only');

@@ -52,7 +52,7 @@ const window = (from: number, to: number) => `${new Date(from).toISOString().sli
 type WeatherRow = { station: string; kind: 'metar' | 'taf'; raw: string; issuedAt: string; source: string; isSynthetic: boolean };
 
 /** Weather flags and a logged weather-impact prediction for an air job's arrival (or departure) morning. */
-export async function weatherForJob(ctx: Ctx, aggregate: JobAggregate): Promise<{ flags: Flag[]; lines: ConditionLine[] }> {
+export async function weatherForJob(ctx: Ctx, aggregate: JobAggregate, persist = true): Promise<{ flags: Flag[]; lines: ConditionLine[] }> {
   const { job } = aggregate;
   if (!job.mode.startsWith('air')) return { flags: [], lines: [] };
   const importing = job.mode === 'air_import', code = (importing ? job.destination : job.origin)?.trim().toUpperCase() ?? '', at = Date.parse((importing ? job.plannedArrivalAt : job.plannedDepartureAt) ?? '');
@@ -63,7 +63,7 @@ export async function weatherForJob(ctx: Ctx, aggregate: JobAggregate): Promise<
   const risks = weatherRisks(parseTaf(taf.raw, taf.issuedAt).groups, at - 3 * 36e5, at + 3 * 36e5);
   const source = `ESTIMATE from TAF ${station} issued ${taf.issuedAt.slice(0, 16).replace('T', ' ')} UTC (${taf.source}${taf.isSynthetic ? ', SYNTHETIC DEMO' : ''}).`;
   const flags = risks.map(risk => makeFlag(risk.code, 'warn', `${risk.code}:${job.id}:${station}:${taf.issuedAt}`, { station: code || station, window: window(risk.from, risk.to), source, ...risk.detail }));
-  if (risks.length && importing) {
+  if (persist && risks.length && importing) {
     const probability = Math.min(0.9, Math.max(...risks.map(risk => risk.probability * (risk.code === 'weather_fog' ? 0.6 : risk.code === 'weather_visibility' ? 0.4 : 0.3))));
     await recordPrediction(ctx, { questionType: 'weather_impact', outcomeKind: 'binary', subjectKey: `weather:${job.id}:arrival`, jobFileId: job.id, resolveBy: new Date(at + 48 * 36e5).toISOString(),
       textEn: `${job.jobNumber}: arrival at ${code} at least 60 minutes later than planned because of weather`, probability, modelVersion: 'weather-rules@1',
@@ -155,9 +155,9 @@ export function eventsForJob(events: EventRow[], job: JobFile, places: string[],
 
 export type ConditionLine = { title: string; label: 'FACT' | 'ESTIMATE'; detail: string };
 /** All outside conditions for one job: saves weather/City Pulse flags and returns impact-first lines. */
-export async function jobConditions(ctx: Ctx, aggregate: JobAggregate) {
-  const org = ctx.actor.organizationId, weather = await weatherForJob(ctx, aggregate), city = await cityPulseForJob(ctx, aggregate);
-  await saveFlags(ctx, aggregate.job.id, [...weather.flags, ...city.flags], { replaceCodes: ['weather_fog', 'weather_visibility', 'weather_wind', 'weather_dust', 'city_pulse'] });
+export async function jobConditions(ctx: Ctx, aggregate: JobAggregate, options: { persist?: boolean } = {}) {
+  const org = ctx.actor.organizationId, persist = options.persist !== false, weather = await weatherForJob(ctx, aggregate, persist), city = await cityPulseForJob(ctx, aggregate);
+  if (persist) await saveFlags(ctx, aggregate.job.id, [...weather.flags, ...city.flags], { replaceCodes: ['weather_fog', 'weather_visibility', 'weather_wind', 'weather_dust', 'city_pulse'] });
   const lines: ConditionLine[] = [...weather.lines, ...city.lines];
   const siteIds = [...new Set((await ctx.repo.select<DriverLink>('ophanim_driver_links', org, { jobFileId: aggregate.job.id })).map(link => link.siteId).filter((id): id is string => Boolean(id)))];
   for (const siteId of siteIds) { const wait = await currentWait(ctx, siteId); const [site] = await ctx.repo.select<{ name: string }>('ophanim_sites', org, { id: siteId }, { shared: true }); if (wait) lines.push({ title: `${site?.name ?? 'Gate'}: ${wait.text.replace(' (ESTIMATE', ' (').replace(/^Current wait at this gate: /, 'current wait ')}`, label: 'ESTIMATE', detail: wait.text }); }
