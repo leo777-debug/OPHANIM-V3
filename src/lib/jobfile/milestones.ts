@@ -221,7 +221,8 @@ export function milestonesFromText(text: string) {
   return EMAIL_PATTERNS.flatMap(({ code, pattern }) => {
     const match = text.match(pattern); if (!match) return [];
     const raw = match[1].replace(/\s+/g, ' ').trim(), iso = /^\d{4}-/.test(raw) ? `${raw.replace(' ', 'T')}:00+04:00` : raw;
-    const at = Date.parse(iso) || Date.parse(`${raw} GMT+0400`);
+    // Times without a zone are Gulf time, never the server's own zone.
+    const at = /^\d{4}-/.test(raw) ? Date.parse(iso) : Date.parse(`${raw} GMT+0400`);
     if (!Number.isFinite(at)) return [];
     const expected = EXPECTED.test(match[0]);
     return [{ code, at: new Date(at).toISOString(), kind: expected ? 'expected' as const : 'actual' as const, confidence: /^\d{4}-/.test(raw) ? 0.85 : 0.7, evidence: match[0].slice(0, 200) }];
