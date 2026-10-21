@@ -5,6 +5,7 @@ import { DEFAULT_RULE_PACKS, differenceKey, normalizeParty, number, runChecks, t
 import { documentTypes, type DocumentTypeDefinition } from './document-types';
 import { validateAwb, validateContainer, type ReferenceType } from './identifiers';
 import { readDocument, type ReadResult } from './reader';
+import { recordPaperRisk } from './receipts';
 import { addReference, attachIntake, audit, createJobFromIntake, JobFileInputError, loadJob, receiveIntake, saveFlags, userOf, type IntakeHooks, type IntakeInput, type JobInput } from './service';
 import { getFile } from './storage';
 import { closeTodayItem, upsertTodayItem } from './today';
@@ -136,6 +137,7 @@ export async function runJobChecks(ctx: Ctx, jobFileId: string) {
   }
   for (const flag of raised) await upsertTodayItem(ctx, { kind: 'flag', jobFileId, sourceKey: `flag:${flag.id}`, titleEn: `${job.jobNumber}: ${flag.messageEn}`, titleAr: `${job.jobNumber}: ${flag.messageAr}`, probability: flag.severity === 'block' ? 0.9 : flag.severity === 'warn' ? 0.5 : 0.15, cost: flag.severity === 'block' ? 2000 : 500, payload: { flagId: flag.id, severity: flag.severity } });
   await routeForSeniorReview(ctx, job, (await ctx.repo.select<FlagRecord>('ophanim_job_checks', org(ctx), { jobFileId, status: 'open' })));
+  await recordPaperRisk(ctx, (await loadJob(ctx, jobFileId))!);
   return flags;
 }
 

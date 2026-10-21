@@ -3,9 +3,9 @@
   "branch": "feat/job-file-core",
   "baseCommit": "2a2b72e",
   "worktree": "D:/OPHANIM/worktrees/job-file-core",
-  "current_phase": "4.9",
-  "current_task": "4.9-ledger-receipts",
-  "last_commit": "19e991a",
+  "current_phase": "4.10",
+  "current_task": "4.10-demo-tests-docs",
+  "last_commit": "d7f6882",
   "updated_at": "2026-10-21",
   "tasks": [
     {
@@ -50,11 +50,11 @@
     },
     {
       "id": "4.9-ledger-receipts",
-      "status": "doing"
+      "status": "done"
     },
     {
       "id": "4.10-demo-tests-docs",
-      "status": "todo"
+      "status": "doing"
     },
     {
       "id": "05-jobfile-finish",

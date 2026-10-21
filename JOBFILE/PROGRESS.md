@@ -176,6 +176,23 @@ from local commit `2a2b72e` (parity-and-reliability, unpushed). Read
 - Acceptance (invoices.test.ts): seeded job → invoice passes checks, PINT AE stub
   export, payment-date range recorded and later scored "called".
 
+## 4.9 — prediction ledger and Receipts (done)
+
+- Every prediction type writes to the one ledger when made: Ghost Position,
+  time-gap risk, weather impact, payment date, dispute odds, Paper Risk (inputs
+  snapshot + sha256, model/rule version, shown/acted interactions).
+- Automatic resolution: milestone confirmed (ghost, gap), arrival (weather),
+  invoice paid/disputed (payment, dispute), delivered without query or a recorded
+  customs query/amendment/rejection/dispute (Paper Risk).
+- Scoring: Brier + log loss for yes/no; interval coverage + absolute error for
+  ranges; acted-on warnings whose problem did not happen are excluded.
+- Paper Risk v1 (`paper-risk@1`): rules + logistic, top 3 reasons ("1 in 4" for a
+  weight mismatch alone).
+- Receipts strip on each job ("Called it" / "Missed" / "Pending"); internal
+  /jobs/receipts "Checking our work": calibration chart + table, Brier vs base-rate
+  baseline, coverage, resolved/excluded counts.
+- Tests: receipts.test.ts.
+
 ## Questions for the founder
 
 1. What exactly are the "landing" and "takeoff" papers? Assumed: air import / export documents (AWB, cargo manifest, delivery order, export declaration).
