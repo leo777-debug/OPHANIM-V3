@@ -219,3 +219,9 @@ including the shared map and Presentation controls. Public sharing targets that
 map; AI discovery retains server-only credentials and private APIs retain session
 requirements. Unit/build checks pass; renewed browser and dependency security
 validation are pending. No World Monitor code, assets or services were used.
+
+The public maritime projection now excludes customer/licensed feeds and caches;
+licensed access is session- and organization-scoped. First-observation and source
+freshness metadata survive the unified news adapter; replay cannot produce current
+convergence alerts. Unit/type/build checks pass; full browser validation continues.
+No World Monitor code, assets, API or data were used.

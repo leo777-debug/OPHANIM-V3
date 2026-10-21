@@ -46,10 +46,10 @@ Pricing/quotas vary by plan and may change. “Keyless” describes access, not 
 | OpenSky Network | `OPENSKY_CLIENT_ID`, `OPENSKY_CLIENT_SECRET` | OAuth aviation quota | Credit tiers and commercial permissions depend on OpenSky agreement. | [Provider](https://openskynetwork.github.io/opensky-api/rest.html) | Existing keyless ADS-B sources have their own coverage and terms. |
 | airplanes.live / adsb.lol | None | Public ADS-B context | Keyless endpoints; confirm commercial rights and rate limits. | [Provider](https://www.adsb.lol/docs/open-data/) | Public coverage only; never implies complete tracking. |
 | NOAA Aviation Weather | None | METAR observations | Public API up to 100 requests/minute; app caps five/minute and caches stations. | [Provider](https://aviationweather.gov/data/api/) | Keyless; existing commercial-rights review gate applies. |
-| AISStream | `AIS_API_KEY` | Streaming AIS | Account/key required; verify current access and redistribution terms. | [Provider](https://aisstream.io/) | Digitraffic provides regional, not global, AIS. |
+| AISStream | `AIS_API_KEY`, `AIS_ORGANIZATION_ID` | Streaming AIS for the configured organization | Account/key required; verify current access and redistribution terms. | [Provider](https://aisstream.io/) | Digitraffic provides regional, not global, AIS. |
 | Digitraffic Marine | None | Finnish regional AIS | Keyless open data, attribution and documented request limits apply. | [Provider](https://www.digitraffic.fi/en/marine-traffic/) | Keyless regional default. |
-| Customer AIS | `CUSTOMER_AIS_API_URL` | Customer-licensed vessel coverage | Your provider contract and rate limits. | [Provider](https://github.com/leo777-debug/OPHANIM-V3) | Digitraffic regional coverage. |
-| MarineTraffic / Kpler | `MARINETRAFFIC_AIS_API_URL`, `MARINETRAFFIC_API_KEY` | Licensed AIS | Paid contract; no assumed free API quota. | [Provider](https://servicedocs.marinetraffic.com/) | Digitraffic regional coverage. |
+| Customer AIS | `CUSTOMER_AIS_API_URL`, `AIS_ORGANIZATION_ID` | Customer-licensed vessel coverage for the configured organization | Your provider contract and rate limits. | [Provider](https://github.com/leo777-debug/OPHANIM-V3) | Digitraffic regional coverage. |
+| MarineTraffic / Kpler | `MARINETRAFFIC_AIS_API_URL`, `MARINETRAFFIC_API_KEY`, `AIS_ORGANIZATION_ID` | Licensed AIS for the configured organization | Paid contract; no assumed free API quota. | [Provider](https://servicedocs.marinetraffic.com/) | Digitraffic regional coverage. |
 | Official port notices | `PORT_NOTICE_FEED_URL` | Port closures and notices | Source-specific permissions and limits. | [Provider](https://github.com/leo777-debug/OPHANIM-V3) | No global substitute; show not configured. |
 | Official sanctions feeds | `OFFICIAL_SANCTIONS_FEED_URL` | Authoritative sanctions updates | Source-specific permissions and limits; not a compliance certification. | [Provider](https://ofac.treasury.gov/sanctions-list-service) | Existing reference screening has separate provenance. |
 | Reviewed public observations | `REVIEWED_OSINT_FEED_URL` | Organization-approved public incident discovery | Source-specific permissions and limits. | [Provider](https://github.com/leo777-debug/OPHANIM-V3) | Other public hazard feeds continue. |
@@ -78,7 +78,8 @@ This table includes credentials, local-service settings, safety gates and runtim
 
 | Area | Variable | Purpose |
 | --- | --- | --- |
-| Maritime | `AIS_API_KEY` | Streaming AIS |
+| Maritime | `AIS_API_KEY` | Streaming AIS for the configured organization |
+| Maritime | `AIS_ORGANIZATION_ID` | Streaming AIS for the configured organization |
 | AI | `AI_API_KEY` | Optional labelled summaries and explanations |
 | AI | `AI_BASE_URL` | Optional labelled summaries and explanations |
 | AI | `AI_ENABLED_TASKS` | Optional runtime setting; leave empty to use the documented code default. |
@@ -89,7 +90,7 @@ This table includes credentials, local-service settings, safety gates and runtim
 | Platform | `APP_INTERNAL_URL` | Optional runtime setting; leave empty to use the documented code default. |
 | Platform | `APP_URL` | Optional runtime setting; leave empty to use the documented code default. |
 | Maritime | `CUSTOMER_AIS_API_TOKEN` | Server-only credential; configure only for the associated optional feature. |
-| Maritime | `CUSTOMER_AIS_API_URL` | Customer-licensed vessel coverage |
+| Maritime | `CUSTOMER_AIS_API_URL` | Customer-licensed vessel coverage for the configured organization |
 | Platform | `DARK_WEB_FIXTURES_ENABLED` | Optional runtime setting; leave empty to use the documented code default. |
 | Platform | `DATABASE_URL` | Organization data, audit records, watchlists |
 | Platform | `DISRUPTION_SYNC_CRON_SECRET` | Server-only credential; configure only for the associated optional feature. |
@@ -131,8 +132,8 @@ This table includes credentials, local-service settings, safety gates and runtim
 | Optional services | `MAIGRET_COMMAND` | Optional runtime setting; leave empty to use the documented code default. |
 | Optional services | `MAIGRET_ENABLED` | Optional runtime setting; leave empty to use the documented code default. |
 | Optional services | `MAIGRET_MAX_SITES` | Optional runtime setting; leave empty to use the documented code default. |
-| Maritime | `MARINETRAFFIC_AIS_API_URL` | Licensed AIS |
-| Maritime | `MARINETRAFFIC_API_KEY` | Licensed AIS |
+| Maritime | `MARINETRAFFIC_AIS_API_URL` | Licensed AIS for the configured organization |
+| Maritime | `MARINETRAFFIC_API_KEY` | Licensed AIS for the configured organization |
 | Space | `N2YO_API_KEY` | Future pass predictions; not consumed by current adapter |
 | Platform | `NEXT_DEV_DIST_DIR` | Optional runtime setting; leave empty to use the documented code default. |
 | Platform | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Public browser configuration; never put a secret here. |

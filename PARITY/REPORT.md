@@ -1,6 +1,6 @@
 # Parity and reliability report — work in progress
 
-Updated: 2026-10-20. Branch: `parity-and-reliability`.
+Updated: 2026-10-21. Branch: `parity-and-reliability`.
 
 This is an interim implementation report, not completed parity. Resume from
 `state.json` and `PROGRESS.md`. No World Monitor code, styles, assets, API, embeds
@@ -11,7 +11,7 @@ No claim is made about the provenance of historical commits outside this work.
 ## Section 2: central keys
 
 **Partial.** API_KEYS.md documents 63 service entries/groups and `.env.example`
-contains 118 deliberately empty configuration identifiers, generated from source
+contains 119 deliberately empty configuration identifiers, generated from source
 without reading private environment files. The inventory includes keyless services,
 credentials, optional workers, runtime settings and reserved-but-unused keys.
 Some keyless catalogue entries group multiple operators (especially cameras and
@@ -41,7 +41,7 @@ Key dependencies include:
 | Compatible hosted AI / Mistral | AI_BASE_URL, AI_MODEL, AI_API_KEY | Deterministic views; explicitly allowed local inference can omit key |
 | Gemini briefings | GEMINI_API_KEY_1 through _8 | Compatible/local AI or no AI |
 | Semantic knowledge | EMBEDDING_BASE_URL, EMBEDDING_MODEL; optional EMBEDDING_API_KEY | Lexical search; no fake embeddings |
-| Streaming/global AIS | AIS_API_KEY or customer AIS URL/token or MarineTraffic URL/key | Regional Digitraffic coverage |
+| Streaming/global AIS | AIS_API_KEY or customer AIS URL/token or MarineTraffic URL/key, plus AIS_ORGANIZATION_ID | Public regional Digitraffic coverage; licensed feeds require matching organization sign-in |
 | OpenSky quota | OPENSKY_CLIENT_ID, OPENSKY_CLIENT_SECRET | Existing public ADS-B, source terms apply |
 | Shodan | SHODAN_API_KEY; authorized scan targets for scans | Other cyber providers |
 | ThreatFox | THREATFOX_AUTH_KEY | Permitted keyless cyber sources |
@@ -262,3 +262,5 @@ re-run regressions before any merge or deployment. See task 00a in state.json.
 Combined default integration (20 October): default d22f6a0 is now reconciled in the isolated managed worktree, preserving Presentation, shared map and current AI behavior with server-only credentials. Anonymous demo auth fallback removed to maintain session requirements. Clean combined suite: 529 passed, 5 skipped; typecheck/build/targeted lint passed. Earlier screenshots/checks remain historical. Dependency audit contains critical Next.js/MapLibre findings; remediation and renewed browser checks are pending. PR base has not yet been retargeted.
 
 Dependency remediation: Next16.4.2/MapLibre6.15.0/Sharp0.35.5 pinned, compatible transitive fixes applied. 531 tests passed, 5 skipped; typecheck/lint/Webpack build passed. Production audit zero findings; five dev-only lint-chain high advisories remain without a compatible patch. See docs/DEPENDENCY_SECURITY.md. Browser validation is running, not yet passed.
+
+21 October: public maritime projector now uses a separate keyless-only path/cache; licensed AIS requires session and AIS_ORGANIZATION_ID match, with private/no-store and pinned transport. Legacy maritime snapshots without public-only provenance are withheld. News/quake provenance survives projection; replay disables current convergence. Latest isolated checks: 538 passed, 5 skipped; typecheck/lint/production build passed. Presentation browser run restarted after interruption and remains pending. See docs/PUBLIC_MAP_PRIVACY.md.

@@ -119,6 +119,21 @@ export async function checkTools({browser,url,owner,save,output,pass}) {
     assert.equal(new URL(page.url()).searchParams.get('tool'),'tracking');
     pass('Legacy Atlas links redirect to the same operational map with tool and camera parameters retained');
     await dock.getByRole('button',{name:'Close tool',exact:true}).click();
+    await workspace.getByRole('button',{name:'Share map view',exact:true}).click();
+    const sharedUrl=await page.getByRole('textbox',{name:'Public map view URL',exact:true}).inputValue();
+    const shared=new URL(sharedUrl);
+    assert.equal(shared.origin,url);
+    assert.equal(shared.pathname,'/logistics/map');
+    assert.equal(shared.searchParams.get('view'),'full');
+    assert.equal(shared.searchParams.get('mapVersion'),'1');
+    for(const field of ['shipment','token','organization','apiKey'])assert.equal(shared.searchParams.has(field),false);
+    assert.ok(!shared.searchParams.get('layers').includes('sdk_'));
+    await page.getByRole('button',{name:'Close map sharing',exact:true}).click();
+    await page.goto(sharedUrl,{waitUntil:'domcontentloaded'});
+    await geography();
+    assert.equal(await workspace.getByRole('button',{name:'Earth colored basemap',exact:true}).getAttribute('aria-pressed'),'true');
+    assert.equal(await workspace.getByRole('checkbox',{name:'Aircraft',exact:true}).isChecked(),false);
+    pass('Generated public map link restores unified map appearance and selected layers without private query IDs');
     for(const viewport of [{width:1920,height:1080},{width:1366,height:768}]) {
       await page.setViewportSize(viewport);
       await workspace.getByRole('button',{name:'Fullscreen map',exact:true}).click();

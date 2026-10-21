@@ -420,3 +420,26 @@ verified; never infer completion from a catalog entry or this plan.
 - Pinned Next/eslint-config-next16.4.2, MapLibre6.15.0 and Sharp0.35.5; compatible transitive updates. Production npm audit: zero findings. Full tree: five high dev-only braces/lint-chain findings with no compatible patch; no forced downgrade. See docs/DEPENDENCY_SECURITY.md and dated audit JSON.
 - Migrated namespace imports, Next-emitted worker URL, nested GeoJSON/cache formats and public projection/unprojection selection. Escaped additional sweep popup values. Turbopack rejects upstream dynamic worker URL analysis; supported Webpack dev/build now explicit.
 - Checks: 531 passed, 5 skipped; typecheck/targeted lint and Webpack production build passed. Full disposable migration chain with pgvector passed; synthetic-session Presentation browser harness running. No real credentials or production data used; no remote push/deployment.
+
+## 21 October 2026 — public projections and provenance
+
+- Closed an inherited public-map bypass into the combined customer AIS handler.
+  Public map calls now explicitly use keyless Digitraffic only, with a separate
+  response cache and no customer/MarineTraffic fetch, keyed stream startup or
+  private vessel-cache reads. Combined licensed AIS requires a valid session and
+  matching AIS_ORGANIZATION_ID before any cache or upstream access, and uses
+  private, no-store responses. Licensed URL transport is bounded, DNS-pinned and
+  rejects redirects. No real keys were read or used.
+- Legacy maritime/port/chokepoint snapshots without public-only provenance are
+  withheld. New snapshots retain publicOnly provenance; synthetic replay fixtures
+  were updated. Owner re-recording is required for old maritime snapshots.
+- Retained validated first-seen/storage, freshness/staleness, source cadence,
+  precision and region through public news projection. Quake adapter now retains
+  numeric observation times and citations. Replay disables current convergence.
+  TSX tests now run too; a real server-rendered test proves current fixture signals
+  qualify while the same replay never generates a current convergence alert.
+- Checks: 538 passed, 5 skipped (119 files passed), standalone typecheck, targeted
+  lint and production build passed. API inventory: 63 catalogue services,
+  119 empty identifiers. Full disposable Presentation browser run restarted after
+  the earlier interrupted run; no completion result claimed yet.
+- See docs/PUBLIC_MAP_PRIVACY.md. No World Monitor code or services were used.

@@ -6,6 +6,24 @@ import type {PresentationFeed} from './types';
 
 const live=(id:PresentationFeed['id'],payload:unknown):PresentationFeed=>({...normalizePublicFeed(id,payload),state:'live',recordedAt:null});
 describe('restored original public map feeds',()=>{
+  it('retains validated first-observation/freshness/precision evidence while excluding private fields',()=>{
+    const time='2026-10-20T00:00:00.000Z';
+    const feed=live('news',{
+      news:[{id:'n',title:'Fixture report',source:'USGS',published:time,coords:[25,55],coords_default:false,
+        location_precision:'reported',region:'Gulf',first_seen:time,first_seen_storage:'postgres',
+        source_data_mode:'stale',source_last_success:time,source_stale_since:time,apiKey:'PRIVATE'}],
+      news_sources:[{name:'USGS',url:'https://example.invalid',status:'ok',count:1,checkedAt:time,latestPublished:time,
+        mode:'stale',lastSuccessAt:time,staleSince:time,refresh:'Every 60 s',latencyMs:10,error:'PRIVATE ERROR'}],
+    });
+    expect(feed.news[0]).toMatchObject({first_seen:time,first_seen_storage:'postgres',source_data_mode:'stale',source_last_success:time,location_precision:'reported',region:'Gulf'});
+    expect(feed.sources[0]).toMatchObject({mode:'stale',lastSuccessAt:time,staleSince:time,refresh:'Every 60 s',latencyMs:10});
+    expect(feed.features[0].properties?.approximate_location).toBe(false);
+    expect(JSON.stringify(feed)).not.toContain('PRIVATE');
+    const missing=live('news',{news:[{first_seen:'bad',first_seen_storage:'private',source_data_mode:'LIVE',location_precision:'reported',coords_default:true}]});
+    expect(missing.news[0].first_seen).toBeUndefined();
+    expect(missing.news[0].source_data_mode).toBeUndefined();
+    expect(missing.news[0].location_precision).toBe('approximate');
+  });
   it('keeps ports and chokepoints separate from observed vessels and strips inferred congestion',()=>{
     const ports=live('ports',{ports:[{name:'Test port',lat:25,lng:55,volume:'LIVE: 200',congestion:'SEVERE'}]});
     const chokepoints=live('chokepoints',{chokepoints:[{name:'Test strait',lat:26,lng:56,risk:'CRITICAL'}]});

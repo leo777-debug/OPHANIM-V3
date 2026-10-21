@@ -39,7 +39,7 @@ export async function startTestDatabase(port=55439) {
 
 export async function seedReplay(db) {
   const now=new Date().toISOString();
-  const common={features:[],news:[],sources:[],source:'Synthetic presentation test fixture',sourceUrl:'https://example.invalid/evidence',fetchedAt:now,observedAt:now,reference:false,note:'Synthetic fixture for tests only',testFixture:true};
+  const common={features:[],news:[],sources:[],source:'Synthetic presentation test fixture',sourceUrl:'https://example.invalid/evidence',fetchedAt:now,observedAt:now,reference:false,note:'Synthetic fixture for tests only',testFixture:true,publicOnly:true};
   const rows={
     flights:[['TEST AIR 01',52,25],['TEST AIR 02',38,34],['TEST AIR 03',63,25]],
     maritime:[['TEST VESSEL 01',56,26],['TEST VESSEL 02',32,31],['TEST VESSEL 03',44,12]],

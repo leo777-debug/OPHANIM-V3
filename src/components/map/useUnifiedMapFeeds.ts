@@ -28,7 +28,7 @@ export function useUnifiedMapFeeds(revision:number,refresh:number) {
   const allData=useMemo(()=>{
     const atlas=atlasPresentationData(feeds,new Set()).data;
     return {...atlas,
-      earthquakes:atlas.earthquakes.map(item=>({...item,location:item.name,time:item.observedAt})),
+      earthquakes:atlas.earthquakes.map(item=>({...item,location:item.name})),
       gdelt:atlas.gdelt.map(item=>({...item,title:item.name,date:item.observedAt})),
       news_sources:feeds.news?.sources??[],
     };

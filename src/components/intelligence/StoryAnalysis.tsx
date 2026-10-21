@@ -8,7 +8,7 @@ import { COUNTRY_REFERENCE } from '@/lib/intelligence/country-gazetteer';
 import styles from './desk.module.css';
 
 const EMPTY_NEWS: NewsItem[] = [];
-export default function StoryAnalysis({ data, onLocate }: { data: ExplorerData; onLocate: (lat: number, lng: number) => void }) {
+export default function StoryAnalysis({ data, onLocate, replay = false }: { data: ExplorerData; onLocate: (lat: number, lng: number) => void; replay?: boolean }) {
   const [hours, setHours] = useState(36);
   const [similarity, setSimilarity] = useState(0.65);
   const [minimumTrust, setMinimumTrust] = useState<'established_media' | 'wire' | 'official'>('established_media');
@@ -16,8 +16,9 @@ export default function StoryAnalysis({ data, onLocate }: { data: ExplorerData; 
   const stories = useMemo(() => clusterStories(news, { windowHours: hours, similarity }), [news, hours, similarity]);
   const entities = useMemo(() => correlateEntities(news), [news]);
   const alerts = useMemo(() => {
+    if (replay) return [];
     const signals: ConvergenceSignal[] = news.flatMap(item => {
-      if (!item.coords || item.location_precision !== 'reported' || !item.published || item.source_data_mode === 'stale') return [];
+      if (!item.coords || item.location_precision !== 'reported' || !item.published || item.source_data_mode !== 'fresh') return [];
       const trust = trustFor(item.source);
       return [{ id: item.id, type: 'news', source: item.source, independenceKey: trust.independenceKey, trust, time: item.published, lat: item.coords[0], lng: item.coords[1], title: item.title, url: item.link }];
     });
@@ -35,7 +36,7 @@ export default function StoryAnalysis({ data, onLocate }: { data: ExplorerData; 
       signals.push({ id: `firms:${fire.lat}:${fire.lng}:${observed}`, type: 'fire', source: 'NASA FIRMS', independenceKey: trust.independenceKey, trust, time: observed, lat: fire.lat, lng: fire.lng, title: fire.title || 'Satellite-observed fire hotspot', url: 'https://firms.modaps.eosdis.nasa.gov/' });
     }
     return detectConvergence(signals, { minimumTrust });
-  }, [news, data.earthquakes, data.fires, minimumTrust]);
+  }, [news, data.earthquakes, data.fires, minimumTrust, replay]);
   return <section className={styles.scroll} aria-label="Story analysis">
     <div className={styles.toolbar}>
       <label>Story window <select value={hours} onChange={event => setHours(Number(event.target.value))}><option value={12}>12 hours</option><option value={36}>36 hours</option><option value={72}>72 hours</option></select></label>
@@ -47,7 +48,7 @@ export default function StoryAnalysis({ data, onLocate }: { data: ExplorerData; 
     <details><summary>Linked entities · {entities.length}</summary><ul>{entities.map(record => <li key={record.entity.id}><strong>{record.entity.label}</strong> · {record.entity.type} · {record.articleIds.length} reports · {record.publishers.join(', ')}</li>)}</ul></details>
     <details><summary>Geographic convergence · {alerts.length}</summary>
       <p>50 km radius, last 6 hours, at least 3 independent source types and score ≥40. Unique type weights: seismic 20, fire 15, aviation 15, maritime 15, news 10, outages 20, GNSS 15; cap 100. One source operator contributes one type. Approximate coordinates are excluded. Reported news, seismic observations and dated NASA fire hotspots are connected. Aviation, maritime, outage and GNSS disruption adapters remain pending.</p>
-      {!alerts.length && <p>No qualifying convergence in the available signals. This does not imply safety or complete coverage.</p>}
+      {replay ? <p>Replay is active. Current convergence detection is disabled; recorded stories and their original source times remain available.</p> : !alerts.length && <p>No qualifying convergence in the available signals. This does not imply safety or complete coverage.</p>}
       {alerts.map(alert => <article key={alert.id}><strong>Indicative score {alert.score}/100</strong><p>{alert.label}</p><button type="button" onClick={() => onLocate(alert.anchor.lat, alert.anchor.lng)}>Locate area</button><ul>{alert.contributions.map(signal => <li key={`${signal.source}:${signal.id}`}><a href={safeSourceUrl(signal.url)} target="_blank" rel="noreferrer">{signal.title}</a> · {signal.source} · {signal.type} · {signal.time} · {signal.trust.tier}</li>)}</ul></article>)}
     </details>
     {!stories.length && <p className={styles.empty}>No source reports available for grouping.</p>}

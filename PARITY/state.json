@@ -11,7 +11,7 @@
     {
       "id": "00a-baseline-alignment",
       "status": "partial",
-      "remaining": "Default integrated and dependency fixes validated. Combined browser regression running; audit public maritime adapter before closing milestone. Retarget PR25 only with final deployment work."
+      "remaining": "Current default integrated. Dependencies patched, public maritime privacy/provenance fixed, 538 tests/typecheck/build passed. Combined Presentation browser run in progress. PR base retarget deferred with deployment last."
     },
     {
       "id": "01-integrations",
@@ -58,12 +58,13 @@
     "baselineTests": "311 passed, 5 skipped",
     "baselineTypecheck": "passed",
     "baselineBuild": "passed",
-    "currentTests": "531 passed, 5 skipped; 117 files passed (patched dependencies, isolated checkout)",
+    "currentTests": "538 passed, 5 skipped; 119 files passed (isolated checkout, TSX included)",
     "typecheck": "passed",
     "build": "passed, Next16.4.2 Webpack (Turbopack dynamic URL incompatibility documented)",
     "targetedLint": "passed",
     "publicReachability": "14/14; HTTP only, not freshness/payload",
-    "dependencyAudit": "Zero production findings; five high development-only lint-chain findings without compatible fix. See docs/DEPENDENCY_SECURITY.md."
+    "dependencyAudit": "Zero production findings; five high development-only lint-chain findings without compatible fix. See docs/DEPENDENCY_SECURITY.md.",
+    "browser": "Disposable Presentation browser validation restarted 2026-10-21; completion pending. Earlier interrupted run is not a pass."
   },
   "overallStatus": "in_progress",
   "resumeInstruction": "Use the attached parity-default-alignment worktree. Preserve the original detached checkout and unrelated dirty work. Finish dependency updates and combined Presentation/map browser regression, retarget PR25 to actual default, then resume 01-integrations and broad parity. Deployment last; merge only after requested work is complete.",
