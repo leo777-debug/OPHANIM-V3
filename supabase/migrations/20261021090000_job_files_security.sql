@@ -155,7 +155,7 @@ create table if not exists public.ophanim_forecast_outcomes (
   outcome_at timestamptz,
   outcome_value numeric,
   resolved_at timestamptz not null default now(),
-  resolution_source text not null check (resolution_source in ('milestone', 'shipment_event', 'actual_arrival', 'invoice_paid', 'query_received', 'weather_observed', 'manual')),
+  resolution_source text not null check (resolution_source in ('milestone', 'shipment_event', 'actual_arrival', 'invoice_paid', 'query_received', 'weather_observed', 'delay_cost_invoice', 'manual')),
   reviewer_user_id uuid references public.ophanim_users(id) on delete set null,
   evidence jsonb not null default '{}'::jsonb,
   check (outcome_bool is not null or outcome_at is not null or outcome_value is not null),

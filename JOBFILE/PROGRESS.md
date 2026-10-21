@@ -155,6 +155,27 @@ from local commit `2a2b72e` (parity-and-reliability, unpushed). Read
   per Gulf day; the rest wait in the list. Re-raised items keep people's decisions.
 - Tests: today.test.ts.
 
+## 4.8 — Invoice Desk (done)
+
+- Draft outgoing invoices from the job file: freight on checked chargeable weight,
+  pass-through of incoming carrier/terminal charges with evidence, VAT per line
+  (default: international freight zero-rated, local charges 5% — **needs tax-adviser
+  confirmation**). Optional bill-to override.
+- Pre-send checks: >10% above quote, chargeable weight changed, storage paid but
+  not billed, wrong client (block), VAT arithmetic/rates.
+- Incoming invoices matched to jobs by references; margin per job; storage /
+  demurrage / detention tagged as the job's actual cost of delay and stored as a
+  labelled outcome (`delay_cost_invoice`) for later delay-cost predictions.
+- E-invoice adapter: stub by default; generic HTTPS ASP adapter only when
+  EINVOICE_ASP_URL + EINVOICE_ASP_TOKEN + EINVOICE_ASP_VALIDATED=true. PINT AE-shaped
+  UBL 2.1 export, marked NOT VALIDATED (CustomizationID/ProfileID TO-VALIDATE against
+  the UAE MoF specification). Ophanim is not an e-invoicing provider.
+- Predictions: payment date (p10/p50/p90 from client history ≥5 → org prior ≥5 →
+  default prior 21/40/75 days) and dispute odds (rules + logistic). Both resolve on
+  paid/disputed.
+- Acceptance (invoices.test.ts): seeded job → invoice passes checks, PINT AE stub
+  export, payment-date range recorded and later scored "called".
+
 ## Questions for the founder
 
 1. What exactly are the "landing" and "takeoff" papers? Assumed: air import / export documents (AWB, cargo manifest, delivery order, export declaration).

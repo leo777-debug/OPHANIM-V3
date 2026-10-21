@@ -60,7 +60,7 @@ export async function markShown(ctx: Ctx, forecastIds: string[]) {
   for (const id of forecastIds) if (!seen.has(id)) await recordInteraction(ctx, id, 'shown');
 }
 
-export type OutcomeInput = { bool?: boolean; at?: string; value?: number; source: 'milestone' | 'shipment_event' | 'actual_arrival' | 'invoice_paid' | 'query_received' | 'weather_observed' | 'manual'; evidence?: Record<string, unknown> };
+export type OutcomeInput = { bool?: boolean; at?: string; value?: number; source: 'milestone' | 'shipment_event' | 'actual_arrival' | 'invoice_paid' | 'query_received' | 'weather_observed' | 'delay_cost_invoice' | 'manual'; evidence?: Record<string, unknown> };
 /** Resolve a question with what actually happened, then score every forecast on it. */
 export async function resolveQuestion(ctx: Ctx, subjectKey: string, outcome: OutcomeInput) {
   const org = ctx.actor.organizationId;
