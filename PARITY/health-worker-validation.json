@@ -31,7 +31,7 @@
     "302 rejected without following redirect",
     "response bodies and secrets excluded from heartbeat/logs"
   ],
-  "containerRuntime": "Not verified: Docker Desktop Linux engine pipe unavailable",
+  "containerRuntime": "Not verified: attempted Docker Desktop startup; Linux engine pipe remained unavailable. Stopped only processes launched by this verification attempt, restoring the prior stopped state. No container was built or run.",
   "browser": "Not rerun: no app route/UI changes; previous 34 browser checks remain historical evidence",
   "upstreamRequests": "None made by focused worker tests; loopback fixtures only",
   "scope": "Scheduler reachability/completion only, not individual source availability, payload freshness or full parity",
