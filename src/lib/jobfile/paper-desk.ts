@@ -72,7 +72,16 @@ export function paperHooks(ctx: Ctx): IntakeHooks {
     },
   };
 }
-export const receiveAndProcess = (ctx: Ctx, input: IntakeInput, options: { autoCreateFromPreAlert?: boolean } = {}) => receiveIntake(ctx, input, { ...options, ...paperHooks(ctx) });
+export async function receiveAndProcess(ctx: Ctx, input: IntakeInput, options: { autoCreateFromPreAlert?: boolean } = {}) {
+  const result = await receiveIntake(ctx, input, { ...options, ...paperHooks(ctx) });
+  // Milestone times written in emails and messages (rules first, optional AI second).
+  if (result.intake.matchedJobFileId && (input.channel === 'email' || input.channel === 'whatsapp')) {
+    const { applyEmailMilestones } = await import('./milestones');
+    const domain = input.sender?.match(/@([a-z0-9.-]+)/i)?.[1]?.toLowerCase() ?? input.sender ?? null;
+    await applyEmailMilestones(ctx, result.intake.matchedJobFileId, [input.subject, input.bodyText].filter(Boolean).join('\n'), domain ? `${input.channel}:${domain}` : null);
+  }
+  return result;
+}
 export const attachAndProcess = (ctx: Ctx, intakeId: string, jobFileId: string) => attachIntake(ctx, intakeId, jobFileId, paperHooks(ctx));
 export const createFromIntakeAndProcess = (ctx: Ctx, intakeId: string, input: JobInput) => createJobFromIntake(ctx, intakeId, input, paperHooks(ctx));
 

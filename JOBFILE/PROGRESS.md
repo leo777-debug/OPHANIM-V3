@@ -85,6 +85,28 @@ from local commit `2a2b72e` (parity-and-reliability, unpushed). Read
 - Acceptance (papers.test.ts): house AWB draft has every required field filled
   from the job file, no retyping; second draft = v2; analyst cannot approve.
 
+## 4.4 — milestones, unloaded items and time gaps (done)
+
+- Templates (air export, air import, sea, Gulf overland via Khor Fakkan/Fujairah;
+  multimodal combines) with p10/p50/p90 step durations; organization overrides in
+  ophanim_milestone_templates; `learnStepDurations` refines from own history (≥5).
+- Milestones from email/WhatsApp: deterministic patterns, plus optional AI
+  (`understand_email` task, central config). <0.8 confidence → one-tap confirmation.
+- Floor taps and warehouse tally phone page (/floor?job=…), optional photo.
+- Piece chain: short-landed (block, "11 of 12 … 1 likely on the next flight"),
+  increase, weight change beyond max(2 kg, 0.5%).
+- Time gaps: past p90 + grace → "expected but missing" Today item + drafted
+  email/WhatsApp chaser to the right counterparty; skipped where the source does not
+  normally report the milestone.
+- Ghost Position: P(happened | unreported) from duration × learned per-source report
+  lags; logged to the ledger (`ghost-position@1`) and scored per forecast when the
+  confirmation arrives; report lag learned from each confirmation.
+- Shared ledger module (`ledger.ts`): record (snapshot + sha256 of canonical
+  inputs, new row only when inputs change), shown/acted interactions, resolve,
+  Brier/log loss, interval coverage, intervention exclusion.
+- Acceptance (milestones.test.ts): landed + no terminal receipt after the window →
+  Today item, ghost ~0.6–1, chaser; 11 of 12 → short-landed flag.
+
 ## Questions for the founder
 
 1. What exactly are the "landing" and "takeoff" papers? Assumed: air import / export documents (AWB, cargo manifest, delivery order, export declaration).

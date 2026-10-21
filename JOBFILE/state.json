@@ -3,9 +3,9 @@
   "branch": "feat/job-file-core",
   "baseCommit": "2a2b72e",
   "worktree": "D:/OPHANIM/worktrees/job-file-core",
-  "current_phase": "4.4",
-  "current_task": "4.4-milestones",
-  "last_commit": "45b508c",
+  "current_phase": "4.5",
+  "current_task": "4.5-connect",
+  "last_commit": "115fa3a",
   "updated_at": "2026-10-21",
   "tasks": [
     {
@@ -30,11 +30,11 @@
     },
     {
       "id": "4.4-milestones",
-      "status": "doing"
+      "status": "done"
     },
     {
       "id": "4.5-connect",
-      "status": "todo"
+      "status": "doing"
     },
     {
       "id": "4.6-congestion",

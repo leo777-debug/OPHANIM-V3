@@ -41,7 +41,8 @@ export default function JobFileDetail({ id }: { id: string }) {
       <div className={styles.form}><span className={styles.chip}>{t('job.mode')}: {job.mode.replace('_', ' ')}</span><span className={styles.chip}>{t('job.status')}: {job.status}</span>
         <span className={styles.chip}>{t('job.client')}: {job.clientName ?? '—'}</span><span className={styles.chip}>{t('job.route')}: {job.origin ?? '?'} → {job.destination ?? '?'}</span>
         {job.plannedArrivalAt && <span className={styles.chip}>ETA {new Date(job.plannedArrivalAt).toLocaleString()}</span>}
-        <Link href={`/capture?job=${job.id}`} className={`${styles.button} ${styles.secondary}`}>{t('capture.take')}</Link></div>
+        <Link href={`/capture?job=${job.id}`} className={`${styles.button} ${styles.secondary}`}>{t('capture.take')}</Link>
+        <Link href={`/floor?job=${job.id}`} className={`${styles.button} ${styles.secondary}`}>Floor taps / tally</Link></div>
       {(view.events ?? []).map(event => <p key={event.title} className={styles.muted}><span className={`${styles.chip} ${event.label === 'FACT' ? styles.ok : styles.warn}`}>{t(event.label === 'FACT' ? 'app.fact' : 'app.estimate')}</span> {event.title} — {event.detail}</p>)}
     </section>
 
