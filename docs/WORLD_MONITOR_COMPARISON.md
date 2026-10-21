@@ -233,3 +233,8 @@ rendered the actual 3,962 reference ports alongside a real schematic sea-route
 calculation and CSV export, with upstream map/event requests blocked. This is
 not a hardware frame-rate guarantee or live source-availability claim. No World
 Monitor code, styles, assets or services were used. See BASEMAP_RELIABILITY.md.
+
+Integration model probes now isolate hosted and embedding credentials and keep
+local inference keyless. Invalid server configuration is recorded as a redacted
+Error observation without network activity. A real loopback transport test
+verifies the headers received by each provider. No World Monitor code was used.

@@ -17,6 +17,12 @@ credentials, optional workers, runtime settings and reserved-but-unused keys.
 Some keyless catalogue entries group multiple operators (especially cameras and
 maps); an exhaustive operator-level commercial-rights audit remains pending.
 
+21 October credential audit: model probes use only their own hosted or embedding
+credential; local inference discovery is keyless. Invalid URLs/credential formats
+are recorded as redacted Error observations without sending a request. A real
+loopback transport test verifies credential isolation. No real keys were read or
+used. See docs/INTEGRATION_CREDENTIALS.md.
+
 Admin → Integrations is owner-protected, searchable and environment-only. Credentials
 are never accepted, echoed or stored by this page/API. Environment presence is
 separate from observation. Read-only adapters test registered public endpoints,

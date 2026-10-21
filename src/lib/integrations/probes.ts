@@ -4,6 +4,7 @@ import { isIP, type LookupFunction } from 'node:net';
 import { lookup as resolveHost } from 'node:dns/promises';
 import { validateHost } from '@/lib/ssrf-guard';
 import type { IntegrationDefinition } from './catalog';
+import { aiAuthorization, aiEndpoint } from '@/lib/ai/providers/openai-compatible-provider';
 
 type Env = Record<string, string | undefined>;
 export interface ProbeRequest { url: string; headers?: Record<string, string>; method?: 'GET' | 'POST'; body?: string; expected?: 'json' | 'text'; }
@@ -30,8 +31,9 @@ export function connectionProbe(service: IntegrationDefinition, env: Env): Probe
   }
   if (['ai', 'local-model', 'embeddings'].includes(service.id)) {
     const base = env[service.id === 'ai' ? 'AI_BASE_URL' : service.id === 'embeddings' ? 'EMBEDDING_BASE_URL' : 'OPHANIM_LOCAL_BASE_URL'];
-    const key = env[service.id === 'embeddings' ? 'EMBEDDING_API_KEY' : 'AI_API_KEY'];
-    return base ? { url: `${base.replace(/\/$/, '').replace(/\/v1$/, '')}/v1/models`, headers: key ? { Authorization: `Bearer ${key}` } : undefined, expected: 'json' } : null;
+    // Local inference is keyless. Never forward the unrelated hosted AI credential.
+    const key = service.id === 'ai' ? env.AI_API_KEY : service.id === 'embeddings' ? env.EMBEDDING_API_KEY : undefined;
+    return base ? { url: aiEndpoint(base, 'models').toString(), headers: aiAuthorization(key ?? ''), expected: 'json' } : null;
   }
   if (service.id === 'shodan' && env.SHODAN_API_KEY) return { url: `https://api.shodan.io/api-info?key=${encodeURIComponent(env.SHODAN_API_KEY)}`, expected: 'json' };
   if (service.id === 'gemini') { const key = Array.from({ length: 8 }, (_, i) => env[`GEMINI_API_KEY_${i + 1}`]).find(Boolean); return key ? { url: 'https://generativelanguage.googleapis.com/v1beta/models', headers: { 'x-goog-api-key': key }, expected: 'json' } : null; }

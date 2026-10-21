@@ -47,6 +47,16 @@ describe('server integration status', () => {
     expect(failure?.observation?.lastSuccessAt).toBe(success?.observation?.lastSuccessAt);
     expect(JSON.stringify(failure)).not.toContain('secret upstream value');
   });
+  it('records malformed server configuration as a redacted error without network activity', async () => {
+    const fetcher = vi.fn();
+    const result = await testIntegration('ai', { env: { AI_BASE_URL: 'https://user:private-fixture@models.example', AI_API_KEY: 'private-key-fixture', AI_MODEL: 'fixture' }, fetcher });
+    expect(result?.status).toBe('Error');
+    expect(result?.observation).toMatchObject({ scope: 'connection', lastSuccessAt: null });
+    expect(result?.observation?.error).toContain('Invalid connection configuration');
+    expect(JSON.stringify(result)).not.toContain('private-fixture');
+    expect(JSON.stringify(result)).not.toContain('private-key-fixture');
+    expect(fetcher).not.toHaveBeenCalled();
+  });
 });
 
 describe('central environment inventory', () => {

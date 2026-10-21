@@ -523,3 +523,10 @@ verified; never infer completion from a catalog entry or this plan.
   Remote API access is blocked, so this is not a live-feed or full-GPU/FPS claim.
 - Client known-token scan: 271 chunks, zero findings. Next: resume remaining
   protocol tests/setup profiles/universal missing-key states and broader P1–P4.
+
+## 21 October — 01b credential probe isolation
+
+- Fixed local model connection tests forwarding the unrelated hosted AI key. Local probes are keyless; embeddings and hosted inference use only their own credentials. Existing generation/settings paths audited for this issue.
+- Reused compatible endpoint/authorization validation. Malformed server URLs or credential formats now produce persisted redacted Error observations without network activity instead of an escaping handler exception.
+- Actual loopback HTTP regression captures each provider path/header; all values are synthetic and no private environment file was read. No World Monitor code used.
+- Checks passed: 552 tests, 5 skipped; standalone typecheck, targeted lint and production build. Broader integrations/parity remain unfinished. Next: deployable optional-service profiles and remaining protocol/missing-key states. Deployment/remote push/base correction/merge remain last.

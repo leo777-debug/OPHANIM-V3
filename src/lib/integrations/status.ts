@@ -70,10 +70,16 @@ export async function testIntegration(id: string, options: { env?: Record<string
   const now = options.now ?? Date.now;
   const started = now();
   let error: string | null = null;
-  const probe = connectionProbe(service, env);
+  let probe: ReturnType<typeof connectionProbe> = null;
+  let invalidConfiguration = false;
+  try { probe = connectionProbe(service, env); }
+  catch {
+    invalidConfiguration = true;
+    error = 'Invalid connection configuration. Check the server URL and credential format in Admin → Integrations.';
+  }
   let connected = false;
   if (probe) {
-    // Only compile-time URLs, no user URL, key, Authorization or redirect forwarding.
+    // Fixed or server-configured URLs; transport pins DNS and never follows redirects.
     try {
       if (options.fetcher) {
         const response = await options.fetcher(probe.url, { signal: AbortSignal.timeout(8000), redirect: 'error', cache: 'no-store', headers: { Accept: 'application/json', ...probe.headers } });
@@ -85,9 +91,9 @@ export async function testIntegration(id: string, options: { env?: Record<string
   const checkedAt = new Date(now()).toISOString();
   const observation: ConnectionObservation = {
     checkedAt, lastSuccessAt: connected ? checkedAt : observations.get(id)?.lastSuccessAt ?? null,
-    error, latencyMs: Math.max(0, now() - started), scope: probe ? 'connection' : 'configuration',
-    message: probe ? error ?? 'Endpoint connection succeeded. This check does not establish current geographic coverage.'
-      : 'Configuration checked only. This service does not yet have a safe connection-test adapter; no network request was made.',
+    error, latencyMs: Math.max(0, now() - started), scope: probe || invalidConfiguration ? 'connection' : 'configuration',
+    message: error ?? (probe ? 'Endpoint connection succeeded. This check does not establish current geographic coverage.'
+      : 'Configuration checked only. This service does not yet have a safe connection-test adapter; no network request was made.'),
   };
   observations.set(id, observation);
   const persistence = await writeRuntimeValue('integration-health', id, observation);
