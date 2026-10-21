@@ -27,7 +27,7 @@ export function connectionProbe(service: IntegrationDefinition, env: Env): Probe
     const [name, token, suffix] = envUrls[service.id]; if (!env[name]) return null;
     let target = env[name]!;
     if (suffix) { try { const base = new URL(target); base.pathname = base.pathname.replace(/\/$/, '') + suffix; base.search = ''; base.hash = ''; target = base.toString(); } catch { /* Transport records the invalid configuration without exposing it. */ } }
-    return { url: target, headers: token && env[token] ? { Authorization: `Bearer ${env[token]}` } : undefined, ...(service.id === 'research' ? { expected: 'json' as const } : {}) };
+    return { url: target, headers: token && env[token] ? { Authorization: `Bearer ${env[token]}` } : undefined, ...(['research', 'scanner'].includes(service.id) ? { expected: 'json' as const } : {}) };
   }
   if (['ai', 'local-model', 'embeddings'].includes(service.id)) {
     const base = env[service.id === 'ai' ? 'AI_BASE_URL' : service.id === 'embeddings' ? 'EMBEDDING_BASE_URL' : 'OPHANIM_LOCAL_BASE_URL'];

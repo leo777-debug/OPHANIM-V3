@@ -4,13 +4,20 @@ import sharp from 'sharp';
 // Disposable local database + recorded public fixtures only. No active scans.
 export async function checkTools({browser,url,owner,save,output,pass}) {
   const context=await browser.newContext({viewport:{width:1366,height:768},reducedMotion:'reduce'});
-  const errors=[],requests=[];
+  const errors=[],requests=[]; let inspectionSubmission=false;
   await context.route('**/*',async route=>{
     const target=new URL(route.request().url());
     if(target.origin!==url&&!target.href.startsWith('data:'))return route.fulfill({status:204,body:''});
     if(target.origin===url&&target.pathname.startsWith('/api/')&&!target.pathname.startsWith('/api/presentation/')&&!target.pathname.startsWith('/api/map/feeds/')) {
       requests.push(target.pathname);
-      assert.ok(!['/api/scanner','/api/osint/sweep'].includes(target.pathname),'Opening tools must not submit scans');
+      assert.ok(inspectionSubmission || !['/api/scanner','/api/osint/sweep'].includes(target.pathname),'Opening tools must not submit scans');
+      if(target.pathname==='/api/scanner') {
+        assert.equal(route.request().method(),'POST');
+        assert.deepEqual(route.request().postDataJSON(),{target:'approved.example',type:'quick'});
+        return requests.filter(path=>path==='/api/scanner').length===1
+          ? route.fulfill({status:401,json:{error:'Authentication is required.'}})
+          : route.fulfill({json:{target:'approved.example',mode:'quick',httpStatus:302,observedAt:'2026-10-21T00:00:00.000Z',headers:{server:'Synthetic fixture'},tls:{authorized:true,protocol:'TLSv1.3',validFrom:null,validTo:null},risk:'unknown',attribution:'Synthetic target response for browser verification only.',limitations:['No real target was requested.']}});
+      }
       const data=target.pathname==='/api/logistics/shipments/recorded-shipment'?{shipment:{id:'recorded-shipment',originPortName:'Fixture origin port',destinationPortName:'Fixture destination port',transshipmentPorts:[]}}
         :target.pathname==='/api/osint/shodan'?{ip:'192.0.2.10',ports:[443],hostnames:['demo.invalid'],tags:[],vulns:[],cpes:[]}
         :target.pathname==='/api/search'?{results:[{id:'test-place',label:'Dubai, United Arab Emirates',type:'location',category:'geospatial',lat:25.2,lng:55.3,zoomLevel:5,source:'Recorded test fixture'}]}
@@ -50,7 +57,25 @@ export async function checkTools({browser,url,owner,save,output,pass}) {
     assert.equal(requests.filter(path=>path==='/api/osint/shodan').length,1);
     await page.screenshot({path:`${output}/screenshots/shodan-tools.png`});
     pass('Read-only Shodan opens beside the same globe, without navigation, remount or active scanning');
+    const geolocationBeforeRecon=requests.filter(path=>path==='/api/osint/ip').length;
+    await choose('Recon');
+    await dock.getByPlaceholder('IP or hostname',{exact:true}).fill('approved.example');
+    inspectionSubmission=true;
+    await dock.getByRole('button',{name:'SCAN',exact:true}).click();
+    await dock.getByRole('link',{name:'Sign in',exact:true}).waitFor();
+    assert.equal(await dock.getByRole('link',{name:'Sign in',exact:true}).getAttribute('href'),'/login?returnTo=%2Fatlas');
+    assert.equal(requests.filter(path=>path==='/api/scanner').length,1);
+    assert.equal(requests.filter(path=>path==='/api/osint/ip').length,geolocationBeforeRecon,'Recon must not send approved target to background geolocation');
+    assert.equal(await dock.locator('select option[value=deep]').count(),0);
+    pass('Recon submits a private POST and shows sign-in recovery without background geolocation or unsupported scan modes');
     await context.addCookies([{name:'ophanim_session',value:owner,url}]);
+    await dock.getByRole('button',{name:'SCAN',exact:true}).click();
+    await dock.getByRole('region',{name:'Approved HTTPS observation'}).waitFor();
+    await dock.getByText('Risk unknown',{exact:false}).waitFor();
+    assert.equal(requests.filter(path=>path==='/api/osint/ip').length,geolocationBeforeRecon);
+    await dock.getByRole('region',{name:'Approved HTTPS observation'}).screenshot({path:`${output}/screenshots/recon-observation.png`});
+    pass('Recon renders dated headers/TLS evidence and unknown risk; synthetic response causes no background target disclosure');
+    inspectionSubmission=false;
     for(const [label,tool,selector] of [
       ['Analyst','analyst','text=OPHANIM ANALYST'],
       ['Fusion','fusion','text=Live fusion is unavailable in replay mode.'],

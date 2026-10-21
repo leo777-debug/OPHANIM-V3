@@ -1,6 +1,7 @@
 import { INTEGRATIONS, type IntegrationDefinition } from './catalog';
 import { readRuntimeScope, writeRuntimeValue, type RuntimeStorage } from '@/lib/runtime/store';
 import { connectionProbe, runConnectionProbe } from './probes';
+import { scannerConfiguration } from './scanner';
 import { sdkOrganizationId } from '@/lib/sdk/configuration';
 
 export type IntegrationState = 'Configured' | 'Not configured' | 'Error' | 'Disabled by licence';
@@ -25,6 +26,7 @@ export interface IntegrationStatus extends IntegrationDefinition {
 export function integrationStatus(service: IntegrationDefinition, env: Record<string, string | undefined>, observation: ConnectionObservation | null = null): IntegrationStatus {
   const present = (name: string) => Boolean(env[name]?.trim());
   let missing = service.variables.filter(name => !present(name));
+  if (service.id === 'scanner' && !missing.length && !scannerConfiguration(env)) missing.push('SCANNER_* (valid scoped configuration)');
   if (service.id === 'sdk' && present('SDK_ORGANIZATION_ID') && !sdkOrganizationId(env)) missing.push('SDK_ORGANIZATION_ID (valid organization UUID)');
   if (service.id === 'supabase') missing = ['URL', 'PUBLISHABLE_KEY'].flatMap(suffix => present(`SUPABASE_${suffix}`) || present(`NEXT_PUBLIC_SUPABASE_${suffix}`) ? [] : [`SUPABASE_${suffix}`]);
   if (service.id === 'gemini' && Array.from({ length: 8 }, (_, i) => `GEMINI_API_KEY_${i + 1}`).some(present)) missing = [];

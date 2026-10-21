@@ -27,7 +27,7 @@ Pricing/quotas vary by plan and may change. “Keyless” describes access, not 
 | Ollama / LM Studio | `OPHANIM_LOCAL_BASE_URL`, `OPHANIM_LOCAL_MODEL` | Private model inference | Self-hosted compute; model licences vary. | [Provider](https://docs.ollama.com/) | Public feeds and deterministic analysis work without inference. |
 | Isolated research sandbox | `AI_SANDBOX_RESEARCH_URL`, `AI_SANDBOX_RESEARCH_TOKEN` | Restricted official-feed research or your authorized worker | Self-hosted restricted worker bundled; no model/API fee; external workers have their own costs. | [Provider](https://github.com/leo777-debug/OPHANIM-V3) | Research disabled until configured and tested. |
 | VoidAccess | `VOIDACCESS_API_URL` | Private authorized research worker; requires token or service account | Self-hosted/service-specific terms. | [Provider](https://github.com/leo777-debug/OPHANIM-V3) | Optional worker disabled; public discovery continues. |
-| Recon scanner | `SCANNER_URL`, `SCANNER_KEY` | Authorized defensive scanning | Self-hosted compute; no hosted quota. | [Provider](https://github.com/leo777-debug/OPHANIM-V3) | Scanner unavailable until service is running. |
+| Restricted Recon diagnostics | `SCANNER_URL`, `SCANNER_KEY`, `SCANNER_ORGANIZATION_ID`, `SCANNER_ALLOWED_TARGETS` | Organization-scoped approved-host HTTPS header/TLS diagnostics | Bundled worker, self-hosted compute; five requests/minute, one HEAD request on port 443; no port sweeps or vulnerability validation. | [Provider](https://github.com/leo777-debug/OPHANIM-V3) | Scanner unavailable until service is running. |
 | Entity resolver | `INTEL_URL` | Optional isolated entity resolver | Self-hosted compute. | [Provider](https://github.com/leo777-debug/OPHANIM-V3) | Local dictionary correlation does not need this service. |
 | Private SDK ingestion | `SDK_INGEST_KEY`, `SDK_ORGANIZATION_ID` | Authenticated ingestion from your SDK | Self-hosted; application ingestion limits apply. | [Provider](https://github.com/leo777-debug/OPHANIM-V3) | Private ingestion disabled without its key. |
 | Shodan | `SHODAN_API_KEY` | Passive host/service intelligence; active scans also require authorized targets | Paid features and credits vary by subscription; no assumed free search quota. | [Provider](https://account.shodan.io/register) | Other public cyber sources remain available. |
@@ -89,7 +89,6 @@ This table includes credentials, local-service settings, safety gates and runtim
 | AI | `AI_MODEL` | Optional labelled summaries and explanations |
 | Optional services | `AI_SANDBOX_RESEARCH_TOKEN` | Restricted official-feed research or your authorized worker |
 | Optional services | `AI_SANDBOX_RESEARCH_URL` | Restricted official-feed research or your authorized worker |
-| Platform | `APP_INTERNAL_URL` | Optional runtime setting; leave empty to use the documented code default. |
 | Platform | `APP_URL` | Optional runtime setting; leave empty to use the documented code default. |
 | Maritime | `CUSTOMER_AIS_API_TOKEN` | Server-only credential; configure only for the associated optional feature. |
 | Maritime | `CUSTOMER_AIS_API_URL` | Customer-licensed vessel coverage for the configured organization |
@@ -119,7 +118,6 @@ This table includes credentials, local-service settings, safety gates and runtim
 | Platform | `HEALTH_ALERT_AFTER_MINUTES` | Optional runtime setting; leave empty to use the documented code default. |
 | Platform | `HEALTH_CRITICAL_INTEGRATIONS` | Optional runtime setting; leave empty to use the documented code default. |
 | Platform | `HEALTH_CRON_SECRET` | Server-only credential; configure only for the associated optional feature. |
-| Platform | `HEALTH_POLL_SECONDS` | Optional runtime setting; leave empty to use the documented code default. |
 | Platform | `HOSTNAME` | Optional runtime setting; leave empty to use the documented code default. |
 | Platform | `IMPORT_CRON_SECRET` | Server-only credential; configure only for the associated optional feature. |
 | Platform | `INTELLIGENCE_ALERT_CRON_SECRET` | Server-only credential; configure only for the associated optional feature. |
@@ -168,8 +166,10 @@ This table includes credentials, local-service settings, safety gates and runtim
 | Risk | `REVIEWED_OSINT_FEED_URL` | Organization-approved public incident discovery |
 | Connectivity | `RIPE_RIS_FILTERS` | Filtered BGP stream |
 | Platform | `RUN_LIVE_TESTS` | Optional runtime setting; leave empty to use the documented code default. |
-| Optional services | `SCANNER_KEY` | Authorized defensive scanning |
-| Optional services | `SCANNER_URL` | Authorized defensive scanning |
+| Optional services | `SCANNER_ALLOWED_TARGETS` | Organization-scoped approved-host HTTPS header/TLS diagnostics |
+| Optional services | `SCANNER_KEY` | Organization-scoped approved-host HTTPS header/TLS diagnostics |
+| Optional services | `SCANNER_ORGANIZATION_ID` | Organization-scoped approved-host HTTPS header/TLS diagnostics |
+| Optional services | `SCANNER_URL` | Organization-scoped approved-host HTTPS header/TLS diagnostics |
 | Optional services | `SDK_INGEST_KEY` | Authenticated ingestion from your SDK |
 | Optional services | `SDK_ORGANIZATION_ID` | Authenticated ingestion from your SDK |
 | Cyber | `SHODAN_API_KEY` | Passive host/service intelligence; active scans also require authorized targets |

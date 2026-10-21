@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-10-21T07:20:03.313Z",
+  "checkedAt": "2026-10-21T08:18:17.271Z",
   "checks": [
     {
       "name": "Disposable local database: full migration chain, external APIs blocked"
@@ -30,7 +30,7 @@
     },
     {
       "name": "Runtime database switch without redeploy",
-      "applyMilliseconds": 730
+      "applyMilliseconds": 284
     },
     {
       "name": "All restored reference and signal layers enabled; dense camera fixture is not dropped"
@@ -43,27 +43,27 @@
             "width": 1920,
             "height": 1080
           },
-          "shellReadyMilliseconds": 2444,
-          "readyMilliseconds": 12403,
-          "pixelCheckedMilliseconds": 18564
+          "shellReadyMilliseconds": 1618,
+          "readyMilliseconds": 12603,
+          "pixelCheckedMilliseconds": 17807
         },
         {
           "viewport": {
             "width": 1366,
             "height": 768
           },
-          "shellReadyMilliseconds": 2316,
-          "readyMilliseconds": 11035,
-          "pixelCheckedMilliseconds": 17222
+          "shellReadyMilliseconds": 2277,
+          "readyMilliseconds": 10628,
+          "pixelCheckedMilliseconds": 13100
         },
         {
           "viewport": {
             "width": 390,
             "height": 844
           },
-          "shellReadyMilliseconds": 2956,
-          "readyMilliseconds": 10754,
-          "pixelCheckedMilliseconds": 16466
+          "shellReadyMilliseconds": 1838,
+          "readyMilliseconds": 9789,
+          "pixelCheckedMilliseconds": 13312
         }
       ]
     },
@@ -78,6 +78,12 @@
     },
     {
       "name": "Read-only Shodan opens beside the same globe, without navigation, remount or active scanning"
+    },
+    {
+      "name": "Recon submits a private POST and shows sign-in recovery without background geolocation or unsupported scan modes"
+    },
+    {
+      "name": "Recon renders dated headers/TLS evidence and unknown risk; synthetic response causes no background target disclosure"
     },
     {
       "name": "All intelligence tools are docked in the operational layout; replay never mixes in live fusion"
@@ -111,6 +117,9 @@
     },
     {
       "name": "Integrations API rejects unsigned/viewer access and browser-supplied keys; listing contains metadata only"
+    },
+    {
+      "name": "Recon GET cannot submit work; real POST requires sign-in, cyber permission and configured tenant worker"
     },
     {
       "name": "Real sign-in returns to Integrations during Presentation; missing AI credentials stay unconfigured and are never displayed"

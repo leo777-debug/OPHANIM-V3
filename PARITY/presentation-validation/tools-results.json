@@ -1,0 +1,48 @@
+{
+  "checkedAt": "2026-10-21T08:21:28.627Z",
+  "checks": [
+    {
+      "name": "Disposable local database: full migration chain, external APIs blocked"
+    },
+    {
+      "name": "Read-only Shodan opens beside the same globe, without navigation, remount or active scanning"
+    },
+    {
+      "name": "Recon submits a private POST and shows sign-in recovery without background geolocation or unsupported scan modes"
+    },
+    {
+      "name": "Recon renders dated headers/TLS evidence and unknown risk; synthetic response causes no background target disclosure"
+    },
+    {
+      "name": "All intelligence tools are docked in the operational layout; replay never mixes in live fusion"
+    },
+    {
+      "name": "A single place/IP/domain search locates results in the existing globe"
+    },
+    {
+      "name": "The existing command palette opens tools in the same workspace"
+    },
+    {
+      "name": "Independent globe tabs retain layers and appearance through PIN-gated Full platform and Back to map"
+    },
+    {
+      "name": "Legacy Atlas links redirect to the same operational map with tool and camera parameters retained"
+    },
+    {
+      "name": "Generated public map link restores appearance and layers in a fresh signed-out browser without private query IDs"
+    },
+    {
+      "name": "Map-only fullscreen, non-overlapping rail/globe/tool dock, and button/Escape exit pass at desktop and laptop sizes"
+    },
+    {
+      "name": "Authenticated shipment detail links still work; public Map view never fetches private query IDs"
+    },
+    {
+      "name": "Mobile globe, collapsible layer rail and bottom intelligence dock fit without horizontal page overflow"
+    },
+    {
+      "name": "Unified map tool path has no uncaught browser errors; no active scan submitted"
+    }
+  ],
+  "syntheticFixturesOnly": true
+}

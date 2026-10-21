@@ -41,7 +41,7 @@ yarn-error.log*
 next-env.d.ts
 
 # Scanner backend
-scanner/
+/scanner/
 
 # Data files
 threatfox.json

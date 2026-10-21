@@ -58,29 +58,30 @@
     "baselineTests": "311 passed, 5 skipped",
     "baselineTypecheck": "passed",
     "baselineBuild": "passed",
-    "currentTests": "571 passed, 5 skipped; 128 files passed",
+    "currentTests": "583 passed, 5 skipped; 130 files passed",
     "typecheck": "passed",
     "build": "passed, Next16.4.2 Webpack",
-    "targetedLint": "passed",
+    "targetedLint": "New Recon modules/components and touched integration modules passed. Legacy OsintPanel retains the same 27 pre-existing no-explicit-any errors; not suppressed.",
     "publicReachability": "14/14; HTTP only, not freshness/payload",
     "dependencyAudit": "Zero production findings; five high development-only lint-chain findings without compatible fix. See docs/DEPENDENCY_SECURITY.md.",
-    "browser": "34 combined production-browser checks passed using disposable SQL, synthetic fixtures and blocked external APIs; presentation-validation/results.json",
+    "browser": "37 combined production-browser checks passed using disposable SQL, synthetic fixtures and blocked external APIs; presentation-validation/results.json",
     "integrationsBrowser": "7 recorded checks passed: actual auth/API/storage, key/licence/error gating, research guide including ordered steps and mobile SDK setup",
     "clientSecretScan": "273 browser JavaScript chunks; zero known-token-format findings (limited pattern audit)",
     "nativeBrowser": "Reference geography/attribution, 3962 clustered ports, real route/closure rendering and CSV, Hazard/Aviation recovery passed",
     "researchWorker": "Real local HTTP/adapter/auth/privacy/cache/bounds tests passed; Compose configuration validated. Docker engine stopped: no actual container claim. Two live fixed keyless endpoints passed; research-source-audit.json.",
-    "healthWorker": "Seven regression tests including actual local HTTP/auth/redirect/failure contracts; isolated Compose config validated using .env.example without resolving env_file contents. Docker engine unavailable: container runtime remains unverified. See health-worker-validation.json."
+    "healthWorker": "Seven regression tests including actual local HTTP/auth/redirect/failure contracts; isolated Compose config validated using .env.example without resolving env_file contents. Docker engine unavailable: container runtime remains unverified. See health-worker-validation.json.",
+    "reconWorker": "Actual loopback worker/application transport; pinned-address/credential/privacy/redirect/rate/concurrency and session/permission/tenant/origin tests passed. Compose config validated with synthetic settings; Docker runtime remains unverified."
   },
   "overallStatus": "in_progress",
-  "resumeInstruction": "Use parity-default-alignment worktree on parity-and-reliability. 01d health-worker isolation committed after 571 tests/5 skipped, type/lint/build. Continue 01-integrations: remaining optional profiles/adapters, operator licence inventory and universal missing-key/sign-in prompts; then broad P1-P4 in REPORT. Legacy intel service publishes port 4000 and loads an external sanctions dataset at startup: source/access/transport review is needed before packaging approval. Actual Docker runtime remains unverified. Preserve original dirty checkout. PR25 still needs current-default recheck/base correction/push/CI/review at final delivery. Merge only after completion; deployment last.",
+  "resumeInstruction": "Use parity-default-alignment worktree on parity-and-reliability. 01e restricted Recon worker and protected POST finished; 583 tests/5 skipped and 37 browser checks. Continue remaining 01 integrations: isolate legacy intel and gate OpenSanctions bulk loading (commercial licence required; currently unconditional), review VoidAccess/protocol adapters and operator inventory, universal configuration/sign-in prompts. Then full P1-P4 in REPORT. Existing OsintPanel has 27 baseline any lint errors; do not suppress. Actual Docker runtime unavailable. Original checkout untouched. PR25 current-default/base/push/CI/review/merge only after completion; deployment last.",
   "baselineCommit": "d22f6a060a1a98c77343764e785db6b6ec60f7e7",
   "pullRequest": "https://github.com/leo777-debug/OPHANIM-V3/pull/25",
   "preserveExistingChanges": true,
   "worldMonitorCodeUsed": false,
   "originalFoundationCommit": "e0898ef",
   "activeMilestone": {
-    "id": "01d-health-worker-isolation",
+    "id": "01e-restricted-recon-profile",
     "status": "done",
-    "evidence": "571 tests/5 skipped; standalone typecheck, targeted lint, production build and diff check passed. Scheduler health is separate from source health. Container runtime unverified."
+    "evidence": "583 tests/5 skipped, typecheck, production build, targeted module lint and 37 combined production-browser checks passed. Legacy UI lint debt unchanged; Docker execution unverified."
   }
 }

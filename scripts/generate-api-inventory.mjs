@@ -10,7 +10,7 @@ function files(directory) {
   });
 }
 const variables = new Set(INTEGRATIONS.flatMap(service => service.variables));
-for (const file of [...files('src'), ...files('scripts'), ...files('ops'), 'next.config.ts', 'docker-compose.yml', 'docker-compose.models.yml']) {
+for (const file of [...files('src'), ...files('scripts'), ...files('ops'), 'next.config.ts', 'docker-compose.yml', 'docker-compose.models.yml', 'docker-compose.research.yml', 'docker-compose.recon.yml']) {
   const source = readFileSync(file, 'utf8');
   for (const match of source.matchAll(/process\.env\.([A-Z][A-Z0-9_]+)|process\.env\[['"]([A-Z][A-Z0-9_]+)['"]\]|(?:env|configuration):\s*['"]([A-Z][A-Z0-9_]+)['"]/g)) variables.add(match[1] ?? match[2] ?? match[3]);
 }

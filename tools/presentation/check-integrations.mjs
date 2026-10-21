@@ -16,6 +16,13 @@ export async function checkIntegrations({browser,url,owner,viewer,credentials,re
   assert.ok(!text.includes(owner)&&!text.includes(credentials.password));
   pass('Integrations API rejects unsigned/viewer access and browser-supplied keys; listing contains metadata only');
 
+  assert.equal((await request('/api/scanner',{token:owner})).status,405);
+  for(const [token,status] of [[undefined,401],[viewer,403],[owner,503]]) {
+    const response=await request('/api/scanner',{method:'POST',token,body:{target:'approved.example',type:'headers'}});
+    assert.equal(response.status,status); assert.equal(response.headers.get('Cache-Control'),'private, no-store');
+  }
+  pass('Recon GET cannot submit work; real POST requires sign-in, cyber permission and configured tenant worker');
+
   const context=await browser.newContext({viewport:{width:1366,height:768}});
   await context.route('**/*',route=>new URL(route.request().url()).origin===url?route.continue():route.fulfill({status:204,body:''}));
   const page=await context.newPage(),errors=[],requests=[];
