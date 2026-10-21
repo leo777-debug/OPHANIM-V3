@@ -74,6 +74,17 @@ from local commit `2a2b72e` (parity-and-reliability, unpushed). Read
 - Acceptance (paper-desk.test.ts): 9 kg invoice/packing-list gap → exactly one warn
   flag with EN/AR fix; crop page/bbox kept; fix returns lesson with the 9 kg example.
 
+## 4.3 — papers from the job file (done)
+
+- Dependency-free PDF writer (`pdf.ts`: text, boxes, JPEG logo). Drafts of house
+  AWB, delivery note and client invoice from `jobFacts` (confirmed fields → key
+  ring → header → piece counts; chargeable weight computed). Per-organization
+  templates (title, company, footer, logo) in ophanim_paper_templates.
+- Every draft is a new version in private storage; approval needs
+  jobfile:approve and no missing required fields. Limit: PDFs print Latin text only.
+- Acceptance (papers.test.ts): house AWB draft has every required field filled
+  from the job file, no retyping; second draft = v2; analyst cannot approve.
+
 ## Questions for the founder
 
 1. What exactly are the "landing" and "takeoff" papers? Assumed: air import / export documents (AWB, cargo manifest, delivery order, export declaration).
