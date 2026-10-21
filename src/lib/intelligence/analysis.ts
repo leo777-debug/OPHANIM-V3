@@ -55,7 +55,7 @@ export interface StoryCluster {
   firstSeen: string | null; earliestPublication: string | null; entities: ExtractedEntity[];
   method: 'deterministic-title-and-url';
 }
-export function clusterStories(items: NewsItem[], options: { windowHours?: number; similarity?: number; now?: number } = {}): StoryCluster[] {
+export function clusterStories(items: NewsItem[], options: { windowHours?: number; similarity?: number; now?: number; dictionary?: readonly GazetteerEntry[] } = {}): StoryCluster[] {
   const windowMs = (options.windowHours ?? 36) * 3600000, threshold = options.similarity ?? 0.65;
   if (!(windowMs > 0) || threshold < 0 || threshold > 1) throw new Error('Invalid clustering configuration.');
   const now = options.now ?? Date.now();
@@ -91,14 +91,14 @@ export function clusterStories(items: NewsItem[], options: { windowHours?: numbe
     };
     cluster.firstSeen = earliest(cluster.articles.map(item => item.first_seen));
     cluster.earliestPublication = earliest(cluster.articles.map(item => item.published));
-    const entities = cluster.articles.flatMap(item => extractEntities(`${item.title} ${item.description}`));
+    const entities = cluster.articles.flatMap(item => extractEntities(`${item.title} ${item.description}`, options.dictionary));
     cluster.entities = [...new Map(entities.map(entity => [entity.id, entity])).values()];
   }
   return clusters.sort((a, b) => Math.max(...b.articles.map(item => publishedTime(item.published) ?? 0)) - Math.max(...a.articles.map(item => publishedTime(item.published) ?? 0)) || a.id.localeCompare(b.id));
 }
 
 export interface GazetteerEntry {
-  id: string; label: string; aliases: string[];
+  id: string; label: string; aliases: readonly string[];
   type: 'country' | 'place' | 'port' | 'airport' | 'organization' | 'public_person';
   publicRole?: string;
 }
@@ -118,7 +118,7 @@ export const GAZETTEER: GazetteerEntry[] = [
 ];
 export interface ExtractedEntity { id: string; label: string; type: GazetteerEntry['type'] | 'imo' | 'mmsi' | 'aircraft'; method: 'dictionary' | 'identifier'; publicRole?: string }
 type DictionaryNode = { children: Map<string, DictionaryNode>; entries: number[] };
-function dictionaryIndex(dictionary: GazetteerEntry[]) {
+function dictionaryIndex(dictionary: readonly GazetteerEntry[]) {
   const root: DictionaryNode = { children: new Map(), entries: [] };
   dictionary.forEach((entry, index) => {
     for (const alias of new Set(entry.aliases.map(normalizeTitle))) {
@@ -131,9 +131,12 @@ function dictionaryIndex(dictionary: GazetteerEntry[]) {
   return root;
 }
 const DEFAULT_INDEX = dictionaryIndex(GAZETTEER);
+const DICTIONARY_INDEXES = new WeakMap<readonly GazetteerEntry[], DictionaryNode>([[GAZETTEER, DEFAULT_INDEX]]);
 const ARABIC_PREFIXES = ['و', 'ف', 'ب', 'ك', 'ل', 'وب', 'وك', 'ول', 'فب', 'فك', 'فل'];
-function dictionaryMatches(normalized: string, dictionary: GazetteerEntry[]) {
-  const index = dictionary === GAZETTEER ? DEFAULT_INDEX : dictionaryIndex(dictionary), words = normalized.split(' ');
+function dictionaryMatches(normalized: string, dictionary: readonly GazetteerEntry[]) {
+  let index = DICTIONARY_INDEXES.get(dictionary);
+  if (!index) { index = dictionaryIndex(dictionary); DICTIONARY_INDEXES.set(dictionary, index); }
+  const words = normalized.split(' ');
   const hits: Array<{ entry: number; start: number; end: number }> = [];
   for (let start = 0; start < words.length; start++) {
     const first = words[start], variants = new Set([first]);
@@ -148,7 +151,7 @@ function dictionaryMatches(normalized: string, dictionary: GazetteerEntry[]) {
   const countryHits = hits.filter(hit => dictionary[hit.entry].type === 'country');
   return new Set(hits.filter(hit => dictionary[hit.entry].type !== 'country' || !countryHits.some(other => other.start <= hit.start && other.end >= hit.end && other.end - other.start > hit.end - hit.start)).map(hit => hit.entry));
 }
-export function extractEntities(text: string, dictionary: GazetteerEntry[] = GAZETTEER): ExtractedEntity[] {
+export function extractEntities(text: string, dictionary: readonly GazetteerEntry[] = GAZETTEER): ExtractedEntity[] {
   const normalized = normalizeTitle(text), result: ExtractedEntity[] = [];
   const matched = dictionaryMatches(normalized, dictionary);
   for (const [index, entry] of dictionary.entries()) {
@@ -165,9 +168,9 @@ export function extractEntities(text: string, dictionary: GazetteerEntry[] = GAZ
   for (const match of text.matchAll(/\b(?:ICAO24|HEX)\s*[:#]?\s*([0-9a-f]{6})\b/gi)) result.push({ id: `aircraft:${match[1].toUpperCase()}`, label: `ICAO24 ${match[1].toUpperCase()}`, type: 'aircraft', method: 'identifier' });
   return [...new Map(result.map(entity => [entity.id, entity])).values()];
 }
-export function correlateEntities(items: NewsItem[]) {
+export function correlateEntities(items: NewsItem[], dictionary: readonly GazetteerEntry[] = GAZETTEER) {
   const linked = new Map<string, { entity: ExtractedEntity; articleIds: string[]; publishers: Set<string> }>();
-  for (const item of items) for (const entity of extractEntities(`${item.title} ${item.description}`)) {
+  for (const item of items) for (const entity of extractEntities(`${item.title} ${item.description}`, dictionary)) {
     const record = linked.get(entity.id) ?? { entity, articleIds: [], publishers: new Set<string>() };
     record.articleIds.push(item.id); record.publishers.add(item.source); linked.set(entity.id, record);
   }
@@ -211,8 +214,8 @@ export function detectConvergence(signals: ConvergenceSignal[], options: { radiu
   return alerts;
 }
 
-export function whyItMatters(item: Pick<NewsItem, 'title' | 'description'>) {
-  const entities = extractEntities(`${item.title} ${item.description}`);
+export function whyItMatters(item: Pick<NewsItem, 'title' | 'description'>, dictionary: readonly GazetteerEntry[] = GAZETTEER) {
+  const entities = extractEntities(`${item.title} ${item.description}`, dictionary);
   const assets = entities.filter(entity => ['country', 'place', 'port', 'airport'].includes(entity.type));
   return { label: 'Rule-based context · INFERENCE', text: assets.length
     ? `Reports mention ${assets.map(entity => entity.label).join(', ')}. Review nearby routes and infrastructure against the source evidence; a mention does not establish a closure or operational impact.`

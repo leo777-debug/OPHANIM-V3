@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-10-21T08:21:28.627Z",
+  "checkedAt": "2026-10-21T12:48:16.052Z",
   "checks": [
     {
       "name": "Disposable local database: full migration chain, external APIs blocked"
@@ -12,6 +12,9 @@
     },
     {
       "name": "Recon renders dated headers/TLS evidence and unknown risk; synthetic response causes no background target disclosure"
+    },
+    {
+      "name": "Stories lazy-loads the licensed port dictionary and links replay news/seismic evidence with original source links and no current convergence"
     },
     {
       "name": "All intelligence tools are docked in the operational layout; replay never mixes in live fusion"
@@ -39,6 +42,9 @@
     },
     {
       "name": "Mobile globe, collapsible layer rail and bottom intelligence dock fit without horizontal page overflow"
+    },
+    {
+      "name": "Mobile Stories supports port provenance, linked evidence and a scrollable source-coverage table without page overflow"
     },
     {
       "name": "Unified map tool path has no uncaught browser errors; no active scan submitted"

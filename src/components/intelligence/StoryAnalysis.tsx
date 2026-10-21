@@ -1,20 +1,34 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { clusterStories, correlateEntities, detectConvergence, trustFor, whyItMatters, type ConvergenceSignal } from '@/lib/intelligence/analysis';
+import { useEffect, useMemo, useState } from 'react';
+import { GAZETTEER, clusterStories, correlateEntities, detectConvergence, trustFor, whyItMatters, type ConvergenceSignal, type GazetteerEntry } from '@/lib/intelligence/analysis';
 import { safeSourceUrl, type NewsItem } from '@/lib/intelligence/news';
 import type { ExplorerData } from './IntelligenceExplorer';
 import { COUNTRY_REFERENCE } from '@/lib/intelligence/country-gazetteer';
 import styles from './desk.module.css';
+import CrossFeedEntities from './CrossFeedEntities';
+import {newsEvidence,quakeEvidence,fireEvidence} from '@/lib/intelligence/evidence-graph';
 
 const EMPTY_NEWS: NewsItem[] = [];
 export default function StoryAnalysis({ data, onLocate, replay = false }: { data: ExplorerData; onLocate: (lat: number, lng: number) => void; replay?: boolean }) {
   const [hours, setHours] = useState(36);
   const [similarity, setSimilarity] = useState(0.65);
   const [minimumTrust, setMinimumTrust] = useState<'established_media' | 'wire' | 'official'>('established_media');
+  const [portDictionary, setPortDictionary] = useState<readonly GazetteerEntry[] | null>(null);
+  const [portReference, setPortReference] = useState<typeof import('@/lib/intelligence/port-gazetteer')['PORT_REFERENCE'] | null>(null);
+  const [portLoadFailed, setPortLoadFailed] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    void import('@/lib/intelligence/port-gazetteer').then(module => {
+      if (!cancelled) { setPortDictionary(module.mergedPortGazetteer()); setPortReference(module.PORT_REFERENCE); }
+    }).catch(() => { if (!cancelled) setPortLoadFailed(true); });
+    return () => { cancelled = true; };
+  }, []);
+  const dictionary = portDictionary ?? GAZETTEER;
   const news = data.news ?? EMPTY_NEWS;
-  const stories = useMemo(() => clusterStories(news, { windowHours: hours, similarity }), [news, hours, similarity]);
-  const entities = useMemo(() => correlateEntities(news), [news]);
+  const stories = useMemo(() => clusterStories(news, { windowHours: hours, similarity, dictionary }), [news, hours, similarity, dictionary]);
+  const entities = useMemo(() => correlateEntities(news, dictionary), [news, dictionary]);
+  const evidenceRecords = useMemo(() => [...newsEvidence(news),...quakeEvidence(data.earthquakes??[]),...fireEvidence(data.fires??[])],[news,data.earthquakes,data.fires]);
   const alerts = useMemo(() => {
     if (replay) return [];
     const signals: ConvergenceSignal[] = news.flatMap(item => {
@@ -43,9 +57,18 @@ export default function StoryAnalysis({ data, onLocate, replay = false }: { data
       <label>Title similarity <select value={similarity} onChange={event => setSimilarity(Number(event.target.value))}><option value={0.65}>65%</option><option value={0.8}>80%</option><option value={1}>Exact tokens</option></select></label>
       <label>Convergence minimum trust <select value={minimumTrust} onChange={event => setMinimumTrust(event.target.value as typeof minimumTrust)}><option value="established_media">Established media</option><option value="wire">Wire</option><option value="official">Official</option></select></label>
     </div>
-    <p className={styles.count}>Deterministic URL/title grouping; publisher count is not independent corroboration. First seen is Ophanim’s earliest recorded observation, separate from publication time. Storage is shown with each story; memory fallback resets on restart. Country/territory names use 249 scoped English/Arabic labels; asset dictionary coverage is limited. Name matches do not locate an event or establish impact. Public-role names require an explicit reviewed dictionary.</p>
+    <p className={styles.count}>Deterministic URL/title grouping; publisher count is not independent corroboration. First seen is Ophanim’s earliest recorded observation, separate from publication time. Storage is shown with each story; memory fallback resets on restart. Country/territory names use 249 scoped English/Arabic labels; Port reference aliases load separately; other city/asset dictionary coverage is limited. Name matches do not locate an event or establish impact. Public-role names require an explicit reviewed dictionary.</p>
     <details><summary>Geographic dictionary source and date</summary><p>{COUNTRY_REFERENCE.name} · {COUNTRY_REFERENCE.version} · generated {COUNTRY_REFERENCE.datasetDate} ({COUNTRY_REFERENCE.dateMeaning}). {COUNTRY_REFERENCE.coverage}</p><p>{COUNTRY_REFERENCE.attribution} · commercial use {COUNTRY_REFERENCE.commercialUse} · {COUNTRY_REFERENCE.rateLimits}.</p><a href={COUNTRY_REFERENCE.source} target="_blank" rel="noreferrer">Original source</a>{' · '}<a href="/reference/UNICODE-LICENSE.txt">Unicode licence</a></details>
+    <details><summary>Port-mention dictionary</summary>
+      {!portReference ? <p>{portLoadFailed ? 'Port reference unavailable; curated country/asset matching remains available.' : 'Loading the packaged port reference for explicit name/code matching.'}</p> : <>
+        <p>{portReference.entryCount} reference identities from {portReference.sourceRecordCount} source records · {portReference.withheldAliases} ambiguous alias occurrences withheld. Existing curated port identities are preserved.</p>
+        <p>{portReference.method} The dictionary does not supply event coordinates or current port status. Bare city names do not acquire port identities.</p>
+        <p>{portReference.attribution} · {portReference.licence} · source dataset {portReference.sourceDatasetDate} ({portReference.dateMeaning}).</p>
+        <a href={portReference.source} target="_blank" rel="noreferrer">Pinned original port reference</a>{' · '}<a href={portReference.termsUrl} target="_blank" rel="noreferrer">Licence terms</a>
+      </>}
+    </details>
     <details><summary>Linked entities · {entities.length}</summary><ul>{entities.map(record => <li key={record.entity.id}><strong>{record.entity.label}</strong> · {record.entity.type} · {record.articleIds.length} reports · {record.publishers.join(', ')}</li>)}</ul></details>
+    <CrossFeedEntities records={evidenceRecords} dictionary={dictionary} replay={replay} />
     <details><summary>Geographic convergence · {alerts.length}</summary>
       <p>50 km radius, last 6 hours, at least 3 independent source types and score ≥40. Unique type weights: seismic 20, fire 15, aviation 15, maritime 15, news 10, outages 20, GNSS 15; cap 100. One source operator contributes one type. Approximate coordinates are excluded. Reported news, seismic observations and dated NASA fire hotspots are connected. Aviation, maritime, outage and GNSS disruption adapters remain pending.</p>
       {replay ? <p>Replay is active. Current convergence detection is disabled; recorded stories and their original source times remain available.</p> : !alerts.length && <p>No qualifying convergence in the available signals. This does not imply safety or complete coverage.</p>}
@@ -53,7 +76,7 @@ export default function StoryAnalysis({ data, onLocate, replay = false }: { data
     </details>
     {!stories.length && <p className={styles.empty}>No source reports available for grouping.</p>}
     <ol className={styles.list}>{stories.slice(0, 200).map(story => {
-      const context = whyItMatters(story.articles[0]);
+      const context = whyItMatters(story.articles[0], dictionary);
       return <li key={story.id} className={styles.event} style={{ display: 'block' }}>
         <h3>{story.title}</h3><p>{story.publisherCount} publishers · {story.articles.length} reports</p>
         <p>First observed by Ophanim: {story.firstSeen ?? 'Not recorded'} · Earliest publication: {story.earliestPublication ?? 'Unknown'}</p>

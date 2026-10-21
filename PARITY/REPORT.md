@@ -10,7 +10,7 @@ No claim is made about the provenance of historical commits outside this work.
 
 ## Section 2: central keys
 
-**Partial.** API_KEYS.md documents 65 service entries/groups and `.env.example`
+**Partial.** API_KEYS.md documents 66 service entries/groups and `.env.example`
 contains 122 deliberately empty configuration identifiers, generated from source
 without reading private environment files. The inventory includes keyless services,
 credentials, optional workers, runtime settings and reserved-but-unused keys.
@@ -28,7 +28,8 @@ worker. Compose configuration and real local HTTP worker/application tests pass;
 actual container execution remains unverified because Docker's engine is stopped.
 It uses no model/keyed upstream and returns unknown risk, explicit limited coverage
 and dated evidence. A dedicated founder-supplied token still gates use. Broader
-browser research, VoidAccess/Recon packaging and other optional profiles remain.
+browser research, VoidAccess review and other optional profiles remain. Restricted
+Recon and entity profiles are implemented; actual container execution is unverified.
 
 The worker reuses two existing registry sources; shared metadata is also visible
 in Integrations. Its source requests use fixed URLs, pinned public DNS, no redirects,
@@ -90,7 +91,7 @@ the reason states the missing work rather than implying that keys alone will fix
 | Capability | Status | Evidence / remaining work |
 | --- | --- | --- |
 | Story clustering and deduplication | Partial | Stories tab, canonical URLs, Unicode titles, token similarity/window, counts and evidence. First-seen persists using atomic earliest-observation writes; explicit memory fallback. No durable cluster membership history. |
-| Entity extraction/correlation | Partial | Dated ICU/CLDR English/Arabic labels for 249 country/territory codes, conservative ambiguous aliases, longest-country-span matching, explicit IMO/MMSI/ICAO24 and linked article IDs. Asset/city dictionary remains small; public-role names require explicit review; universal cross-feed graph remains pending. |
+| Entity extraction/correlation | Partial | 249 English/Arabic country/territory identities; 3,924 conservative port-reference identities from 3,962 pinned records, 516 ambiguous alias occurrences withheld; explicit IMO/MMSI/ICAO24. Stories links loaded news/seismic/fire evidence with original dates, trust and replay/freshness disclosures. Broader cities/assets, all-provider wiring and durable membership history remain pending; public-role names require explicit review. |
 | Geographic convergence | Partial | Configurable tested score, independent operators/types, all contributions. Desk wires reported news, seismic and dated FIRMS fire observations; other disruption adapters and alert delivery pending. |
 | Source trust tiers | Partial | Manual tier/affiliation/risk metadata in Stories/news; minimum tier for convergence. Other evidence screens and persisted alert rules pending. |
 | Why it matters | Partial | Labelled deterministic inference in Stories. Broader event/asset exposure integration pending. |
@@ -172,6 +173,7 @@ attribution, rate rules and explicit key requirements. All are keyless.
 | CDC Travel Health Notices | US government public domain, CDC-authored notices; excludes third-party media | yes | on |
 | UK FCDO country travel advice | Open Government Licence v3.0; stated exclusions apply | yes | on when country selected |
 | Marnet sea edges and ports, searoute-py 1.6.0 data | Apache-2.0 | yes | on; dated reference, no navigation claim |
+| Conservative Marnet port-mention dictionary, derived from the same pinned reference | Apache-2.0, original attribution retained | yes | on when Stories opens; packaged reference, no upstream call or inferred event coordinates |
 | GDACS normalized hazard adapter | GDACS specific terms; commercial reuse unresolved | unknown | off; no requests, flagged in Admin |
 | FAA NAS public airport status facts | US government public domain, FAA-authored metadata; excludes raw third-party/operator NOTAM text | yes | on; US national list, not full NOTAM coverage |
 | NOAA/NWS US K-station METAR and TAF | US government public domain, NWS US products | yes | on; selected US stations, broader international rights gate retained |
@@ -249,6 +251,14 @@ coverage, a successful real-time subscription or every existing camera/operator.
   spans and cross-publisher links. Production Atlas Stories showed 26 linked
   entities in the available 77-item sample and rendered the source/version/date
   disclosure. Screenshot: screenshots/country-dictionary-provenance.jpg.
+- Current02a intelligence milestone:599 tests/5 skipped, standalone typecheck,
+  targeted lint and production build passed. 16 tools browser checks passed with
+  disposable SQL and synthetic public replay records, external APIs blocked.
+  Verified port-reference lazy loading, original news/seismic source links/times,
+  disabled current convergence during replay and mobile source-table containment.
+  This does not claim full provider wiring, live-source availability or a repeat
+  of the prior38 combined checks. See intelligence-links-validation.json and
+  presentation-validation/tools-results.json.
 - Public map link opened in a fresh production-browser tab, retaining centre,
   2D/night and all layers off beyond the geolocation timer. Renderer zoom clamps
   to its existing 1.5–18 range. Fixed zero-zoom fallback, implicit conflict layer,

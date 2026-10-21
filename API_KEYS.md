@@ -8,6 +8,7 @@ Pricing/quotas vary by plan and may change. “Keyless” describes access, not 
 
 | Service | Environment variables | Unlocks | Free/paid and limits | Sign-up / original documentation | Without a key |
 | --- | --- | --- | --- | --- | --- |
+| Conservative Marnet port-mention dictionary | None | Explicit port phrases or marked reference codes only; ambiguous aliases withheld. No event coordinates inferred. | Derived from the pinned Apache-2.0 port reference; no key or upstream request. | [Provider](https://github.com/genthalili/searoute-py/tree/dde461382a60ff75f4577f6e06c411bc48cd7efc/searoute/data) | Curated country/asset dictionary remains available. |
 | OpenFreeMap Dark basemap | None | Keyless interactive basemap | Free public map display, no account or API key; no promised SLA. | [Provider](https://openfreemap.org/) | Bundled Natural Earth geography; operational source status is separate. |
 | Natural Earth reference basemap | None | Labelled local reference fallback | Bundled public-domain reference, no fee or key. | [Provider](https://www.naturalearthdata.com/about/terms-of-use/) | Bundled Natural Earth geography; operational source status is separate. |
 | English / Arabic country and territory labels | None | Deterministic English/Arabic country and territory dictionary | Bundled ICU/CLDR reference, no key, no runtime requests or paid quota. | [Provider](https://cldr.unicode.org/) | Local dictionary works offline; ambiguous bare names are withheld. |

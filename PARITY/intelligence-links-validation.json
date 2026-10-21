@@ -1,0 +1,37 @@
+{
+  "milestone": "02a-port-mentions-scoped-evidence",
+  "checkedAt": "2026-10-21T12:48:16.052Z",
+  "unitTests": { "passed": 599, "skipped": 5, "filesPassed": 133, "newRegressionTests": 10 },
+  "typecheck": "passed, standalone tsc --noEmit",
+  "productionBuild": "passed, Next.js 16.4.2 Webpack",
+  "targetedLint": "passed, intelligence/dictionary/integration modules and generator/browser tests",
+  "dictionary": {
+    "sourceRecords": 3962,
+    "referenceIdentities": 3924,
+    "withheldAmbiguousAliasOccurrences": 516,
+    "sourceSha256": "8398cb9554a19cf37f53f932f3842f58fbd94fce4c8e2704c3f5a4205ea5977e",
+    "sourceDatasetDate": "2026-05-17",
+    "licence": "Apache-2.0, original notice/attribution retained",
+    "regeneration": "Verified original hash and regenerated locally with no upstream requests",
+    "eventCoordinatesInferred": false
+  },
+  "browser": {
+    "checks": 16,
+    "results": "presentation-validation/tools-results.json",
+    "dataPath": "Disposable SQL snapshots -> actual public feed API -> Stories lazy reference matching -> linked source evidence",
+    "verified": ["Explicit port name reference", "Shared Oman mention in news and seismic evidence", "Original source links and dates", "Replay labelled and current convergence disabled", "Mobile source table contained without horizontal page overflow"],
+    "screenshots": ["presentation-validation/screenshots/cross-feed-entities.png", "presentation-validation/screenshots/cross-feed-entities-mobile.png"],
+    "screenshotsInspected": true,
+    "syntheticFixturesOnly": true,
+    "externalApiTransportBlocked": true,
+    "uncaughtBrowserErrors": 0,
+    "priorFullCombinedChecks": "38 at previous01f checkpoint; not rerun or relabelled for this milestone"
+  },
+  "scopeTests": "Foreign/missing scopes and their counts excluded; projected fields only; undated/future/replay/stale evidence and bounded unique records retained honestly",
+  "limitations": ["Only loaded news/seismic/fire connected in Stories", "Normalized-event adapter requires authorized caller scope and explicit additional provider wiring", "No causal/identity/location confirmation or automatic alert", "No persistent membership history or worldwide coverage-gap matrix", "Docker runtime and child dependency audit remain unverified from earlier milestones"],
+  "inventory": { "services": 66, "emptyConfigurationIdentifiers": 122 },
+  "worldMonitorCodeUsed": false,
+  "privateEnvironmentValuesRead": false,
+  "merged": false,
+  "deployed": false
+}

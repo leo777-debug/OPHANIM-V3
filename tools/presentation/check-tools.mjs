@@ -98,6 +98,30 @@ export async function checkTools({browser,url,owner,save,output,pass}) {
         await dock.getByLabel('Matching map entities').getByRole('button').first().click();
         await dock.getByText('[ OPHANIM // ENTITY INTEL ]',{exact:true}).waitFor();
       }
+      if(tool==='news') {
+        await dock.getByRole('tab',{name:'stories',exact:true}).click();
+        const stories=dock.getByRole('region',{name:'Story analysis',exact:true});
+        await stories.getByText('Port-mention dictionary',{exact:true}).click();
+        await stories.getByText(/3924 reference identities from 3962 source records/).waitFor();
+        const links=stories.locator('details').filter({has:page.locator('summary').filter({hasText:/^Cross-feed entity links/})}).first();
+        await links.locator('summary').first().click();
+        await links.getByLabel('Find a linked entity',{exact:true}).fill('Durres');
+        await links.getByRole('button',{name:'Durres',exact:true}).click();
+        const evidence=links.getByRole('region',{name:'Linked source evidence',exact:true});
+        await evidence.getByRole('link',{name:'Oman port weather advisory: test replay',exact:true}).waitFor();
+        assert.equal(await evidence.getByRole('link').first().getAttribute('href'),'https://example.invalid/story');
+        assert.match(await evidence.innerText(),/replay freshness/);
+        await links.getByLabel('Find a linked entity',{exact:true}).fill('Oman');
+        await links.getByRole('button',{name:'Oman',exact:true}).click();
+        await evidence.getByText(/USGS \/ seismic/).waitFor();
+        await evidence.getByRole('link',{name:'Oman port weather advisory: test replay',exact:true}).waitFor();
+        assert.match(await evidence.innerText(),/Original source time:/);
+        await stories.getByText('Geographic convergence · 0',{exact:true}).click();
+        await stories.getByText(/Current convergence detection is disabled/).waitFor();
+        await links.screenshot({path:`${output}/screenshots/cross-feed-entities.png`});
+        pass('Stories lazy-loads the licensed port dictionary and links replay news/seismic evidence with original source links and no current convergence');
+        await dock.getByRole('tab',{name:'news',exact:true}).click();
+      }
       assert.equal(await page.locator('canvas.maplibregl-canvas').getAttribute('data-identity'),'same-globe',label);
     }
     pass('All intelligence tools are docked in the operational layout; replay never mixes in live fusion');
@@ -215,6 +239,18 @@ export async function checkTools({browser,url,owner,save,output,pass}) {
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
     await page.screenshot({path:`${output}/screenshots/unified-map-mobile.png`});
     pass('Mobile globe, collapsible layer rail and bottom intelligence dock fit without horizontal page overflow');
+    await dock.getByRole('tab',{name:'stories',exact:true}).click();
+    const mobileStories=dock.getByRole('region',{name:'Story analysis',exact:true});
+    await mobileStories.getByText('Port-mention dictionary',{exact:true}).click();
+    await mobileStories.getByText(/3924 reference identities from 3962 source records/).waitFor();
+    await mobileStories.locator('summary').filter({hasText:/^Cross-feed entity links/}).click();
+    await mobileStories.getByLabel('Find a linked entity',{exact:true}).fill('Oman');
+    await mobileStories.getByRole('button',{name:'Oman',exact:true}).click();
+    await mobileStories.getByText('Loaded-source coverage and unresolved dates',{exact:true}).click();
+    await mobileStories.getByRole('table').scrollIntoViewIfNeeded();
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+    await mobileStories.screenshot({path:`${output}/screenshots/cross-feed-entities-mobile.png`});
+    pass('Mobile Stories supports port provenance, linked evidence and a scrollable source-coverage table without page overflow');
     assert.equal(errors.length,0,errors.join('\n'));
     pass('Unified map tool path has no uncaught browser errors; no active scan submitted');
   } catch(error) {

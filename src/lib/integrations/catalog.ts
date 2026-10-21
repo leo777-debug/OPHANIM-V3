@@ -1,3 +1,4 @@
+import portDictionaryMetadata from '../intelligence/port-gazetteer-metadata.json' with { type: 'json' };
 import countryData from '../intelligence/country-gazetteer.json' with { type: 'json' };
 import basemapSources from '../map/basemap-sources.json' with { type: 'json' };
 import researchSources from '../intelligence/research-sources.json' with { type: 'json' };
@@ -27,6 +28,7 @@ const entry = (id: string, name: string, area: string, variables: string[], unlo
   ({ id, name, area, variables, unlocks, pricing, signup, fallback, ...(probe ? { probe } : {}) });
 
 export const INTEGRATIONS: IntegrationDefinition[] = [
+  { ...entry(portDictionaryMetadata.id,portDictionaryMetadata.name,'Reference data',[],portDictionaryMetadata.method,'Derived from the pinned Apache-2.0 port reference; no key or upstream request.',portDictionaryMetadata.source,'Curated country/asset dictionary remains available.'),licence:{name:portDictionaryMetadata.licence,commercialUse:'yes',attribution:portDictionaryMetadata.attribution,rateLimits:portDictionaryMetadata.rateLimits,keyNeeded:false,termsUrl:portDictionaryMetadata.termsUrl} },
   ...[OPEN_FREE_MAP,NATURAL_EARTH_BASEMAP].map(source=>({
     ...entry(source.id,source.name,'Maps',[],source.id==='openfreemap-dark'?'Keyless interactive basemap':'Labelled local reference fallback',
       source.id==='openfreemap-dark'?'Free public map display, no account or API key; no promised SLA.':'Bundled public-domain reference, no fee or key.',

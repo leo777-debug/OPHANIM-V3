@@ -17,20 +17,25 @@ Separate article URLs from the same publisher remain separate. Different reporte
 locations more than 100 km apart also prevent title-only matches; generic hazard
 titles must not merge unrelated events merely because their wording is identical.
 
-Publisher count counts labels, not independent reporting. First-seen time records
-this process's first observation, resets on restart and may reset after bounded
-cache eviction; earliest publication is shown separately. No durable ingestion
-history is claimed. Grouping is a discovery aid and can make false matches.
+Publisher count counts labels, not independent reporting. First-seen time uses
+the earliest persisted observation where storage is configured; an explicit memory
+fallback can reset on restart. Earliest publication is shown separately. Durable
+cluster membership history remains unfinished. Grouping can make false matches.
 
 ## Entities and trust
 
-Dictionary entries are a small, version-controlled Ophanim reference list, not a
-complete gazetteer. Unicode boundaries avoid substring matches; aliases support
+Dictionary entries combine 249 English/Arabic country/territory identities, a
+licensed conservative port reference and a small curated asset list. They are not
+a complete gazetteer. Unicode boundaries avoid substring matches; aliases support
 English/Arabic. IMO extraction requires the check digit; MMSI needs an explicit
 label and nine digits; aircraft extraction needs an explicit ICAO24/HEX label.
 Identifiers are mentions, not proof of identity or location. People are extracted
 only from an explicitly supplied dictionary containing a publicRole; no generic
 person-name recognition or private-individual tracking is added.
+See ENTITY_DICTIONARY.md for pinned provenance, explicit port markers, withheld
+ambiguous aliases and the bounded cross-feed mention graph. News, seismic and fire
+evidence are linked here; other normalized providers require explicit wiring.
+Shared mentions do not establish common cause or create automatic alerts.
 
 Trust order is official > wire > established_media > aggregator > social.
 The metadata is manually configured in analysis.ts; it is never inferred by AI.
@@ -54,9 +59,9 @@ Distance is spherical haversine with Earth radius 6371.0088 km, including date-l
 crossing. Candidates are centered on actual observations, not invented locations.
 Overlapping candidate areas may remain; this is not a validated risk index.
 
-The current desk wires reported news coordinates and USGS observations. Approximate
-country centroids, stale news caches and undated reports are excluded. Fire,
-aviation-disruption, maritime-disruption, outage and GNSS normalization still need
+The current desk wires reported news coordinates, USGS observations and dated NASA
+fire observations. Approximate country centroids, stale news caches and undated
+reports are excluded. Aviation-disruption, maritime-disruption, outage and GNSS still need
 adapters. No actual alert is synthesized to demonstrate the UI. Proximity does not
 establish causation, targeting intent, a closure or a strike prediction.
 

@@ -576,3 +576,36 @@ verified; never infer completion from a catalog entry or this plan.
 - Full 589 tests/5 skipped; standalone typecheck, production build and lint for new/touched worker/API/integration modules passed. Full production browser passed 38 checks with actual session/config gates, Presentation/map/PIN/sharing/mobile/logistics preservation, synthetic accounts/events and blocked external APIs. No real entity queried. EntityGraphPanel retains 14 pre-existing lint errors, confirmed against HEAD; OsintPanel retains 27. No suppressions added.
 - Compose configuration validated with synthetic process-only settings and .env.example without private env-file resolution. Docker runtime remains unverified. Child npm audit failed twice with registry ECONNRESET; no clean-audit claim. Evidence: entity-worker-validation.json. Inventory 65 services/122 deliberately empty identifiers. No World Monitor code used; original checkout untouched.
 - Next: VoidAccess/protocol/operator audit and universal missing-service/sign-in recovery; remaining intelligence, reliability, specialist, analysis and platform scope stays incomplete. No push, merge or deployment.
+
+## 21 October — 02a conservative port mentions and scoped evidence links
+
+- Stories lazy-loads a packaged mention dictionary derived from the existing
+  hash-pinned Apache-2.0 port reference: 3,924 identities from 3,962 records,
+  516 ambiguous alias occurrences withheld. Explicit port phrases/marked codes
+  only; existing curated identities preserved. No event coordinates, operating
+  status or impact are inferred. Immutable dictionary indexes are reused.
+- Added a bounded evidence-to-mention graph for loaded news, seismic and fire
+  observations, with original source dates/links, manual/unreviewed trust and
+  fresh/stale/unknown/replay states. Normalized-event adapter requires the caller's
+  authorized scope; foreign/missing scopes and rejected counts never enter output.
+  Other providers are not claimed connected. Source table shows loaded records,
+  unknown/future dates and unmatched evidence, not worldwide/geographic coverage.
+- No AI, key or optional worker required. A dictionary chunk failure leaves
+  curated matching available with an explicit unavailable message. Replay never
+  becomes current convergence. No alerts or persistent entity history added.
+- Validation: 599 tests passed/5 skipped across133 files; standalone typecheck,
+  targeted lint and production build passed. 16 tools production-browser checks
+  passed, including actual disposable SQL/feed/API path, lazy dictionary, original
+  news/seismic evidence, replay and mobile table/overflow. Screenshots inspected.
+  External APIs blocked, all event/account fixtures synthetic. Prior full combined
+  38-check run belongs to01f; not rerun/relabelled. See intelligence-links-validation.json.
+- Inventory66 services/122 deliberately empty variables. Docs/source registry
+  updated; generator checks the original hash and makes no upstream request.
+  Broader02 and full scope remain incomplete. First unfinished01 retained.
+- Reviewed two user-supplied Claude prompts for overlap only: cameras/provider
+  governance, routes, forecasts, alerts, imports, central config and tenant/RLS.
+  The first prompt's no-forecast-store assumption is outdated on this branch;
+  ophanim_forecasts already exists with sourced outcomes/Brier scoring. The
+  prompts also overlap each other's ledgers, shipment milestones and imports.
+  Separate worktrees avoid direct overwrites but require shared schema/API design
+  before integration. No Claude implementation, remote push, merge or deployment.
