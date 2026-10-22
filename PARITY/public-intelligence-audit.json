@@ -1,0 +1,195 @@
+{
+  "checkedAt": "2026-10-20T07:39:17.975Z",
+  "coverage": "Official source regions shown individually. This is not comprehensive global alert coverage.",
+  "diagnostics": [
+    {
+      "providerId": "noaa-public-warnings",
+      "status": "success",
+      "eventCount": 100,
+      "durationMs": 1365
+    },
+    {
+      "providerId": "nhc-atlantic",
+      "status": "success",
+      "eventCount": 2,
+      "durationMs": 1107
+    },
+    {
+      "providerId": "nhc-pacific",
+      "status": "success",
+      "eventCount": 7,
+      "durationMs": 1160
+    },
+    {
+      "providerId": "nhc-atlantic-es",
+      "status": "success",
+      "eventCount": 2,
+      "durationMs": 977
+    },
+    {
+      "providerId": "cdc-travel-health",
+      "status": "success",
+      "eventCount": 21,
+      "durationMs": 1275
+    },
+    {
+      "providerId": "fcdo-travel-advisory",
+      "status": "success",
+      "eventCount": 1,
+      "durationMs": 1293
+    }
+  ],
+  "sources": [
+    {
+      "id": "noaa-public-warnings",
+      "name": "NOAA/NWS public weather warnings",
+      "url": "https://api.weather.gov/alerts/active?status=actual&message_type=alert",
+      "licence": "US government public domain (NWS-authored text)",
+      "commercialUse": "yes",
+      "termsUrl": "https://www.weather.gov/disclaimer",
+      "attribution": "NOAA / National Weather Service; no endorsement. Source-authored warning text.",
+      "rateLimits": "Upstream limit not published; application cache 5 minutes, one concurrent request/source/instance",
+      "keyNeeded": false,
+      "language": "en",
+      "region": "United States",
+      "kind": "public_warning",
+      "format": "nws",
+      "normalizedCount": 100,
+      "newestPublication": "2026-10-20T07:37:00.000Z",
+      "fetchedAt": [
+        "2026-10-20T07:39:17.962Z"
+      ],
+      "dataModes": [
+        "fresh"
+      ],
+      "dateAnomalies": []
+    },
+    {
+      "id": "nhc-atlantic",
+      "name": "NHC Atlantic cyclone advisories",
+      "url": "https://www.nhc.noaa.gov/index-at.xml",
+      "language": "en",
+      "region": "Atlantic",
+      "licence": "US government public domain (NHC-authored text)",
+      "commercialUse": "yes",
+      "termsUrl": "https://www.weather.gov/disclaimer",
+      "attribution": "NOAA / National Hurricane Center. Original advisories; no endorsement.",
+      "rateLimits": "Application cache 5 minutes; source cadence varies by bulletin",
+      "keyNeeded": false,
+      "kind": "cyclone_advisory",
+      "format": "rss",
+      "normalizedCount": 2,
+      "newestPublication": "2026-10-20T05:04:51.000Z",
+      "fetchedAt": [
+        "2026-10-20T07:39:17.722Z"
+      ],
+      "dataModes": [
+        "fresh"
+      ],
+      "dateAnomalies": [
+        {
+          "id": "nhc-atlantic:7e15901606fa065222def561f6b4",
+          "reportedPublishedAt": "2026-10-21T17:04:51.000Z",
+          "message": "Source publication date is later than retrieval time; excluded from chronological ranking."
+        }
+      ]
+    },
+    {
+      "id": "nhc-pacific",
+      "name": "NHC Eastern Pacific cyclone advisories",
+      "url": "https://www.nhc.noaa.gov/index-ep.xml",
+      "language": "en",
+      "region": "Eastern Pacific",
+      "licence": "US government public domain (NHC-authored text)",
+      "commercialUse": "yes",
+      "termsUrl": "https://www.weather.gov/disclaimer",
+      "attribution": "NOAA / National Hurricane Center. Original advisories; no endorsement.",
+      "rateLimits": "Application cache 5 minutes; source cadence varies by bulletin",
+      "keyNeeded": false,
+      "kind": "cyclone_advisory",
+      "format": "rss",
+      "normalizedCount": 7,
+      "newestPublication": "2026-10-20T05:05:51.000Z",
+      "fetchedAt": [
+        "2026-10-20T07:39:17.778Z"
+      ],
+      "dataModes": [
+        "fresh"
+      ],
+      "dateAnomalies": []
+    },
+    {
+      "id": "nhc-atlantic-es",
+      "name": "NHC Atlantic advisories (Español)",
+      "url": "https://www.nhc.noaa.gov/index-at-sp.xml",
+      "language": "es",
+      "region": "Atlantic",
+      "licence": "US government public domain (NHC-authored text)",
+      "commercialUse": "yes",
+      "termsUrl": "https://www.weather.gov/disclaimer",
+      "attribution": "NOAA / National Hurricane Center. Original advisories; no endorsement.",
+      "rateLimits": "Application cache 5 minutes; source cadence varies by bulletin",
+      "keyNeeded": false,
+      "kind": "cyclone_advisory",
+      "format": "rss",
+      "normalizedCount": 2,
+      "newestPublication": "2026-10-20T07:30:17.000Z",
+      "fetchedAt": [
+        "2026-10-20T07:39:17.596Z"
+      ],
+      "dataModes": [
+        "fresh"
+      ],
+      "dateAnomalies": []
+    },
+    {
+      "id": "cdc-travel-health",
+      "name": "CDC Travel Health Notices",
+      "url": "https://wwwnc.cdc.gov/travel/rss/notices.xml",
+      "licence": "US government public domain (CDC-authored notices; excludes third-party media)",
+      "commercialUse": "yes",
+      "termsUrl": "https://www.cdc.gov/other/agencymaterials.html",
+      "attribution": "US Centers for Disease Control and Prevention. No endorsement. Consult the linked current official notice.",
+      "rateLimits": "Application cache 15 minutes; source rate limit not published",
+      "keyNeeded": false,
+      "language": "en",
+      "region": "International notices; coverage is not comprehensive",
+      "kind": "health_notice",
+      "format": "rss",
+      "normalizedCount": 21,
+      "newestPublication": "2026-10-16T04:00:00.000Z",
+      "fetchedAt": [
+        "2026-10-20T07:39:17.896Z"
+      ],
+      "dataModes": [
+        "fresh"
+      ],
+      "dateAnomalies": []
+    },
+    {
+      "id": "fcdo-travel-advisory",
+      "name": "UK FCDO country travel advice",
+      "url": "https://www.gov.uk/api/content/foreign-travel-advice",
+      "licence": "Open Government Licence v3.0 (except stated third-party material)",
+      "commercialUse": "yes",
+      "termsUrl": "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/",
+      "attribution": "Contains public sector information licensed under the Open Government Licence v3.0. UK Foreign, Commonwealth & Development Office.",
+      "rateLimits": "Application cache 1 hour/country; source limits apply",
+      "keyNeeded": false,
+      "language": "en",
+      "region": "Country selected by analyst",
+      "kind": "travel_advisory",
+      "format": "govuk",
+      "normalizedCount": 1,
+      "newestPublication": "2026-07-24T14:52:23.000Z",
+      "fetchedAt": [
+        "2026-10-20T07:39:17.918Z"
+      ],
+      "dataModes": [
+        "fresh"
+      ],
+      "dateAnomalies": []
+    }
+  ],
+  "limitation": "One local, point-in-time parse audit. Counts may be capped at 100/source. No completeness, continuous availability, legal endorsement or future-feed health guarantee."
+}

@@ -41,13 +41,13 @@ yarn-error.log*
 next-env.d.ts
 
 # Scanner backend
-scanner/
+/scanner/
 
 # Data files
 threatfox.json
 
 # Dev scripts (one-time migration helpers)
-scripts/
+/scripts/
 
 # AI agent config files
 CLAUDE.md
@@ -73,6 +73,24 @@ scanner_backend_backup.js
 /test-artifacts/*.png
 /test-artifacts/full-walkthrough-raw/
 /supabase/.temp/
+
+# ML artifacts and private knowledge: rebuild with ml/scripts, never commit.
+/ml/.venv/
+**/__pycache__/
+/ml/data/*.jsonl
+/ml/data/generated/
+/ml/eval/results/
+/knowledge/past/*
+/knowledge/present/*
+!/knowledge/past/.gitkeep
+!/knowledge/present/.gitkeep
+*.gguf
+*.safetensors
+*.pt
+*.bin
+/models/
+/.knowledge-storage/
+/.ophanim-runtime/
 /presentation-evidence/failure.json
 /presentation-evidence/debug-dom.html
 /presentation-evidence/screenshots/failed-check.png
@@ -85,3 +103,6 @@ forecast-worker/__pycache__/
 forecast-worker/.pytest_cache/
 
 .forecast-test-models/
+/PARITY/presentation-validation/failure.json
+/PARITY/presentation-validation/debug-dom.html
+/PARITY/presentation-validation/screenshots/failed-*.png

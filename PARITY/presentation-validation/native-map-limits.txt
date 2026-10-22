@@ -1,0 +1,1 @@
+Synthetic/local browser validation; remote sources deliberately blocked. 3,962 reference points clustered. No device-independent FPS or upstream availability claim.

@@ -17,9 +17,9 @@ export async function proxy(request: NextRequest, event: NextFetchEvent) {
     try {
       const config=getSupabasePublicConfig();
       const auth=config?createServerClient(config.url,config.publishableKey,{cookies:{getAll:()=>request.cookies.getAll(),setAll:()=>{}}}):null;
-      if(!await getAuthenticatedActor(request,auth))return NextResponse.json({error:'Authentication is required.'},{status:401});
-      if(!['GET','HEAD','OPTIONS'].includes(request.method) && !sameOrigin(request))return NextResponse.json({error:'Cross-origin changes are not permitted.'},{status:403});
-    }catch{return NextResponse.json({error:'Authentication is unavailable.'},{status:503});}
+      if(!await getAuthenticatedActor(request,auth))return NextResponse.json({error:'Sign in to see your organization’s data.'},{status:401,headers:{'Cache-Control':'private, no-store'}});
+      if(!['GET','HEAD','OPTIONS'].includes(request.method) && !sameOrigin(request))return NextResponse.json({error:'Cross-origin changes are not permitted.'},{status:403,headers:{'Cache-Control':'private, no-store'}});
+    }catch{return NextResponse.json({error:'Authentication is unavailable.'},{status:503,headers:{'Cache-Control':'private, no-store'}});}
   }
   // Presentation redirects apply only to pages, never to authenticated APIs.
   if(!path.startsWith('/api/') && !path.startsWith('/admin') && !/\.[a-z0-9]+$/i.test(path)) {
@@ -37,7 +37,7 @@ export async function proxy(request: NextRequest, event: NextFetchEvent) {
       if(destination) {
         const target=new URL(destination,request.url);
         if(target.pathname==='/presentation' && (path==='/atlas'||path==='/logistics/map')) {
-          for(const key of ['tool','layers','lat','lng','lon','zoom']) {
+          for(const key of ['tool','layers','lat','lng','lon','zoom','projection','style','mapVersion']) {
             const value=request.nextUrl.searchParams.get(key);
             if(value && value.length<=1200 && (key!=='tool'||parseAtlasTool(value)))target.searchParams.set(key,value);
           }

@@ -85,6 +85,7 @@ export type IntelligenceProviderContext = {
   now: Date;
   since: Date;
   limit: number;
+  parameters?: Record<string, string>;
 };
 
 export type IntelligenceEventProvider<Raw = unknown> = {
@@ -97,6 +98,14 @@ export type IntelligenceEventProvider<Raw = unknown> = {
   supportedEventTypes: string[];
   requiresCredentials: boolean;
   timeoutMs: number;
+  queryOnly?: boolean;
+  compliance?: () => {
+    license: string;
+    commercialUse: 'yes' | 'no' | 'unknown';
+    attribution: string;
+    rateLimits: string;
+    termsUrl: string;
+  };
   isConfigured(): boolean;
   fetch(context: IntelligenceProviderContext): Promise<Raw>;
   normalize(

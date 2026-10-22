@@ -56,6 +56,7 @@ function EntityGraphPanel({ entity, onClose, embedded = false }: Props) {
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [recoveryHref, setRecoveryHref] = useState<string | null>(null);
   const [selectedNode, setSelectedNode] = useState<EntityNode | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
@@ -84,7 +85,7 @@ function EntityGraphPanel({ entity, onClose, embedded = false }: Props) {
   const expandEntity = useCallback(async (type: string, id: string, properties?: Record<string, any>) => {
     const key = `${type}:${id}`;
     if (expandedIds.has(key)) return;
-    setLoading(true); setError(null);
+    setLoading(true); setError(null); setRecoveryHref(null);
     try {
       const params = new URLSearchParams({ type, id });
       // Forward extra properties for aircraft/vessel resolution
@@ -92,7 +93,11 @@ function EntityGraphPanel({ entity, onClose, embedded = false }: Props) {
       if (properties?.model) params.set('model', properties.model);
       if (properties?.icao24) params.set('icao24', properties.icao24);
       const res = await fetch(`/api/entity/expand?${params}`, { cache: 'no-store' });
-      if (!res.ok) { const b = await res.json().catch(() => ({})); throw new Error(b.error || `HTTP ${res.status}`); }
+      if (!res.ok) {
+        if (res.status === 401) setRecoveryHref('/login?returnTo=%2Fatlas');
+        if (res.status === 503) setRecoveryHref('/admin/integrations');
+        const b = await res.json().catch(() => ({})); throw new Error(b.error || `HTTP ${res.status}`);
+      }
       const data = await res.json();
       setGraphData(prev => mergeGraph(prev, { nodes: data.nodes || [], links: data.links || [] }));
       setExpandedIds(prev => new Set([...prev, key]));
@@ -271,7 +276,7 @@ function EntityGraphPanel({ entity, onClose, embedded = false }: Props) {
           <div className="px-6 py-2 bg-[#FF1744]/10 border-b border-[#FF1744]/30 flex items-center gap-2 relative z-20 shadow-[inset_0_0_15px_rgba(255,23,68,0.2)]">
             <AlertTriangle className="w-3.5 h-3.5 text-[#FF1744]" />
             <span className="text-[10px] font-mono font-bold tracking-widest text-[#FF1744] uppercase">[ ERR: {error} ]</span>
-          </div>
+          {recoveryHref && <a href={recoveryHref} className="underline ml-2">{recoveryHref.startsWith('/login') ? 'Sign in' : 'Open Integrations'}</a>}</div>
         )}
 
         {/* GRAPH */}

@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "branch": "parity-and-reliability",
+  "startedAt": "2026-10-19",
+  "firstUnfinishedTask": "01-integrations",
+  "tasks": [
+    {
+      "id": "00-inventory",
+      "status": "done"
+    },
+    {
+      "id": "00a-baseline-alignment",
+      "status": "done",
+      "evidence": "Default d22f6a0 integrated at ee7837d. 543 tests, typecheck/lint/build passed; 33 combined Presentation/map/Integrations browser checks passed (synthetic fixtures). PR base correction tracked in final delivery."
+    },
+    {
+      "id": "01-integrations",
+      "status": "partial",
+      "remaining": "Restricted research Compose worker and SDK wizard added. Remaining optional service packaging, protocol adapters, operator inventory and universal missing-key/sign-in prompts; actual Docker runtime verification remains pending."
+    },
+    {
+      "id": "02-core-intelligence",
+      "status": "partial",
+      "remaining": "249-country/territory English/Arabic reference and conservative 3924-port dictionary added; scoped mention graph connects loaded news/seismic/fire evidence. Broader city/asset gazetteer, universal provider wiring, durable membership history, remaining convergence adapters, alert-rule trust integration, regional media catalogue and geographic coverage gaps remain"
+    },
+    {
+      "id": "03-provider-reliability",
+      "status": "partial",
+      "remaining": "Complete provider payload/item-age audit, universal last-good persistence and replay snapshots; connection scheduler, persistence and outage emails added"
+    },
+    {
+      "id": "04-specialist-layers",
+      "status": "partial",
+      "remaining": "Official advisories, hazard matching/map and US FAA/METAR/TAF panel added; GDACS normalized source off by licence; worldwide aviation and remaining specialist layers tracked in REPORT.md"
+    },
+    {
+      "id": "05-analysis-tools",
+      "status": "partial",
+      "remaining": "Sea routes, four scenario templates and sourced forecast register added; actual land routes, Deduce and authenticated deployment validation remain"
+    },
+    {
+      "id": "06-platform-ux-api",
+      "status": "partial",
+      "remaining": "Public offline shell/snapshots and provider point clustering added; legacy-layer load checks, panel layouts, global search, sharing, RTL, organization API/agent/webhook/widget and remaining UX pending"
+    },
+    {
+      "id": "07-limitations",
+      "status": "partial",
+      "remaining": "Reference refresh importers, other public-layer push/fanout, deployable isolated optional worker profiles, durable/scoped SDK storage, full session/demo UX; research/SDK setup wizard added"
+    },
+    {
+      "id": "08-validation-report-pr",
+      "status": "partial",
+      "remaining": "Full Playwright/security/load matrix, clean-checkout CI and final completion report; draft PR 25 open"
+    }
+  ],
+  "checks": {
+    "baselineTests": "311 passed, 5 skipped",
+    "baselineTypecheck": "passed",
+    "baselineBuild": "passed",
+    "currentTests": "599 passed, 5 skipped; 133 files passed",
+    "typecheck": "passed",
+    "build": "passed, Next16.4.2 Webpack",
+    "targetedLint": "Current intelligence, dictionary, integration and browser-test modules passed. Legacy OsintPanel has 27 and EntityGraphPanel has 14 pre-existing errors, unchanged and not suppressed.",
+    "publicReachability": "14/14; HTTP only, not freshness/payload",
+    "dependencyAudit": "Zero production findings; five high development-only lint-chain findings without compatible fix. See docs/DEPENDENCY_SECURITY.md.",
+    "browser": "Current intelligence milestone: 16 tools production-browser checks passed, including port reference, news/seismic links, replay and mobile source table; presentation-validation/tools-results.json. Prior entity-worker checkpoint: 38 full combined checks, not rerun or relabelled for this milestone. Disposable SQL/synthetic fixtures; external API transport blocked.",
+    "integrationsBrowser": "7 recorded checks passed: actual auth/API/storage, key/licence/error gating, research guide including ordered steps and mobile SDK setup",
+    "clientSecretScan": "273 browser JavaScript chunks; zero known-token-format findings (limited pattern audit)",
+    "nativeBrowser": "Reference geography/attribution, 3962 clustered ports, real route/closure rendering and CSV, Hazard/Aviation recovery passed",
+    "researchWorker": "Real local HTTP/adapter/auth/privacy/cache/bounds tests passed; Compose configuration validated. Docker engine stopped: no actual container claim. Two live fixed keyless endpoints passed; research-source-audit.json.",
+    "healthWorker": "Seven regression tests including actual local HTTP/auth/redirect/failure contracts; isolated Compose config validated using .env.example without resolving env_file contents. Docker engine unavailable: container runtime remains unverified. See health-worker-validation.json.",
+    "reconWorker": "Actual loopback worker/application transport; pinned-address/credential/privacy/redirect/rate/concurrency and session/permission/tenant/origin tests passed. Compose config validated with synthetic settings; Docker runtime remains unverified.",
+    "entityWorker": "Real local worker health/auth HTTP, disabled-source and proxy tenant/permission/projection/no-request regression tests passed. Compose validated with synthetic settings. Container runtime unverified; child dependency audit failed twice with registry ECONNRESET."
+  },
+  "overallStatus": "in_progress",
+  "resumeInstruction": "Continue only in parity-default-alignment, parity-and-reliability. Current 02a intelligence milestone complete: conservative port dictionary and scoped loaded news/seismic/fire mention graph. 599 tests/5 skipped, build/type/targeted lint and 16 tools browser checks passed; prior full combined38 was not rerun. 66 services/122 empty variables. First unfinished01 remains: VoidAccess review, adapters, operator licence inventory and universal recovery prompts; then remaining P1-P4 in REPORT. Broader scope incomplete; do not merge. Docker unavailable; child package audit ECONNRESET twice; remote CI pending. Original checkout untouched. Claude prompts reviewed for overlap only, not implemented: separate worktrees required, reconcile existing ophanim_forecasts before creating any ledger; prompts also overlap each other. Recheck default/base, push/review/CI/merge only at final delivery; deployment last.",
+  "baselineCommit": "d22f6a060a1a98c77343764e785db6b6ec60f7e7",
+  "pullRequest": "https://github.com/leo777-debug/OPHANIM-V3/pull/25",
+  "preserveExistingChanges": true,
+  "worldMonitorCodeUsed": false,
+  "originalFoundationCommit": "e0898ef",
+  "activeMilestone": {
+    "id": "02a-port-mentions-scoped-evidence",
+    "status": "done",
+    "evidence": "599 tests/5 skipped; standalone typecheck, targeted lint, production build and 16 tools production-browser checks passed. Dictionary 3924 identities/3962 source records, 516 ambiguous alias occurrences withheld. Other core-intelligence work remains partial."
+  }
+}

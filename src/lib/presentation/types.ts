@@ -32,6 +32,8 @@ export interface PublicFeed {
   reference: boolean;
   note: string;
   testFixture?: boolean;
+  /** Only the keyless maritime projector sets this; legacy mixed snapshots are rejected. */
+  publicOnly?: boolean;
 }
 export interface PresentationFeed extends PublicFeed {
   state: 'live' | 'replay' | 'reference' | 'unavailable';

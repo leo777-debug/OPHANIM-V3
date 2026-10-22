@@ -15,6 +15,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm ci --prefix intel --omit=dev
       - run: npx eslint src/lib/platform src/lib/imports/format-detection.ts src/lib/imports/generic-entity-import.ts src/lib/providers/provider-metrics.ts
       - run: npx tsc --noEmit
       - run: npm test

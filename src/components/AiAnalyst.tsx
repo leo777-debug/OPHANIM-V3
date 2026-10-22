@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useSyncExternalStore } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { readClientAiConfig, writeClientAiConfig } from '@/lib/ai/client-config';
 import { AI_TASKS, type AiTask } from '@/lib/ai/providers/types';
+import EmbeddingSetup from '@/components/knowledge/EmbeddingSetup';
 import {
   Brain,
   Send,
@@ -21,6 +22,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import type { IntelligenceContext } from '@/lib/ai-engine';
+import type { SandboxResearchResult } from '@/lib/ai/sandbox-research';
 
 /* ═══════════════════════════════════════════════════════════════
    OPHANIM — AI Intelligence Analyst Panel
@@ -99,7 +101,7 @@ interface ChatMessage {
   content: string;
   timestamp: string;
   isError?: boolean;
-  sources?: Array<{ title: string; url: string }>;
+  sources?: SandboxResearchResult['sources'];
 }
 
 interface AiAnalystProps {
@@ -108,8 +110,9 @@ interface AiAnalystProps {
   embedded?: boolean;
 }
 
-const GEMINI_KEY_STORAGE = 'ophanim-gemini-key';
-const LEGACY_GEMINI_KEY_STORAGE = ['osi', 'ris-gemini-key'].join('');
+const subscribeToHydration = () => () => {};
+const clientSnapshot = () => true;
+const serverSnapshot = () => false;
 
 /* ─────────────────────────────────────────────────────────────
    Helpers
@@ -196,15 +199,20 @@ function renderMarkdown(text: string): string {
    ───────────────────────────────────────────────────────────── */
 
 export default function AiAnalyst({ data, mode = 'briefing', embedded = false }: AiAnalystProps) {
+  const isClient = useSyncExternalStore(subscribeToHydration, clientSnapshot, serverSnapshot);
+  const [configHydrated, setConfigHydrated] = useState(false);
+  const [previousMode, setPreviousMode] = useState(mode);
   const [isOpen, setIsOpen] = useState(true);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showSettings, setShowSettings] = useState(() => mode === 'settings');
-  const [apiKeyInput, setApiKeyInput] = useState('');
   const [baseUrlInput, setBaseUrlInput] = useState('');
   const [modelInput, setModelInput] = useState('');
   const [enabledTasks, setEnabledTasks] = useState<AiTask[]>([...AI_TASKS]);
+  const [taskModels, setTaskModels] = useState<Partial<Record<AiTask,string>>>({});
+  const [localModelInfo,setLocalModelInfo]=useState('');
+  const [embeddingInfo,setEmbeddingInfo]=useState('');
   const [keySaved, setKeySaved] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('');
   const [testingConnection, setTestingConnection] = useState(false);
@@ -215,22 +223,24 @@ export default function AiAnalyst({ data, mode = 'briefing', embedded = false }:
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Provider credentials are held only for the current browser session.
-  useEffect(() => {
+  // Browser preferences never contain credentials; keys live in server integrations.
+  if (isClient && !configHydrated) {
+    setConfigHydrated(true);
     const saved = readClientAiConfig();
     if (saved) {
-      setApiKeyInput(saved.apiKey);
       setBaseUrlInput(saved.baseUrl);
       setModelInput(saved.model);
       setEnabledTasks(saved.enabledTasks);
+      setTaskModels(saved.taskModels ?? {});
       setKeySaved(true);
     }
-  }, []);
+  }
 
-  useEffect(() => {
+  if (previousMode !== mode) {
+    setPreviousMode(mode);
     setIsOpen(true);
     setShowSettings(mode === 'settings');
-  }, [mode]);
+  }
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -243,15 +253,6 @@ export default function AiAnalyst({ data, mode = 'briefing', embedded = false }:
       setTimeout(() => inputRef.current?.focus(), 300);
     }
   }, [isOpen, showSettings]);
-
-  const getHeaders = useCallback((): Record<string, string> => {
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-    const savedKey = localStorage.getItem(GEMINI_KEY_STORAGE) || localStorage.getItem(LEGACY_GEMINI_KEY_STORAGE);
-    if (savedKey) {
-      headers['x-gemini-key'] = savedKey;
-    }
-    return headers;
-  }, []);
 
   const handleSend = useCallback(async () => {
     const query = inputText.trim();
@@ -305,7 +306,7 @@ export default function AiAnalyst({ data, mode = 'briefing', embedded = false }:
     } finally {
       setIsLoading(false);
     }
-  }, [inputText, isLoading, data, getHeaders]);
+  }, [inputText, isLoading, data]);
 
   const handleBriefing = useCallback(async () => {
     if (isLoading) return;
@@ -357,7 +358,7 @@ export default function AiAnalyst({ data, mode = 'briefing', embedded = false }:
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, data, getHeaders]);
+  }, [isLoading, data]);
 
   const briefingRef = useRef(handleBriefing);
   useEffect(() => { briefingRef.current = handleBriefing; }, [handleBriefing]);
@@ -373,7 +374,7 @@ export default function AiAnalyst({ data, mode = 'briefing', embedded = false }:
     try {
       const response = await fetch('/api/ai/connection', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ apiKey: apiKeyInput, baseUrl: baseUrlInput, model: modelInput, enabledTasks }),
+        body: JSON.stringify({ baseUrl: baseUrlInput, model: modelInput, enabledTasks }),
       });
       const result = await response.json();
       setConnectionStatus(response.ok ? `Connected to ${result.model}` : result.error);
@@ -388,7 +389,7 @@ export default function AiAnalyst({ data, mode = 'briefing', embedded = false }:
     try {
       const response = await fetch('/api/ai/models', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ apiKey: apiKeyInput, baseUrl: baseUrlInput }),
+        body: JSON.stringify({ baseUrl: baseUrlInput, model: modelInput }),
         signal: AbortSignal.timeout(25000),
       });
       const result = await response.json() as { models?: string[]; message?: string; error?: string };
@@ -426,14 +427,14 @@ export default function AiAnalyst({ data, mode = 'briefing', embedded = false }:
       });
       const payload = await response.json() as {
         error?: string;
-        research?: { summary: string; riskIndicator: string; uncertainty: string; sources: Array<{ title: string; url: string }> };
+        research?: SandboxResearchResult;
       };
       if (!response.ok || !payload.research) throw new Error(payload.error || `HTTP ${response.status}`);
       const research = payload.research;
       setMessages((previous) => [...previous, {
         id: generateId(),
         role: 'analyst',
-        content: `SANDBOX SOURCE ASSESSMENT\n\nRisk indicator: ${research.riskIndicator.toUpperCase()}\n\n${research.summary}\n\nUncertainty: ${research.uncertainty}`,
+        content: `SOURCE RESEARCH\n\nRisk indicator: ${research.riskIndicator.toUpperCase()}\n\n${research.summary}\n\nUncertainty: ${research.uncertainty}\n\nSource retrieval: ${research.collectedAt ?? 'unknown'}. Response received: ${research.retrievedAt}.\n\nLimitations:\n${research.limitations.join('\n')}`,
         timestamp: new Date().toISOString(),
         sources: research.sources,
       }]);
@@ -462,19 +463,17 @@ export default function AiAnalyst({ data, mode = 'briefing', embedded = false }:
   );
 
   const saveApiKey = useCallback(() => {
-    const key = apiKeyInput.trim();
     const baseUrl = baseUrlInput.trim();
     const model = modelInput.trim();
     if (baseUrl && model) {
-      writeClientAiConfig({ apiKey: key, baseUrl, model, enabledTasks });
+      writeClientAiConfig({ apiKey: '', baseUrl, model, enabledTasks, taskModels });
       setKeySaved(true);
       setTimeout(() => setShowSettings(false), 600);
     }
-  }, [apiKeyInput, baseUrlInput, modelInput, enabledTasks]);
+  }, [baseUrlInput, modelInput, enabledTasks, taskModels]);
 
   const clearApiKey = useCallback(() => {
     sessionStorage.removeItem('ophanim-ai-provider-config');
-    setApiKeyInput('');
     setBaseUrlInput('');
     setModelInput('');
     setEnabledTasks([...AI_TASKS]);
@@ -638,35 +637,30 @@ export default function AiAnalyst({ data, mode = 'briefing', embedded = false }:
                         <label className="text-xs text-[var(--text-primary)]">Provider
                           <select aria-label="AI provider preset" defaultValue="custom" onChange={(e) => {
                             const preset = e.target.value;
-                            if (preset !== 'custom') { setBaseUrlInput(preset === 'ollama' ? 'http://localhost:11434/v1' : 'http://localhost:1234/v1'); setApiKeyInput(''); }
-                            setKeySaved(false); setConnectionStatus(''); setAvailableModels([]);
+                            if (preset !== 'custom') { setBaseUrlInput(preset === 'lmstudio' ? 'http://localhost:1234/v1' : 'http://localhost:11434/v1'); }
+                            if (preset === 'ophanim') setModelInput('ophanim-logistics:base');
+                            setKeySaved(false); setConnectionStatus('');
                           }} className="mt-1 w-full bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded-lg px-3 py-2">
                             <option value="custom">Custom OpenAI-compatible server</option>
                             <option value="ollama">Local model - Ollama</option>
+                            <option value="ophanim">Ophanim Logistics (local)</option>
                             <option value="lmstudio">Local model - LM Studio</option>
                           </select>
                         </label>
-                        <input
-                          type="password"
-                          value={apiKeyInput}
-                          onChange={(e) => {
-                            setApiKeyInput(e.target.value);
-                            setKeySaved(false);
-                            setAvailableModels([]);
-                            setConnectionStatus('');
-                          }}
-                          aria-label="API key (optional)"
-                          placeholder="API key (optional for local servers)"
-                          className="flex-1 bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded-lg px-3 py-2 text-[11px] font-mono text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--gold-dim)] transition-colors"
-                        />
-                        <input value={baseUrlInput} onChange={(e) => { setBaseUrlInput(e.target.value); setKeySaved(false); setAvailableModels([]); setConnectionStatus(''); }} placeholder="Base URL, e.g. https://api.openai.com/v1" className="bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded-lg px-3 py-2 text-[11px] font-mono text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--gold-dim)] transition-colors" />
-                        <input value={modelInput} onChange={(e) => { setModelInput(e.target.value); setKeySaved(false); setConnectionStatus(''); }} placeholder="Model, e.g. gpt-4o-mini" className="bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded-lg px-3 py-2 text-[11px] font-mono text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--gold-dim)] transition-colors" />
+                        <p className="text-xs">Keys are configured on the server in <a href="/admin/integrations">Admin → Integrations</a>. Browser settings store public model preferences only.</p>
+                        <input value={baseUrlInput} onChange={(e) => { setBaseUrlInput(e.target.value); setKeySaved(false); }} placeholder="Base URL, e.g. https://api.openai.com/v1" className="bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded-lg px-3 py-2 text-[11px] font-mono text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--gold-dim)] transition-colors" />
+                        <input value={modelInput} onChange={(e) => { setModelInput(e.target.value); setKeySaved(false); }} placeholder="Model, e.g. gpt-4o-mini" className="bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded-lg px-3 py-2 text-[11px] font-mono text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--gold-dim)] transition-colors" />
+                        <button type="button" disabled={loadingModels || testingConnection || !baseUrlInput.trim()} onClick={() => void loadModels()} className="px-3 py-2 border border-[var(--border-secondary)] rounded-lg text-xs disabled:opacity-50">{loadingModels ? 'Checking models…' : 'Load available models'}</button>
+                        {availableModels.length > 0 && <select aria-label="Available provider models" value={availableModels.includes(modelInput) ? modelInput : ''} onChange={event => { setModelInput(event.target.value); setKeySaved(false); }} className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded-lg px-3 py-2 text-xs"><option value="" disabled>Select a provider model</option>{availableModels.map(model => <option key={model} value={model}>{model}</option>)}</select>}
                         <div className="flex flex-wrap gap-2">
                           {AI_TASKS.map((task) => <label key={task} className="flex items-center gap-1 text-[8px] font-mono text-[var(--text-muted)]"><input type="checkbox" checked={enabledTasks.includes(task)} onChange={() => { setEnabledTasks((current) => current.includes(task) ? current.filter((value) => value !== task) : [...current, task]); setKeySaved(false); }} />{task.replace(/_/g, ' ')}</label>)}
                         </div>
-                        <button disabled={loadingModels || testingConnection || !baseUrlInput.trim()} onClick={() => void loadModels()} className="px-3 py-2 border border-[var(--border-secondary)] rounded-lg text-xs disabled:opacity-50">{loadingModels ? 'Checking models...' : 'Load available models'}</button>
-                        {availableModels.length > 0 && <select aria-label="Available provider models" value={availableModels.includes(modelInput) ? modelInput : ''} onChange={event => { setModelInput(event.target.value); setKeySaved(false); }} className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded-lg px-3 py-2 text-xs"><option value="" disabled>Select a provider model</option>{availableModels.map(model => <option key={model} value={model}>{model}</option>)}</select>}
-                        <button disabled={loadingModels || testingConnection || !baseUrlInput.trim() || !modelInput.trim()} onClick={() => void testConnection()} className="px-3 py-2 border border-[var(--border-secondary)] rounded-lg text-xs disabled:opacity-50">{testingConnection ? 'Testing...' : 'Test connection'}</button>
+                        <details><summary className="text-xs">Models per task</summary><p className="text-xs">Leave blank to use Ophanim locally when available, then the configured fallback. Overrides use the configured server.</p>{AI_TASKS.filter(task=>!['summarize','explain','suggest_follow_up_searches','write_email_summary'].includes(task)).map(task=><label key={task} className="block text-xs">{task.replace(/_/g,' ')}<input aria-label={`${task} model override`} value={taskModels[task] ?? ''} placeholder="Default routing" onChange={e=>{setTaskModels(current=>({...current,[task]:e.target.value}));setKeySaved(false);}} className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded px-2 py-1" /></label>)}</details>
+                        <button type="button" onClick={()=>void fetch('/api/ai/local-status').then(async r=>{const b=await r.json();if(!r.ok)throw new Error(b.error);setLocalModelInfo(`${b.message} Version: ${b.version ?? 'not loaded'} · ${b.path}`);setEmbeddingInfo(`${b.embedding?.model ?? 'Not configured'} · ${b.embedding?.baseUrl ?? ''} · 1024 dimensions`);}).catch(e=>setLocalModelInfo(e.message))} className="text-xs">Check local model drive and embeddings</button>
+                        {localModelInfo && <p role="status" className="text-xs">{localModelInfo}</p>}
+                        {embeddingInfo && <p className="text-xs">Server embedding defaults: {embeddingInfo}.</p>}
+                        <EmbeddingSetup />
+                        <button disabled={testingConnection || !baseUrlInput.trim() || !modelInput.trim()} onClick={() => void testConnection()} className="px-3 py-2 border border-[var(--border-secondary)] rounded-lg text-xs disabled:opacity-50">{testingConnection ? 'Testing...' : 'Test connection'}</button>
                         {connectionStatus && <p role="status" className="text-xs text-[var(--text-primary)]">{connectionStatus}</p>}
                         <label className="text-xs text-[var(--text-primary)]">Automatic monitoring summaries
                           <select aria-label="Monitoring summary interval" value={monitorMinutes} disabled={!keySaved || !enabledTasks.includes('summarize')} onChange={(e) => setMonitorMinutes(Number(e.target.value))} className="mt-1 w-full bg-[var(--bg-tertiary)] border border-[var(--border-secondary)] rounded-lg px-3 py-2">
@@ -849,9 +843,10 @@ export default function AiAnalyst({ data, mode = 'briefing', embedded = false }:
                           <span className="text-[8px] font-mono tracking-[0.14em] text-[var(--text-muted)]">SANDBOX SOURCES</span>
                           <div className="mt-1.5 space-y-1">
                             {msg.sources.map((source) => (
-                              <a key={source.url} href={source.url} target="_blank" rel="noreferrer" className="block truncate text-[9px] font-mono text-[var(--cyan-primary)] hover:underline">
-                                {source.title}
-                              </a>
+                              <div key={source.url} className="break-words text-[9px] font-mono">
+                                <a href={source.url} target="_blank" rel="noreferrer" className="block text-[var(--cyan-primary)] hover:underline">{source.title}</a>
+                                <p className="text-[var(--text-muted)]">Published: {source.publishedAt ?? 'unknown'}{source.attribution ? ` · ${source.attribution}` : ''}{source.licence ? ` · ${source.licence}` : ''}</p>
+                              </div>
                             ))}
                           </div>
                         </div>

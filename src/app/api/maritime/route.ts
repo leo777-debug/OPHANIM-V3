@@ -1,4 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { getAuthenticatedActor } from '@/lib/auth/actor';
+import { requestIntegration } from '@/lib/integrations/probes';
 import WebSocket from 'ws';
 
 /**
@@ -225,13 +227,9 @@ async function fetchCustomerAis(): Promise<any[]> {
   customerAisInflight = (async () => {
     try {
       const token = process.env.CUSTOMER_AIS_API_TOKEN;
-      const response = await fetch(url, {
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-        signal: AbortSignal.timeout(12000),
-        cache: 'no-store',
-      });
-      if (!response.ok) return customerAisCache;
-      const payload = await response.json();
+      const payload = JSON.parse(await requestIntegration({
+        url, headers: token ? { Authorization: `Bearer ${token}` } : undefined, expected: 'json',
+      }, process.env, 12000));
       const items = Array.isArray(payload) ? payload : payload.ships ?? payload.vessels ?? payload.features ?? [];
       if (!Array.isArray(items)) return customerAisCache;
       const vessels = items.map(normalizeCustomerAisVessel).filter(Boolean);
@@ -302,9 +300,7 @@ async function fetchMarineTrafficOfficial(): Promise<any[]> {
           configured.searchParams.set('api_key', apiKey);
           return configured.toString();
         })();
-      const response = await fetch(url, { signal: AbortSignal.timeout(12000), cache: 'no-store' });
-      if (!response.ok) return marineTrafficCache;
-      const payload = await response.json();
+      const payload = JSON.parse(await requestIntegration({ url, expected: 'json' }, process.env, 12000));
       const rows = Array.isArray(payload) ? payload : payload?.data ?? payload?.ships ?? payload?.vessels ?? [];
       if (!Array.isArray(rows)) return marineTrafficCache;
       const vessels = rows.map(normalizeMarineTrafficVessel).filter(Boolean);
@@ -543,7 +539,7 @@ function connectAisStream() {
 }
 
 // Start connection process asynchronously
-connectAisStream();
+// Start keyed streaming only for an authorized combined-feed request.
 
 // --- SCM Integration: VesselAPI Hybrid Fallback (Satellite AIS) ---
 let lastVesselApiFetch = 0;
@@ -553,23 +549,40 @@ async function fetchVesselApiFallback() {
 
 // Response cache — merging + congestion math over thousands of ships is O(ports×ships);
 // caching keeps it cheap at scale and lets Cloudflare's edge serve most requests.
-let respCache: any = null;
-let respCacheAt = 0;
+const responseCache = new Map<string, { payload: unknown; at: number }>();
 const RESP_TTL = 30000;
 const SHIP_CAP = 8000; // keep the map (and payload) performant
 const EDGE_CC = 'public, s-maxage=30, stale-while-revalidate=60';
 
-export async function GET() {
-  if (respCache && Date.now() - respCacheAt < RESP_TTL) {
-    return NextResponse.json(respCache, { headers: { 'Cache-Control': EDGE_CC } });
+export async function GET(request?: NextRequest) {
+  // Public projection is deliberately keyless, even when customer feeds exist.
+  const publicOnly = request?.nextUrl.searchParams.get('public') === '1';
+  const hasRestrictedSources = Boolean(process.env.CUSTOMER_AIS_API_URL || process.env.MARINETRAFFIC_AIS_API_URL || process.env.AIS_API_KEY);
+  if (!publicOnly && hasRestrictedSources) {
+    try {
+      const actor = request ? await getAuthenticatedActor(request) : null;
+      if (!actor) return NextResponse.json({ error: 'Sign in to see your organization’s data.' }, { status: 401, headers: { 'Cache-Control': 'private, no-store' } });
+      const organization = process.env.AIS_ORGANIZATION_ID;
+      if (!organization) return NextResponse.json({ error: 'Configure AIS_ORGANIZATION_ID in Admin → Integrations before using licensed AIS.' }, { status: 503, headers: { 'Cache-Control': 'private, no-store' } });
+      if (actor.organizationId !== organization) return NextResponse.json({ error: 'This AIS integration is not available to your organization.' }, { status: 403, headers: { 'Cache-Control': 'private, no-store' } });
+    } catch {
+      return NextResponse.json({ error: 'Authentication is unavailable.' }, { status: 503, headers: { 'Cache-Control': 'private, no-store' } });
+    }
+  }
+  if (!publicOnly) connectAisStream();
+  const cacheKey = publicOnly ? 'public' : 'combined';
+  const cacheControl = !publicOnly && hasRestrictedSources ? 'private, no-store' : EDGE_CC;
+  const cached = responseCache.get(cacheKey);
+  if (cached && Date.now() - cached.at < RESP_TTL) {
+    return NextResponse.json(cached.payload, { headers: { 'Cache-Control': cacheControl } });
   }
 
   // Production ingestion uses structured AIS responses only. Public map tiles
   // are deliberately not used as a data source.
   const [dtShips, customerShips, marineTrafficShips] = await Promise.all([
     fetchDigitraffic(),
-    fetchCustomerAis(),
-    fetchMarineTrafficOfficial(),
+    publicOnly ? Promise.resolve([]) : fetchCustomerAis(),
+    publicOnly ? Promise.resolve([]) : fetchMarineTrafficOfficial(),
   ]);
 
   // Clean up stale aisstream ships (older than 10 minutes)
@@ -593,7 +606,7 @@ export async function GET() {
   for (const s of dtShips) byId.set(`dt-${s.mmsi}`, s);
   for (const s of customerShips) byId.set(`customer-${s.mmsi}`, s);
   for (const s of marineTrafficShips) byId.set(`marinetraffic-${s.mmsi}`, s);
-  for (const s of shipsCache.values()) byId.set(`ais-${s.mmsi}`, s); // aisstream (if keyed)
+  if (!publicOnly) for (const s of shipsCache.values()) byId.set(`ais-${s.mmsi}`, s);
   let ships = Array.from(byId.values());
   if (ships.length > SHIP_CAP) ships = ships.slice(0, SHIP_CAP);
 
@@ -659,6 +672,7 @@ export async function GET() {
   });
 
   const payload = {
+    publicOnly,
     ports: dynamicPorts,
     chokepoints: dynamicChokepoints,
     ships,
@@ -666,16 +680,15 @@ export async function GET() {
     total_chokepoints: dynamicChokepoints.length,
     total_ships: ships.length,
     sources: ['Digitraffic marine AIS']
-      .concat(process.env.AIS_API_KEY ? ['AISStream'] : [])
-      .concat(process.env.CUSTOMER_AIS_API_URL ? ['Customer AIS provider'] : [])
-      .concat(process.env.MARINETRAFFIC_AIS_API_URL && process.env.MARINETRAFFIC_API_KEY ? ['MarineTraffic AIS API'] : []),
-    coverage: process.env.AIS_API_KEY || process.env.CUSTOMER_AIS_API_URL || (process.env.MARINETRAFFIC_AIS_API_URL && process.env.MARINETRAFFIC_API_KEY)
+      .concat(!publicOnly && process.env.AIS_API_KEY ? ['AISStream'] : [])
+      .concat(!publicOnly && process.env.CUSTOMER_AIS_API_URL ? ['Customer AIS provider'] : [])
+      .concat(!publicOnly && process.env.MARINETRAFFIC_AIS_API_URL && process.env.MARINETRAFFIC_API_KEY ? ['MarineTraffic AIS API'] : []),
+    coverage: !publicOnly && (process.env.AIS_API_KEY || process.env.CUSTOMER_AIS_API_URL || (process.env.MARINETRAFFIC_AIS_API_URL && process.env.MARINETRAFFIC_API_KEY))
       ? 'configured global or customer coverage'
       : 'regional Digitraffic coverage',
     timestamp: new Date().toISOString(),
   };
-  respCache = payload;
-  respCacheAt = Date.now();
+  responseCache.set(cacheKey, { payload, at: Date.now() });
 
-  return NextResponse.json(payload, { headers: { 'Cache-Control': EDGE_CC } });
+  return NextResponse.json(payload, { headers: { 'Cache-Control': cacheControl } });
 }

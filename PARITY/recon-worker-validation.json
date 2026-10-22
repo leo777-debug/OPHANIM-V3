@@ -1,0 +1,45 @@
+{
+  "checkedAt": "2026-10-21T08:20:00.487Z",
+  "milestone": "01e-restricted-recon-profile",
+  "unitTests": {
+    "passed": 583,
+    "skipped": 5,
+    "focusedReconTests": 12
+  },
+  "typecheck": "passed",
+  "productionBuild": "passed",
+  "targetedLint": "New worker, route, tests, integration modules and observation component passed. OsintPanel retains 27 baseline no-explicit-any errors; no suppressions added.",
+  "browser": {
+    "combinedChecks": 37,
+    "results": "presentation-validation/results.json",
+    "fixtures": "Synthetic accounts/records/target responses; external API transport blocked. No actual target inspected."
+  },
+  "composeConfiguration": {
+    "validated": true,
+    "privateEnvRead": false,
+    "workerSettings": [
+      "NODE_ENV",
+      "SCANNER_ALLOWED_TARGETS",
+      "SCANNER_KEY"
+    ],
+    "publishedPorts": [],
+    "readOnly": true,
+    "nonRoot": true,
+    "capabilitiesDropped": [
+      "ALL"
+    ]
+  },
+  "transport": [
+    "Exact approved hosts, configured organization and cyber:write permission",
+    "POST and same-origin; GET cannot submit work",
+    "Public-address pinning, no redirects and no target credentials",
+    "One verified HTTPS HEAD on port 443; selected headers/TLS only",
+    "Source times preserved; risk remains unknown",
+    "No background geolocation of approved targets",
+    "Cookie/body/arbitrary-field exclusion; sanitized failures",
+    "Five requests/minute and two concurrent worker requests"
+  ],
+  "containerRuntime": "Not verified: Docker Linux engine unavailable. See preceding health-worker evidence.",
+  "scope": "Restricted HTTPS diagnostics only; not port scanning, exploitation, vulnerability validation or subdomain enumeration. Broader parity remains unfinished.",
+  "worldMonitorCodeUsed": false
+}

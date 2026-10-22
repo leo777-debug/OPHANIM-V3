@@ -1,7 +1,35 @@
 # World Monitor / Ophanim Comparison
 
 Reviewed: 2026-10-08. This is a capability comparison, not a claim of complete parity.
-World Monitor source code was not copied into Ophanim.
+No World Monitor code, styles, assets, API, embeds or backend data were used for
+the parity-and-reliability work. Implementations are independent.
+
+## Parity and reliability work (2026-10-19)
+
+The active branch is `parity-and-reliability`. `PARITY/state.json` and
+`PARITY/PROGRESS.md` are the resumable record; `PARITY/REPORT.md` records verified
+coverage and outstanding work. This is not a claim of full parity.
+
+Central configuration now has generated `API_KEYS.md`, an all-empty `.env.example`,
+and an owner-protected Admin → Integrations page. Presence checks are distinguished
+from actual endpoint reachability. Five fixed public probes are implemented;
+authenticated probes and persistent fetch observations remain unfinished.
+Credentials are environment-only and never returned by the integrations API.
+No new external data connector is enabled by the integration inventory.
+
+The Intel Desk now includes independent deterministic Stories analysis with
+evidence-preserving groups, limited dictionary entities, manual trust metadata,
+labelled context and a documented convergence method. Only news/seismic adapters
+are wired for convergence; other source types remain pending. News gains bounded
+last-good caching, coalesced requests, backoff/circuit protection and explicit
+stale labels. See `docs/INTELLIGENCE_METHODS.md` for formulas and caveats.
+
+The pre-existing Logistics World Monitor iframe and product-specific catalogue
+were removed. Logistics uses Ophanim's native map and source-attributed controls.
+Unsupported competitor catalogue entries are not treated as implementations.
+SDK reads now require sign-in and the configured organization, and no longer
+invent a latest source update or nine connected feeds. Setup wizard, durable
+health/storage and the broader parity roadmap remain unfinished.
 
 Reference material:
 - https://github.com/koala73/worldmonitor
@@ -48,9 +76,9 @@ summaries and links do not transfer publisher ownership or republication rights.
 
 ## Remaining Differences
 
-These are not implemented by this update. Entries in `src/lib/world-monitor-layers.ts`
-labelled WorldMonitor API or public embed must not be described as native Ophanim
-data connectors just because they appear in that catalog.
+The earlier catalogue in `src/lib/world-monitor-layers.ts` has now been removed,
+along with its external product iframe. That catalogue was never evidence of native
+connectors. The broader specialist work below remains unfinished.
 
 | Area | Remaining work |
 | --- | --- |
@@ -110,3 +138,111 @@ failures without live network dependency.
 
 The separately pending local-AI changes are preserved, but are not attributed to
 this comparison update. No GitHub commit or deployment is implied by this document.
+
+## Independent parity continuation — 20 October 2026
+
+No World Monitor code, styles, assets, API, embeds or backend data were used.
+The following additions use Ophanim's own components and documented original
+sources. This remains an incomplete parity project; see PARITY/state.json.
+
+- Admin integrations now persist connection observations in a private runtime
+  schema, or an explicitly reported local-file/memory fallback. An optional
+  health worker checks connections and sends configured critical-outage emails.
+  A successful connection is not a claim of current item coverage.
+- Official public advisories use NOAA/NWS, NHC (English and Spanish), CDC and
+  UK FCDO sources, with source-specific rights, coverage and polling metadata.
+  Their timeline supports filtering and CSV. NHC coverage does not include the
+  Arabian Sea or Bay of Bengal. NWS weather warnings are not global siren feeds.
+- Route Explorer independently calculates shortest sea paths and closed-passage
+  alternatives over pinned Apache-2.0 Marnet reference data. It shows distance,
+  constant-speed days, unrouted endpoint connectors and public hazard context.
+  It does not provide navigation or actual road/rail routing.
+- Four hypothetical scenario templates assess the signed-in organization's
+  recorded shipment ports. Every modeled exposure includes inputs, calculation,
+  unresolved records and limitations. Private CSV and browser Print / Save PDF
+  exports require access to the private results.
+
+Dataset provenance and formulas: docs/ROUTE_SCENARIO_METHODS.md. New official
+source declarations live in specialist-providers.ts and the existing event
+provider registry. Founder configuration remains centralized in API_KEYS.md.
+Public advisory updates use Ophanim SSE revision notifications over explicitly
+periodic polling. Source cadence remains visible; no continuous upstream stream
+is implied. See docs/PUBLIC_UPDATES.md for capacity and instance limitations.
+The independent public offline shell now stores a deliberately saved, filtered
+official-advisory snapshot with explicit offline timestamps. It caches no private
+HTML or API responses; offline interactive maps are not implemented. Browser
+server-down fallback was verified. See docs/OFFLINE_MODE.md.
+An independent organization forecast register stores analyst-entered, source-linked
+probabilities and future horizons, with immutable inputs and one-time sourced
+outcomes. It computes binary Brier scores explicitly; no automated prediction or
+validated accuracy is implied. See docs/FORECASTS.md and the additive RLS migration.
+Natural hazards now retain every contributing source in conservative possible
+duplicate groups. GDACS normalized data remains disabled pending commercial-rights
+review. Legacy conflict news no longer receives fabricated map offsets or current
+event dates; static areas are explicitly undated references. None of this work
+uses World Monitor code or services. See docs/HAZARD_MATCHING.md.
+The public aviation workspace independently parses FAA status metadata and selected
+US NOAA/NWS METAR/TAF products, with source times, separate forecast periods,
+documented watch thresholds and an optional source-coordinate map. Conditional FAA
+notices do not establish complete airport closures. Raw operator NOTAM text is not
+republished; worldwide NOTAM/weather coverage remains incomplete. Source rights,
+rate rules and limitations are in docs/AVIATION_DISRUPTIONS.md. No World Monitor
+code, styles, assets, APIs or data were used.
+Research/SDK setup now uses Ophanim's own three-step guide with no browser key
+storage. Research passes an authenticated worker health check before context is
+sent through pinned, bounded transport. SDK diagnostics validate a server-supplied
+credential without creating map objects; bounded ingestion preserves unknown
+confidence/times and resets process state on a tenant configuration change.
+External worker isolation and multi-worker SDK persistence remain incomplete.
+Provider point layers now use MapLibre's existing worker clustering API, with
+count labels and expansion, preserving original source records. Route Explorer
+optionally shows 3,962 dated Apache-2.0 port reference points; these do not assert
+live operations. Production browser rendering/expansion and route coexistence were
+checked. Legacy layer and measured hardware load work remain. See MAP_CLUSTERING.md.
+No World Monitor code, styles, assets, APIs, embeds or data were used.
+Country/territory entity coverage now uses 249 scoped English/Arabic ICU/CLDR
+labels with version/date/licence and a token-trie matcher. Ambiguous bare names
+are withheld; country mentions never create event coordinates. Public-role-only
+person extraction remains enforced. This reference was generated independently
+from the installed Unicode/ICU data, with its original notice retained. Broader
+asset/city gazetteers and a universal feed graph remain incomplete. See
+ENTITY_DICTIONARY.md. No World Monitor code or services were used.
+Public Atlas links now encode only allowed display settings and restore camera,
+projection, basemap and exact layer selection. Private/unreviewed layers block
+public settings sharing. Data/time snapshots are not implied; current sources are
+loaded. See MAP_VIEW_LINKS.md. A default-branch discrepancy was found during
+verification: current Presentation/map/AI commits must be reconciled before
+preservation or completed parity can be claimed. PARITY/state.json tracks this.
+
+The current default branch has now been integrated in an isolated checkout,
+including the shared map and Presentation controls. Public sharing targets that
+map; AI discovery retains server-only credentials and private APIs retain session
+requirements. Unit/build checks pass; renewed browser and dependency security
+validation are pending. No World Monitor code, assets or services were used.
+
+The public maritime projection now excludes customer/licensed feeds and caches;
+licensed access is session- and organization-scoped. First-observation and source
+freshness metadata survive the unified news adapter; replay cannot produce current
+convergence alerts. Unit/type/build checks pass; full browser validation continues.
+No World Monitor code, assets, API or data were used.
+
+Standalone Route Explorer, Hazard and Aviation maps now use a keyless basemap,
+with a labelled, attributed Natural Earth startup fallback. Source metadata is
+registered and cluster font compatibility is checked. A production-browser test
+rendered the actual 3,962 reference ports alongside a real schematic sea-route
+calculation and CSV export, with upstream map/event requests blocked. This is
+not a hardware frame-rate guarantee or live source-availability claim. No World
+Monitor code, styles, assets or services were used. See BASEMAP_RELIABILITY.md.
+
+Integration model probes now isolate hosted and embedding credentials and keep
+local inference keyless. Invalid server configuration is recorded as a redacted
+Error observation without network activity. A real loopback transport test
+verifies the headers received by each provider. No World Monitor code was used.
+
+The optional research Compose profile now packages Ophanim's own restricted
+official-feed worker. It performs deterministic subject-token lookup of the
+registered USGS and NWS feeds, preserves source dates/attribution and reports
+unknown risk, outages and limited coverage. It does not run browser tasks, code
+or AI. The worker receives only a dedicated secret and cannot fetch caller URLs.
+The public setup guides remain reachable during Presentation Map mode without
+unlocking protected features. No World Monitor code or services were used.

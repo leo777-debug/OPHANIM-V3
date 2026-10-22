@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
-import crypto from 'crypto';
 import Parser from 'rss-parser';
 import { deduplicateNews, publishedTime, safeSourceUrl, type FeedHealth, type NewsItem } from '@/lib/intelligence/news';
+import { newsFeedCache } from '@/lib/intelligence/news-cache';
+import { refreshLabel } from '@/lib/providers/resilient-feed';
+import { articleObservationId, observeArticles } from '@/lib/intelligence/observations';
 
 /**
  * Ophanim supporting news discovery. Each source fails independently.
@@ -52,6 +54,7 @@ function findCoords(text: string): [number, number] | null {
 type Article = {
   title: string; description: string; link: string; pubDate: string | null; source: string;
   coords?: [number, number]; sourcePolicy?: { reliability: string; purpose: string };
+  feedMode?: 'fresh' | 'stale' | 'unavailable'; lastSuccessAt?: string | null; staleSince?: string | null;
 };
 
 function parseTelegramHTML(html: string, channel: string): Article[] {
@@ -106,21 +109,26 @@ export async function GET() {
   try {
     const health: FeedHealth[] = [];
     const load = async (name: string, url: string, parse: (text: string) => Article[] | Promise<Article[]>) => {
-      let articles: Article[] = [];
-      let status: FeedHealth['status'] = 'unavailable';
-      try {
+      const result = await newsFeedCache.load(name, async (signal) => {
         const res = await fetch(url, {
-          signal: AbortSignal.timeout(8000), next: { revalidate: 300 },
+          signal, cache: 'no-store', redirect: 'error',
           headers: { 'User-Agent': 'Ophanim/1.0 (news feed reader)' },
         });
         if (!res.ok) throw new Error(`Source HTTP ${res.status}`);
-        articles = await parse(await res.text());
-        status = articles.length ? 'ok' : 'empty';
-      } catch { /* A failed feed must not interrupt other feeds. */ }
+        if (Number(res.headers.get('content-length') ?? 0) > 2000000) throw new Error('Feed too large');
+        const text = await res.text();
+        if (Buffer.byteLength(text) > 2000000) throw new Error('Feed too large');
+        return parse(text);
+      });
+      const articles = result.data ?? [];
+      const status: FeedHealth['status'] = result.mode === 'fresh' ? articles.length ? 'ok' : 'empty' : 'unavailable';
       const times = articles.map((item) => publishedTime(item.pubDate)).filter((time): time is number => time !== null);
-      health.push({ name, url, status, count: articles.length, checkedAt: new Date().toISOString(),
+      health.push({ name, url, status, count: articles.length, checkedAt: result.observation.checkedAt!,
+        lastSuccessAt: result.observation.lastSuccessAt, mode: result.mode, staleSince: result.staleSince,
+        latencyMs: result.observation.latencyMs, error: result.observation.error,
+        refresh: refreshLabel('polling', 300),
         latestPublished: times.length ? new Date(Math.max(...times)).toISOString() : null });
-      return articles;
+      return articles.map((article): Article => ({ ...article, feedMode: result.mode, lastSuccessAt: result.observation.lastSuccessAt, staleSince: result.staleSince }));
     };
     const results = await Promise.all([
       ...REVIEWED_TELEGRAM_SOURCES.map((source) => load(`t.me/${source.channel}`, `https://t.me/s/${source.channel}`,
@@ -128,6 +136,7 @@ export async function GET() {
       ...Object.entries(RSS_FEEDS).map(([name, url]) => load(name, url, (xml) => parseRSSItems(xml, name))),
     ]);
     const allArticles = results.flat();
+    const observations = await observeArticles(allArticles.map(article => articleObservationId(article.source, article.link, article.title)));
 
     const newsItems = deduplicateNews(allArticles.map((article): NewsItem & Record<string, unknown> => {
       const riskScore = scoreRisk(article.description || article.title);
@@ -136,8 +145,15 @@ export async function GET() {
       const region = Object.keys(KEYWORD_COORDS).find((keyword) => text.toLowerCase().includes(keyword));
       const time = publishedTime(article.pubDate);
 
+      const id = articleObservationId(article.source, article.link, article.title);
       return {
-        id: crypto.createHash('sha256').update(`${article.source}:${article.link || article.title}`).digest('hex').slice(0, 24),
+        id,
+        first_seen: observations.items[id],
+        first_seen_storage: observations.storage,
+        first_seen_warning: observations.warning,
+        source_data_mode: article.feedMode,
+        source_last_success: article.lastSuccessAt,
+        source_stale_since: article.staleSince,
         title: article.title,
         description: article.description,
         link: safeSourceUrl(article.link),
@@ -158,6 +174,8 @@ export async function GET() {
     return NextResponse.json({
       news: newsItems,
       total: newsItems.length,
+      observation_storage: observations.storage,
+      observation_warning: observations.warning,
       news_sources: health.sort((a, b) => a.name.localeCompare(b.name)),
       timestamp: new Date().toISOString(),
     }, {

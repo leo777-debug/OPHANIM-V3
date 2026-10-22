@@ -3,9 +3,11 @@
 import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { Activity, Bell, Bookmark, Brain, Camera, CloudLightning, Database, Globe2, Layers3, MapPin, Moon, Network, Newspaper, Plane, Plus, Radar, RefreshCw, Satellite, Search, Settings, Share2, Shield, Ship, Sun, Upload, X, ChartNoAxesColumn } from 'lucide-react';
+import { Activity, Bell, Bookmark, Brain, Camera, CloudLightning, Database, Globe2, Layers3, MapPin, Moon, Network, Newspaper, Plane, Plus, Radar, RefreshCw, Satellite, Search, Settings, Shield, Ship, Sun, Upload, X, ChartNoAxesColumn } from 'lucide-react';
 import SearchBar from '@/components/SearchBar';
 import FullscreenButton from '@/components/FullscreenButton';
+import SharePanel from '@/components/SharePanel';
+import { decodeMapView } from '@/lib/map/view-url';
 import CommandPalette from '@/components/CommandPalette';
 import { usePresentation } from '@/components/presentation/PresentationBoundary';
 import { ATLAS_TOOLS, parseAtlasTool, type AtlasTool } from '@/lib/atlas-tools';
@@ -30,7 +32,7 @@ const toolIcons = { watchtower:Camera, 'route-lens':Ship, analyst:Brain, fusion:
 const layerIcons:Partial<Record<FeedId,typeof Globe2>> = { flights:Plane, maritime:Ship, cameras:Camera, news:Newspaper, satellites:Satellite, weather:CloudLightning, cyber:Shield, cables:Network };
 const regions = [ ['Global',24,42,1.35], ['Gulf',25,53,4], ['Europe',52,14,3.1], ['Asia',30,100,2.35], ['Americas',15,-79,2.1], ['Africa',2,21,2.7], ['Oceania',-24,141,2.65] ] as const;
 const groups = { All:feedIds, Transport:['flights','maritime','ports','chokepoints','cameras','cables'], Hazards:['earthquakes','fires','weather','incidents','space-weather'], Intelligence:['news','broadcasts','conflicts','war-sanctions','cyber','infrastructure','satellites'] };
-const layerAliases:Record<string,FeedId> = { war_sanctions:'war-sanctions', global_incidents:'incidents', malware:'cyber', news_intel:'news', live_news:'broadcasts', cctv:'cameras', sdk_sea:'cables', conflict_zones:'conflicts' };
+const layerAliases:Record<string,FeedId> = { war_sanctions:'war-sanctions', global_incidents:'incidents', malware:'cyber', news_intel:'news', live_news:'broadcasts', cctv:'cameras', conflict_zones:'conflicts' };
 const timeText = (value:unknown) => typeof value==='string' && Number.isFinite(Date.parse(value)) ? new Date(value).toLocaleString('en-GB',{timeZone:'UTC'})+' UTC' : 'Not supplied by source';
 
 export default function UnifiedMap({ publicSurface=false, settings: suppliedSettings }: { publicSurface?:boolean; settings?:PresentationSettings }) {
@@ -69,12 +71,14 @@ export default function UnifiedMap({ publicSurface=false, settings: suppliedSett
       let restoredState=defaultUnifiedMapState();
       try { restoredState=restoreUnifiedMapState(localStorage.getItem(UNIFIED_MAP_STORAGE)); } catch { /* Storage is optional. */ }
       const params=new URLSearchParams(location.search);
+      const shared=decodeMapView(params);
       if(params.has('layers')) {
         const enabled=new Set((params.get('layers')??'').split(',').map(id=>layerAliases[id]??id));
         restoredState=patchUnifiedWorkspace(restoredState,{activeLayers:Object.fromEntries(feedIds.map(id=>[id,enabled.has(id)]))});
       }
-      const lat=Number(params.get('lat')),lng=Number(params.get('lng')??params.get('lon')),zoom=Number(params.get('zoom')??3);
-      if(params.has('lat') && (params.has('lng')||params.has('lon')) && [lat,lng,zoom].every(Number.isFinite) && Math.abs(lat)<=85 && Math.abs(lng)<=180 && zoom>=0 && zoom<=22) restoredState=patchUnifiedWorkspace(restoredState,{viewport:{latitude:lat,longitude:lng,zoom}});
+      if(shared.viewport)restoredState=patchUnifiedWorkspace(restoredState,{viewport:shared.viewport});
+      if(shared.projection)restoredState=patchUnifiedWorkspace(restoredState,{projection:shared.projection});
+      if(shared.mapStyle)restoredState=patchUnifiedWorkspace(restoredState,{mapStyle:shared.mapStyle});
       setState(restoredState);setRestored(true);
     });
     return()=>cancelAnimationFrame(frame);
@@ -144,10 +148,7 @@ export default function UnifiedMap({ publicSurface=false, settings: suppliedSett
     const next=createMapWorkspace({...workspace,id:crypto.randomUUID(),label:`Globe ${state.workspaces.length+1}`});
     setState(current=>({...current,activeId:next.id,workspaces:[...current.workspaces,next]}));setSelected(null);setFollow(false);
   }
-  async function share() {
-    const params=new URLSearchParams({view:publicSurface?'map':'full',layers:feedIds.filter(id=>!hidden.has(id)).join(','),lat:String(workspace.viewport.latitude.toFixed(4)),lng:String(workspace.viewport.longitude.toFixed(4)),zoom:String(workspace.viewport.zoom.toFixed(2))});
-    try {await navigator.clipboard.writeText(location.origin+(publicSurface?'/presentation':'/logistics/map')+'?'+params);setNotice('Map view link copied. Private records and credentials are not included.');} catch {setNotice('The browser blocked clipboard access.');}
-  }
+  function share() { window.dispatchEvent(new Event('ophanim:share-map')); }
   const news=feeds.news?.news??[];
   const headlines=news.slice(0,12).map(item=>item.title);
   if(!headlines.length)headlines.push(loading?'Connecting public sources...':'No news items currently available.');
@@ -158,7 +159,7 @@ export default function UnifiedMap({ publicSurface=false, settings: suppliedSett
   return <main ref={root} className={`world-map-workspace ${styles.workspace} ${styles.stageWithTabs} ${publicSurface?styles.publicSurface:''}`} style={{containerType:'inline-size'}} data-testid="operational-map-workspace" data-unified-map="true" data-surface={publicSurface?'public':'platform'}>
     <header className={styles.header}>
       <div className={styles.title}><Globe2/><div><small>Operational map</small><h1>Global situation monitor</h1></div></div>
-      <div className={styles.headerActions}><span>Ophanim live</span><time>{clock}</time><FullscreenButton targetRef={root} label="Fullscreen map"/><select aria-label="Map region" defaultValue="Global" onChange={event=>{const region=regions.find(item=>item[0]===event.target.value);if(region)onLocate(region[1],region[2],region[3]);}}>{regions.map(item=><option key={item[0]}>{item[0]}</option>)}</select><button title="Refresh feeds" aria-label="Refresh feeds" onClick={()=>setRefresh(value=>value+1)}><RefreshCw size={16}/></button><button title="Share map view" aria-label="Share map view" onClick={()=>void share()}><Share2 size={16}/></button><button title="Show layers" aria-label="Show layers" aria-expanded={layersOpen} onClick={()=>setLayersOpen(value=>!value)}><Layers3 size={16}/></button></div>
+      <div className={styles.headerActions}><span>Ophanim</span><time>{clock}</time><FullscreenButton targetRef={root} label="Fullscreen map"/><select aria-label="Map region" defaultValue="Global" onChange={event=>{const region=regions.find(item=>item[0]===event.target.value);if(region)onLocate(region[1],region[2],region[3]);}}>{regions.map(item=><option key={item[0]}>{item[0]}</option>)}</select><button title="Refresh feeds" aria-label="Refresh feeds" onClick={()=>setRefresh(value=>value+1)}><RefreshCw size={16}/></button><SharePanel mapView={workspace.viewport} activeLayers={workspace.activeLayers} projection={workspace.projection} mapStyle={workspace.mapStyle} surface={publicSurface?'map':'full'}/><button title="Show layers" aria-label="Show layers" aria-expanded={layersOpen} onClick={()=>setLayersOpen(value=>!value)}><Layers3 size={16}/></button></div>
     </header>
     <div className={styles.ribbon}><div ref={searchRef} className={styles.search}><SearchBar alwaysExpanded onLocate={onLocate} onAction={onAction}/></div><nav className={styles.tools} aria-label="Map tools">{ATLAS_TOOLS.map(item=>{const Icon=toolIcons[item.id];return <button key={item.id} title={item.label+' - '+item.description} aria-label={item.label} data-primary={item.id==='settings'||item.id==='news'} aria-pressed={activeTool===item.id} onClick={()=>openTool(activeTool===item.id?null:item.id)}><Icon size={17}/><span>{item.label}</span></button>;})}<button title="Import shipments" aria-label="Import shipments" onClick={()=>presentation.openPage('/imports')}><Upload size={17}/><span>Import</span></button></nav></div>
     <div className={styles.tabs} role="tablist" aria-label="Globe workspaces">{state.workspaces.map(item=><div className={styles.tab} key={item.id}><button role="tab" aria-selected={state.activeId===item.id} onClick={()=>changeTab(item.id)}><Globe2 size={13}/>{item.label}</button>{item.id!=='main'&&<button aria-label={`Close ${item.label}`} title={`Close ${item.label}`} onClick={()=>{if(state.activeId===item.id)changeTab('main');setState(current=>({...current,workspaces:current.workspaces.filter(tab=>tab.id!==item.id)}));}}><X size={12}/></button>}</div>)}<button title="New globe" aria-label="New globe" disabled={state.workspaces.length>=12} onClick={addTab}><Plus size={14}/>New globe</button></div>
@@ -176,6 +177,15 @@ export default function UnifiedMap({ publicSurface=false, settings: suppliedSett
     {!publicSurface&&activeTool!=='route-lens'&&(shipment||disruption)&&<DetailDrawer title={shipment?'Shipment route':'Disruption'} onClose={()=>{setShipment(null);setDisruption(null);}}>{shipment?<><a href={`/logistics/map?tool=route-lens&shipment=${shipment.id}`}>Open Route Lens + forecast</a><a href={`/logistics/map?tool=watchtower&port=${shipment.destinationPortCode??''}`}>Show destination cameras</a><ShipmentRoute origin={shipment.originPortName} destination={shipment.destinationPortName} transshipments={shipment.transshipmentPorts}/><p>Only recorded shipment route data is shown; coordinates are not inferred.</p></>:<p>{disruption?.description??'No recorded description.'}</p>}</DetailDrawer>}
     <CommandPalette commands={[
       ...ATLAS_TOOLS.map(item=>({id:`tool:${item.id}`,title:item.label,subtitle:item.description,group:'Tools',run:()=>openTool(item.id)})),
+      ...[
+        ['/public-intelligence','Official advisories','Weather, travel and public health'],
+        ['/aviation','Aviation disruptions','FAA notices and US airport METAR/TAF'],
+        ['/hazards','Natural hazards','Source evidence and possible duplicates'],
+        ['/route-explorer','Route Explorer','Sea routes and organization scenarios'],
+        ['/forecasts','Sourced forecasts','Organization probabilities, outcomes and scoring'],
+        ['/admin/integrations','Integrations','Server configuration and connection tests'],
+        ['/admin/health','Source health','Fetch status, errors and coverage gaps'],
+      ].map(([href,title,subtitle])=>({id:`page:${href}`,title,subtitle,group:'Pages',run:()=>presentation.openPage(href)})),
       ...regions.map(item=>({id:`region:${item[0]}`,title:item[0],group:'Regions',run:()=>onLocate(item[1],item[2],item[3])})),
       ...feedIds.map(id=>({id:`layer:${id}`,title:PRESENTATION_FEEDS[id].name,group:'Layers',badge:hidden.has(id)?'OFF':'ON',active:!hidden.has(id),keepOpen:true,run:()=>setState(current=>patchUnifiedWorkspace(current,{activeLayers:{...workspace.activeLayers,[id]:hidden.has(id)}}))})),
       {id:'new-globe',title:'New globe',group:'Map',run:addTab},

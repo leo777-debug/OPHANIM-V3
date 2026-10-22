@@ -1,11 +1,12 @@
 import { PGlite } from '@electric-sql/pglite';
 import { pgcrypto } from '@electric-sql/pglite/contrib/pgcrypto';
+import { vector } from '@electric-sql/pglite-pgvector';
 import { PGLiteSocketServer } from '@electric-sql/pglite-socket';
 import { readFile,readdir } from 'node:fs/promises';
 import { createHash,randomBytes,scryptSync } from 'node:crypto';
 
 export async function startTestDatabase(port=55439) {
-  const db=new PGlite({extensions:{pgcrypto}});
+  const db=new PGlite({extensions:{pgcrypto,vector}});
   await db.exec(`create role anon;create role authenticated;create role service_role bypassrls;
     create schema auth;create table auth.users(id uuid primary key);
     create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
@@ -38,7 +39,7 @@ export async function startTestDatabase(port=55439) {
 
 export async function seedReplay(db) {
   const now=new Date().toISOString();
-  const common={features:[],news:[],sources:[],source:'Synthetic presentation test fixture',sourceUrl:'https://example.invalid/evidence',fetchedAt:now,observedAt:now,reference:false,note:'Synthetic fixture for tests only',testFixture:true};
+  const common={features:[],news:[],sources:[],source:'Synthetic presentation test fixture',sourceUrl:'https://example.invalid/evidence',fetchedAt:now,observedAt:now,reference:false,note:'Synthetic fixture for tests only',testFixture:true,publicOnly:true};
   const rows={
     flights:[['TEST AIR 01',52,25],['TEST AIR 02',38,34],['TEST AIR 03',63,25]],
     maritime:[['TEST VESSEL 01',56,26],['TEST VESSEL 02',32,31],['TEST VESSEL 03',44,12]],
@@ -55,7 +56,7 @@ export async function seedReplay(db) {
     const feed={...common,id,reference,features:items.map(([name,lng,lat],index)=>({type:'Feature',geometry:{type:'Point',coordinates:[lng,lat]},properties:{id:`${id}-${index}`,name,lat,lng,type:id==='maritime'?'cargo':id,heading:75,severity:id==='conflicts'?'war':undefined,color:id==='satellites'?'#b5a4f5':undefined,brightness:id==='fires'?320:undefined,aircraft_category:id==='flights'?'commercial':undefined,magnitude:id==='earthquakes'?4.2:undefined,source:common.source,sourceUrl:common.sourceUrl,reference,observedAt:reference?null:now}}))};
     await db.query('insert into ophanim_presentation_snapshots(feed_id,payload,item_count,recorded_at) values($1,$2,$3,$4) on conflict(feed_id) do update set payload=excluded.payload,item_count=excluded.item_count,recorded_at=excluded.recorded_at',[id,JSON.stringify(feed),items.length,now]);
   }
-  const feed={...common,id:'news',news:[['Gulf','Oman port weather advisory: test replay'],['Europe','Europe cargo routes: test replay'],['Asia','Singapore terminal update: test replay']].map(([region,title],index)=>({id:`news-${index}`,title,description:'Synthetic test evidence only',source:'Synthetic test newsroom',published:now,link:'https://example.invalid/story',risk_score:0,coords:[25+index,50+index],coords_default:true,region})),sources:[]};
+  const feed={...common,id:'news',news:[['Gulf','Oman port weather advisory: test replay'],['Europe','Europe cargo routes: test replay'],['Asia','Singapore terminal update: test replay']].map(([region,title],index)=>({id:`news-${index}`,title,description:'Synthetic test evidence only; Port of Durres is a reference mention, with no asserted impact.',source:'Synthetic test newsroom',published:now,link:'https://example.invalid/story',risk_score:0,coords:[25+index,50+index],coords_default:true,region})),sources:[]};
   await db.query("insert into ophanim_presentation_snapshots values('news',$1,3,$2) on conflict(feed_id) do update set payload=excluded.payload,recorded_at=excluded.recorded_at",[JSON.stringify(feed),now]);
   const cables=JSON.parse(await readFile('public/data/submarine-cables.json','utf8'));
   const reference={...common,id:'cables',reference:true,features:cables.features};

@@ -1,0 +1,23 @@
+{
+  "scope": "Two registered public source endpoints from the local worker runtime; no queries, context or keys sent. Does not verify container isolation or continuous availability.",
+  "observations": [
+    {
+      "sourceId": "usgs-earthquakes",
+      "checkedAt": "2026-10-21T01:45:26.422Z",
+      "status": "success",
+      "latencyMs": 364,
+      "itemCount": 22,
+      "newestItemAt": "2026-10-21T01:20:02.961Z",
+      "commercialUse": "yes"
+    },
+    {
+      "sourceId": "noaa-public-warnings",
+      "checkedAt": "2026-10-21T01:45:26.517Z",
+      "status": "success",
+      "latencyMs": 451,
+      "itemCount": 166,
+      "newestItemAt": "2026-10-21T00:58:00.000Z",
+      "commercialUse": "yes"
+    }
+  ]
+}

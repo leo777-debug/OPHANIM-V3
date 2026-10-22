@@ -15,6 +15,7 @@ describe('existing public loader connections (no live HTTP)',()=>{
     const {loadPublicPayload}=await import('./public-loaders');
     const results=await Promise.all(['maritime','ports','chokepoints'].map(id=>loadPublicPayload(id as 'ports')));
     expect(mocks.marine).toHaveBeenCalledTimes(1);
+    expect(mocks.marine.mock.calls[0][0].nextUrl.searchParams.get('public')).toBe('1');
     expect(results[1]).toMatchObject({ports:[{name:'Test port'}]});
   });
   it('reads completed camera regions without waiting for the global GET aggregation',async()=>{

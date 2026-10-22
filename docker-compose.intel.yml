@@ -1,0 +1,13 @@
+# Optional public structured-reference enrichment, private app/worker transport.
+# docker compose -f docker-compose.yml -f docker-compose.intel.yml --profile intel up -d --build
+services:
+  ophanim:
+    environment:
+      INTEL_URL: http://ophanim-intel:4000
+      INTEL_API_TOKEN: ${INTEL_API_TOKEN:?Set a dedicated entity worker token of at least 32 characters}
+      INTEL_ORGANIZATION_ID: ${INTEL_ORGANIZATION_ID:?Set the organization UUID authorized for entity enrichment}
+      INTEGRATION_ALLOWED_ORIGINS: ${INTEGRATION_ALLOWED_ORIGINS:-},http://ophanim-intel:4000
+  ophanim-intel:
+    environment:
+      INTEL_API_TOKEN: ${INTEL_API_TOKEN:?Set a dedicated entity worker token of at least 32 characters}
+    # No host port, env_file, database/AI credentials or host filesystem.

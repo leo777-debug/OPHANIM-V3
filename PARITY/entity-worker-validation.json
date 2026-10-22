@@ -1,0 +1,51 @@
+{
+  "checkedAt": "2026-10-21T08:44:53.105Z",
+  "milestone": "01f-entity-worker-isolation",
+  "unitTests": {
+    "passed": 589,
+    "skipped": 5,
+    "focusedEntityTests": 7
+  },
+  "typecheck": "passed",
+  "productionBuild": "passed",
+  "newModuleLint": "passed",
+  "legacyUiLint": {
+    "OsintPanel": 27,
+    "EntityGraphPanel": 14,
+    "scope": "Same errors as HEAD; no suppressions added."
+  },
+  "browser": {
+    "combinedChecks": 38,
+    "results": "presentation-validation/results.json",
+    "syntheticOnly": true,
+    "externalApiTransportBlocked": true
+  },
+  "workerHttp": "Actual Express app health/auth handlers exercised over loopback with synthetic tokens; no upstream entity lookup.",
+  "licensing": {
+    "wikidata": {
+      "structuredData": "CC0",
+      "source": "https://www.wikidata.org/wiki/Wikidata:Licensing"
+    },
+    "opensanctions": {
+      "status": "disabled; no importer or scheduled requests",
+      "source": "https://www.opensanctions.org/licensing/"
+    }
+  },
+  "compose": {
+    "validated": true,
+    "workerSettings": [
+      "INTEL_API_TOKEN"
+    ],
+    "publishedPorts": [],
+    "readOnly": true,
+    "capabilitiesDropped": [
+      "ALL"
+    ],
+    "profile": "intel",
+    "privateEnvRead": false
+  },
+  "dependencyAudit": "Not verified: npm audit --prefix intel --omit=dev failed twice with registry ECONNRESET. No zero-findings claim.",
+  "containerRuntime": "Not verified: Docker Linux engine unavailable.",
+  "scope": "Public structured-reference relationships only, not identity confirmation or live operational observations. Direct person/IP profiling and bulk sanctions download disabled.",
+  "worldMonitorCodeUsed": false
+}

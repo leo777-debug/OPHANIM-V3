@@ -5,7 +5,7 @@ import type { FeedId, PublicFeed } from './types';
 
 export const PRESENTATION_FEEDS: Record<FeedId, { name: string; color: string; source: string; url: string; reference?: boolean }> = {
   flights: { name:'Aircraft',color:'#75baff',source:'ADS-B / configured aviation sources',url:'https://adsb.lol/' },
-  maritime: { name:'Vessels',color:'#40dbb0',source:'Digitraffic / AISStream public positions',url:'https://www.digitraffic.fi/en/marine-traffic/' },
+  maritime: { name:'Vessels',color:'#40dbb0',source:'Digitraffic Marine AIS (regional)',url:'https://www.digitraffic.fi/en/marine-traffic/' },
   ports: { name:'Ports & harbours',color:'#26a69a',source:'Ophanim port reference',url:'https://www.digitraffic.fi/en/marine-traffic/',reference:true },
   chokepoints: { name:'Maritime chokepoints',color:'#ff9500',source:'Ophanim chokepoint reference',url:'https://www.digitraffic.fi/en/marine-traffic/',reference:true },
   cameras: { name:'Public cameras',color:'#00e676',source:'Existing public transport camera directories',url:'https://tfl.gov.uk/' },
@@ -55,18 +55,42 @@ export function normalizePublicFeed(id: FeedId, raw: unknown, fetchedAt = new Da
   const data=record(raw), definition=PRESENTATION_FEEDS[id];
   if (data.error) throw new Error('Public source unavailable.');
   const result:PublicFeed={id,features:[],news:[],sources:[],source:definition.source,sourceUrl:definition.url,fetchedAt,observedAt:null,reference:Boolean(definition.reference),note:''};
+  if (['maritime','ports','chokepoints'].includes(id)) result.publicOnly = data.publicOnly === true;
   if (id==='news') {
     result.news=list(data.news).map((value,index):NewsItem=>{
       const item=record(value), coords=list(item.coords);
-      return {id:text(item.id,`news-${index}`),title:text(item.title,'Untitled source item'),description:text(item.description),link:publicUrl(item.link),published:publicTime(item.published),source:text(item.source,'Public source'),risk_score:typeof item.risk_score==='number' && Number.isFinite(item.risk_score)?item.risk_score:0,coords:coords.length===2 && coords.every(v=>typeof v==='number' && Number.isFinite(v)) && Math.abs(Number(coords[0]))<=90 && Math.abs(Number(coords[1]))<=180 ? coords as [number,number]:null,coords_default:item.coords_default!==false};
+      return {
+        id:text(item.id,`news-${index}`),title:text(item.title,'Untitled source item'),description:text(item.description),
+        link:publicUrl(item.link),published:publicTime(item.published),source:text(item.source,'Public source'),
+        risk_score:typeof item.risk_score==='number' && Number.isFinite(item.risk_score)?item.risk_score:0,
+        coords:coords.length===2 && coords.every(v=>typeof v==='number' && Number.isFinite(v)) && Math.abs(Number(coords[0]))<=90 && Math.abs(Number(coords[1]))<=180 ? coords as [number,number]:null,
+        coords_default:item.coords_default!==false,
+        location_precision:item.location_precision==='reported' && item.coords_default===false?'reported':'approximate',
+        region:typeof item.region==='string'?text(item.region):undefined,
+        first_seen:publicTime(item.first_seen)??undefined,
+        first_seen_storage:['postgres','local-file','memory','no-observations'].includes(String(item.first_seen_storage))?String(item.first_seen_storage):undefined,
+        first_seen_warning:item.first_seen_warning?'First observation persistence degraded; see source health.':null,
+        source_data_mode:item.source_data_mode==='fresh'||item.source_data_mode==='stale'||item.source_data_mode==='unavailable'?item.source_data_mode:undefined,
+        source_last_success:publicTime(item.source_last_success),source_stale_since:publicTime(item.source_stale_since),
+      };
     });
     result.sources=list(data.news_sources).map(value=>{
       const source=record(value);
-      return {name:text(source.name,'Public source'),url:publicUrl(source.url),status:source.status==='ok'?'ok':source.status==='empty'?'empty':'unavailable',count:typeof source.count==='number' && Number.isFinite(source.count)?source.count:0,checkedAt:publicTime(source.checkedAt)??fetchedAt,latestPublished:publicTime(source.latestPublished)};
+      return {
+        name:text(source.name,'Public source'),url:publicUrl(source.url),
+        status:source.status==='ok'?'ok':source.status==='empty'?'empty':'unavailable',
+        count:typeof source.count==='number' && Number.isFinite(source.count)?source.count:0,
+        checkedAt:publicTime(source.checkedAt)??fetchedAt,latestPublished:publicTime(source.latestPublished),
+        lastSuccessAt:publicTime(source.lastSuccessAt),staleSince:publicTime(source.staleSince),
+        mode:source.mode==='fresh'||source.mode==='stale'||source.mode==='unavailable'?source.mode:undefined,
+        latencyMs:typeof source.latencyMs==='number' && Number.isFinite(source.latencyMs) && source.latencyMs>=0?source.latencyMs:null,
+        error:source.error?'Source refresh failed; retained evidence may be stale.':null,
+        refresh:typeof source.refresh==='string'?text(source.refresh):undefined,
+      };
     });
     if (!result.news.length && result.sources.length && result.sources.every(source=>source.status==='unavailable')) throw new Error('News sources unavailable.');
     result.observedAt=result.news.map(item=>item.published).filter((value):value is string=>Boolean(value)).sort().at(-1)??null;
-    result.features=result.news.flatMap(item=>item.coords?[{type:'Feature' as const,geometry:{type:'Point' as const,coordinates:[item.coords[1],item.coords[0]]},properties:{id:item.id,name:item.title,lat:item.coords[0],lng:item.coords[1],source:item.source,sourceUrl:item.link,observedAt:item.published,approximate_location:true}}]:[]);
+    result.features=result.news.flatMap(item=>item.coords?[{type:'Feature' as const,geometry:{type:'Point' as const,coordinates:[item.coords[1],item.coords[0]]},properties:{id:item.id,name:item.title,lat:item.coords[0],lng:item.coords[1],source:item.source,sourceUrl:item.link,observedAt:item.published,approximate_location:item.location_precision!=='reported'}}]:[]);
     result.note='News markers are story-associated locations, not verified incident coordinates.';
     return result;
   }

@@ -1,6 +1,10 @@
 {
-  "name": "Shrafim — Ophanim logistics intelligence",
-  "short_name": "Shrafim",
+  "name": "Ophanim — Operational intelligence",
+  "short_name": "Ophanim",
+  "id": "/",
+  "start_url": "/public-intelligence",
+  "scope": "/",
+  "description": "Public awareness and organization intelligence, with clearly labelled offline public snapshots.",
   "icons": [
     { "src": "/android-chrome-192x192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "/android-chrome-512x512.png", "sizes": "512x512", "type": "image/png" }

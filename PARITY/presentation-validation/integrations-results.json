@@ -1,0 +1,27 @@
+{
+  "checkedAt": "2026-10-21T02:00:28.777Z",
+  "checks": [
+    {
+      "name": "Disposable local database: full migration chain, external APIs blocked"
+    },
+    {
+      "name": "Integrations API rejects unsigned/viewer access and browser-supplied keys; listing contains metadata only"
+    },
+    {
+      "name": "Real sign-in returns to Integrations during Presentation; missing AI credentials stay unconfigured and are never displayed"
+    },
+    {
+      "name": "Unknown commercial rights disable the source and its connection action"
+    },
+    {
+      "name": "Actual connection failure records its time/error, survives reload, and never invents a successful fetch"
+    },
+    {
+      "name": "Research setup opens the actual guide with its one-command restricted profile and explicit uncertainty"
+    },
+    {
+      "name": "Credential-free SDK wizard gates diagnostics when unconfigured and fits the mobile viewport"
+    }
+  ],
+  "syntheticFixturesOnly": true
+}

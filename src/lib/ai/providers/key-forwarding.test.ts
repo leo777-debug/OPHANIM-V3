@@ -1,4 +1,4 @@
-import { afterAll, afterEach, beforeAll, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, expect, it, vi } from 'vitest';
 import { createServer, type Server } from 'node:http';
 import { NextRequest } from 'next/server';
 vi.mock('@/lib/ssrf-guard', async importOriginal => ({ ...await importOriginal<typeof import('@/lib/ssrf-guard')>(), isRateLimited: () => false, getClientIp: () => '192.0.2.1' }));
@@ -27,17 +27,18 @@ beforeAll(async () => {
   vi.stubEnv('AI_LOCAL_BASE_URLS', baseUrl);
 });
 afterEach(() => { received.length = 0; status = 200; });
+beforeEach(() => { vi.stubEnv('AI_BASE_URL', `${baseUrl}/v1`); vi.stubEnv('AI_MODEL', 'fixture-chat'); vi.stubEnv('AI_API_KEY', key); });
 afterAll(async () => { await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve())); vi.unstubAllEnvs(); });
-const request = (path: string, config: Record<string, unknown> = {}) => new NextRequest(`http://localhost${path}`, { method: 'POST', body: JSON.stringify({ apiKey: `  ${key}  `, baseUrl: `${baseUrl}/v1`, model: 'fixture-chat', ...config }) });
+const request = (path: string, config: Record<string, unknown> = {}) => new NextRequest(`http://localhost${path}`, { method: 'POST', body: JSON.stringify({ apiKey: 'browser-key-must-be-ignored', baseUrl: `${baseUrl}/v1`, model: 'fixture-chat', ...config }) });
 
-it('forwards the entered key and model through the real connection route to the HTTP wire', async () => {
+it('forwards the server key and model through the real connection route while ignoring browser credentials', async () => {
   const response = await connection(request('/api/ai/connection'));
   expect(response.status).toBe(200);
   expect(received[0]).toMatchObject({ path: '/v1/chat/completions', authorization: `Bearer ${key}` });
   expect(JSON.parse(received[0].body)).toMatchObject({ model: 'fixture-chat', max_tokens: 64 });
   expect(await response.text()).not.toContain(key);
 });
-it('discovers chat models using the same entered key without a completion request or credential echo', async () => {
+it('discovers chat models using server configuration without a completion request or credential echo', async () => {
   const response = await models(request('/api/ai/models', { model: undefined }));
   expect(response.status).toBe(200);
   expect(received).toHaveLength(1);
@@ -45,6 +46,7 @@ it('discovers chat models using the same entered key without a completion reques
   expect((await response.json()).models).toEqual(['fixture-chat', 'fixture-latest']);
 });
 it('normalizes a pasted full chat URL instead of duplicating its path', async () => {
+  vi.stubEnv('AI_BASE_URL', `${baseUrl}/v1/chat/completions/`);
   expect((await connection(request('/api/ai/connection', { baseUrl: `${baseUrl}/v1/chat/completions/` }))).status).toBe(200);
   expect(received[0].path).toBe('/v1/chat/completions');
 });
@@ -54,13 +56,15 @@ it('does not pretend a rejected key or rate-limited provider is connected', asyn
   status = 429;
   expect((await connection(request('/api/ai/connection'))).status).toBe(429);
 });
-it('rejects an accidentally pasted Bearer prefix without sending a request', async () => {
+it('rejects a malformed server Bearer prefix without sending a request', async () => {
+  vi.stubEnv('AI_API_KEY', `Bearer ${key}`);
   const response = await models(request('/api/ai/models', { apiKey: `Bearer ${key}` }));
   expect(response.status).toBe(400);
   expect(received).toHaveLength(0);
   expect(await response.text()).not.toContain(key);
 });
-it('rejects invisible characters without exposing the entered key in a header error', async () => {
+it('rejects invisible server credential characters without exposing them in a header error', async () => {
+  vi.stubEnv('AI_API_KEY', `${key}\u200b`);
   const response = await connection(request('/api/ai/connection', { apiKey: `${key}\u200b` }));
   expect(received).toHaveLength(0);
   const body = await response.text();

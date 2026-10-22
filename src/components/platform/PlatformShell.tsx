@@ -20,9 +20,10 @@ export default function PlatformShell({ title, children }: { title: string; chil
       .catch(() => setConfiguration(null));
   }, []);
 
-  const navigation = configuration?.navigation ?? [
+  const baseNavigation = configuration?.navigation ?? [
     { id: 'command', label: 'Command', href: '/command' }, { id: 'map', label: 'Map', href: '/' }, { id: 'entities', label: 'Entities', href: '/entities' }, { id: 'cases', label: 'Cases', href: '/cases' }, { id: 'evidence', label: 'Evidence', href: '/evidence' },
   ];
+  const navigation = baseNavigation.some(item=>item.href==='/knowledge') ? baseNavigation : [...baseNavigation,{id:'knowledge',label:'Knowledge',href:'/knowledge'}];
 
   return <main className="platform-shell">
     <aside className="platform-nav" aria-label="Platform navigation">
@@ -35,6 +36,12 @@ export default function PlatformShell({ title, children }: { title: string; chil
       })}</nav>
       <Link href="/jobs" className="platform-nav__item"><Activity size={17} /><span>Job files</span></Link>
       <Link href="/admin/health" className="platform-nav__health"><span />Platform health</Link>
+      <Link href="/admin/integrations" className="platform-nav__item"><Settings size={17} /><span>Integrations</span></Link>
+      <Link href="/public-intelligence" className="platform-nav__item"><Activity size={17} /><span>Public advisories</span></Link>
+      <Link href="/route-explorer" className="platform-nav__item"><Map size={17} /><span>Route Explorer</span></Link>
+      <Link href="/forecasts" className="platform-nav__item"><Activity size={17} /><span>Sourced forecasts</span></Link>
+      <Link href="/hazards" className="platform-nav__item"><Activity size={17} /><span>Natural hazards</span></Link>
+      <Link href="/aviation" className="platform-nav__item"><Activity size={17} /><span>Aviation disruptions</span></Link>
     </aside>
     <section className="platform-main"><header className="platform-header"><div><p>Configured operational workspace</p><h1>{title}</h1></div><div className="platform-header__actions"><AdminEntry /><Link href="/onboarding">Configure workspace</Link><Link href="/">Open map</Link></div></header>{children}</section>
   </main>;

@@ -21,6 +21,13 @@ describe('presentation routing is opt-in',()=>{
     for(const path of ['/admin','/admin/presentation','/api/logistics'])expect(presentationDestination(path,on,'map')).toBeNull();
     expect(presentationDestination('/login',on,'map',true)).toBeNull();
   });
+  it('keeps only the two public setup guides reachable during PIN-locked Map view',()=>{
+    const locked={...on,pinRequired:true};
+    for(const path of ['/docs/research-setup','/docs/sdk-setup'])expect(presentationDestination(path,locked,'map')).toBeNull();
+    for(const path of ['/docs/private','/docs/research-setup/private','/knowledge'])expect(presentationDestination(path,locked,'map')).toBe('/presentation');
+    expect(resolvePresentationView(locked,'full','full',false)).toBe('map');
+    expect(protectedPresentationApi('/api/ai/research','POST')).toBe(true);
+  });
   it('honours cookies and URL choice without bypassing a PIN',()=>{
     expect(resolvePresentationView(on,'map','full',true)).toBe('map');
     expect(resolvePresentationView(on,'full','map',true)).toBe('full');

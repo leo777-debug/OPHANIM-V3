@@ -1,36 +1,35 @@
-/**
- * OSIRIS Intelligence Layer — osiris-intel
- *
- * Centralized ontology engine that ingests, indexes, and correlates entities
- * across open-source intelligence feeds. All other services query this one
- * brain via GET /resolve.
- *
- * Data sources:
- *   - OpenSanctions (OFAC SDN) — bulk CSV, refreshed every 24h
- *   - Wikidata SPARQL — on-demand with aggressive LRU cache
- *
- * Security:
- *   - Outbound requests only to allowlisted domains
- *   - SPARQL inputs sanitized against injection
- *   - Rate-limited per client IP
+/** Optional authenticated Wikidata structured-reference service.
+ * No direct person/IP profiling or bulk sanctions loading. Matches are not
+ * identity verification, current operational status or sanctions clearance.
  */
-
-const express = require('express');
+import express from 'express';
+import { pathToFileURL } from 'node:url';
 const app = express();
-const PORT = process.env.INTEL_PORT || 4000;
+import {configured,authorized,publicJson} from './policy.mjs';
+let activeResolutions=0;
+app.use((req,res,next)=>{
+  res.set('Cache-Control','private, no-store');
+  if(!configured(process.env.INTEL_API_TOKEN))return res.status(503).json({error:'Entity service is not configured.'});
+  if(!authorized(req.headers.authorization,process.env.INTEL_API_TOKEN))return res.status(401).json({error:'Authentication required.'});
+  if(req.path==='/resolve'){
+    if(activeResolutions>=4)return res.status(429).json({error:'Resolution limit reached.'});
+    activeResolutions++;let released=false;const release=()=>{if(!released){released=true;activeResolutions--;}};res.once('finish',release);res.once('close',release);
+  }
+  next();
+});
+const rawPort=Number(process.env.INTEL_PORT || 4000);
+const PORT=Number.isInteger(rawPort) && rawPort>=1 && rawPort<=65535 ? rawPort : 4000;
 
 // ════════════════════════════════════════════════════
 // §1 — CONFIGURATION
 // ════════════════════════════════════════════════════
 
-const SDN_CSV_URL = 'https://data.opensanctions.org/datasets/latest/us_ofac_sdn/targets.simple.csv';
 const WIKIDATA_ENDPOINT = 'https://query.wikidata.org/sparql';
 const WIKIDATA_UA = 'OSIRIS-Intel/1.0 (https://osirisai.live; ontology engine)';
-const SDN_REFRESH_MS = 24 * 60 * 60 * 1000; // 24h
 const WIKIDATA_CACHE_TTL = 24 * 60 * 60 * 1000; // 24h
 const WIKIDATA_CACHE_MAX = 10_000;
 
-const ALLOWED_DOMAINS = new Set(['query.wikidata.org', 'data.opensanctions.org', 'www.wikidata.org', 'ip-api.com', 'stat.ripe.net']);
+const ALLOWED_DOMAINS = new Set(['query.wikidata.org', 'www.wikidata.org']);
 
 // ════════════════════════════════════════════════════
 // §2 — SANCTIONS INDEX (in-memory graph)
@@ -46,78 +45,8 @@ function normName(s) {
   return s.toLowerCase().replace(/[^\p{L}\p{N}\s]+/gu, ' ').replace(/\s+/g, ' ').trim();
 }
 
-function parseCsv(text) {
-  const rows = [];
-  let field = '', row = [], inQ = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (inQ) {
-      if (c === '"') { if (text[i + 1] === '"') { field += '"'; i++; } else inQ = false; }
-      else field += c;
-    } else if (c === '"') inQ = true;
-    else if (c === ',') { row.push(field); field = ''; }
-    else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
-    else if (c !== '\r') field += c;
-  }
-  if (field.length || row.length) { row.push(field); rows.push(row); }
-  return rows;
-}
-
 async function loadSanctions() {
-  console.log('[INTEL] Loading OpenSanctions OFAC SDN...');
-  try {
-    const res = await fetch(SDN_CSV_URL, {
-      signal: AbortSignal.timeout(30000),
-      headers: { Accept: 'text/csv' },
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const text = await res.text();
-    const rows = parseCsv(text);
-    if (rows.length < 2) throw new Error('CSV empty');
-
-    const headers = rows[0];
-    const idx = (col) => headers.indexOf(col);
-    const i = {
-      id: idx('id'), schema: idx('schema'), name: idx('name'),
-      aliases: idx('aliases'), countries: idx('countries'),
-      programs: idx('program_ids'), sanctions: idx('sanctions'),
-      first_seen: idx('first_seen'), last_seen: idx('last_seen'),
-    };
-
-    const entries = [];
-    const byNorm = new Map();
-
-    for (let r = 1; r < rows.length; r++) {
-      const row = rows[r];
-      if (!row[i.name]) continue;
-      const entry = {
-        id: row[i.id] || '',
-        schema: row[i.schema] || 'LegalEntity',
-        name: row[i.name],
-        aliases: (row[i.aliases] || '').split(';').map(s => s.trim()).filter(Boolean),
-        countries: (row[i.countries] || '').split(';').map(s => s.trim()).filter(Boolean),
-        programs: (row[i.programs] || '').split(';').map(s => s.trim()).filter(Boolean),
-        sanctions: row[i.sanctions] || '',
-        first_seen: i.first_seen >= 0 ? row[i.first_seen] : undefined,
-      };
-      entries.push(entry);
-
-      const keys = new Set([entry.name, ...entry.aliases].map(normName));
-      for (const key of keys) {
-        if (!key) continue;
-        if (!byNorm.has(key)) byNorm.set(key, []);
-        byNorm.get(key).push(entry);
-      }
-    }
-
-    sanctionsIndex = { entries, byNorm, fetchedAt: Date.now() };
-    console.log(`[INTEL] Sanctions index loaded: ${entries.length} entities, ${byNorm.size} name keys`);
-  } catch (e) {
-    console.error('[INTEL] Sanctions load failed:', e.message);
-    if (sanctionsIndex.entries.length > 0) {
-      console.log('[INTEL] Keeping stale index');
-    }
-  }
+  // No request: commercial bulk-data rights are unresolved for this deployment.
 }
 
 function sanctionsSearch(query, limit = 5) {
@@ -178,7 +107,7 @@ async function sparql(query) {
   if (!ALLOWED_DOMAINS.has(parsed.hostname)) {
     throw new Error(`Blocked domain: ${parsed.hostname}`);
   }
-  const res = await fetch(url, {
+  const res = await publicJson(url, {
     headers: { 'User-Agent': WIKIDATA_UA, Accept: 'application/sparql-results+json' },
     signal: AbortSignal.timeout(10000),
   });
@@ -188,7 +117,7 @@ async function sparql(query) {
 }
 
 // Search Wikidata for an entity by name, returns QID or null
-async function wdSearch(query, type = 'item') {
+async function wdSearch(query) {
   const url = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(query)}&language=en&limit=1&format=json`;
   const parsed = new URL(url);
   if (!ALLOWED_DOMAINS.has(parsed.hostname)) return null;
@@ -199,7 +128,7 @@ async function wdSearch(query, type = 'item') {
     });
     if (!res.ok) return null;
     const json = await res.json();
-    return json.search?.[0]?.id || null;
+    const id=json.search?.[0]?.id;return typeof id==='string' && /^Q[1-9][0-9]{0,14}$/.test(id) ? id : null;
   } catch { return null; }
 }
 
@@ -289,7 +218,7 @@ async function resolveAircraft(id, properties = {}) {
           }
         }
       }
-    } catch (e) { console.warn('[INTEL] Airline ICAO lookup error:', e.message); }
+    } catch { throw new Error('Reference source unavailable.'); }
   }
 
   // Step 2: Decode registration prefix → country (e.g. TC → Turkey, N → USA, G → UK)
@@ -371,7 +300,7 @@ async function resolveVessel(id) {
         links.push({ source: rootId, target: oid, label: 'OPERATED BY' });
       }
     }
-  } catch (e) { console.warn('[INTEL] Wikidata vessel error:', e.message); }
+  } catch { throw new Error('Reference source unavailable.'); }
 
   addSanctionsToGraph(id, rootId, nodes, links);
   const result = dedup(nodes, links);
@@ -417,187 +346,11 @@ async function resolveCompany(id) {
         links.push({ source: rootId, target: pid, label: 'CEO' });
       }
     }
-  } catch (e) { console.warn('[INTEL] Wikidata company error:', e.message); }
+  } catch { throw new Error('Reference source unavailable.'); }
 
   addSanctionsToGraph(id, rootId, nodes, links);
   const result = dedup(nodes, links);
   wdCacheSet(`company:${id}`, result);
-  return result;
-}
-
-async function resolvePerson(id) {
-  const rootId = `person:${id}`;
-  const nodes = [], links = [];
-  const cached = wdCacheGet(`person:${id}`);
-  if (cached) return { ...cached };
-
-  try {
-    const qid = await wdSearch(id);
-    const filter = qid
-      ? `VALUES ?item { wd:${qid} }`
-      : `?item rdfs:label "${id}"@en . ?item wdt:P31 wd:Q5 .`;
-    const results = await sparql(`
-      SELECT ?item ?itemLabel ?nationalityLabel ?employerLabel ?positionLabel WHERE {
-        ${filter}
-        OPTIONAL { ?item wdt:P27 ?nationality . }
-        OPTIONAL { ?item wdt:P108 ?employer . }
-        OPTIONAL { ?item wdt:P39 ?position . }
-        SERVICE wikibase:label { bd:serviceParam wikibase:language "en" . }
-      } LIMIT 10`);
-    for (const r of results) {
-      if (r.nationalityLabel?.value) {
-        const cid = `country:${r.nationalityLabel.value}`;
-        nodes.push({ id: cid, label: r.nationalityLabel.value, type: 'country', properties: { source: 'Wikidata' } });
-        links.push({ source: rootId, target: cid, label: 'NATIONALITY' });
-      }
-      if (r.employerLabel?.value) {
-        const eid = `company:${r.employerLabel.value}`;
-        nodes.push({ id: eid, label: r.employerLabel.value, type: 'company', properties: { source: 'Wikidata' } });
-        links.push({ source: rootId, target: eid, label: 'EMPLOYER' });
-      }
-      if (r.positionLabel?.value) {
-        const pid = `event:${r.positionLabel.value}`;
-        nodes.push({ id: pid, label: r.positionLabel.value, type: 'event', properties: { source: 'Wikidata' } });
-        links.push({ source: rootId, target: pid, label: 'POSITION HELD' });
-      }
-    }
-  } catch (e) { console.warn('[INTEL] Wikidata person error:', e.message); }
-
-  addSanctionsToGraph(id, rootId, nodes, links);
-  const result = dedup(nodes, links);
-  wdCacheSet(`person:${id}`, result);
-  return result;
-}
-
-async function resolveIP(id) {
-  const rootId = `ip:${id}`;
-  const nodes = [], links = [];
-  const cached = wdCacheGet(`ip:${id}`);
-  if (cached) return { ...cached };
-
-  // Step 1: ip-api.com — geolocation, ISP, ASN, proxy/hosting detection
-  try {
-    const ipApiUrl = `http://ip-api.com/json/${encodeURIComponent(id)}?fields=status,message,country,countryCode,region,regionName,city,zip,lat,lon,timezone,isp,org,as,asname,mobile,proxy,hosting`;
-    const parsed = new URL(ipApiUrl);
-    if (!ALLOWED_DOMAINS.has(parsed.hostname)) throw new Error(`Blocked domain: ${parsed.hostname}`);
-    const res = await fetch(ipApiUrl, { signal: AbortSignal.timeout(8000) });
-    if (res.ok) {
-      const data = await res.json();
-      if (data.status === 'success') {
-        // ISP node
-        if (data.isp) {
-          const ispId = `company:${data.isp}`;
-          nodes.push({ id: ispId, label: data.isp, type: 'company', properties: { role: 'ISP', org: data.org || '', source: 'ip-api.com' } });
-          links.push({ source: rootId, target: ispId, label: 'HOSTED_BY' });
-          addSanctionsToGraph(data.isp, rootId, nodes, links);
-        }
-
-        // ASN node
-        if (data.as) {
-          const asLabel = data.asname || data.as;
-          const asId = `company:${data.as}`;
-          nodes.push({ id: asId, label: asLabel, type: 'company', properties: { as_number: data.as, source: 'ip-api.com' } });
-          links.push({ source: rootId, target: asId, label: 'ASN' });
-        }
-
-        // Country node
-        if (data.country) {
-          const cid = `country:${data.country}`;
-          nodes.push({ id: cid, label: data.country, type: 'country', properties: { code: data.countryCode || '', source: 'ip-api.com' } });
-          links.push({ source: rootId, target: cid, label: 'LOCATED_IN' });
-          addSanctionsToGraph(data.country, rootId, nodes, links);
-        }
-
-        // City node (as event type with lat/lng)
-        if (data.city) {
-          const cityId = `event:${data.city}`;
-          nodes.push({
-            id: cityId, label: data.city, type: 'event',
-            properties: {
-              lat: data.lat, lon: data.lon, region: data.regionName || '',
-              zip: data.zip || '', timezone: data.timezone || '', source: 'ip-api.com',
-            },
-          });
-          links.push({ source: rootId, target: cityId, label: 'GEOLOCATED' });
-        }
-
-        // Tag proxy/hosting/mobile flags on the root IP node
-        nodes.push({
-          id: rootId, label: id, type: 'ip',
-          properties: {
-            proxy: !!data.proxy, hosting: !!data.hosting, mobile: !!data.mobile,
-            source: 'ip-api.com',
-          },
-        });
-      }
-    }
-  } catch (e) { console.warn('[INTEL] ip-api.com error:', e.message); }
-
-  // Step 2: RIPEstat WHOIS
-  try {
-    const whoisUrl = `https://stat.ripe.net/data/whois/data.json?resource=${encodeURIComponent(id)}`;
-    const parsed = new URL(whoisUrl);
-    if (!ALLOWED_DOMAINS.has(parsed.hostname)) throw new Error(`Blocked domain: ${parsed.hostname}`);
-    const res = await fetch(whoisUrl, { signal: AbortSignal.timeout(8000) });
-    if (res.ok) {
-      const json = await res.json();
-      const records = json.data?.records || [];
-      for (const record of records) {
-        for (const field of record) {
-          if (field.key === 'netname' || field.key === 'NetName') {
-            const netId = `company:${field.value}`;
-            nodes.push({ id: netId, label: field.value, type: 'company', properties: { role: 'Network', source: 'RIPEstat WHOIS' } });
-            links.push({ source: rootId, target: netId, label: 'HOSTED_BY' });
-          }
-        }
-      }
-    }
-  } catch (e) { console.warn('[INTEL] RIPEstat WHOIS error:', e.message); }
-
-  // Step 3: RIPEstat Abuse Contact
-  try {
-    const abuseUrl = `https://stat.ripe.net/data/abuse-contact-finder/data.json?resource=${encodeURIComponent(id)}`;
-    const parsed = new URL(abuseUrl);
-    if (!ALLOWED_DOMAINS.has(parsed.hostname)) throw new Error(`Blocked domain: ${parsed.hostname}`);
-    const res = await fetch(abuseUrl, { signal: AbortSignal.timeout(8000) });
-    if (res.ok) {
-      const json = await res.json();
-      const contacts = json.data?.abuse_contacts || [];
-      for (const email of contacts) {
-        if (email) {
-          const eid = `person:${email}`;
-          nodes.push({ id: eid, label: email, type: 'person', properties: { role: 'Abuse Contact', source: 'RIPEstat' } });
-          links.push({ source: rootId, target: eid, label: 'ABUSE CONTACT' });
-        }
-      }
-    }
-  } catch (e) { console.warn('[INTEL] RIPEstat abuse-contact error:', e.message); }
-
-  // Step 4: RIPEstat Network Info
-  try {
-    const netUrl = `https://stat.ripe.net/data/network-info/data.json?resource=${encodeURIComponent(id)}`;
-    const parsed = new URL(netUrl);
-    if (!ALLOWED_DOMAINS.has(parsed.hostname)) throw new Error(`Blocked domain: ${parsed.hostname}`);
-    const res = await fetch(netUrl, { signal: AbortSignal.timeout(8000) });
-    if (res.ok) {
-      const json = await res.json();
-      const prefix = json.data?.prefix;
-      const asns = json.data?.asns || [];
-      if (prefix) {
-        const prefId = `ip:${prefix}`;
-        nodes.push({ id: prefId, label: prefix, type: 'ip', properties: { role: 'Prefix', source: 'RIPEstat' } });
-        links.push({ source: rootId, target: prefId, label: 'PREFIX' });
-      }
-      for (const asn of asns) {
-        const asnId = `company:AS${asn}`;
-        nodes.push({ id: asnId, label: `AS${asn}`, type: 'company', properties: { as_number: `AS${asn}`, source: 'RIPEstat' } });
-        links.push({ source: rootId, target: asnId, label: 'ASN' });
-      }
-    }
-  } catch (e) { console.warn('[INTEL] RIPEstat network-info error:', e.message); }
-
-  const result = dedup(nodes, links);
-  wdCacheSet(`ip:${id}`, result);
   return result;
 }
 
@@ -675,7 +428,7 @@ async function resolveCountry(id) {
         links.push({ source: rootId, target: nid, label: 'NEIGHBOR' });
       }
     }
-  } catch (e) { console.warn('[INTEL] Wikidata country error:', e.message); }
+  } catch { throw new Error('Reference source unavailable.'); }
 
   addSanctionsToGraph(id, rootId, nodes, links);
   const result = dedup(nodes, links);
@@ -683,7 +436,7 @@ async function resolveCountry(id) {
   return result;
 }
 
-const RESOLVERS = { aircraft: resolveAircraft, vessel: resolveVessel, company: resolveCompany, person: resolvePerson, ip: resolveIP, country: resolveCountry };
+const RESOLVERS = { aircraft: resolveAircraft, vessel: resolveVessel, company: resolveCompany, country: resolveCountry };
 const ALLOWED_TYPES = new Set(Object.keys(RESOLVERS));
 
 // ════════════════════════════════════════════════════
@@ -707,7 +460,8 @@ function isRateLimited(ip, limit = 30, windowMs = 60000) {
 
 app.get('/health', (_req, res) => {
   res.json({
-    status: 'ok',
+    status: 'ready',
+    sources: [{id:'wikidata',licence:'CC0 structured data',upstreamTested:false},{id:'opensanctions',status:'disabled-by-licence'}],
     sanctions_entries: sanctionsIndex.entries.length,
     sanctions_loaded_at: sanctionsIndex.fetchedAt ? new Date(sanctionsIndex.fetchedAt).toISOString() : null,
     wikidata_cache_size: wdCache.size,
@@ -716,11 +470,11 @@ app.get('/health', (_req, res) => {
 });
 
 app.get('/resolve', async (req, res) => {
-  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || 'unknown';
+  const ip = req.ip || 'unknown';
   if (isRateLimited(ip)) return res.status(429).json({ error: 'Rate limit exceeded' });
 
-  const type = (req.query.type || '').toLowerCase().trim();
-  const rawId = (req.query.id || '').trim();
+  const type = typeof req.query.type === 'string' ? req.query.type.toLowerCase().trim() : '';
+  const rawId = typeof req.query.id === 'string' ? req.query.id.trim() : '';
 
   if (!type || !ALLOWED_TYPES.has(type)) {
     return res.status(400).json({ error: `Invalid type. Allowed: ${[...ALLOWED_TYPES].join(', ')}` });
@@ -736,22 +490,24 @@ app.get('/resolve', async (req, res) => {
     const resolver = RESOLVERS[type];
     // Pass extra properties for aircraft resolution (registration, model, etc.)
     const props = {};
-    if (req.query.registration) props.registration = sanitizeId(req.query.registration);
-    if (req.query.model) props.model = sanitizeId(req.query.model);
-    if (req.query.icao24) props.icao24 = sanitizeId(req.query.icao24);
+    if (typeof req.query.registration === 'string' && req.query.registration.length <= 100) props.registration = sanitizeId(req.query.registration);
+    if (typeof req.query.model === 'string' && req.query.model.length <= 100) props.model = sanitizeId(req.query.model);
+    if (typeof req.query.icao24 === 'string' && req.query.icao24.length <= 100) props.icao24 = sanitizeId(req.query.icao24);
     const result = await resolver(id, props);
-    res.set('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=7200');
+    res.set('Cache-Control', 'private, no-store');
     res.json({
       nodes: result.nodes,
       links: result.links,
       entity: { type, id },
-      source: 'OSIRIS Intelligence Layer',
+      source: 'Wikidata structured reference enrichment (CC0); no identity verification',
+      sourcePublishedAt:null,
+      limitations:['Reference relationships may be incomplete or outdated. A name match is not identity confirmation. Source publication dates are unknown. OpenSanctions bulk loading is disabled pending commercial rights. Direct person and IP enrichment are disabled.'],
       sanctions_index_size: sanctionsIndex.entries.length,
       wikidata_cache_hits: wdCache.size,
       timestamp: new Date().toISOString(),
     });
-  } catch (e) {
-    console.error('[INTEL] Resolve error:', e);
+  } catch {
+    console.error('[INTEL] Reference resolution unavailable.');
     res.status(500).json({ error: 'Resolution failed', nodes: [], links: [] });
   }
 });
@@ -761,16 +517,18 @@ app.get('/resolve', async (req, res) => {
 // ════════════════════════════════════════════════════
 
 async function boot() {
+  if(!configured(process.env.INTEL_API_TOKEN)){console.error('[INTEL] Dedicated worker token is not configured.');process.exitCode=1;return;}
   console.log('[INTEL] OSIRIS Intelligence Layer starting...');
   await loadSanctions();
-  // Refresh sanctions every 24h
-  setInterval(() => loadSanctions(), SDN_REFRESH_MS);
+  // No background source timer; bulk sanctions loading is disabled.
 
-  app.listen(PORT, '0.0.0.0', () => {
+  const server=app.listen(PORT, '0.0.0.0', () => {
     console.log(`[INTEL] Intelligence Layer ready on port ${PORT}`);
     console.log(`[INTEL] Sanctions: ${sanctionsIndex.entries.length} entities indexed`);
-    console.log(`[INTEL] Resolve endpoint: GET /resolve?type=<type>&id=<id>`);
+    console.log('[INTEL] Authenticated reference resolver ready.');
   });
+  server.maxConnections=32;server.requestTimeout=15000;server.headersTimeout=10000;server.timeout=20000;
 }
 
-boot().catch(e => { console.error('[INTEL] Fatal:', e); process.exit(1); });
+export {app,boot};
+if(process.argv[1] && import.meta.url===pathToFileURL(process.argv[1]).href)boot().catch(()=>{console.error('[INTEL] Startup failed.');process.exitCode=1;});

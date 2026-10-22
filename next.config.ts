@@ -7,6 +7,13 @@ const nextConfig: NextConfig = {
   output: process.env.VERCEL ? undefined : 'standalone',
   serverExternalPackages: ['ws'],
   transpilePackages: ['react-map-gl', 'mapbox-gl', 'maplibre-gl'],
+  turbopack: {
+    // MapLibre 6 builds a blob URL from `new URL(dynamic, import.meta.url)`, used only for
+    // cross-origin worker URLs. Ours is same-origin (set in OphanimMap), so that path never
+    // runs. Turbopack builds are required on Vercel: its adapter merges routes into shared
+    // functions only from Turbopack's file hashes (webpack builds exceed the function limit).
+    ignoreIssue: [{ path: /node_modules[\\/]maplibre-gl[\\/]dist[\\/]maplibre-gl\.mjs$/, title: /Module not found/ }],
+  },
   experimental: {
     // OneDrive can drop Turbopack's persistent cache while files are syncing.
     turbopackFileSystemCacheForDev: false,

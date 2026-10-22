@@ -4,13 +4,20 @@ import sharp from 'sharp';
 // Disposable local database + recorded public fixtures only. No active scans.
 export async function checkTools({browser,url,owner,save,output,pass}) {
   const context=await browser.newContext({viewport:{width:1366,height:768},reducedMotion:'reduce'});
-  const errors=[],requests=[];
+  const errors=[],requests=[]; let inspectionSubmission=false;
   await context.route('**/*',async route=>{
     const target=new URL(route.request().url());
     if(target.origin!==url&&!target.href.startsWith('data:'))return route.fulfill({status:204,body:''});
     if(target.origin===url&&target.pathname.startsWith('/api/')&&!target.pathname.startsWith('/api/presentation/')&&!target.pathname.startsWith('/api/map/feeds/')) {
       requests.push(target.pathname);
-      assert.ok(!['/api/scanner','/api/osint/sweep'].includes(target.pathname),'Opening tools must not submit scans');
+      assert.ok(inspectionSubmission || !['/api/scanner','/api/osint/sweep'].includes(target.pathname),'Opening tools must not submit scans');
+      if(target.pathname==='/api/scanner') {
+        assert.equal(route.request().method(),'POST');
+        assert.deepEqual(route.request().postDataJSON(),{target:'approved.example',type:'quick'});
+        return requests.filter(path=>path==='/api/scanner').length===1
+          ? route.fulfill({status:401,json:{error:'Authentication is required.'}})
+          : route.fulfill({json:{target:'approved.example',mode:'quick',httpStatus:302,observedAt:'2026-10-21T00:00:00.000Z',headers:{server:'Synthetic fixture'},tls:{authorized:true,protocol:'TLSv1.3',validFrom:null,validTo:null},risk:'unknown',attribution:'Synthetic target response for browser verification only.',limitations:['No real target was requested.']}});
+      }
       const data=target.pathname==='/api/logistics/shipments/recorded-shipment'?{shipment:{id:'recorded-shipment',originPortName:'Fixture origin port',destinationPortName:'Fixture destination port',transshipmentPorts:[]}}
         :target.pathname==='/api/osint/shodan'?{ip:'192.0.2.10',ports:[443],hostnames:['demo.invalid'],tags:[],vulns:[],cpes:[]}
         :target.pathname==='/api/search'?{results:[{id:'test-place',label:'Dubai, United Arab Emirates',type:'location',category:'geospatial',lat:25.2,lng:55.3,zoomLevel:5,source:'Recorded test fixture'}]}
@@ -50,7 +57,25 @@ export async function checkTools({browser,url,owner,save,output,pass}) {
     assert.equal(requests.filter(path=>path==='/api/osint/shodan').length,1);
     await page.screenshot({path:`${output}/screenshots/shodan-tools.png`});
     pass('Read-only Shodan opens beside the same globe, without navigation, remount or active scanning');
+    const geolocationBeforeRecon=requests.filter(path=>path==='/api/osint/ip').length;
+    await choose('Recon');
+    await dock.getByPlaceholder('IP or hostname',{exact:true}).fill('approved.example');
+    inspectionSubmission=true;
+    await dock.getByRole('button',{name:'SCAN',exact:true}).click();
+    await dock.getByRole('link',{name:'Sign in',exact:true}).waitFor();
+    assert.equal(await dock.getByRole('link',{name:'Sign in',exact:true}).getAttribute('href'),'/login?returnTo=%2Fatlas');
+    assert.equal(requests.filter(path=>path==='/api/scanner').length,1);
+    assert.equal(requests.filter(path=>path==='/api/osint/ip').length,geolocationBeforeRecon,'Recon must not send approved target to background geolocation');
+    assert.equal(await dock.locator('select option[value=deep]').count(),0);
+    pass('Recon submits a private POST and shows sign-in recovery without background geolocation or unsupported scan modes');
     await context.addCookies([{name:'ophanim_session',value:owner,url}]);
+    await dock.getByRole('button',{name:'SCAN',exact:true}).click();
+    await dock.getByRole('region',{name:'Approved HTTPS observation'}).waitFor();
+    await dock.getByText('Risk unknown',{exact:false}).waitFor();
+    assert.equal(requests.filter(path=>path==='/api/osint/ip').length,geolocationBeforeRecon);
+    await dock.getByRole('region',{name:'Approved HTTPS observation'}).screenshot({path:`${output}/screenshots/recon-observation.png`});
+    pass('Recon renders dated headers/TLS evidence and unknown risk; synthetic response causes no background target disclosure');
+    inspectionSubmission=false;
     for(const [label,tool,selector] of [
       ['Analyst','analyst','text=OPHANIM ANALYST'],
       ['Fusion','fusion','text=Live fusion is unavailable in replay mode.'],
@@ -72,6 +97,30 @@ export async function checkTools({browser,url,owner,save,output,pass}) {
       if(tool==='entities') {
         await dock.getByLabel('Matching map entities').getByRole('button').first().click();
         await dock.getByText('[ OPHANIM // ENTITY INTEL ]',{exact:true}).waitFor();
+      }
+      if(tool==='news') {
+        await dock.getByRole('tab',{name:'stories',exact:true}).click();
+        const stories=dock.getByRole('region',{name:'Story analysis',exact:true});
+        await stories.getByText('Port-mention dictionary',{exact:true}).click();
+        await stories.getByText(/3924 reference identities from 3962 source records/).waitFor();
+        const links=stories.locator('details').filter({has:page.locator('summary').filter({hasText:/^Cross-feed entity links/})}).first();
+        await links.locator('summary').first().click();
+        await links.getByLabel('Find a linked entity',{exact:true}).fill('Durres');
+        await links.getByRole('button',{name:'Durres',exact:true}).click();
+        const evidence=links.getByRole('region',{name:'Linked source evidence',exact:true});
+        await evidence.getByRole('link',{name:'Oman port weather advisory: test replay',exact:true}).waitFor();
+        assert.equal(await evidence.getByRole('link').first().getAttribute('href'),'https://example.invalid/story');
+        assert.match(await evidence.innerText(),/replay freshness/);
+        await links.getByLabel('Find a linked entity',{exact:true}).fill('Oman');
+        await links.getByRole('button',{name:'Oman',exact:true}).click();
+        await evidence.getByText(/USGS \/ seismic/).waitFor();
+        await evidence.getByRole('link',{name:'Oman port weather advisory: test replay',exact:true}).waitFor();
+        assert.match(await evidence.innerText(),/Original source time:/);
+        await stories.getByText('Geographic convergence · 0',{exact:true}).click();
+        await stories.getByText(/Current convergence detection is disabled/).waitFor();
+        await links.screenshot({path:`${output}/screenshots/cross-feed-entities.png`});
+        pass('Stories lazy-loads the licensed port dictionary and links replay news/seismic evidence with original source links and no current convergence');
+        await dock.getByRole('tab',{name:'news',exact:true}).click();
       }
       assert.equal(await page.locator('canvas.maplibregl-canvas').getAttribute('data-identity'),'same-globe',label);
     }
@@ -119,6 +168,28 @@ export async function checkTools({browser,url,owner,save,output,pass}) {
     assert.equal(new URL(page.url()).searchParams.get('tool'),'tracking');
     pass('Legacy Atlas links redirect to the same operational map with tool and camera parameters retained');
     await dock.getByRole('button',{name:'Close tool',exact:true}).click();
+    await workspace.getByRole('button',{name:'Share map view',exact:true}).click();
+    const sharedUrl=await page.getByRole('textbox',{name:'Public map view URL',exact:true}).inputValue();
+    const shared=new URL(sharedUrl);
+    assert.equal(shared.origin,url);
+    assert.equal(shared.pathname,'/logistics/map');
+    assert.equal(shared.searchParams.get('view'),'full');
+    assert.equal(shared.searchParams.get('mapVersion'),'1');
+    for(const field of ['shipment','token','organization','apiKey'])assert.equal(shared.searchParams.has(field),false);
+    assert.ok(!shared.searchParams.get('layers').includes('sdk_'));
+    await page.getByRole('button',{name:'Close map sharing',exact:true}).click();
+    const sharedContext=await browser.newContext({viewport:{width:1366,height:768}});
+    await sharedContext.route('**/*',route=>new URL(route.request().url()).origin===url?route.continue():route.fulfill({status:204,body:''}));
+    try {
+      const sharedPage=await sharedContext.newPage();
+      sharedPage.on('pageerror',error=>errors.push(error.message));
+      await sharedPage.goto(sharedUrl,{waitUntil:'domcontentloaded'});
+      await sharedPage.locator('[data-testid="presentation-globe"][data-ready="true"]').waitFor();
+      assert.equal(await sharedPage.getByRole('button',{name:'Earth colored basemap',exact:true}).getAttribute('aria-pressed'),'true');
+      assert.equal(await sharedPage.getByRole('checkbox',{name:'Aircraft',exact:true}).isChecked(),false);
+      await sharedPage.screenshot({path:`${output}/screenshots/share-restored.png`});
+    } finally {await sharedContext.close();}
+    pass('Generated public map link restores appearance and layers in a fresh signed-out browser without private query IDs');
     for(const viewport of [{width:1920,height:1080},{width:1366,height:768}]) {
       await page.setViewportSize(viewport);
       await workspace.getByRole('button',{name:'Fullscreen map',exact:true}).click();
@@ -131,6 +202,9 @@ export async function checkTools({browser,url,owner,save,output,pass}) {
         return canvas&&parent&&Math.abs(canvas.clientWidth-parent.clientWidth)<2&&Math.abs(canvas.clientHeight-parent.clientHeight)<2;
       });
       await geography();
+      await workspace.getByRole('button',{name:'Share map view',exact:true}).click();
+      assert.equal(await page.getByRole('textbox',{name:'Public map view URL',exact:true}).isVisible(),true,'Sharing remains visible inside the fullscreen map');
+      await page.getByRole('button',{name:'Close map sharing',exact:true}).click();
       await workspace.getByRole('button',{name:'Intel Desk',exact:true}).click();
       await dock.getByRole('tab',{name:'news',exact:true}).waitFor();
       const bounds=await Promise.all([page.getByTestId('unified-map-canvas').boundingBox(),dock.boundingBox(),workspace.getByRole('complementary',{name:'Visible layers'}).boundingBox()]);
@@ -165,6 +239,18 @@ export async function checkTools({browser,url,owner,save,output,pass}) {
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
     await page.screenshot({path:`${output}/screenshots/unified-map-mobile.png`});
     pass('Mobile globe, collapsible layer rail and bottom intelligence dock fit without horizontal page overflow');
+    await dock.getByRole('tab',{name:'stories',exact:true}).click();
+    const mobileStories=dock.getByRole('region',{name:'Story analysis',exact:true});
+    await mobileStories.getByText('Port-mention dictionary',{exact:true}).click();
+    await mobileStories.getByText(/3924 reference identities from 3962 source records/).waitFor();
+    await mobileStories.locator('summary').filter({hasText:/^Cross-feed entity links/}).click();
+    await mobileStories.getByLabel('Find a linked entity',{exact:true}).fill('Oman');
+    await mobileStories.getByRole('button',{name:'Oman',exact:true}).click();
+    await mobileStories.getByText('Loaded-source coverage and unresolved dates',{exact:true}).click();
+    await mobileStories.getByRole('table').scrollIntoViewIfNeeded();
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+    await mobileStories.screenshot({path:`${output}/screenshots/cross-feed-entities-mobile.png`});
+    pass('Mobile Stories supports port provenance, linked evidence and a scrollable source-coverage table without page overflow');
     assert.equal(errors.length,0,errors.join('\n'));
     pass('Unified map tool path has no uncaught browser errors; no active scan submitted');
   } catch(error) {

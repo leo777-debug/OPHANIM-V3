@@ -1,0 +1,48 @@
+{
+  "checkedAt": "2026-10-20T12:59:59.413Z",
+  "checks": [
+    {
+      "path": "/docs/sdk-setup",
+      "method": "GET",
+      "status": 200,
+      "cacheControl": "s-maxage=31536000"
+    },
+    {
+      "path": "/docs/research-setup",
+      "method": "GET",
+      "status": 200,
+      "cacheControl": "s-maxage=31536000"
+    },
+    {
+      "path": "/api/platform/integrations",
+      "method": "GET",
+      "status": 401,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/platform/integrations/sdk-test",
+      "method": "POST",
+      "status": 401,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/sdk/ingest",
+      "method": "GET",
+      "status": 401,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/sdk/stream",
+      "method": "GET",
+      "status": 401,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "path": "/api/ai/research",
+      "method": "POST",
+      "status": 401,
+      "cacheControl": "private, no-store"
+    }
+  ],
+  "limitation": "Local production server, signed-out requests only. Does not verify authenticated UI or an external worker. No real credentials used."
+}

@@ -1,11 +1,17 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback, memo } from 'react';
-import maplibregl from 'maplibre-gl';
+import * as maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import DynamicProviderLayers from './DynamicProviderLayers';
 import type { ProviderMapLayer } from '@/lib/providers';
 import type { MapViewport } from '@/lib/map-workspaces';
+import { geoJsonArray } from '@/lib/map/geojson-properties';
+import { atlasFallbackBasemap } from '@/lib/presentation/basemap';
+import { bindBasemapFallback } from '@/lib/map/basemap-fallback';
+import { OPEN_FREE_MAP } from '@/lib/map/basemap-sources';
+
+maplibregl.setWorkerUrl(new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url).toString());
 
 interface OphanimMapProps {
   data: any;
@@ -15,6 +21,7 @@ interface OphanimMapProps {
   onRightClick?: (coords: { lat: number; lng: number }) => void;
   onViewStateChange?: (vs: MapViewport) => void;
   initialView?: MapViewport;
+  fitBounds?: [[number, number], [number, number]];
   flyToLocation?: { lat: number; lng: number; zoom?: number; ts: number } | null;
   projection?: 'mercator' | 'globe';
   mapStyle?: 'dark' | 'earth' | 'satellite';
@@ -56,11 +63,12 @@ function isExpectedMapTileAbort(error: unknown): boolean {
     && /signal timed out|request was aborted|signal is aborted without reason/i.test(message);
 }
 
-function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightClick, onViewStateChange, initialView, flyToLocation, projection = 'globe', mapStyle = 'dark', sweepData, scanTargets = [], demoMode = false, theme = 'core', providerLayers = [], publicPresentation }: OphanimMapProps) {
+function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightClick, onViewStateChange, initialView, fitBounds, flyToLocation, projection = 'globe', mapStyle = 'dark', sweepData, scanTargets = [], demoMode = false, theme = 'core', providerLayers = [], publicPresentation }: OphanimMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const popupRef = useRef<maplibregl.Popup | null>(null);
   const [mapReady, setMapReady] = useState(false);
+  const [basemapFallback, setBasemapFallback] = useState(false);
   const prevStyleRef = useRef<'dark' | 'earth' | 'satellite'>('dark');
 
   // Create aircraft icon on canvas (for WebGL symbol layer)
@@ -178,7 +186,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     if (!containerRef.current || mapRef.current) return;
 
     // Select basemap style
-    const styleUrl = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
+    const styleUrl = OPEN_FREE_MAP.styleUrl;
 
     const map = new maplibregl.Map({
       container: containerRef.current,
@@ -187,17 +195,12 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
       zoom: initialView?.zoom ?? 6.5,
       minZoom: publicPresentation ? .5 : 1.5,
       maxZoom: 18,
-      attributionControl: false,
+      attributionControl: publicPresentation ? false : { compact: false },
       maxPitch: 85,
-      // Load CARTO basemap tiles DIRECTLY in the browser. Previously every tile
-      // was routed through /api/proxy-tiles, so the map fired dozens of server-side
-      // tile fetches per pan/zoom — when CARTO was momentarily slow these hung and
-      // poisoned the Next server's shared outbound connection pool, which silently
-      // broke the data feeds (CCTV, earthquakes, malware, …). CARTO's public tiles
-      // are CORS-enabled (Access-Control-Allow-Origin: *), so direct loading is
-      // correct, faster, and keeps the server's fetch pool healthy for real data.
+      // Browser tile requests stay separate from the backend data-feed pool.
       transformRequest: (url: string) => ({ url }),
     });
+    const releaseFallback = publicPresentation ? () => {} : bindBasemapFallback(map, atlasFallbackBasemap, () => setBasemapFallback(true));
 
     map.on('error', (event) => {
       // Switching a raster layer can cancel an obsolete tile request. MapLibre
@@ -996,12 +999,12 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
       const p = e.features[0].properties as any;
       const coords = (e.features[0].geometry as any).coordinates;
       const color = p.risk_level === 'CRITICAL' ? '#FF1744' : p.risk_level === 'HIGH' ? '#FF9500' : '#00BCD4';
-      const activeThreats = p.active_threats ? JSON.parse(p.active_threats) : [];
+      const activeThreats = geoJsonArray(p.active_threats);
 
       let threatsHtml = '';
       if (activeThreats.length > 0) {
         threatsHtml = `<div style="margin-top:8px;padding-top:6px;border-top:1px solid ${color}40;color:${color};font-size:9px;font-weight:bold;">
-          ACTIVE THREATS:<br/>${activeThreats.map((t: string) => `⚠ ${htmlEsc(t)}`).join('<br/>')}
+          ACTIVE THREATS:<br/>${activeThreats.map(t => `⚠ ${htmlEsc(t)}`).join('<br/>')}
         </div>`;
       }
 
@@ -1020,20 +1023,20 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
       const p = e.features?.[0]?.properties;
       if (!p) return;
       const coords = e.features[0].geometry.coordinates.slice();
-      const ports = JSON.parse(p.ports || '[]');
-      const vulns = JSON.parse(p.vulns || '[]');
-      const hostnames = JSON.parse(p.hostnames || '[]');
+      const ports = geoJsonArray(p.ports);
+      const vulns = geoJsonArray(p.vulns);
+      const hostnames = geoJsonArray(p.hostnames);
       const riskColors: Record<string, string> = { CRITICAL: '#FF3D3D', HIGH: '#FF6B00', MEDIUM: '#FFD700', LOW: '#76FF03', INFO: '#5C5A54' };
       popup(coords, `<div style="font-family:monospace;font-size:11px;color:#E8E6E0;">
-        <div style="font-size:13px;font-weight:bold;margin-bottom:6px;color:${p.color};">${p.device_type}</div>
-        <div style="font-size:12px;margin-bottom:8px;color:#fff;">${p.ip}</div>
-        ${hostnames.length > 0 ? `<div style="font-size:9px;color:#8A8880;margin-bottom:6px;">${hostnames.join(', ')}</div>` : ''}
+        <div style="font-size:13px;font-weight:bold;margin-bottom:6px;color:${colorSafe(p.color)};">${htmlEsc(p.device_type)}</div>
+        <div style="font-size:12px;margin-bottom:8px;color:#fff;">${htmlEsc(p.ip)}</div>
+        ${hostnames.length > 0 ? `<div style="font-size:9px;color:#8A8880;margin-bottom:6px;">${hostnames.map(htmlEsc).join(', ')}</div>` : ''}
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
           <div><span style="color:#5C5A54;">PORTS</span><br/><span style="color:#E8E6E0;">${ports.length}</span></div>
-          <div><span style="color:#5C5A54;">RISK</span><br/><span style="color:${riskColors[p.risk_level] || '#666'};">${p.risk_level}</span></div>
+          <div><span style="color:#5C5A54;">RISK</span><br/><span style="color:${riskColors[p.risk_level] || '#666'};">${htmlEsc(p.risk_level)}</span></div>
         </div>
-        <div style="font-size:9px;color:#8A8880;margin-bottom:6px;">Open: ${ports.slice(0, 12).join(', ')}${ports.length > 12 ? ' ...' : ''}</div>
-        ${vulns.length > 0 ? `<div style="font-size:9px;color:#FF3D3D;margin-bottom:6px;">⚠ CVEs: ${vulns.slice(0, 5).join(', ')}${vulns.length > 5 ? ` +${vulns.length - 5} more` : ''}</div>` : ''}
+        <div style="font-size:9px;color:#8A8880;margin-bottom:6px;">Open: ${ports.slice(0, 12).map(htmlEsc).join(', ')}${ports.length > 12 ? ' ...' : ''}</div>
+        ${vulns.length > 0 ? `<div style="font-size:9px;color:#FF3D3D;margin-bottom:6px;">⚠ CVEs: ${vulns.slice(0, 5).map(htmlEsc).join(', ')}${vulns.length > 5 ? ` +${vulns.length - 5} more` : ''}</div>` : ''}
         <button onclick="window.openOphanimIntel({ type: 'ip', ip: '${p.ip}' })" style="width:100%;margin-top:6px;padding:6px 12px;background:rgba(255,109,0,0.15);border:1px solid rgba(255,109,0,0.5);color:#FF6D00;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:bold;letter-spacing:0.1em;border-radius:4px;cursor:pointer;">[ IP INTEL DEEP DIVE ]</button>
       </div>`);
     });
@@ -1213,7 +1216,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     });
 
     }
-    return () => { map.remove(); mapRef.current = null; };
+    return () => { releaseFallback(); map.remove(); mapRef.current = null; };
   }, []);
 
   // Day/Night
@@ -1538,8 +1541,9 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
 
   useEffect(() => {
     if (!mapReady) return;
-    // 🔴 CONFLICT ZONES - Live from /api/conflicts 🔴
     if (publicPresentation) return;
+    if (activeLayers.conflict_zones === false) { setGeo('conflict-zones', []); return; }
+    // Public news context and explicitly labelled editorial reference areas.
     let cancelled = false;
     (async () => {
       try {
@@ -1556,47 +1560,33 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
           properties: {
             label: z.label,
             severity: z.severity,
-            description: `${z.description}${z.eventCount > 0 ? ` [${z.eventCount} live events detected]` : ''}`,
+            description: `${z.description}${z.eventCount > 0 ? ` [${z.eventCount} associated news mentions; not verified incidents]` : ''}`,
             sourceUrl: z.sourceUrl,
             eventCount: z.eventCount,
           },
         }));
 
-        // Individual live conflict events (scatter dots across conflict zones)
+        // Only source-reported points; no synthetic coordinate offsets.
         const eventFeatures = (conflictData.liveEvents || [])
-          .filter((e: any) => e.lat && e.lng)
+          .filter((e: any) => e.locationPrecision === 'reported' && Number.isFinite(e.lat) && Number.isFinite(e.lng))
           .map((e: any) => ({
             type: 'Feature' as const,
             geometry: { type: 'Point' as const, coordinates: [e.lng, e.lat] },
             properties: {
-              label: (e.title || 'CONFLICT EVENT').substring(0, 60).toUpperCase(),
+              label: `NEWS · ${(e.title || 'SOURCE REPORT').substring(0, 60)}`,
               severity: 'war',
-              description: e.title || 'Live conflict event detected by GDELT.',
+              description: `${e.title || 'Source report'} · ${e.source || 'Source unknown'} · ${e.timestamp || 'Publication time unknown'} · Verification required.`,
               sourceUrl: e.url || '',
             },
           }));
 
         setGeo('conflict-zones', [...zoneFeatures, ...eventFeatures]);
       } catch (e) {
-        // Fallback: if API fails, use minimal known zones
-        const FALLBACK_ZONES = [
-          { label: 'UKRAINE WAR', severity: 'war', lat: 48.5, lng: 31.2, description: 'Ongoing Russian invasion of Ukraine.', sourceUrl: 'https://liveuamap.com/' },
-          { label: 'GAZA CONFLICT', severity: 'war', lat: 31.35, lng: 34.35, description: 'Active military operations in Gaza.', sourceUrl: 'https://israelpalestine.liveuamap.com/' },
-          { label: 'SUDAN CIVIL WAR', severity: 'war', lat: 15.0, lng: 30.0, description: 'SAF vs RSF armed conflict.', sourceUrl: 'https://sudan.liveuamap.com/' },
-          { label: 'YEMEN WAR', severity: 'war', lat: 15.5, lng: 48.0, description: 'Houthi operations and Red Sea threats.', sourceUrl: 'https://yemen.liveuamap.com/' },
-          { label: 'MYANMAR CONFLICT', severity: 'war', lat: 19.5, lng: 96.5, description: 'Military junta vs opposition forces.', sourceUrl: 'https://myanmar.liveuamap.com/' },
-          { label: 'SYRIA', severity: 'high', lat: 35.0, lng: 38.5, description: 'Ongoing civil conflict.', sourceUrl: 'https://syria.liveuamap.com/' },
-        ];
-        const fallbackFeatures = FALLBACK_ZONES.map(z => ({
-          type: 'Feature' as const,
-          geometry: { type: 'Point' as const, coordinates: [z.lng, z.lat] },
-          properties: { label: z.label, severity: z.severity, description: z.description, sourceUrl: z.sourceUrl },
-        }));
-        setGeo('conflict-zones', fallbackFeatures);
+        if (!cancelled) setGeo('conflict-zones', []);
       }
     })();
     return () => { cancelled = true; };
-  }, [mapReady, setGeo, publicPresentation]);
+  }, [mapReady, activeLayers.conflict_zones, setGeo, publicPresentation]);
 
 
   // Visibility
@@ -1724,8 +1714,14 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
   // Fly-to
   useEffect(() => {
     if (!mapReady || !mapRef.current || !flyToLocation) return;
-    mapRef.current.flyTo({ center: [flyToLocation.lng, flyToLocation.lat], zoom: flyToLocation.zoom || 8, duration: 2000 });
+    mapRef.current.flyTo({ center: [flyToLocation.lng, flyToLocation.lat], zoom: flyToLocation.zoom ?? 8, duration: 2000 });
   }, [mapReady, flyToLocation]);
+
+  useEffect(() => {
+    if (!mapReady || !mapRef.current || !fitBounds) return;
+    if (!fitBounds.flat().every(Number.isFinite)) return;
+    mapRef.current.fitBounds(fitBounds, { padding: 30, maxZoom: 8, duration: 0 });
+  }, [mapReady, fitBounds]);
 
   // Dynamic projection switching (lightweight — no terrain DEM)
   useEffect(() => {
@@ -1836,6 +1832,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
 
   return <>
     <div ref={containerRef} className="absolute inset-0 w-full h-full" />
+    {basemapFallback && <p role="status" className="absolute left-2 top-2 z-10 max-w-[80%] rounded bg-black/80 px-2 py-1 text-xs text-white">Natural Earth reference basemap · remote basemap unavailable. Operational data freshness is separate.</p>}
     <DynamicProviderLayers map={mapReady ? mapRef.current : null} layers={providerLayers} onEntityClick={onEntityClick} />
   </>;
 }
