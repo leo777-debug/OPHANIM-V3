@@ -562,9 +562,13 @@ export async function GET(request?: NextRequest) {
     try {
       const actor = request ? await getAuthenticatedActor(request) : null;
       if (!actor) return NextResponse.json({ error: 'Sign in to see your organization’s data.' }, { status: 401, headers: { 'Cache-Control': 'private, no-store' } });
+      // Customer and MarineTraffic feeds are licensed to one organization, so they need
+      // AIS_ORGANIZATION_ID. AISStream alone may serve every signed-in user; setting the
+      // ID still restricts it to that organization.
       const organization = process.env.AIS_ORGANIZATION_ID;
-      if (!organization) return NextResponse.json({ error: 'Configure AIS_ORGANIZATION_ID in Admin → Integrations before using licensed AIS.' }, { status: 503, headers: { 'Cache-Control': 'private, no-store' } });
-      if (actor.organizationId !== organization) return NextResponse.json({ error: 'This AIS integration is not available to your organization.' }, { status: 403, headers: { 'Cache-Control': 'private, no-store' } });
+      const organizationLicensed = Boolean(process.env.CUSTOMER_AIS_API_URL || process.env.MARINETRAFFIC_AIS_API_URL);
+      if (!organization && organizationLicensed) return NextResponse.json({ error: 'Configure AIS_ORGANIZATION_ID in Admin → Integrations before using licensed AIS.' }, { status: 503, headers: { 'Cache-Control': 'private, no-store' } });
+      if (organization && actor.organizationId !== organization) return NextResponse.json({ error: 'This AIS integration is not available to your organization.' }, { status: 403, headers: { 'Cache-Control': 'private, no-store' } });
     } catch {
       return NextResponse.json({ error: 'Authentication is unavailable.' }, { status: 503, headers: { 'Cache-Control': 'private, no-store' } });
     }

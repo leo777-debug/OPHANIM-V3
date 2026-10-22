@@ -58,4 +58,15 @@ describe('keyless public AIS and organization-licensed AIS isolation', () => {
     expect((await GET(request())).status).toBe(503);
     expect(mocks.transport).toHaveBeenCalledTimes(1);
   });
+  it('serves AISStream to any signed-in user when no organization is set and no licensed feed exists', async () => {
+    vi.stubEnv('CUSTOMER_AIS_API_URL', '');
+    vi.stubEnv('AIS_ORGANIZATION_ID', '');
+    mocks.actor.mockResolvedValue({ organizationId: 'another-organization', userId: 'fixture-user', role: 'viewer' });
+    const { GET } = await import('./route');
+    const body = await (await GET(request())).json();
+    expect(body.sources).toContain('AISStream');
+    expect(body.ships.map((ship: {name: string}) => ship.name)).toContain('PRIVATE STREAM');
+    mocks.actor.mockResolvedValue(null);
+    expect((await GET(request())).status).toBe(401);
+  });
 });
