@@ -18,11 +18,24 @@ describe('existing public loader connections (no live HTTP)',()=>{
     expect(mocks.marine.mock.calls[0][0].nextUrl.searchParams.get('public')).toBe('1');
     expect(results[1]).toMatchObject({ports:[{name:'Test port'}]});
   });
-  it('reads completed camera regions without waiting for the global GET aggregation',async()=>{
-    mocks.cameraSnapshot.mockReturnValue({cameras:[{name:'Test public camera'}]});
+  it('loads every camera region once and reuses the result',async()=>{
+    mocks.cameraRoute.mockResolvedValue(Response.json({cameras:[{name:'Test public camera'},{name:'Second camera'}]}));
     const {loadPublicPayload}=await import('./public-loaders');
-    expect(await loadPublicPayload('cameras')).toEqual({cameras:[{name:'Test public camera'}]});
-    expect(mocks.cameraRoute).not.toHaveBeenCalled();
+    expect(await loadPublicPayload('cameras')).toEqual({cameras:[{name:'Test public camera'},{name:'Second camera'}]});
+    await loadPublicPayload('cameras');
+    expect(mocks.cameraRoute).toHaveBeenCalledTimes(1);
+    expect(new URL(mocks.cameraRoute.mock.calls[0][0].url).searchParams.get('region')).toBe('all');
+  });
+  it('falls back to completed camera regions when the full aggregation is slow',async()=>{
+    vi.useFakeTimers();
+    try {
+      mocks.cameraRoute.mockReturnValue(new Promise(()=>{}));
+      mocks.cameraSnapshot.mockReturnValue({cameras:[{name:'Warm region camera'}]});
+      const {loadPublicPayload}=await import('./public-loaders');
+      const result=loadPublicPayload('cameras');
+      await vi.advanceTimersByTimeAsync(22000);
+      expect(await result).toEqual({cameras:[{name:'Warm region camera'}]});
+    } finally { vi.useRealTimers(); }
   });
   it('connects original broadcaster, conflict and infrastructure adapters',async()=>{
     mocks.broadcast.mockResolvedValue(Response.json({feeds:[{name:'Test newsroom'}]}));
