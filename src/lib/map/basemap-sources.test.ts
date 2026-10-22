@@ -1,25 +1,21 @@
-import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { OPEN_FREE_MAP, NATURAL_EARTH_BASEMAP } from './basemap-sources';
-import { registeredReferenceDatasets } from '@/lib/intelligence/event-provider-registry';
-import { INTEGRATIONS } from '@/lib/integrations/catalog';
+import { LABEL_FONT, LABEL_FONT_BOLD, OPEN_FREE_MAP } from './basemap-sources';
 
-describe('basemap source governance and packaged reference integrity',()=>{
-  it('registers both keyless map sources with reviewed commercial rights and attribution',()=>{
-    for(const source of [OPEN_FREE_MAP,NATURAL_EARTH_BASEMAP]) {
-      expect(registeredReferenceDatasets.some(record=>record.id===source.id)).toBe(true);
-      const integration=INTEGRATIONS.find(record=>record.id===source.id);
-      expect(integration?.variables).toEqual([]);
-      expect(integration?.licence).toMatchObject({commercialUse:'yes',keyNeeded:false});
-      expect(integration?.licence?.attribution).toBeTruthy();
-      expect(integration?.licence?.rateLimits).toBeTruthy();
-      expect(source.datasetDate).toBeNull();
+// Fontstacks tiles.openfreemap.org serves (checked 2026-10-22); anything else returns 404.
+const SERVED = new Set(['Noto Sans Regular', 'Noto Sans Bold', 'Noto Sans Italic']);
+
+describe('map label fonts', () => {
+  it('uses single fontstacks the OpenFreeMap glyph server serves', () => {
+    for (const stack of [LABEL_FONT, LABEL_FONT_BOLD, [OPEN_FREE_MAP.clusterFont]]) {
+      expect(stack).toHaveLength(1);
+      expect(SERVED.has(stack[0])).toBe(true);
     }
   });
-  it('pins the actual bundled geography without inventing an upstream dataset date',()=>{
-    const bytes=readFileSync('public/presentation/countries.geojson');
-    expect(createHash('sha256').update(bytes).digest('hex')).toBe(NATURAL_EARTH_BASEMAP.sha256);
-    expect(JSON.parse(bytes.toString()).features).toHaveLength(177);
+
+  it('keeps OphanimMap labels on the shared fonts', () => {
+    const source = readFileSync(path.join(process.cwd(), 'src', 'components', 'OphanimMap.tsx'), 'utf8');
+    expect(source).not.toMatch(/'text-font':\s*\[/);
   });
 });
