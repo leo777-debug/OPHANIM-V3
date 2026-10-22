@@ -113,6 +113,11 @@
       "id": "P8-restore-org-signup",
       "status": "todo",
       "reason": "Create-organization mode removed from /login on 2026-10-22; /api/auth/bootstrap kept. Restore from git history when self-serve sign-up returns."
+    },
+    {
+      "id": "P9-camera-feeds-on-map",
+      "status": "todo",
+      "reason": "Markers show location only: public feed strips stream URLs, UnifiedMap has no CameraViewer, camera cache is in-memory (4 markers in production), sourceUrl falls back to tfl.gov.uk. See PROGRESS.md pending task 9."
     }
   ],
   "resumeInstruction": "Everything is merged into feat/gdacs-weather-ai-overview and live. Read 'Pending tasks' in PROGRESS.md; start with P2 then P1. Production builds must stay on Turbopack.",
