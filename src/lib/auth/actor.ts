@@ -4,11 +4,13 @@ import { OrganizationAccessError, requireOrganizationAccess } from '@/lib/operat
 import type { OrganizationActor } from '@/lib/operations/types';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { hashSessionToken, ORGANIZATION_COOKIE, SESSION_COOKIE } from './session';
+import { signInRequired } from './access-mode';
+import { getSharedWorkspaceActor } from './shared-workspace';
 
 export interface AuthenticatedActor extends OrganizationActor {
   email: string;
   displayName: string | null;
-  authProvider: 'supabase' | 'legacy';
+  authProvider: 'supabase' | 'legacy' | 'shared';
 }
 
 function isUuid(value: string | undefined): value is string {
@@ -48,6 +50,7 @@ async function getSupabaseActor(request: NextRequest): Promise<AuthenticatedActo
 }
 
 export async function getAuthenticatedActor(request: NextRequest): Promise<AuthenticatedActor | null> {
+  if (!signInRequired()) return getSharedWorkspaceActor();
   const supabaseActor = await getSupabaseActor(request);
   if (supabaseActor) return supabaseActor;
   const token = request.cookies.get(SESSION_COOKIE)?.value;

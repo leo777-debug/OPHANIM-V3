@@ -1,5 +1,6 @@
 
 import { NextResponse } from 'next/server';
+import { sourceTime } from '@/lib/atlas-freshness';
 
 export const dynamic = 'force-dynamic';
 
@@ -56,6 +57,7 @@ export async function GET() {
             confidence: 'high',
             date: geo.date?.split('T')[0] || '',
             time: '',
+            observedAt: sourceTime(geo.date),
             frp: 100,
             title: `[VOLCANO] ${e.title}`,
             type: 'volcano',
@@ -113,6 +115,7 @@ function parseCSV(csv: string): any[] {
       confidence: cols[confIdx] || 'unknown',
       date: cols[dateIdx] || '',
       time: cols[timeIdx] || '',
+      observedAt: sourceTime(`${cols[dateIdx]}T${String(cols[timeIdx] || '').padStart(4, '0').slice(0, 2)}:${String(cols[timeIdx] || '').padStart(4, '0').slice(2)}:00Z`),
       frp: parseFloat(cols[frpIdx]) || 0,
       type: 'fire'
     });

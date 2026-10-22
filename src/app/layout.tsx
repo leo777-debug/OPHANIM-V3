@@ -5,9 +5,9 @@ import "./globals.css";
 
 const SITE_URL = "https://ophanim.live";
 const SITE_NAME = "Ophanim";
-const SITE_TITLE = "Ophanim — Operational intelligence for logistics teams";
+const SITE_TITLE = "Ophanim — Know what could delay your shipments";
 const SITE_DESCRIPTION =
-  "Ophanim connects your shipments, email and documents with maritime, cyber, environmental and open-source intelligence—then surfaces only what matters.";
+  "Ophanim helps shipping teams see which storms, port closures, and other problems could delay their shipments. Join the waitlist.";
 
 export const viewport: Viewport = {
   themeColor: "#f4f2ec",
@@ -72,7 +72,7 @@ export const metadata: Metadata = {
         url: `${SITE_URL}/og.png`,
         width: 1200,
         height: 630,
-        alt: "Ophanim operational intelligence for logistics teams",
+        alt: "Ophanim — shipment alerts for shipping teams",
         type: "image/png",
       },
     ],
@@ -98,7 +98,7 @@ export const metadata: Metadata = {
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  name: "Ophanim — Operational intelligence for logistics teams",
+  name: "Ophanim — Know what could delay your shipments",
   alternateName: ["Ophanim", "Ophanim Intelligence", "Ophanim Atlas"],
   url: SITE_URL,
   description: SITE_DESCRIPTION,

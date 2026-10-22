@@ -1,6 +1,7 @@
 
 import { NextResponse } from 'next/server';
 import { stealthFetch } from '@/lib/stealthFetch';
+import { adsbObservationTime, sourceTime } from '@/lib/atlas-freshness';
 
 export const maxDuration = 60;
 
@@ -98,7 +99,9 @@ async function fetchRegionFrom(
     });
     if (res.ok) {
       const data = await res.json();
-      return data[arrayKey] || data.ac || [];
+      return (data[arrayKey] || data.ac || []).map((aircraft: Record<string, unknown>) => ({
+        ...aircraft, observedAt: adsbObservationTime(aircraft, data.now),
+      }));
     }
   } catch {}
   return [];
@@ -156,6 +159,7 @@ function classifyFlight(f: any) {
     grounded: isGrounded,
     nac_p: f.nac_p,
     type: 'flight',
+    observedAt: sourceTime(f.observedAt),
   };
 }
 
@@ -270,7 +274,9 @@ export async function GET() {
         if (r.status !== 'fulfilled') return;
         if (r.value.ok) {
           const data = await r.value.json();
-          ingestAc(data.ac || [], allRaw, seenHex);
+          ingestAc((data.ac || []).map((aircraft: Record<string, unknown>) => ({
+            ...aircraft, observedAt: adsbObservationTime(aircraft, data.now),
+          })), allRaw, seenHex);
         } else {
           await r.value.body?.cancel();
         }
@@ -305,6 +311,7 @@ export async function GET() {
                   track: s[10],
                   squawk: s[14],
                   category_os: s[17],
+                  observedAt: sourceTime(s[3]),
                 });
               }
             }

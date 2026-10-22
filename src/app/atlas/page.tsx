@@ -21,6 +21,7 @@ import CommandPalette, { type PaletteCommand } from '@/components/CommandPalette
 import ThreatFusionHUD from '@/components/ThreatFusionHUD';
 import WatchlistPanel from '@/components/WatchlistPanel';
 import ProviderStatusPanel from '@/components/ProviderStatusPanel';
+import { filterCurrentAtlasData, isRecentObservation, POSITION_MAX_AGE_MS, sourceTime, type AtlasFeedSnapshot } from '@/lib/atlas-freshness';
 import MapWorkspaceTabs from '@/components/MapWorkspaceTabs';
 import type { ProviderMapLayer } from '@/lib/providers';
 import {
@@ -152,7 +153,19 @@ function getYouTubeWatchUrl(url: string): string {
 export default function Dashboard() {
   const dataRef = useRef<any>({});
   const [dataVersion, setDataVersion] = useState(0);
-  const data = dataRef.current;
+  const sourceSnapshotsRef = useRef<Record<string, AtlasFeedSnapshot>>({});
+  const [freshnessNow, setFreshnessNow] = useState(0);
+  const freshness = useMemo(() => ({
+    ...filterCurrentAtlasData(dataRef.current, sourceSnapshotsRef.current, freshnessNow),
+    version: dataVersion,
+  }), [dataVersion, freshnessNow]);
+  const data = freshness.data as typeof dataRef.current;
+  useEffect(() => {
+    const tick = () => setFreshnessNow(Date.now());
+    tick();
+    const timer = setInterval(tick, 30_000);
+    return () => clearInterval(timer);
+  }, []);
 
   const [backendStatus, setBackendStatus] = useState<'connecting' | 'connected' | 'error'>('connecting');
   const [mapView, setMapView] = useState({ zoom: 6.5, latitude: 42.7, longitude: 25.48 });
@@ -572,23 +585,59 @@ export default function Dashboard() {
   // ── SHARED FETCH UTILITY (Fixes #107 — single definition, not 3 copies) ──
   const fetchEndpoint = useCallback(async (url: string, transform?: (d: any) => any, options?: RequestInit) => {
     if (typeof document !== 'undefined' && document.hidden) return;
+    const endpoint = url.split('?')[0];
     try {
       // Force the browser to bypass its local disk cache for real-time data
       const res = await fetch(url, { ...options, cache: 'no-store' });
       if (res.ok) {
         const json = await res.json();
+        if (json.error) throw new Error(String(json.error));
         const d = transform ? transform(json) : json;
         dataRef.current = { ...dataRef.current, ...d };
+        sourceSnapshotsRef.current[endpoint] = { checkedAt: Date.now(), sourceFetchedAt: sourceTime(json.timestamp),
+          withheld: typeof json.withheld_stale_or_undated === 'number' ? json.withheld_stale_or_undated : 0 };
+        setFreshnessNow(Date.now());
         setDataVersion(v => v + 1);
         setBackendStatus('connected');
-      }
+      } else throw new Error(`Source HTTP ${res.status}`);
     } catch (e) {
+      const previous = sourceSnapshotsRef.current[endpoint];
+      sourceSnapshotsRef.current[endpoint] = { checkedAt: Date.now(), sourceFetchedAt: previous?.sourceFetchedAt ?? null,
+        withheld: previous?.withheld,
+        error: e instanceof Error ? e.message : 'Source unavailable' };
+      setDataVersion(v => v + 1);
       console.warn('[OPHANIM] Suppressed error:', e instanceof Error ? e.message : e);
       setBackendStatus('error');
     }
   }, []);
 
   // ── PROGRESSIVE DATA LOADING (request-optimized) ──
+  const cameraLayerVisible = Boolean(activeLayers.cctv || activeLayers.camera_logistics || activeLayers.camera_transport);
+  useEffect(() => {
+    if (!cameraLayerVisible || mapView.zoom < 4) return;
+    const controller = new AbortController();
+    const load = async () => {
+      if (document.hidden) return;
+      try {
+        const radius = Math.max(1, Math.min(250, Math.round(20000 / 2 ** mapView.zoom)));
+        const params = new URLSearchParams({ lat: mapView.latitude.toFixed(2), lng: mapView.longitude.toFixed(2), radius: String(radius) });
+        const response = await fetch(`/api/cctv/indexes?${params}`, { signal: controller.signal, cache: 'no-store' });
+        if (!response.ok) return;
+        const result = await response.json();
+        if (controller.signal.aborted || !Array.isArray(result.cameras)) return;
+        const existing = dataRef.current.cameras || [];
+        const retained = existing.filter((camera: { source: string }) => camera.source !== 'Windy Webcams');
+        const indexed = new Map(existing.filter((camera: { source: string }) => camera.source === 'Windy Webcams').map((camera: { id: string }) => [camera.id, camera]));
+        for (const camera of result.cameras) indexed.set(camera.id, camera);
+        dataRef.current = { ...dataRef.current, cameras: [...retained, ...Array.from(indexed.values()).slice(-2000)] };
+        setDataVersion(value => value + 1);
+      } catch { /* Optional index failure does not remove existing transport feeds. */ }
+    };
+    const timer = setTimeout(load, 900);
+    const interval = setInterval(load, 4 * 60 * 1000);
+    return () => { controller.abort(); clearTimeout(timer); clearInterval(interval); };
+  }, [cameraLayerVisible, mapView.latitude, mapView.longitude, mapView.zoom]);
+
   useEffect(() => {
     // Priority 1: Core feeds (always needed for panels)
     const eqTransform = (response: any) => ({ earthquakes: response.earthquakes || [] });
@@ -598,7 +647,7 @@ export default function Dashboard() {
 
     // Polling — OPTIMIZED intervals to minimize edge requests
     const intervals = [
-      setInterval(() => fetchEndpoint('/api/earthquakes', eqTransform), 900000),  // 15 min
+      setInterval(() => fetchEndpoint('/api/earthquakes', eqTransform), 300000),
       setInterval(() => fetchEndpoint('/api/news'), 300000),        // 5 min, aligned with source cache
       setInterval(() => fetchEndpoint('/api/cyber-threats', (response) => ({ cyberThreats: response.threats || [] })), 1800000),
     ];
@@ -645,12 +694,13 @@ export default function Dashboard() {
     }
     // CCTV
     if ((activeLayers.cctv || activeLayers.camera_logistics || activeLayers.camera_transport) && !layerFetchedRef.current.has('cctv')) {
-      fetchEndpoint(`/api/cctv?region=all&_t=${Date.now()}`);
+      const mergeCameras = (response: any) => ({ ...response, cameras: Array.from(new Map([...(dataRef.current.cameras || []), ...response.cameras].map(camera => [camera.id, camera])).values()) });
+      fetchEndpoint(`/api/cctv?region=all&_t=${Date.now()}`, mergeCameras);
       layerFetchedRef.current.add('cctv');
       // Backfill once ~35s later: right after a deploy the server cache is cold,
       // and slow regions (Caltrans → LA/San Diego) can drop out of the first
       // region=all. By 35s the server has warmed, so this refetch fills them in.
-      setTimeout(() => fetchEndpoint(`/api/cctv?region=all&_t=${Date.now()}`), 35000);
+      setTimeout(() => fetchEndpoint(`/api/cctv?region=all&_t=${Date.now()}`, mergeCameras), 35000);
     }
     // Maritime
     if (activeLayers.maritime && !layerFetchedRef.current.has('maritime')) {
@@ -718,7 +768,7 @@ export default function Dashboard() {
   useEffect(() => {
     const intervals: ReturnType<typeof setInterval>[] = [];
     if (activeLayers.flights || activeLayers.military || activeLayers.jets || activeLayers.private) {
-      intervals.push(setInterval(() => fetchEndpoint('/api/flights', d => ({ ...d, flight_source: d.source, flight_timestamp: d.timestamp })), 300000)); // 5 min (was 2 min)
+      intervals.push(setInterval(() => fetchEndpoint('/api/flights', d => ({ ...d, flight_source: d.source, flight_timestamp: d.timestamp })), 120000));
     }
 
     if (activeLayers.balloons) {
@@ -730,7 +780,24 @@ export default function Dashboard() {
     if (activeLayers.maritime) {
       intervals.push(setInterval(() => fetchEndpoint('/api/maritime', d => ({ maritime_ports: d.ports, maritime_chokepoints: d.chokepoints, maritime_ships: d.ships })), 60000)); // 60s — was 10s; a 3MB poll every 10s OOM'd the prod container
     }
-    return () => intervals.forEach(clearInterval);
+    if (activeLayers.fires) intervals.push(setInterval(() => fetchEndpoint('/api/fires'), 600000));
+    if (activeLayers.weather) intervals.push(setInterval(() => fetchEndpoint('/api/weather', d => ({ weather_events: d.events })), 300000));
+    if (activeLayers.global_incidents) intervals.push(setInterval(() => fetchEndpoint('/api/gdelt', d => ({ gdelt: d.events })), 300000));
+    if (activeLayers.malware) intervals.push(setInterval(() => fetchEndpoint('/api/malware', d => ({ malware_threats: d.threats })), 300000));
+    const resume = () => {
+      if (document.hidden) return;
+      if (activeLayers.flights || activeLayers.military || activeLayers.jets || activeLayers.private) fetchEndpoint('/api/flights');
+      if (activeLayers.maritime) fetchEndpoint('/api/maritime', d => ({ maritime_ports: d.ports, maritime_chokepoints: d.chokepoints, maritime_ships: d.ships }));
+      if (activeLayers.weather) fetchEndpoint('/api/weather', d => ({ weather_events: d.events }));
+      if (activeLayers.fires) fetchEndpoint('/api/fires');
+      if (activeLayers.global_incidents) fetchEndpoint('/api/gdelt', d => ({ gdelt: d.events }));
+      if (activeLayers.malware) fetchEndpoint('/api/malware', d => ({ malware_threats: d.threats }));
+      fetchEndpoint('/api/news');
+      fetchEndpoint('/api/earthquakes', d => ({ earthquakes: d.earthquakes || [] }));
+      fetchEndpoint('/api/cyber-threats', d => ({ cyberThreats: d.threats || [] }));
+    };
+    document.addEventListener('visibilitychange', resume);
+    return () => { intervals.forEach(clearInterval); document.removeEventListener('visibilitychange', resume); };
   }, [activeLayers, fetchEndpoint]);
 
   // CCTV: loaded once on layer toggle via layerFetchedRef (no viewport polling)
@@ -814,7 +881,7 @@ export default function Dashboard() {
     }
 
     dataRef.current = { ...dataRef.current, sdk_entities: sdkEntities };
-  }, [dataVersion, activeLayers.sdk_sea, activeLayers.sdk_air, activeLayers.sdk_naval]);
+  }, [freshness.version, freshnessNow, data.commercial_flights, data.private_flights, data.private_jets, data.military_flights, data.maritime_ships, data.earthquakes, data.gdelt, data.news, activeLayers.sdk_sea, activeLayers.sdk_air, activeLayers.sdk_naval]);
 
   const totalFlights = useMemo(() => (
     (data.commercial_flights?.length||0)+(data.private_flights?.length||0)+(data.private_jets?.length||0)+(data.military_flights?.length||0)
@@ -1195,7 +1262,10 @@ export default function Dashboard() {
           scanTargets={scanTargets}
           demoMode={demoMode}
           theme={ophanimTheme}
-          providerLayers={providerLayers}
+          providerLayers={providerLayers.map((layer) => layer.id === 'maritime-vessels' ? {
+            ...layer, source: { ...layer.source, features: layer.source.features.filter((feature) =>
+              isRecentObservation(feature.properties?.observedAt ?? feature.properties?.timestamp, POSITION_MAX_AGE_MS, freshnessNow)) },
+          } : layer)}
         />
       </ErrorBoundary>
 
@@ -1353,7 +1423,7 @@ export default function Dashboard() {
       <AnimatePresence>
         {showProviders && (
           <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className={`absolute left-1/2 z-[260] w-[min(440px,calc(100vw-32px))] -translate-x-1/2 pointer-events-auto ${isMobile ? 'top-[156px]' : 'top-[86px]'}`}>
-            <ProviderStatusPanel />
+            <ProviderStatusPanel freshness={freshness.feeds} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -1394,7 +1464,7 @@ export default function Dashboard() {
           <AnimatePresence>
             {showIntel && (
               <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="absolute right-12 top-1/2 -translate-y-1/2 w-80">
-                <OsintPanel onSweepVisualize={setSweepData} onScanGeolocate={(target, data) => {
+                <OsintPanel onCameraSelect={setActiveCamera} onSweepVisualize={setSweepData} onScanGeolocate={(target, data) => {
                   setScanTargets(prev => {
                     const existing = prev.filter(t => t.id !== target);
                     return [{ id: target, timestamp: Date.now(), ...data }, ...existing].slice(0, 10);
@@ -1640,7 +1710,7 @@ export default function Dashboard() {
                   )}
                   {mobilePanel === 'recon' && (
                     <div className="space-y-2">
-                      <OsintPanel isOpen={true} onClose={() => setMobilePanel(null)} isMobile={true} onSweepVisualize={setSweepData} />
+                      <OsintPanel onCameraSelect={setActiveCamera} isOpen={true} onClose={() => setMobilePanel(null)} isMobile={true} onSweepVisualize={setSweepData} />
                     </div>
                   )}
                 </div>

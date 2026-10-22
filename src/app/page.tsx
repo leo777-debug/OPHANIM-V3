@@ -2,21 +2,21 @@ import type { Metadata } from 'next';
 import OphanimLanding from '@/components/landing/OphanimLanding';
 
 export const metadata: Metadata = {
-  title: 'Shrafim — Ophanim logistics intelligence',
-  description: 'Shrafim builds intelligence products for complex operations. Ophanim is its logistics product, connecting global disruptions to the shipments they may affect.',
+  title: "Ophanim — Know what could delay your shipments",
+  description: "Ophanim helps shipping teams see which storms, port closures, and other problems could delay their shipments. Join the waitlist.",
   alternates: { canonical: '/' },
   openGraph: {
-    title: 'Shrafim — Ophanim logistics intelligence',
-    description: 'Meet Ophanim, the logistics intelligence product from Shrafim.',
+    title: "Ophanim — Know what could delay your shipments",
+    description: "Ophanim helps shipping teams see which storms, port closures, and other problems could delay their shipments. Join the waitlist.",
     url: '/',
-    siteName: 'Shrafim',
+    siteName: 'Ophanim',
     type: 'website',
-    images: [{ url: '/og.png', width: 1200, height: 630, alt: 'Ophanim operational intelligence for logistics teams' }],
+    images: [{ url: '/og.png', width: 1200, height: 630, alt: "Ophanim — shipment alerts for shipping teams" }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Shrafim — Ophanim logistics intelligence',
-    description: 'Meet Ophanim, the logistics intelligence product from Shrafim.',
+    title: "Ophanim — Know what could delay your shipments",
+    description: "Ophanim helps shipping teams see which storms, port closures, and other problems could delay their shipments. Join the waitlist.",
     images: ['/og.png'],
   },
 };

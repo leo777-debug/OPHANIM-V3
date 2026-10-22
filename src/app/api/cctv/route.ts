@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { stealthFetch } from '@/lib/stealthFetch';
 import { classifyOperationalCamera, filterCamerasByFocus, type CameraFocus } from './operational-context';
 import type { CctvCamera } from './types';
+import { cameraRegionsAt } from '@/lib/cameras/regions';
+import { globalCameraOverview, searchCameraIndex } from '@/lib/cameras/windy';
 
 export const maxDuration = 60;
 import { fetchAsfinagCameras } from './asfinag';
@@ -404,6 +406,9 @@ async function fetchMiddleEastCameras(): Promise<any[]> {
 
 // ═══ REGION MAPPING ═══
 const REGION_FETCHERS: Record<string, () => Promise<any[]>> = {
+  'gcc': async () => (await searchCameraIndex({ region: 'gcc', offset: 0 })).cameras,
+  'mena': async () => (await searchCameraIndex({ region: 'mena', offset: 0 })).cameras,
+  'north-africa': async () => (await searchCameraIndex({ region: 'north-africa', offset: 0 })).cameras,
   'middle-east': fetchMiddleEastCameras,
   'uk': fetchTfLCameras,
   'us-west': async () => { const [w, c] = await Promise.all([fetchWSDOTCameras(), fetchCaltransCameras()]); return [...w, ...c]; },
@@ -489,8 +494,9 @@ function getRegionsForBounds(lat: number, lng: number, radius: number): string[]
   if (inFinland) regions.push('finland');
 
   // Middle East
-  const inMiddleEast = lat > 29 && lat < 34.5 && lng > 34 && lng < 36.5;
+  const inMiddleEast = lat + radius >= 12 && lat - radius <= 43 && lng + radius >= 25 && lng - radius <= 64;
   if (inMiddleEast) regions.push('middle-east');
+  regions.push(...cameraRegionsAt(lat, lng, radius));
 
   // Japan
   if (lat > 24 && lat < 46 && lng > 122 && lng < 154) regions.push('japan');
@@ -505,7 +511,7 @@ function getRegionsForBounds(lat: number, lng: number, radius: number): string[]
   // Australia explicitly
   if (lat > -45 && lat < -10 && lng > 110 && lng < 155) regions.push('asia');
 
-  return regions.length > 0 ? regions : ['uk', 'us-east']; // Default fallback
+  return [...new Set(regions)];
 }
 
 // Per-region camera cache. A single region timing out under load (e.g. Caltrans,
@@ -561,7 +567,7 @@ let warming = false;
 async function warmAllRegions() {
   if (warming) return;
   warming = true;
-  try { await fetchRegionsPooled(Object.keys(REGION_FETCHERS), 4); }
+  try { await fetchRegionsPooled(Object.keys(REGION_FETCHERS).filter(name => !['gcc', 'mena', 'north-africa'].includes(name)), 4); }
   catch { /* best effort */ }
   finally { warming = false; }
 }
@@ -595,13 +601,21 @@ export async function GET(request: Request) {
 
     // Bounded concurrency so a big region=all doesn't collapse the socket pool
     // and silently drop slow regions (Caltrans/LA/San Diego, Canada, Europe).
-    const perRegion = await fetchRegionsPooled(regionsToFetch, 6);
+    const overviewRequested = !region && lat === 0 && lng === 0 || region === 'all';
+    const [perRegion, cameraIndex] = await Promise.all([
+      fetchRegionsPooled(regionsToFetch.filter(name => !overviewRequested || !['gcc', 'mena', 'north-africa'].includes(name)), 6),
+      overviewRequested ? globalCameraOverview() : Promise.resolve(null),
+    ]);
+    if (cameraIndex) perRegion.push(cameraIndex.cameras);
 
     const allCameras: CctvCamera[] = [];
     const sources: Record<string, number> = {};
+    const seen = new Set<string>();
 
     for (const cams of perRegion) {
       for (const cam of (cams || [])) {
+        if (seen.has(cam.id)) continue;
+        seen.add(cam.id);
         allCameras.push(classifyOperationalCamera(cam));
         sources[cam.source] = (sources[cam.source] || 0) + 1;
       }
@@ -625,6 +639,7 @@ export async function GET(request: Request) {
       regions: regionsToFetch,
       focus,
       operationalCounts,
+      cameraIndex: cameraIndex ? { status: cameraIndex.status, message: cameraIndex.message, sampled: true } : undefined,
       timestamp: new Date().toISOString(),
     }, {
       headers: { 'Cache-Control': cacheControl },

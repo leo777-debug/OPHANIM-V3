@@ -35,6 +35,7 @@ export async function GET() {
       const latMatch = item.match(/<geo:lat>(.*?)<\/geo:lat>/i);
       const lngMatch = item.match(/<geo:long>(.*?)<\/geo:long>/i);
       const typeMatch = item.match(/<gdacs:eventtype>(.*?)<\/gdacs:eventtype>/i);
+      const publishedMatch = item.match(/<pubDate>(.*?)<\/pubDate>/i);
 
       if (!titleMatch || !latMatch || !lngMatch) continue;
 
@@ -60,6 +61,7 @@ export async function GET() {
         url: link,
         html: `<a href="${link}" target="_blank">${title}</a><br/><i>${desc}</i>`,
         type,
+        date: publishedMatch?.[1] || null,
       });
     }
 
