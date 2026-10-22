@@ -49,7 +49,7 @@ Pricing/quotas vary by plan and may change. “Keyless” describes access, not 
 | OpenSky Network | `OPENSKY_CLIENT_ID`, `OPENSKY_CLIENT_SECRET` | OAuth aviation quota | Credit tiers and commercial permissions depend on OpenSky agreement. | [Provider](https://openskynetwork.github.io/opensky-api/rest.html) | Existing keyless ADS-B sources have their own coverage and terms. |
 | airplanes.live / adsb.lol | None | Public ADS-B context | Keyless endpoints; confirm commercial rights and rate limits. | [Provider](https://www.adsb.lol/docs/open-data/) | Public coverage only; never implies complete tracking. |
 | NOAA Aviation Weather | None | METAR observations | Public API up to 100 requests/minute; app caps five/minute and caches stations. | [Provider](https://aviationweather.gov/data/api/) | Keyless; existing commercial-rights review gate applies. |
-| AISStream | `AIS_API_KEY` | Streaming AIS for signed-in users (optionally one organization via AIS_ORGANIZATION_ID) | Account/key required; verify current access and redistribution terms. | [Provider](https://aisstream.io/) | Digitraffic provides regional, not global, AIS. |
+| AISStream | `AIS_API_KEY` | Streaming AIS on the map, including the public map (no sign-in for now) | Account/key required; verify current access and redistribution terms. | [Provider](https://aisstream.io/) | Digitraffic provides regional, not global, AIS. |
 | Digitraffic Marine | None | Finnish regional AIS | Keyless open data, attribution and documented request limits apply. | [Provider](https://www.digitraffic.fi/en/marine-traffic/) | Keyless regional default. |
 | Customer AIS | `CUSTOMER_AIS_API_URL`, `AIS_ORGANIZATION_ID` | Customer-licensed vessel coverage for the configured organization | Your provider contract and rate limits. | [Provider](https://github.com/leo777-debug/OPHANIM-V3) | Digitraffic regional coverage. |
 | MarineTraffic / Kpler | `MARINETRAFFIC_AIS_API_URL`, `MARINETRAFFIC_API_KEY`, `AIS_ORGANIZATION_ID` | Licensed AIS for the configured organization | Paid contract; no assumed free API quota. | [Provider](https://servicedocs.marinetraffic.com/) | Digitraffic regional coverage. |
@@ -92,7 +92,7 @@ This table includes credentials, local-service settings, safety gates and runtim
 
 | Area | Variable | Purpose |
 | --- | --- | --- |
-| Maritime | `AIS_API_KEY` | Streaming AIS for signed-in users (optionally one organization via AIS_ORGANIZATION_ID) |
+| Maritime | `AIS_API_KEY` | Streaming AIS on the map, including the public map (no sign-in for now) |
 | Maritime | `AIS_ORGANIZATION_ID` | Customer-licensed vessel coverage for the configured organization |
 | AI | `AI_API_KEY` | Optional labelled summaries and explanations |
 | AI | `AI_BASE_URL` | Optional labelled summaries and explanations |

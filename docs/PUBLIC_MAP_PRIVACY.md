@@ -1,12 +1,13 @@
 # Public map and licensed AIS
 
 The public map uses a fixed public-feed projector. Maritime requests explicitly
-select the keyless Digitraffic branch. That branch never starts AISStream, calls
-customer/MarineTraffic endpoints, reads their vessel cache or uses their response
-cache. Ports and chokepoints remain reference locations, not assessed closures.
+select the public branch: Digitraffic plus, when AIS_API_KEY is set, AISStream
+(shown publicly for now, no sign-in; restoring the sign-in rule is a pending task in
+JOBFILE/PROGRESS.md). That branch never calls customer/MarineTraffic endpoints or uses
+the licensed response cache. Ports and chokepoints remain reference locations, not assessed closures.
 
-The combined licensed endpoint requires a valid session and a matching
-AIS_ORGANIZATION_ID. Set that organization UUID alongside the relevant AIS
+The combined endpoint requires a valid session and a matching AIS_ORGANIZATION_ID
+when a customer or MarineTraffic feed is configured. Set that organization UUID alongside the relevant AIS
 credentials in the uncommitted environment or hosting dashboard. Missing scope
 keeps the licensed feed unavailable; another organization receives 403. Licensed
 responses use private, no-store. Customer/MarineTraffic requests use the existing

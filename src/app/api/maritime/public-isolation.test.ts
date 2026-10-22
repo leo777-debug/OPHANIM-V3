@@ -8,7 +8,7 @@ vi.mock('ws', () => ({ default: class { constructor() { mocks.socket(); } on() {
 const organization = '10000000-0000-4000-8000-000000000001';
 const request = (query = '') => new NextRequest('http://localhost/api/maritime' + query);
 
-describe('keyless public AIS and organization-licensed AIS isolation', () => {
+describe('public AIS (Digitraffic + AISStream) and organization-licensed AIS isolation', () => {
   beforeEach(() => {
     vi.resetModules(); vi.clearAllMocks();
     vi.stubEnv('CUSTOMER_AIS_API_URL', 'https://customer.example.invalid/ships');
@@ -16,7 +16,7 @@ describe('keyless public AIS and organization-licensed AIS isolation', () => {
     vi.stubEnv('AIS_ORGANIZATION_ID', organization);
     vi.stubEnv('MARINETRAFFIC_AIS_API_URL', '');
     vi.stubEnv('AIS_API_KEY', 'synthetic-stream-key');
-    vi.stubGlobal('shipsCache', new Map([[1, { mmsi: 1, name: 'PRIVATE STREAM', lat: 25, lng: 55, timestamp: Date.now() }]]));
+    vi.stubGlobal('shipsCache', new Map([[1, { mmsi: 1, name: 'STREAM SHIP', lat: 25, lng: 55, timestamp: Date.now() }]]));
     vi.stubGlobal('isAisConnecting', false);
     vi.stubGlobal('fetch', vi.fn(async (input: string) => input.endsWith('/locations')
       ? Response.json({ features: [{ geometry: { coordinates: [24, 60] }, properties: { mmsi: 2, sog: 5 } }] })
@@ -26,16 +26,17 @@ describe('keyless public AIS and organization-licensed AIS isolation', () => {
   });
   afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
 
-  it('never starts or calls keyed sources on public map requests, even with a populated private cache', async () => {
+  it('shows AISStream on public map requests but never calls organization-licensed sources', async () => {
     const { GET } = await import('./route');
     const response = await GET(request('?public=1'));
     const body = await response.json();
     expect(body.publicOnly).toBe(true);
-    expect(body.ships.map((ship: {name: string}) => ship.name)).toEqual(['PUBLIC BALTIC']);
-    expect(JSON.stringify(body)).not.toMatch(/PRIVATE|synthetic|Customer AIS|AISStream/);
+    expect(body.ships.map((ship: {name: string}) => ship.name)).toEqual(['PUBLIC BALTIC', 'STREAM SHIP']);
+    expect(body.sources).toContain('AISStream');
+    expect(JSON.stringify(body)).not.toMatch(/PRIVATE|synthetic|Customer AIS/);
     expect(mocks.actor).not.toHaveBeenCalled();
     expect(mocks.transport).not.toHaveBeenCalled();
-    expect(mocks.socket).not.toHaveBeenCalled();
+    expect(mocks.socket).toHaveBeenCalled();
   });
   it('never mixes a previously cached combined response into the public response', async () => {
     const { GET } = await import('./route');
@@ -43,7 +44,7 @@ describe('keyless public AIS and organization-licensed AIS isolation', () => {
     expect(combined.headers.get('Cache-Control')).toBe('private, no-store');
     expect(JSON.stringify(await combined.json())).toContain('PRIVATE CUSTOMER');
     const publicBody = await (await GET(request('?public=1'))).json();
-    expect(publicBody.ships.map((ship: {name: string}) => ship.name)).toEqual(['PUBLIC BALTIC']);
+    expect(publicBody.ships.map((ship: {name: string}) => ship.name)).toEqual(['PUBLIC BALTIC', 'STREAM SHIP']);
     expect(mocks.transport).toHaveBeenCalledTimes(1);
   });
   it('rejects unsigned or other-tenant requests before cached data or upstream calls', async () => {
@@ -58,15 +59,16 @@ describe('keyless public AIS and organization-licensed AIS isolation', () => {
     expect((await GET(request())).status).toBe(503);
     expect(mocks.transport).toHaveBeenCalledTimes(1);
   });
-  it('serves AISStream to any signed-in user when no organization is set and no licensed feed exists', async () => {
+  it('serves AISStream without sign-in when no organization-licensed feed is configured', async () => {
     vi.stubEnv('CUSTOMER_AIS_API_URL', '');
     vi.stubEnv('AIS_ORGANIZATION_ID', '');
-    mocks.actor.mockResolvedValue({ organizationId: 'another-organization', userId: 'fixture-user', role: 'viewer' });
-    const { GET } = await import('./route');
-    const body = await (await GET(request())).json();
-    expect(body.sources).toContain('AISStream');
-    expect(body.ships.map((ship: {name: string}) => ship.name)).toContain('PRIVATE STREAM');
     mocks.actor.mockResolvedValue(null);
-    expect((await GET(request())).status).toBe(401);
+    const { GET } = await import('./route');
+    const response = await GET(request());
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.sources).toContain('AISStream');
+    expect(body.ships.map((ship: {name: string}) => ship.name)).toContain('STREAM SHIP');
+    expect(mocks.actor).not.toHaveBeenCalled();
   });
 });

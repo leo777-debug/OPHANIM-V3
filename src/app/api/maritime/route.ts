@@ -555,25 +555,23 @@ const SHIP_CAP = 8000; // keep the map (and payload) performant
 const EDGE_CC = 'public, s-maxage=30, stale-while-revalidate=60';
 
 export async function GET(request?: NextRequest) {
-  // Public projection is deliberately keyless, even when customer feeds exist.
+  // Public projection never includes organization-licensed feeds. AISStream is shown publicly
+  // for now (no sign-in); restoring its sign-in rule is a pending task in JOBFILE/PROGRESS.md.
   const publicOnly = request?.nextUrl.searchParams.get('public') === '1';
-  const hasRestrictedSources = Boolean(process.env.CUSTOMER_AIS_API_URL || process.env.MARINETRAFFIC_AIS_API_URL || process.env.AIS_API_KEY);
+  const hasRestrictedSources = Boolean(process.env.CUSTOMER_AIS_API_URL || process.env.MARINETRAFFIC_AIS_API_URL);
   if (!publicOnly && hasRestrictedSources) {
     try {
       const actor = request ? await getAuthenticatedActor(request) : null;
       if (!actor) return NextResponse.json({ error: 'Sign in to see your organization’s data.' }, { status: 401, headers: { 'Cache-Control': 'private, no-store' } });
-      // Customer and MarineTraffic feeds are licensed to one organization, so they need
-      // AIS_ORGANIZATION_ID. AISStream alone may serve every signed-in user; setting the
-      // ID still restricts it to that organization.
+      // Customer and MarineTraffic feeds are licensed to one organization.
       const organization = process.env.AIS_ORGANIZATION_ID;
-      const organizationLicensed = Boolean(process.env.CUSTOMER_AIS_API_URL || process.env.MARINETRAFFIC_AIS_API_URL);
-      if (!organization && organizationLicensed) return NextResponse.json({ error: 'Configure AIS_ORGANIZATION_ID in Admin → Integrations before using licensed AIS.' }, { status: 503, headers: { 'Cache-Control': 'private, no-store' } });
-      if (organization && actor.organizationId !== organization) return NextResponse.json({ error: 'This AIS integration is not available to your organization.' }, { status: 403, headers: { 'Cache-Control': 'private, no-store' } });
+      if (!organization) return NextResponse.json({ error: 'Configure AIS_ORGANIZATION_ID in Admin → Integrations before using licensed AIS.' }, { status: 503, headers: { 'Cache-Control': 'private, no-store' } });
+      if (actor.organizationId !== organization) return NextResponse.json({ error: 'This AIS integration is not available to your organization.' }, { status: 403, headers: { 'Cache-Control': 'private, no-store' } });
     } catch {
       return NextResponse.json({ error: 'Authentication is unavailable.' }, { status: 503, headers: { 'Cache-Control': 'private, no-store' } });
     }
   }
-  if (!publicOnly) connectAisStream();
+  connectAisStream();
   const cacheKey = publicOnly ? 'public' : 'combined';
   const cacheControl = !publicOnly && hasRestrictedSources ? 'private, no-store' : EDGE_CC;
   const cached = responseCache.get(cacheKey);
@@ -610,7 +608,7 @@ export async function GET(request?: NextRequest) {
   for (const s of dtShips) byId.set(`dt-${s.mmsi}`, s);
   for (const s of customerShips) byId.set(`customer-${s.mmsi}`, s);
   for (const s of marineTrafficShips) byId.set(`marinetraffic-${s.mmsi}`, s);
-  if (!publicOnly) for (const s of shipsCache.values()) byId.set(`ais-${s.mmsi}`, s);
+  for (const s of shipsCache.values()) byId.set(`ais-${s.mmsi}`, s);
   let ships = Array.from(byId.values());
   if (ships.length > SHIP_CAP) ships = ships.slice(0, SHIP_CAP);
 
@@ -684,10 +682,10 @@ export async function GET(request?: NextRequest) {
     total_chokepoints: dynamicChokepoints.length,
     total_ships: ships.length,
     sources: ['Digitraffic marine AIS']
-      .concat(!publicOnly && process.env.AIS_API_KEY ? ['AISStream'] : [])
+      .concat(process.env.AIS_API_KEY ? ['AISStream'] : [])
       .concat(!publicOnly && process.env.CUSTOMER_AIS_API_URL ? ['Customer AIS provider'] : [])
       .concat(!publicOnly && process.env.MARINETRAFFIC_AIS_API_URL && process.env.MARINETRAFFIC_API_KEY ? ['MarineTraffic AIS API'] : []),
-    coverage: !publicOnly && (process.env.AIS_API_KEY || process.env.CUSTOMER_AIS_API_URL || (process.env.MARINETRAFFIC_AIS_API_URL && process.env.MARINETRAFFIC_API_KEY))
+    coverage: (process.env.AIS_API_KEY || (!publicOnly && (process.env.CUSTOMER_AIS_API_URL || (process.env.MARINETRAFFIC_AIS_API_URL && process.env.MARINETRAFFIC_API_KEY))))
       ? 'configured global or customer coverage'
       : 'regional Digitraffic coverage',
     timestamp: new Date().toISOString(),

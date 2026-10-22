@@ -319,7 +319,7 @@ from local commit `2a2b72e` (parity-and-reliability, unpushed). Read
    page; the bootstrap API still exists. Restore the mode from git history (commit
    that removed it: "feat(auth): pause organization sign-up on the login page") when
    self-serve sign-up should return.
-9. **Show camera feeds on the map.** Camera markers show only a location today:
+9. **Show camera feeds on the map. (Done 2026-10-22, PR #35: about 8,800 cameras load and play.)** Before that, camera markers showed only a location:
    - The public feed normaliser (`src/lib/presentation/feeds.ts`) keeps an allow-list
      of fields that excludes `feed_url`, `stream_url` and `stream_type`, on purpose
      (`restored-feeds.test.ts`: "without stream credentials").
@@ -332,7 +332,14 @@ from local commit `2a2b72e` (parity-and-reliability, unpushed). Read
    Fix: pass stream URLs only for official public streams with no keys in the URL,
    open `CameraViewer` on camera click, persist the camera directory, and correct the
    source link. Keep Watchtower's rule: lawful, verified public feeds only.
-10. **Housekeeping.** Lint has 2 errors that predate this work in Codex's `UnifiedMap`
+10. **Restore sign-in for AISStream ships.** Paused on 2026-10-22: with `AIS_API_KEY`
+    set, AISStream ships show on the public map to everyone, with no sign-in and no
+    database needed (`src/app/api/maritime/route.ts`). Customer AIS and MarineTraffic
+    feeds still need sign-in and `AIS_ORGANIZATION_ID`. To restore: run the production
+    migrations (task 1) so sign-in works, then add `AIS_API_KEY` back to
+    `hasRestrictedSources` and drop AISStream ships from the public branch. See commit
+    "feat(ais): show AISStream ships on the public map for now".
+11. **Housekeeping.** Lint has 2 errors that predate this work in Codex's `UnifiedMap`
    and route code. On this PC, the renamed Docker folders
    (`%LOCALAPPDATA%\Docker\run.stale-*`, `%LOCALAPPDATA%\docker-secrets-engine.stale-*`)
    can be deleted.
