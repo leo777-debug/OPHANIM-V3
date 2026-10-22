@@ -1,0 +1,20 @@
+[
+ {
+  "id":"dubai-marina-skyline", "name":"Dubai Marina from Princess Tower", "port":"AEJEA", "country":"AE",
+  "lat":25.0887,"lon":55.1466,"type":"marina","streamUrl":null,"embedType":"iframe",
+  "sourceUrl":"https://www.skylinewebcams.com/en/webcam/united-arab-emirates/dubai/dubai/dubai-marina.html",
+  "terms":"Publisher copyright. Link to public page only; embed/redistribution rights not verified. Nearby marina, NOT a view of Jebel Ali berths.",
+  "termsUrl":"https://www.skylinewebcams.com/", "lastSeen":null,"status":"offline",
+  "verifiedAt":"2026-10-21T00:00:00Z","publicViewingVerified":true,"embedAllowed":false,
+  "healthCheckAllowed":false,"coverage":"Nearby waterfront only; source page explicitly displayed OFFLINE at verification."
+ },
+ {
+  "id":"muscat-aida-darglobal", "name":"AIDA Beach, Muscat — DarGlobal public livestream", "port":"OMMNQ", "country":"OM",
+  "lat":23.53,"lon":58.66,"type":"tourist","streamUrl":"https://www.youtube.com/embed/lgQ8-E3rJ_4","embedType":"youtube",
+  "sourceUrl":"https://www.youtube.com/watch?v=lgQ8-E3rJ_4",
+  "terms":"DarGlobal public channel; standard YouTube embedded player only, retaining branding and controls. YouTube Terms permit showing videos through the embeddable player. No download, frame harvesting, re-stream or separate charge for the video. Publisher retains copyright. Manual public playback verified; automated server polling disabled.",
+  "termsUrl":"https://www.youtube.com/t/terms?hl=en", "lastSeen":"2026-10-21T18:53:19.356Z","status":"online",
+  "verifiedAt":"2026-10-21T18:53:19.356Z","publicViewingVerified":true,"embedAllowed":true,
+  "healthCheckAllowed":false,"coverage":"Yiti/AIDA waterfront near Muscat; NOT Mina Qaboos cargo berths or a Sohar/Salalah approach. Pin is an approximate Yiti area reference (roughly 10 km accuracy), not a verified camera position. Night imagery limits visibility. DarGlobal identifies AIDA in Yiti; exact field of view is not surveyed."
+ }
+]

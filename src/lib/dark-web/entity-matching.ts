@@ -1,7 +1,7 @@
 import type { EntityMatch, NormalizedMention, RegisteredEntity } from './types';
 
 function fold(value: string): string { return value.toLowerCase().normalize('NFKD').replace(/[^a-z0-9.:-]+/g, ' ').replace(/\s+/g, ' ').trim(); }
-function exact(text: string, value: string): boolean { const candidate = fold(value); if (!candidate) return false; return candidate.includes('.') || candidate.includes(':') || /^\d+$/.test(candidate) ? fold(text).includes(candidate) : new RegExp(`(^|[^a-z0-9])${candidate.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/ /g, '\\s+')}($|[^a-z0-9])`, 'i').test(text); }
+function exact(text: string, value: string): boolean { const candidate = fold(value); if (!candidate) return false; const identifierBoundary=candidate.includes('.')||candidate.includes(':')?'a-z0-9_.:-':/^\d+$/.test(candidate)?'0-9':'a-z0-9'; return new RegExp(`(^|[^${identifierBoundary}])${candidate.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/ /g, '\\s+')}($|[^${identifierBoundary}])`, 'i').test(text); }
 function method(identifierType: string | undefined, entity: RegisteredEntity): EntityMatch['matchMethod'] | undefined {
   const kind = (identifierType ?? '').toLowerCase();
   if (kind === 'imo') return 'exact_imo'; if (kind === 'mmsi') return 'exact_mmsi'; if (kind === 'callsign') return 'exact_callsign'; if (kind === 'unlocode') return 'exact_unlocode'; if (kind === 'domain' || entity.entityType === 'domain') return 'exact_domain'; if (kind === 'ip' || entity.entityType === 'ip') return 'exact_ip'; if (kind === 'client_identifier') return 'exact_client_identifier'; if (kind === 'vendor_product') return 'exact_vendor_product';

@@ -20,10 +20,13 @@ export type ShipmentMilestoneType = (typeof SHIPMENT_MILESTONE_TYPES)[number];
 export interface ShipmentMilestoneInput {
   milestoneType: ShipmentMilestoneType;
   deadlineAt: string;
+  actualAt?: string;
+  actualSource?: string;
 }
 
 export interface ShipmentInput {
   shipmentReference: string;
+  historical?: boolean;
   bookingNumber?: string;
   containerNumber?: string;
   billOfLadingReference?: string;

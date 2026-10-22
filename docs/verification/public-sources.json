@@ -1,0 +1,35 @@
+{
+  "checkedAt": "2026-10-21T18:44:08.243Z",
+  "productionEnablement": false,
+  "tenantRecordsRead": 0,
+  "checks": [
+    {
+      "provider": "gur",
+      "status": "parsed",
+      "n": 24,
+      "imoCount": 24,
+      "source": "https://war-sanctions.gur.gov.ua/en/transport/ships",
+      "commercialUse": "still requires source terms review; production gate unchanged"
+    },
+    {
+      "provider": "opensanctions",
+      "status": "parsed",
+      "n": 20434,
+      "source": "https://data.opensanctions.org/datasets/latest/us_ofac_sdn/targets.simple.csv",
+      "commercialUse": "Licence required; no commercial enablement inferred from test"
+    },
+    {
+      "provider": "hibp-public-metadata",
+      "status": "reachable",
+      "http": 200,
+      "customerExposureTested": false,
+      "source": "https://haveibeenpwned.com/api/v3/latestbreach"
+    },
+    {
+      "provider": "hibp-domain",
+      "status": "not_configured",
+      "customerExposureTested": false,
+      "reason": "No verified tenant domain or subscription supplied. API keys intentionally blank."
+    }
+  ]
+}

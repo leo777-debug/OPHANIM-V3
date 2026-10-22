@@ -3996,3 +3996,15 @@ a.ops-stat:hover { border-color: var(--border-active); background: #1a2028; }
 .world-map-workspace:fullscreen .world-map-mode { display: none; }
 .world-map-workspace:fullscreen .world-map-canvas,
 .world-map-workspace:fullscreen .world-map-canvas > div:not(.world-map-source-badge):not(.world-map-inspector) { min-height: 0; height: 100%; }
+
+/* Route Lens shares the existing operational map dock. */
+.lens-panel {padding:16px;color:#dce9ec;display:grid;gap:12px;font-size:13px;line-height:1.6}
+.lens-panel h2,.lens-panel h3,.lens-panel h4 {color:#81e1d3;margin:4px 0}
+.lens-panel p {margin:4px 0}.lens-panel label {display:grid;gap:6px}
+.lens-panel input,.lens-panel textarea {width:100%;background:#101d26;border:1px solid #344957;padding:9px;color:#e8f2f3;border-radius:5px}
+.lens-panel button {padding:9px;border:1px solid #354d59;border-radius:5px;background:#132b34;color:#e4f4f3;text-align:left;cursor:pointer}
+.lens-panel button:disabled {opacity:.5;cursor:wait}.lens-panel button:focus-visible,.lens-panel input:focus-visible {outline:2px solid #60dac7}
+.lens-panel a {color:#80d9fa;display:inline-block;margin-right:12px}.lens-port-list,.lens-evidence,.lens-camera-grid {display:grid;gap:8px;max-height:320px;overflow:auto}
+.lens-port-list span,.lens-evidence small {display:block;color:#aebfc7;font-size:11px}.lens-panel article,.lens-forecast {padding:12px;border:1px solid #36515e;border-radius:7px;background:#0d1c24}
+.lens-toggles {display:grid;grid-template-columns:1fr 1fr;gap:8px}.lens-toggles label {display:flex;align-items:center;gap:6px}.lens-toggles input {width:auto}
+.lens-panel details {padding:8px;border-top:1px solid #314550}.lens-panel summary {cursor:pointer}.lens-probability {font-size:36px;color:#71e5cb}.lens-panel dl {display:flex;gap:12px;flex-wrap:wrap}.lens-panel dd {margin:0;color:#b9d2d9}

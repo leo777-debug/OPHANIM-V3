@@ -2,7 +2,7 @@ import type { RegisteredEntity } from './types';
 
 export interface DarkWebQueryConfig { maxQueriesPerEntity?: number; priority?: 'low' | 'normal' | 'high'; expiresAt?: string; }
 export interface GeneratedDarkWebQuery { query: string; priority: 'low' | 'normal' | 'high'; expiresAt?: string; source: string; }
-const logisticsTerms = ['AIS spoofing', 'identity laundering', 'shadow fleet', 'sanctions evasion', 'ship-to-ship transfer', 'forged vessel documents', 'terminal access', 'subsea cable'];
+const logisticsTerms = ['cargo theft', 'smuggling', 'sanctions evasion brokering', 'fraudulent bills of lading', 'logistics fraud', 'AIS spoofing', 'identity laundering', 'shadow fleet', 'sanctions evasion', 'ship-to-ship transfer', 'forged vessel documents', 'terminal access', 'subsea cable'];
 const cyberTerms = ['credentials', 'database', 'access for sale', 'VPN access', 'RDP access', 'initial access', 'ransomware', 'leak', 'API key'];
 function value(entity: RegisteredEntity): Array<{ value: string; source: string }> { return [...entity.aliases.map((alias) => ({ value: alias.identifierValue ?? alias.alias, source: alias.identifierType ?? 'alias' })), { value: entity.canonicalName, source: 'canonical_name' }].filter((item) => item.value.trim().length > 1); }
 export function generateDarkWebQueries(entity: RegisteredEntity, config: DarkWebQueryConfig = {}): GeneratedDarkWebQuery[] {

@@ -1,5 +1,6 @@
 import { createShipment } from '@/lib/logistics/shipments';
 import { validateShipmentInput } from '@/lib/logistics/shipment-validation';
+import { SHIPMENT_MILESTONE_TYPES } from '@/lib/logistics/types';
 import type { ShipmentInput } from '@/lib/logistics/types';
 import { db } from '@/lib/watchlists/db';
 import type { ImportAdapter } from './types';
@@ -10,6 +11,11 @@ export const shipmentImportAdapter: ImportAdapter<ShipmentInput> = {
   description: 'Shipment records for the active organization.',
   available: true,
   columns: [
+    {key:'historical',label:'Historical record',aliases:['historical','historical record']},
+    ...SHIPMENT_MILESTONE_TYPES.flatMap(type=>[
+      {key:`${type}DeadlineAt`,label:`${type} deadline`,aliases:[`${type} deadline`]},
+      {key:`${type}ActualAt`,label:`${type} completed`,aliases:[`${type} completed`,`${type} actual`]},
+    ]),
     { key: 'shipmentReference', label: 'Shipment reference', required: true, aliases: ['shipment reference', 'internal shipment reference', 'shipment ref', 'reference'] },
     { key: 'bookingNumber', label: 'Booking number', aliases: ['booking number', 'booking'] },
     { key: 'containerNumber', label: 'Container number', aliases: ['container number', 'container'] },
@@ -34,7 +40,15 @@ export const shipmentImportAdapter: ImportAdapter<ShipmentInput> = {
     { key: 'priority', label: 'Priority', aliases: ['priority', 'shipment priority'] },
     { key: 'currentStatus', label: 'Current status', aliases: ['current status', 'status'] },
   ],
-  normalize: validateShipmentInput,
+  normalize(raw) {
+    const milestones=SHIPMENT_MILESTONE_TYPES.flatMap(type=>{
+      const actualAt=raw[`${type}ActualAt`],deadlineAt=raw[`${type}DeadlineAt`];
+      if(actualAt&&!deadlineAt)throw new Error(`${type}: original deadline required with completion.`);
+      return deadlineAt?[{milestoneType:type,deadlineAt,actualAt:actualAt||undefined,actualSource:actualAt?'shipment_import':undefined}]:[];
+    });
+    const historical=raw.historical==='true'||Boolean(typeof raw.actualArrivalAt==='string'&&Date.parse(raw.actualArrivalAt)<Date.now());
+    return validateShipmentInput({...raw,historical,currentStatus:historical?'delivered':raw.currentStatus,milestones});
+  },
   duplicateKey: (shipment) => shipment.shipmentReference.trim().toLowerCase(),
   async findExisting(actor, shipments) {
     const references = shipments.map((shipment) => shipment.shipmentReference.trim().toLowerCase());

@@ -1,4 +1,6 @@
 export const ATLAS_TOOLS = [
+  { id: 'watchtower', label: 'Watchtower', description: 'Public port cameras and coverage gaps' },
+  { id: 'route-lens', label: 'Route Lens', description: 'Shipment corridor evidence and scored forecasts' },
   { id: 'analyst', label: 'Analyst', description: 'AI briefing and summaries' },
   { id: 'fusion', label: 'Fusion', description: 'Combined intelligence signals' },
   { id: 'recon', label: 'Recon', description: 'DNS, domain and network tools' },

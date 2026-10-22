@@ -22,11 +22,25 @@ services:
       - NODE_ENV=production
       - PORT=3000
       - HOSTNAME=0.0.0.0
+      - FORECAST_WORKER_URL=http://forecast-worker:8081
+      - FORECAST_WORKER_TOKEN=${FORECAST_WORKER_TOKEN:-}
+      - ROAD_ROUTER_URL=${ROAD_ROUTER_URL:-}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
     networks:
       - default
+
+  forecast-worker:
+    build: ./forecast-worker
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-}
+      FORECAST_WORKER_TOKEN: ${FORECAST_WORKER_TOKEN:-}
+      MODEL_ROOT: /models
+    volumes:
+      - forecast-models:/models
+    restart: unless-stopped
+    # Internal network only. No AI credentials and no host port publication.
 
   ophanim-cache:
     image: nginx:alpine
@@ -55,6 +69,7 @@ services:
 
 volumes:
   nginx-cache:
+  forecast-models:
 
 # ── CasaOS app-store metadata (ignored by plain Docker Compose) ──
 x-casaos:

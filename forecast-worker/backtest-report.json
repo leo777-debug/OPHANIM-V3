@@ -1,0 +1,7 @@
+{
+  "status": "blocked",
+  "resolved_rows": 0,
+  "reason": "Need 150 distinct causally frozen resolved shipments, including 30 untouched test cases.",
+  "accuracy_claim": false,
+  "hormuz_shock_replay": "Not available without dated source snapshots and outcomes."
+}

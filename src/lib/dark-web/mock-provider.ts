@@ -1,7 +1,8 @@
-import type { DarkWebProvider, DarkWebRawMention, DarkWebSearchQuery } from './types';
+import type { DarkWebProvider, DarkWebRawMention } from './types';
 
 const now = '2026-08-03T00:00:00.000Z';
-const fixtures: DarkWebRawMention[] = [
+const fixtures: DarkWebRawMention[] = ['cargo_theft','smuggling','sanctions_evasion_brokering','fraudulent_bills_of_lading','logistics_fraud'].map(category => ({providerDocumentId:`fixture-${category}`,sourceCategory:'development_fixture' as const,sourceName:'Ophanim development fixture',firstSeenAt:now,lastSeenAt:now,originalText:`Fictional cargo Example Client at UNLOCODE EXPRT: ${category.replaceAll('_',' ')} claim.`,sourceReliability:30,threatCategories:[category]}));
+fixtures.push(
   { providerDocumentId: 'fixture-imo', sourceCategory: 'development_fixture', sourceName: 'Ophanim development fixture', sourceReference: 'https://fixtures.invalid/imo', firstSeenAt: now, lastSeenAt: now, publishedAt: now, originalLanguage: 'en', originalText: 'IMO 9123456 discussed alongside AIS spoofing and replacement registry papers.', title: 'Exact vessel identifier', sourceReliability: 45, matchedIdentifiers: ['9123456'], threatCategories: ['ais_manipulation', 'forged_documents'] },
   { providerDocumentId: 'fixture-vessel-name', sourceCategory: 'development_fixture', sourceName: 'Ophanim development fixture', sourceReference: 'https://fixtures.invalid/vessel-name', firstSeenAt: now, lastSeenAt: now, originalText: 'Example Star is mentioned near a terminal access claim.', title: 'Vessel name only', sourceReliability: 20, matchedIdentifiers: ['EXAMPLE STAR'], threatCategories: ['terminal_access'] },
   { providerDocumentId: 'fixture-mmsi', sourceCategory: 'development_fixture', sourceName: 'Ophanim development fixture', sourceReference: 'https://fixtures.invalid/mmsi', firstSeenAt: now, lastSeenAt: now, originalText: 'MMSI 123456789 appears in an alleged identity laundering discussion.', title: 'Exact MMSI', sourceReliability: 40, matchedIdentifiers: ['123456789'], threatCategories: ['identity_laundering'] },
@@ -14,7 +15,7 @@ const fixtures: DarkWebRawMention[] = [
   { providerDocumentId: 'fixture-false-positive', sourceCategory: 'development_fixture', sourceName: 'Ophanim development fixture', sourceReference: 'https://fixtures.invalid/false-positive', firstSeenAt: now, lastSeenAt: now, originalText: 'Example Company is a generic phrase with no identifier or domain.', title: 'Weak company name', sourceReliability: 5, matchedIdentifiers: ['EXAMPLE COMPANY'], threatCategories: ['unverified_claim'] },
   { providerDocumentId: 'fixture-copy', sourceCategory: 'development_fixture', sourceName: 'Ophanim development fixture', sourceReference: 'https://fixtures.invalid/copy', firstSeenAt: now, lastSeenAt: now, originalText: 'IMO 9123456 discussed alongside AIS spoofing and replacement registry papers.', title: 'Copied vessel identifier', sourceReliability: 20, matchedIdentifiers: ['9123456'], threatCategories: ['ais_manipulation', 'forged_documents'] },
   { providerDocumentId: 'fixture-independent', sourceCategory: 'development_fixture', sourceName: 'Ophanim development fixture', sourceReference: 'https://fixtures.invalid/independent', firstSeenAt: now, lastSeenAt: now, originalText: 'Independent source reports an AIS gap for IMO 9123456 with a separate source reference.', title: 'Independent corroboration', sourceReliability: 55, matchedIdentifiers: ['9123456'], threatCategories: ['ais_manipulation'] },
-];
+);
 
 function enabled() { return process.env.NODE_ENV === 'test' || (process.env.NODE_ENV !== 'production' && process.env.DARK_WEB_FIXTURES_ENABLED === 'true'); }
 function clean(value: string | undefined) { return value?.replace(/<[^>]*>/g, '').replace(/[\u0000-\u001f]/g, ' ').trim(); }

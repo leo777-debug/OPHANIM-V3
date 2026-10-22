@@ -1,0 +1,13 @@
+{
+  "checkedAt": "2026-10-21T18:54:01.354622+00:00",
+  "source": "Read-only aggregate audit of connected OPHANIM database plus user confirmation",
+  "shipments": 0,
+  "actual_arrivals": 0,
+  "labelled_arrivals": 0,
+  "forecast_snapshot_table_present": false,
+  "historical_files_supplied": false,
+  "activation": "blocked",
+  "reason": "No real shipment labels or frozen snapshots. Public aggregate port/weather series are not substitute shipment outcomes. No fixtures or hindsight snapshots used for production activation.",
+  "provider_credentials": "Intentionally left blank at user request",
+  "production_migrations_applied": false
+}

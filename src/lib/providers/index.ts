@@ -1,3 +1,4 @@
+import { watchtowerProvider } from './providers/watchtower-provider';
 import { EnrichmentManager } from './enrichment-manager';
 import { MapLayerManager } from './map-layer-manager';
 import { domainIntelligenceProvider } from './providers/domain-intelligence-provider';
@@ -24,6 +25,7 @@ export * from './types';
 export { providerMetrics } from './provider-metrics';
 
 const registry = new ProviderRegistry([
+  watchtowerProvider,
   ipIntelligenceProvider,
   domainIntelligenceProvider,
   emailBreachProvider,

@@ -20,7 +20,7 @@ interface MentionRow {
   id: string; title: string | null; original_text: string; translated_text: string | null; source_reliability: number;
   source_chain_label: 'likely_original' | 'likely_copy' | 'possible_copy' | 'independent_source' | 'relationship_unknown'; independent_source_count: number;
   first_seen_at: string; source_name: string; source_reference: string | null; review_status: MentionReviewStatus;
-  best_match: number | null; requires_review: boolean | null; match_count: number;
+  match_methods: string[];best_match: number | null; requires_review: boolean | null; match_count: number;
 }
 
 export interface SignalAssessment {
@@ -52,14 +52,14 @@ function assessmentFrom(row: Record<string, unknown>): SignalAssessment {
   return { id: String(row.id), mentionId: String(row.mention_id), subjectType: row.subject_type as CorrelationSubjectType, subjectId: String(row.subject_id), subjectLabel: String(row.subject_label), assessmentStatus: String(row.assessment_status), confidenceScore: Number(row.confidence_score), confidenceLevel: row.confidence_level as ConfidenceAssessment['level'], confidenceBreakdown: (row.confidence_breakdown ?? {}) as ConfidenceAssessment['breakdown'], correlationSignals: Array.isArray(row.correlation_signals) ? row.correlation_signals as SignalAssessment['correlationSignals'] : [], nextMilestoneAt: row.next_milestone_at ? String(row.next_milestone_at) : undefined, lastSafeMoveAt: row.last_safe_move_at ? String(row.last_safe_move_at) : undefined, lastSafeMoveSource: row.last_safe_move_source ? String(row.last_safe_move_source) : undefined, createdAt: String(row.created_at), updatedAt: String(row.updated_at) };
 }
 
-function alertSummary(candidate: CorrelationCandidate): string {
-  return `An unverified intelligence signal matched ${candidate.signals.length} stored ${candidate.subjectType.replace('_', ' ')} identifier${candidate.signals.length === 1 ? '' : 's'} for ${candidate.subjectLabel}. Analyst verification is required before action.`;
+function alertSummary(candidate: CorrelationCandidate,mention:MentionRow): string {
+  return `An unverified intelligence signal matched ${candidate.signals.length} stored ${candidate.subjectType.replace('_', ' ')} identifier${candidate.signals.length === 1 ? '' : 's'} for ${candidate.subjectLabel}. Match methods: ${(mention.match_methods??[]).join(', ')||'text correlation only'}. Analyst verification is required before action.`;
 }
 
 async function activeMentions(actor: OrganizationActor): Promise<MentionRow[]> {
   return (await db().query<MentionRow>(
     `select mention.id, mention.title, mention.original_text, mention.translated_text, mention.source_reliability, mention.source_chain_label, mention.independent_source_count, mention.first_seen_at, mention.source_name, mention.source_reference, mention.review_status,
-            max(match.confidence_contribution) as best_match, bool_or(match.requires_review) as requires_review, count(match.id)::int as match_count
+            array_agg(distinct match.match_method) filter(where match.match_method is not null) as match_methods, max(match.confidence_contribution) as best_match, bool_or(match.requires_review) as requires_review, count(match.id)::int as match_count
        from ophanim_dark_web_mentions mention left join ophanim_mention_entity_matches match on match.mention_id = mention.id
       where mention.organization_id = $1 and mention.review_status not in ('false_positive', 'duplicate', 'closed')
       group by mention.id order by mention.first_seen_at desc limit 200`,
@@ -86,13 +86,13 @@ async function upsertAssessment(actor: OrganizationActor, mention: MentionRow, c
   const createdAlert = await db().query<{ id: string }>(
     `insert into ophanim_intelligence_alerts(organization_id, assessment_id, alert_category, title, summary)
      values($1,$2,$3,$4,$5) on conflict(assessment_id) do nothing returning id`,
-    [actor.organizationId, assessment.id, category, `Unverified ${category} signal`, alertSummary(candidate)],
+    [actor.organizationId, assessment.id, category, `Unverified ${category} signal`, alertSummary(candidate,mention)],
   );
   const alertId = createdAlert.rows[0]?.id;
   if (!alertId) return { assessment };
   await db().query(`insert into ophanim_operational_tasks(organization_id, workflow_type, workflow_id, title, priority, assigned_to_user_id, due_at, created_by_user_id)
     values($1,$2,$3,$4,$5,$6,$7,$8)`, [actor.organizationId, candidate.subjectType === 'shipment' ? 'shipment_exposure' : 'cyber_exposure', assessment.id, `Verify intelligence signal for ${candidate.subjectLabel}`, confidence.level === 'high' ? 'high' : 'normal', candidate.ownerUserId ?? null, candidate.nextMilestoneAt ?? null, actor.userId]);
-  return { assessment, alert: { id: alertId, organizationId: actor.organizationId, assessmentId: assessment.id, category, title: `Unverified ${category} signal`, summary: alertSummary(candidate), confidenceScore: confidence.score, subjectLabel: candidate.subjectLabel, sourceName: mention.source_name, sourceReference: mention.source_reference ?? undefined } };
+  return { assessment, alert: { id: alertId, organizationId: actor.organizationId, assessmentId: assessment.id, category, title: `Unverified ${category} signal`, summary: alertSummary(candidate,mention), confidenceScore: confidence.score, subjectLabel: candidate.subjectLabel, sourceName: mention.source_name, sourceReference: mention.source_reference ?? undefined } };
 }
 
 export async function reconcileIntelligence(actor: OrganizationActor) {
@@ -168,7 +168,7 @@ export async function startRemediationForSignal(actor: OrganizationActor, assess
 
 export async function listIntelligenceAlerts(actor: OrganizationActor): Promise<IntelligenceAlert[]> {
   requireOrganizationAccess(actor, actor.organizationId, 'intelligence:read');
-  const result = await db().query<{ id: string; assessment_id: string; alert_category: 'logistics' | 'cyber'; title: string; summary: string; alert_status: IntelligenceAlertStatus; snoozed_until: string | null; subject_label: string; confidence_score: number; confidence_level: ConfidenceAssessment['level']; source_name: string; source_reference: string | null; updated_at: string }>(`select alert.id,alert.assessment_id,alert.alert_category,alert.title,alert.summary,alert.alert_status,alert.snoozed_until,assessment.subject_label,assessment.confidence_score,assessment.confidence_level,mention.source_name,mention.source_reference,alert.updated_at from ophanim_intelligence_alerts alert join ophanim_signal_assessments assessment on assessment.id=alert.assessment_id join ophanim_dark_web_mentions mention on mention.id=assessment.mention_id where alert.organization_id=$1 and (alert.alert_status <> 'snoozed' or alert.snoozed_until is null or alert.snoozed_until <= now()) order by alert.alert_status='closed',assessment.confidence_score desc,alert.updated_at desc`, [actor.organizationId]);
+  const result = await db().query<{ id: string; assessment_id: string; alert_category: 'logistics' | 'cyber'; title: string; summary: string; alert_status: IntelligenceAlertStatus; snoozed_until: string | null; subject_label: string; confidence_score: number; confidence_level: ConfidenceAssessment['level']; source_name: string; source_reference: string | null; updated_at: string }>(`select alert.id,alert.assessment_id,alert.alert_category,alert.title,alert.summary,alert.alert_status,alert.snoozed_until,coalesce(assessment.subject_label,shipment.shipment_reference) as subject_label,coalesce(assessment.confidence_score,55) as confidence_score,coalesce(assessment.confidence_level,'low') as confidence_level,coalesce(mention.source_name,'The Panel · local validated model') as source_name,mention.source_reference,alert.updated_at from ophanim_intelligence_alerts alert left join ophanim_forecasts forecast on forecast.id=alert.forecast_id and forecast.organization_id=alert.organization_id left join ophanim_shipments shipment on shipment.id=forecast.shipment_id and shipment.organization_id=alert.organization_id left join ophanim_signal_assessments assessment on assessment.id=alert.assessment_id left join ophanim_dark_web_mentions mention on mention.id=assessment.mention_id where alert.organization_id=$1 and (alert.alert_status <> 'snoozed' or alert.snoozed_until is null or alert.snoozed_until <= now()) order by alert.alert_status='closed',assessment.confidence_score desc,alert.updated_at desc`, [actor.organizationId]);
   return result.rows.map((row) => ({ id: row.id, assessmentId: row.assessment_id, category: row.alert_category, title: row.title, summary: row.summary, status: row.alert_status, snoozedUntil: row.snoozed_until ?? undefined, subjectLabel: row.subject_label, confidenceScore: row.confidence_score, confidenceLevel: row.confidence_level, sourceName: row.source_name, sourceReference: row.source_reference ?? undefined, updatedAt: row.updated_at }));
 }
 
@@ -187,7 +187,7 @@ export async function listOperationalTasks(actor: OrganizationActor): Promise<Op
 
 export async function listIntelligenceDeliveryLogs(actor: OrganizationActor): Promise<IntelligenceDeliveryLog[]> {
   requireOrganizationAccess(actor, actor.organizationId, 'intelligence:read');
-  const result = await db().query<{ id: string; kind: IntelligenceDeliveryLog['kind']; status: IntelligenceDeliveryLog['status']; attempts: number; email: string; title: string; subject_label: string; error: string | null; created_at: string; sent_at: string | null }>(`select delivery.id,delivery.kind,delivery.status,delivery.attempts,setting.email,alert.title,assessment.subject_label,delivery.error,delivery.created_at,delivery.sent_at from ophanim_intelligence_deliveries delivery join ophanim_intelligence_notification_settings setting on setting.id=delivery.setting_id join ophanim_intelligence_alerts alert on alert.id=delivery.alert_id join ophanim_signal_assessments assessment on assessment.id=alert.assessment_id where delivery.organization_id=$1 order by delivery.created_at desc limit 100`, [actor.organizationId]);
+  const result = await db().query<{ id: string; kind: IntelligenceDeliveryLog['kind']; status: IntelligenceDeliveryLog['status']; attempts: number; email: string; title: string; subject_label: string; error: string | null; created_at: string; sent_at: string | null }>(`select delivery.id,delivery.kind,delivery.status,delivery.attempts,setting.email,alert.title,coalesce(assessment.subject_label,shipment.shipment_reference) as subject_label,delivery.error,delivery.created_at,delivery.sent_at from ophanim_intelligence_deliveries delivery join ophanim_intelligence_notification_settings setting on setting.id=delivery.setting_id join ophanim_intelligence_alerts alert on alert.id=delivery.alert_id left join ophanim_forecasts forecast on forecast.id=alert.forecast_id and forecast.organization_id=alert.organization_id left join ophanim_shipments shipment on shipment.id=forecast.shipment_id and shipment.organization_id=alert.organization_id left join ophanim_signal_assessments assessment on assessment.id=alert.assessment_id where delivery.organization_id=$1 order by delivery.created_at desc limit 100`, [actor.organizationId]);
   return result.rows.map((row) => ({ id: row.id, kind: row.kind, status: row.status, attempts: row.attempts, email: row.email, title: row.title, subjectLabel: row.subject_label, error: row.error ?? undefined, createdAt: row.created_at, sentAt: row.sent_at ?? undefined }));
 }
 

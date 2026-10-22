@@ -52,7 +52,10 @@ function optionalMilestones(value: unknown): ShipmentMilestoneInput[] | undefine
     if (!milestoneType || !SHIPMENT_MILESTONE_TYPES.includes(milestoneType as ShipmentMilestoneType)) throw new ShipmentValidationError('Milestone type is invalid.');
     const deadlineAt = optionalTimestamp(record.deadlineAt, 'Milestone deadline');
     if (!deadlineAt) throw new ShipmentValidationError('Milestone deadline is required.');
-    return { milestoneType: milestoneType as ShipmentMilestoneType, deadlineAt };
+    const actualAt=optionalTimestamp(record.actualAt,'Milestone completion');
+    const actualSource=optionalText(record.actualSource,'Milestone actual source');
+    if(actualAt&&!actualSource)throw new ShipmentValidationError('Milestone actual source required with completion.');
+    return { milestoneType: milestoneType as ShipmentMilestoneType, deadlineAt, actualAt, actualSource };
   });
   if (milestones.length > SHIPMENT_MILESTONE_TYPES.length) throw new ShipmentValidationError('Too many milestones were supplied.');
   if (new Set(milestones.map((milestone) => milestone.milestoneType)).size !== milestones.length) throw new ShipmentValidationError('Each milestone type can be supplied once.');
@@ -85,6 +88,7 @@ export function validateShipmentInput(value: unknown): ShipmentInput {
 
   return {
     shipmentReference,
+    historical:input.historical===true||input.historical==='true',
     bookingNumber: optionalText(input.bookingNumber, 'Booking number'),
     containerNumber: optionalText(input.containerNumber, 'Container number'),
     billOfLadingReference: optionalText(input.billOfLadingReference, 'Bill of lading reference'),

@@ -5,11 +5,12 @@ import maplibregl from 'maplibre-gl';
 import OphanimMap from '@/components/OphanimMap';
 import { atlasFallbackBasemap } from '@/lib/presentation/basemap';
 import { atlasPresentationData, pickPublicMapPoint } from '@/lib/presentation/map-adapter';
+import type { ProviderMapLayer } from '@/lib/providers/types';
 import type { FeedId, PresentationFeed } from '@/lib/presentation/types';
 import type { MapProjection, MapStyle, MapViewport } from '@/lib/map-workspaces';
 import styles from './presentation.module.css';
 
-export default function PresentationGlobe({ feeds, hidden, onSelect, locate, projection, mapStyle, dayNight, embedded = false, initialViewport, onViewportChange, extraLayers }: {
+export default function PresentationGlobe({ feeds, hidden, onSelect, locate, projection, mapStyle, dayNight, embedded = false, initialViewport, onViewportChange, extraLayers, providerLayers }: {
   feeds: Partial<Record<FeedId, PresentationFeed>>; hidden: ReadonlySet<FeedId>;
   onSelect: (entity: Record<string, unknown>) => void;
   locate: {lat:number;lng:number;sequence:number;zoom?:number} | null;
@@ -19,6 +20,7 @@ export default function PresentationGlobe({ feeds, hidden, onSelect, locate, pro
   initialViewport?: MapViewport;
   onViewportChange?: (view:MapViewport)=>void;
   extraLayers?: Record<string,boolean>;
+  providerLayers?:ProviderMapLayer[];
 }) {
   const [basemap, setBasemap] = useState<maplibregl.StyleSpecification | null>(null);
   const [map, setMap] = useState<maplibregl.Map | null>(null);
@@ -79,7 +81,7 @@ export default function PresentationGlobe({ feeds, hidden, onSelect, locate, pro
   }, [map,projection]);
   return <>
     <div className={styles.globe} style={embedded?{position:'absolute',inset:0,width:'100%',height:'100%'}:undefined} aria-label="Live intelligence globe" data-testid="presentation-globe" data-ready={ready} data-renderer="ophanim-atlas" data-map-style={mapStyle} data-projection={projection}>
-      {publicPresentation && <OphanimMap data={atlas.data} activeLayers={activeLayers} initialView={initialView} projection={projection} mapStyle={mapStyle} flyToLocation={flyTo} publicPresentation={publicPresentation} onViewStateChange={onNativeViewport} />}
+      {publicPresentation && <OphanimMap providerLayers={providerLayers} onEntityClick={onSelect} data={atlas.data} activeLayers={activeLayers} initialView={initialView} projection={projection} mapStyle={mapStyle} flyToLocation={flyTo} publicPresentation={publicPresentation} onViewStateChange={onNativeViewport} />}
     </div>
     {!ready && <div className={styles.globePoster} style={embedded?{inset:0}:undefined} data-testid="globe-starter"><span>Starting Ophanim map...</span></div>}
     <div className={styles.attribution} style={embedded?{left:8,bottom:4}:undefined}>

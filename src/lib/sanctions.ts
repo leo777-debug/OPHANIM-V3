@@ -2,7 +2,8 @@
  * OFAC SDN sanctioned-entity lookup.
  *
  * Source: [OpenSanctions](https://www.opensanctions.org/) `us_ofac_sdn`
- * dataset, distributed as a simple CSV under CC-BY 4.0. OpenSanctions
+ * dataset, distributed as a simple CSV subject to OpenSanctions licensing. OpenSanctions
+ * Commercial use requires appropriate upstream rights. OpenSanctions
  * normalises the upstream Treasury data into a flat schema with stable
  * field names and an entity-type discriminator (`Person`, `Organization`,
  * `Vessel`, `Aircraft`, …), which is far easier to consume than the raw

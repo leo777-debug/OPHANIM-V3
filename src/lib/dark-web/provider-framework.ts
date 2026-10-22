@@ -1,3 +1,4 @@
+import { safeMetadata } from './scope';
 import type { DarkWebProvider, DarkWebSearchQuery } from './types';
 
 export class DarkWebProviderRegistry {
@@ -10,7 +11,7 @@ export async function searchDarkWeb(registry: DarkWebProviderRegistry, query: Da
   const providers = registry.select(query);
   const settled = await Promise.all(providers.map(async (provider) => {
     try { return { provider, mentions: await provider.search(query, context), error: undefined as string | undefined }; }
-    catch (error) { return { provider, mentions: [], error: error instanceof Error ? error.message : 'Provider failed.' }; }
+    catch { return { provider, mentions: [], error: 'Provider unavailable; check tenant configuration and source status.' }; }
   }));
-  return { mentions: settled.flatMap(({ provider, mentions }) => mentions.map((mention) => ({ providerId: provider.metadata.id, mention: provider.normalize(provider.redact(mention)) }))), diagnostics: settled.map(({ provider, mentions, error }) => ({ providerId: provider.metadata.id, resultCount: mentions.length, error })) };
+  return { mentions: settled.flatMap(({ provider, mentions }) => mentions.filter(safeMetadata).map((mention) => ({ providerId: provider.metadata.id, mention: provider.normalize(provider.redact(mention)) }))), diagnostics: settled.map(({ provider, mentions, error }) => ({ providerId: provider.metadata.id, resultCount: mentions.length, error })) };
 }

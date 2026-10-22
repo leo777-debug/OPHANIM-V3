@@ -1,0 +1,13 @@
+{
+  "syntheticFixturesOnly": true,
+  "checkedAt": "2026-10-21T18:59:36.409Z",
+  "checks": [
+    "Authenticated shipment → existing sea network → corridor layers",
+    "Anonymous read and foreign-origin write rejected",
+    "Browser Watchtower search displays Iranian coverage gap",
+    "Reviewed Muscat coastal player opens with explicit non-berth coverage; live playback audited separately using public IFrame API",
+    "Browser selects depot/gate → truck router stub → tenant route metadata → globe road layer; viewer and foreign-origin mutations denied",
+    "Evidence view → Python cold-start withholding → human call persisted in immutable ledger",
+    "No browser runtime exceptions"
+  ]
+}
