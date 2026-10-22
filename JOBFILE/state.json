@@ -62,7 +62,7 @@
     },
     {
       "id": "06-final-pr",
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": "C1-port-job-files-onto-pr27",
@@ -70,14 +70,46 @@
     },
     {
       "id": "C2-parity-pr25-reconcile",
-      "status": "todo"
+      "status": "done"
     },
     {
       "id": "C3-production-deploy",
+      "status": "done",
+      "note": "PRs 27, 28, 29 and 30 merged and live (merge a70b622). Database migrations are task P1."
+    },
+    {
+      "id": "P1-production-migrations",
       "status": "blocked",
-      "reason": "Waiting for founder go-ahead; merge order PR 27 -> this PR, then PR 25 reconcile; migrations must be applied to production."
+      "reason": "Not applied. Runner stopped on a line-ending checksum mismatch (013 recorded with CRLF); needs P2's runner fix, then the founder runs node db/run-migrations.mjs. Backup at D:\\OPHANIM\\backups\\ophanim-prod-before-migrations.dump."
+    },
+    {
+      "id": "P2-runner-line-endings",
+      "status": "todo",
+      "reason": "Fix edited locally in db/run-migrations.mjs, not committed; add .gitattributes *.sql text eol=lf."
+    },
+    {
+      "id": "P3-rotate-db-password",
+      "status": "todo",
+      "reason": "Password appeared in chat on 2026-10-22; reset in Supabase, update Vercel DATABASE_URL, redeploy. After P1."
+    },
+    {
+      "id": "P4-production-config",
+      "status": "todo",
+      "reason": "/api/health reports configuration incomplete: APP_URL, WATCHLIST_CRON_SECRET or IMPORT_CRON_SECRET missing."
+    },
+    {
+      "id": "P5-provider-keys",
+      "status": "todo"
+    },
+    {
+      "id": "P6-news-source-breadth",
+      "status": "todo"
+    },
+    {
+      "id": "P7-founder-questions",
+      "status": "todo"
     }
   ],
-  "resumeInstruction": "Job files now live on feat/job-files-on-panel, stacked on Codex PR 27, using The Panel ledger (025) with additive extension 20261022090000. feat/job-file-core (PR 26) is superseded. Do not merge or deploy without the founder.",
+  "resumeInstruction": "Everything is merged into feat/gdacs-weather-ai-overview and live. Read 'Pending tasks' in PROGRESS.md; start with P2 then P1. Production builds must stay on Turbopack.",
   "pullRequest": null
 }

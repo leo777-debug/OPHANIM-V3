@@ -264,3 +264,56 @@ from local commit `2a2b72e` (parity-and-reliability, unpushed). Read
   whole-schema test applying every migration of all three PRs in order (pgvector
   loaded for parity's knowledge migration); lint 463 = parity baseline 461 + 2
   pre-existing in Codex's UnifiedMap/route code (none in touched files).
+
+## Deployed (2026-10-22)
+
+- Merged into `feat/gdacs-weather-ai-overview` and live on https://ophanim-v3.vercel.app:
+  PR #27 (The Panel, Watchtower, Deep Watch, Route Lens), PR #28 (job files),
+  PR #29 (parity reconciled, Next 16.4.2, merge `b486d04`) and PR #30 (map labels on
+  Noto Sans, merge `a70b622`). PRs #25 and #26 closed as superseded.
+- Vercel build fix in #29: builds must use Turbopack. Vercel's adapter merges routes into
+  shared functions only from Turbopack's file hashes; a webpack build makes one function
+  per route and fails the Hobby plan's 12-function limit. Production runs on 7 functions.
+
+## Pending tasks
+
+1. **Apply the production database migrations (not done).** Production has
+   `DATABASE_URL` set but none of the new tables, so job files, The Panel, receipts,
+   Verify, knowledge and the parity runtime store return 503 or fall back to memory.
+   Pending: `024_verify`, `025_forecast_panel`, `025_knowledge`, `026_job_files`,
+   `026_knowledge_settings` and the Supabase migrations from `20261009141447` onwards.
+   All are additive (no drops, deletes or data rewrites).
+   - Backup already taken: `D:\OPHANIM\backups\ophanim-prod-before-migrations.dump`
+     (3.0 MB, schemas `public` and `app_private`, 2026-10-22 18:05 local).
+   - Run from PowerShell in `D:\OPHANIM\worktrees\parity-reconciled` with
+     `$env:DATABASE_URL = "<Supabase session pooler URI, port 5432>"`,
+     `$env:NODE_ENV = "production"`, then `node db/run-migrations.mjs`; afterwards
+     `Remove-Item Env:DATABASE_URL, Env:NODE_ENV`.
+   - Blocker found: production recorded `001`–`012` with LF checksums and `013` with
+     CRLF (applied from a Windows checkout), so the runner stopped with "Migration
+     checksum changed after application". Nothing was applied. Fix in task 2.
+   - Check afterwards: `/api/forecasts/receipts` no longer returns 503.
+2. **Commit the migration-runner line-ending fix.** `db/run-migrations.mjs` in the
+   worktree above accepts a stored checksum matching the file with LF or CRLF endings
+   and records LF checksums; any other change still stops it. It is edited locally and
+   not committed. Ship it with a `.gitattributes` rule (`*.sql text eol=lf`) so Windows
+   checkouts keep migrations on LF.
+3. **Rotate the Supabase database password.** It appeared in a chat on 2026-10-22.
+   Reset it in Supabase (Project Settings → Database), immediately update
+   `DATABASE_URL` in Vercel for every environment, then redeploy production. The site
+   cannot reach the database between the reset and the redeploy. Do this after task 1.
+4. **Complete production configuration.** `/api/health` reports
+   `configuration: incomplete`: one of `APP_URL`, `WATCHLIST_CRON_SECRET` or
+   `IMPORT_CRON_SECRET` is missing in Vercel (`DATABASE_URL` is set).
+5. **Live provider keys.** Job-file integrations (email intake, WhatsApp, vision
+   reading), The Panel worker (`FORECAST_WORKER_URL`), HIBP and Route Lens screening
+   run in demo or stub mode until their keys are set. See `/jobs/setup` and
+   Admin → Integrations.
+6. **News source breadth.** The map's 18 "feeds" are layers; news draws on 9 sources
+   (WorldMonitor's large count is hundreds of individual news feeds). Each new feed
+   needs its terms, coverage and language checked before it is added.
+7. **Founder questions** above (papers, software, unloading, air/sea mix, pooling).
+8. **Housekeeping.** Lint has 2 errors that predate this work in Codex's `UnifiedMap`
+   and route code. On this PC, the renamed Docker folders
+   (`%LOCALAPPDATA%\Docker\run.stale-*`, `%LOCALAPPDATA%\docker-secrets-engine.stale-*`)
+   can be deleted.
