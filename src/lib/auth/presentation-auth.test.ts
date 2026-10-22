@@ -7,7 +7,7 @@ vi.mock('./demo-access',()=>({presentationDemoActor:mocks.demo}));
 import { getAuthenticatedActor } from './actor';
 const request=()=>new NextRequest('http://localhost/api/presentation/admin',{headers:{Cookie:'ophanim_session=test-legacy-token'}});
 describe('presentation proxy preserves the existing authentication boundary',()=>{
-  beforeEach(()=>{vi.clearAllMocks();mocks.demo.mockResolvedValue(null);});
+  beforeEach(()=>{vi.clearAllMocks();vi.stubEnv('OPHANIM_REQUIRE_SIGN_IN','true');mocks.demo.mockResolvedValue(null);});
   it('cannot use a legacy cookie to bypass a configured Supabase session',async()=>{
     mocks.client.mockResolvedValue({auth:{getClaims:async()=>({data:null,error:new Error('Expired')})}});
     expect(await getAuthenticatedActor(request())).toBeNull();expect(mocks.query).not.toHaveBeenCalled();

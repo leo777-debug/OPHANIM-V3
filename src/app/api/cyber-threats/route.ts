@@ -19,6 +19,7 @@ type CyberThreat = {
   officialAdvisory: string;
   published?: string;
   modified?: string;
+  listedAt?: string;
   remediationDeadline?: string;
   confidence: 'primary';
   missingInformation: string[];
@@ -134,6 +135,7 @@ async function buildPayload(): Promise<Record<string, unknown>> {
       officialAdvisory: `https://www.cisa.gov/known-exploited-vulnerabilities-catalog?search_api_fulltext=${encodeURIComponent(item.cveID)}`,
       published: details?.published ?? item.dateAdded,
       modified: details?.modified,
+      listedAt: item.dateAdded,
       remediationDeadline: item.dueDate,
       confidence: 'primary',
       missingInformation,

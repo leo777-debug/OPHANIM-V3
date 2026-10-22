@@ -36,6 +36,7 @@ export function connectionProbe(service: IntegrationDefinition, env: Env): Probe
     return base ? { url: aiEndpoint(base, 'models').toString(), headers: aiAuthorization(key ?? ''), expected: 'json' } : null;
   }
   if (service.id === 'shodan' && env.SHODAN_API_KEY) return { url: `https://api.shodan.io/api-info?key=${encodeURIComponent(env.SHODAN_API_KEY)}`, expected: 'json' };
+  if (service.id === 'windy-webcams' && env.WINDY_WEBCAMS_API_KEY) return { url: 'https://api.windy.com/webcams/api/v3/webcams?limit=1&include=location', headers: { 'x-windy-api-key': env.WINDY_WEBCAMS_API_KEY }, expected: 'json' };
   if (service.id === 'gemini') { const key = Array.from({ length: 8 }, (_, i) => env[`GEMINI_API_KEY_${i + 1}`]).find(Boolean); return key ? { url: 'https://generativelanguage.googleapis.com/v1beta/models', headers: { 'x-goog-api-key': key }, expected: 'json' } : null; }
   if (service.id === 'resend' && env.RESEND_API_KEY) return { url: 'https://api.resend.com/domains', headers: { Authorization: `Bearer ${env.RESEND_API_KEY}` }, expected: 'json' };
   if (service.id === 'supabase') { const base = env.SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL, key = env.SUPABASE_PUBLISHABLE_KEY || env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY; return base && key ? { url: `${base.replace(/\/$/, '')}/auth/v1/health`, headers: { apikey: key }, expected: 'json' } : null; }

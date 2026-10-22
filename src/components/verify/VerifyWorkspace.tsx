@@ -22,7 +22,7 @@ export default function VerifyWorkspace() {
   const [ai, setAi] = useState(false), [consent, setConsent] = useState(false), [share, setShare] = useState<Share | null>(null);
   const loadHistory = useCallback(async () => {
     try { const response = await fetch('/api/verify/history', { cache: 'no-store' }); const data = await response.json(); if (!response.ok) throw new Error(data.error); setHistory(data.results); setHistoryNotice(data.reason || (data.results.length ? '' : 'No saved checks yet.')); }
-    catch { setHistoryNotice('History is unavailable. Check your sign-in and database connection.'); }
+    catch { setHistoryNotice('History is unavailable. Check the workspace database connection.'); }
   }, []);
   useEffect(() => {
     const controller = new AbortController();
@@ -49,7 +49,7 @@ export default function VerifyWorkspace() {
   function field(key: keyof ParsedClaim, value: unknown) { setClaim((current) => current ? { ...current, [key]: value } : null); }
   function placeField(key: keyof ParsedClaim['place'], value: unknown) { setClaim((current) => current ? { ...current, place: { ...current.place, [key]: value } } : null); }
   return <main className={styles.page}>
-    <header className={styles.header}><Link href="/atlas"><ArrowLeft size={18} /> Atlas</Link><Link href="/verify" className={styles.brand}><ShieldCheck /> OPHANIM <span>VERIFY</span></Link><Link href="/login">Sign in</Link></header>
+    <header className={styles.header}><Link href="/atlas"><ArrowLeft size={18} /> Atlas</Link><Link href="/verify" className={styles.brand}><ShieldCheck /> OPHANIM <span>VERIFY</span></Link><Link href="/operations">Workspace</Link></header>
     <div className={styles.title}><p>PUBLIC EVENT VERIFICATION</p><h1>Is this true?</h1></div>
     <div className={styles.layout}><div className={styles.main}>
       <form className={styles.form} onSubmit={(event) => { event.preventDefault(); void run(async () => { const data = await post('/api/verify/parse', { text, url, urlPermission: permission, useAi: ai, aiConfig: config() }); setClaim(data.claim); setParser(data.parser); setNotice(data.warning); }); }}>

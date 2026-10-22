@@ -13,8 +13,12 @@ import {
   Maximize2, Minimize2, Gavel, Bitcoin, Phone, Terminal, ShieldAlert
 } from 'lucide-react';
 import { ipToNumber, numberToIp, calculateSubnetStart, classifyDevice, assessRisk, batchFetch, ShodanInternetDBResponse, SweepDevice } from '@/lib/osint-utils';
+import ShodanPanel from '@/components/ShodanPanel';
+import CameraIndexPanel from '@/components/CameraIndexPanel';
+import type { CctvCamera } from '@/app/api/cctv/types';
 
 const TABS = [
+  { id: 'cameras', label: 'CAMERAS', icon: Globe, placeholder: 'Published camera indexes', color: '#5BB6FF' },
   { id: 'scanner', label: 'HTTPS CHECK', icon: Radar, placeholder: 'IP or hostname', color: '#5BB6FF' },
   { id: 'vuln', label: 'VULN SWEEP', icon: Bug, placeholder: 'IP or hostname', color: '#FF3D3D' },
 
@@ -26,7 +30,7 @@ const TABS = [
   { id: 'ssl', label: 'SSL/TLS', icon: Shield, placeholder: 'Domain name', color: '#76FF03' },
   { id: 'subdomains', label: 'SUBDOMAINS', icon: Layers, placeholder: 'Domain to enumerate', color: '#00BCD4' },
   { id: 'tech', label: 'TECH DETECT', icon: Code, placeholder: 'Approved hostname', color: '#9C27B0' },
-  { id: 'shodan', label: 'SHODAN IOT', icon: Network, placeholder: 'IP address', color: '#FF3D3D' },
+  { id: 'shodan', label: 'SHODAN', icon: Network, placeholder: 'IP address or Shodan query', color: '#FF3D3D' },
   { id: 'ip', label: 'IP LOOKUP', icon: LocateFixed, placeholder: 'IP address', color: '#5BB6FF' },
   { id: 'bgp', label: 'BGP ROUTE', icon: Globe, placeholder: 'IP or ASN', color: '#5BB6FF' },
   { id: 'mac', label: 'MAC ADDR', icon: Fingerprint, placeholder: 'MAC address', color: '#FFD700' },
@@ -36,9 +40,9 @@ const TABS = [
   { id: 'sweep', label: 'IP SWEEP', icon: Crosshair, placeholder: 'Enter IP address (e.g. 8.8.8.8)', color: '#FF3D3D' },
 ];
 
-interface OsintPanelProps { initialTab?: 'scanner' | 'shodan' | 'bgp' | 'ip'; isOpen?: boolean; onClose?: () => void; isMobile?: boolean; onSweepVisualize?: (data: any) => void; onScanGeolocate?: (target: string, data: any) => void; }
+interface OsintPanelProps { initialTab?: 'scanner' | 'shodan' | 'bgp' | 'ip' | 'cameras'; isOpen?: boolean; onClose?: () => void; isMobile?: boolean; onSweepVisualize?: (data: any) => void; onScanGeolocate?: (target: string, data: any) => void; onCameraSelect?: (camera: CctvCamera) => void; }
 
-function OsintPanelInner({ initialTab = 'scanner', isMobile, onSweepVisualize, onScanGeolocate }: OsintPanelProps) {
+function OsintPanelInner({ initialTab = 'scanner', isMobile, onSweepVisualize, onScanGeolocate, onCameraSelect }: OsintPanelProps) {
   const [activeTab, setActiveTab] = useState(initialTab as string);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [query, setQuery] = useState('');
@@ -750,7 +754,9 @@ function OsintPanelInner({ initialTab = 'scanner', isMobile, onSweepVisualize, o
       </div>
 
       {/* Input Area */}
-      <div className="flex flex-col gap-1.5">
+      {activeTab === 'shodan' && <ShodanPanel />}
+      {activeTab === 'cameras' && <CameraIndexPanel onSelect={onCameraSelect} />}
+      <div className={activeTab === 'shodan' || activeTab === 'cameras' ? 'hidden' : 'flex flex-col gap-1.5'}>
         <div className="flex gap-1.5">
           <div className="flex-1 relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--text-muted)]" />

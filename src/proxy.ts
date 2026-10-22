@@ -1,6 +1,5 @@
-import type { NextFetchEvent, NextRequest } from 'next/server';
+import { NextResponse, type NextFetchEvent, type NextRequest } from 'next/server';
 import { refreshSupabaseSession } from '@/lib/supabase/proxy';
-import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { getSupabasePublicConfig } from '@/lib/supabase/config';
 import { getAuthenticatedActor } from '@/lib/auth/actor';
@@ -10,8 +9,18 @@ import { sameOrigin } from '@/lib/presentation/http';
 import { VIEW_COOKIE } from '@/lib/presentation/types';
 import { parseAtlasTool } from '@/lib/atlas-tools';
 
+import { signInRequired } from '@/lib/auth/access-mode';
+import { safeReturnTo } from '@/lib/auth/return-to';
+
 export async function proxy(request: NextRequest, event: NextFetchEvent) {
-  const response = await refreshSupabaseSession(request);
+  const sharedAccess = !signInRequired();
+  if (sharedAccess && request.nextUrl.pathname === '/login') {
+    const target = safeReturnTo(request.nextUrl.searchParams.get('returnTo'));
+    const destination = new URL(target, request.url);
+    if (destination.pathname === '/login' || destination.pathname.startsWith('/api/')) destination.pathname = '/operations';
+    return NextResponse.redirect(destination);
+  }
+  const response = sharedAccess ? NextResponse.next({ request }) : await refreshSupabaseSession(request);
   const path=request.nextUrl.pathname;
   if(protectedPresentationApi(path,request.method,Boolean(process.env.CUSTOMER_AIS_API_URL || process.env.MARINETRAFFIC_AIS_API_URL))) {
     try {

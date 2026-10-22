@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Activity, CheckCircle2, Database, KeyRound, Map, RefreshCw, XCircle } from 'lucide-react';
+import type { AtlasFeedStatus } from '@/lib/atlas-freshness';
 
 type ProviderRecord = {
   name: string;
@@ -32,7 +33,7 @@ type ProviderResponse = {
   timestamp: string;
 };
 
-export default function ProviderStatusPanel() {
+export default function ProviderStatusPanel({ freshness = [] }: { freshness?: AtlasFeedStatus[] }) {
   const [state, setState] = useState<ProviderResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -82,6 +83,18 @@ export default function ProviderStatusPanel() {
       </div>
 
       <div className="max-h-[420px] overflow-y-auto">
+        {freshness.length > 0 && <div className="border-b border-white/10 px-4 py-3">
+          <h3 className="text-xs font-semibold text-white">Current data</h3>
+          <p className="mt-1 text-[10px] leading-4 text-white/55">Positions: last 10 minutes. Reports: last 24 hours. Unexpired weather warnings remain active.</p>
+          {freshness.map((feed) => <div key={feed.endpoint} className="mt-3 border-t border-white/10 pt-2 text-[10px]">
+            <div className="flex justify-between gap-3"><span className="text-white/80">{feed.label}</span><span className={feed.current > 0 && !feed.reason ? 'text-emerald-300' : 'text-amber-200'}>{feed.current} current</span></div>
+            <p className="mt-1 text-white/45">{feed.withheld} stale or undated withheld</p>
+            <p className="mt-1 text-white/45">Latest observation: {feed.latestObservation ? new Date(feed.latestObservation).toISOString().replace('T', ' ').replace(/\.\d+Z$/, ' UTC') : 'Unavailable'}</p>
+            {feed.checkedAt && <p className="mt-1 text-white/45">Last check: {new Date(feed.checkedAt).toISOString().replace('T', ' ').replace(/\.\d+Z$/, ' UTC')}</p>}
+            {feed.reason && <p className="mt-1 text-amber-200">{feed.reason}</p>}
+          </div>)}
+          <p className="mt-3 text-[10px] leading-4 text-white/55">Cables, port locations and sanctions-associated ports are reference data, not live positions.</p>
+        </div>}
         {!loading && !state && <div className="px-4 py-7 text-center text-xs text-white/45">Source status is temporarily unavailable.</div>}
         {state?.productionSources.map((source) => {
           const label = source.mode === 'core' ? 'CORE' : source.mode === 'supporting' ? 'SUPPORTING' : source.mode === 'optional' ? 'OPTIONAL' : 'OFF BY DEFAULT';

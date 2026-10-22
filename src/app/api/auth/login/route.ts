@@ -4,8 +4,10 @@ import { createSession, setOrganizationCookie, setSessionCookie } from '@/lib/au
 import { getClientIp, isRateLimited } from '@/lib/ssrf-guard';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { db } from '@/lib/watchlists/db';
+import { signInRequired } from '@/lib/auth/access-mode';
 
 export async function POST(request: NextRequest) {
+  if (!signInRequired()) return NextResponse.json({ ok: true, sharedWorkspace: true });
   if (isRateLimited(getClientIp(request), 10, 60_000)) return NextResponse.json({ error: 'Rate limit exceeded.' }, { status: 429 });
   let body: { email?: unknown; password?: unknown; organizationSlug?: unknown };
   try { body = await request.json(); } catch { return NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 }); }

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Search, X, MapPin, Navigation, Building2, Globe2, Landmark } from 'lucide-react';
 import type { NormalizedSearchResult, SearchAction } from '@/lib/providers/types';
+import { shodanQuery } from '@/lib/shodan/query';
 
 /* ═══════════════════════════════════════════════════════════════
    OPHANIM — Enhanced Search / Locate Bar
@@ -94,11 +95,12 @@ export default function SearchBar({ onLocate, onAction, alwaysExpanded = false }
     return () => document.removeEventListener('mousedown', handler);
   }, [open, alwaysExpanded]);
 
-  const handleSearch = useCallback(async (q: string) => {
+  const handleSearch = useCallback(async (q: string, confirmed = false) => {
     setValue(q);
     setSelectedIdx(-1);
 
     if (timerRef.current) clearTimeout(timerRef.current);
+    if (shodanQuery(q) && !confirmed) { requestRef.current++; setLoading(false); setResults([]); setMessage(''); return; }
     if (q.trim().length < 2) { setResults([]); setMessage(''); return; }
 
     timerRef.current = setTimeout(async () => {
@@ -106,7 +108,7 @@ export default function SearchBar({ onLocate, onAction, alwaysExpanded = false }
       setLoading(true);
       setMessage('');
       try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&limit=8`);
+        const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&limit=8${confirmed ? '&confirm=true' : ''}`);
         const data = await res.json() as { results?: SearchResult[]; error?: string };
         if (!res.ok) throw new Error(data.error || 'Search is temporarily unavailable.');
         if (request !== requestRef.current) return;
@@ -164,6 +166,7 @@ export default function SearchBar({ onLocate, onAction, alwaysExpanded = false }
     }
     if (e.key === 'Enter') {
       e.preventDefault();
+      if (shodanQuery(value) && !results.length) { if (!loading) void handleSearch(value, true); return; }
       if (selectedIdx >= 0 && selectedIdx < results.length) {
         handleSelect(results[selectedIdx]);
       } else if (results.length > 0) {
@@ -201,6 +204,7 @@ export default function SearchBar({ onLocate, onAction, alwaysExpanded = false }
           spellCheck={false}
         />
         {loading && <div className="w-3 h-3 border border-[var(--gold-primary)] border-t-transparent rounded-full animate-spin" />}
+        {shodanQuery(value) && !results.length && <button type="button" disabled={loading} title="Submit Shodan search (may consume query credits)" aria-label="Submit Shodan search" onClick={() => handleSearch(value, true)} className="shrink-0 p-1 text-[var(--cyan-primary)] disabled:opacity-40"><Search className="h-4 w-4" /></button>}
         <span className="text-[8px] text-[var(--text-muted)] font-mono opacity-70 hidden md:inline">CTRL+F</span>
         {(value || !alwaysExpanded) && (
           <button onClick={() => {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedActor } from '@/lib/auth/actor';
 import { requestIntegration } from '@/lib/integrations/probes';
 import WebSocket from 'ws';
+import { isRecentObservation, POSITION_MAX_AGE_MS, sourceTime } from '@/lib/atlas-freshness';
 
 /**
  * OSIRIS — Maritime Intelligence
@@ -178,7 +179,8 @@ async function fetchDigitraffic(): Promise<any[]> {
           destination: (m.destination && m.destination.trim()) || '',
           type: aisTypeToCategory(m.shipType || 0),
           source: 'digitraffic',
-          timestamp: Date.now(),
+          timestamp: sourceTime(p.timestampExternal),
+          observedAt: sourceTime(p.timestampExternal),
         });
       }
       if (ships.length > 0) { dtCache = ships; dtCacheAt = Date.now(); }
@@ -214,7 +216,8 @@ function normalizeCustomerAisVessel(value: any): any | null {
     destination: String(value?.destination ?? '').trim(),
     type: aisTypeToCategory(Number(value?.shipType ?? value?.typeCode ?? 0)),
     source: 'customer-ais',
-    timestamp: Date.now(),
+    timestamp: sourceTime(value?.observedAt ?? value?.timestamp ?? value?.position?.timestamp),
+    observedAt: sourceTime(value?.observedAt ?? value?.timestamp ?? value?.position?.timestamp),
   };
 }
 
@@ -280,7 +283,8 @@ function normalizeMarineTrafficVessel(value: any): any | null {
     destination: String(value?.DESTINATION ?? value?.destination ?? '').trim(),
     type: marineTrafficCategory(value?.TYPE_NAME ?? value?.shipType ?? value?.SHIPTYPE ?? value?.type),
     source: 'marinetraffic',
-    timestamp: Date.now(),
+    timestamp: sourceTime(value?.TIMESTAMP ?? value?.timestamp ?? value?.POSITION?.TIMESTAMP),
+    observedAt: sourceTime(value?.TIMESTAMP ?? value?.timestamp ?? value?.POSITION?.TIMESTAMP),
   };
 }
 
@@ -490,7 +494,7 @@ function connectAisStream() {
       if (!mmsi) return;
 
       const existing = shipsCache.get(mmsi) || {
-        id: mmsi, mmsi: mmsi, timestamp: Date.now()
+        id: mmsi, mmsi: mmsi, timestamp: null
       };
 
       // Extract Name from MetaData if available (present in most messages)
@@ -504,7 +508,8 @@ function connectAisStream() {
         existing.lng = report.Longitude;
         existing.speed = report.Sog;
         existing.heading = report.TrueHeading || report.Cog;
-        existing.timestamp = Date.now();
+        existing.timestamp = sourceTime(parsed.MetaData?.time_utc);
+        existing.observedAt = existing.timestamp;
       } 
       else if (parsed.MessageType === "ShipStaticData" && parsed.Message?.ShipStaticData) {
         const staticData = parsed.Message.ShipStaticData;
@@ -590,7 +595,7 @@ export async function GET(request?: NextRequest) {
   // Clean up stale aisstream ships (older than 10 minutes)
   const now = Date.now();
   for (const [mmsi, ship] of shipsCache.entries()) {
-    if (now - ship.timestamp > 10 * 60 * 1000) {
+    if (!isRecentObservation(ship.timestamp, POSITION_MAX_AGE_MS, now)) {
       shipsCache.delete(mmsi);
     }
   }
@@ -608,8 +613,10 @@ export async function GET(request?: NextRequest) {
   for (const s of dtShips) byId.set(`dt-${s.mmsi}`, s);
   for (const s of customerShips) byId.set(`customer-${s.mmsi}`, s);
   for (const s of marineTrafficShips) byId.set(`marinetraffic-${s.mmsi}`, s);
-  for (const s of shipsCache.values()) byId.set(`ais-${s.mmsi}`, s);
-  let ships = Array.from(byId.values());
+  for (const s of shipsCache.values()) byId.set(`ais-${s.mmsi}`, s); // aisstream (if keyed)
+  const allShips = Array.from(byId.values());
+  const freshShips = allShips.filter((ship) => isRecentObservation(ship.observedAt ?? ship.timestamp, POSITION_MAX_AGE_MS, now));
+  let ships = freshShips;
   if (ships.length > SHIP_CAP) ships = ships.slice(0, SHIP_CAP);
 
   // Dynamically calculate live traffic (Fast approximation of Haversine)
@@ -681,6 +688,8 @@ export async function GET(request?: NextRequest) {
     total_ports: dynamicPorts.length,
     total_chokepoints: dynamicChokepoints.length,
     total_ships: ships.length,
+    withheld_stale_or_undated: allShips.length - freshShips.length,
+    position_max_age_minutes: POSITION_MAX_AGE_MS / 60_000,
     sources: ['Digitraffic marine AIS']
       .concat(process.env.AIS_API_KEY ? ['AISStream'] : [])
       .concat(!publicOnly && process.env.CUSTOMER_AIS_API_URL ? ['Customer AIS provider'] : [])

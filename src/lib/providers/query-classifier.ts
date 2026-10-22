@@ -1,4 +1,5 @@
 import type { Coordinates, ProviderQuery } from './types';
+import { shodanQuery } from '@/lib/shodan/query';
 
 export interface SearchInput {
   query?: string | null;
@@ -69,6 +70,10 @@ export function classifySearch(input: SearchInput): ProviderQuery {
 
   const query = input.query?.trim() ?? '';
   if (!query || query.length > 200) throw new Error('Search query must be between 1 and 200 characters');
+  const shodan = shodanQuery(query);
+  if (shodan) {
+    return { intent: 'shodan_search', entityType: 'command', query: shodan, limit };
+  }
 
   const coordinates = parseCoordinates(query);
   if (coordinates) {
