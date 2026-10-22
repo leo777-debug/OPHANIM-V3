@@ -13,12 +13,13 @@ export default function LogisticsTopBar() {
   const [actor, setActor] = useState<Actor | null>(null);
   const [providers, setProviders] = useState<ProviderState | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [requiresSignIn, setRequiresSignIn] = useState<boolean | null>(null);
 
   useEffect(() => {
     let active = true;
     Promise.all([
       fetch("/api/auth/me", { cache: "no-store" }).then((response) =>
-        response.ok ? response.json() : null,
+        response.json(),
       ),
       fetch("/api/providers", { cache: "no-store" }).then((response) =>
         response.ok ? response.json() : null,
@@ -27,6 +28,7 @@ export default function LogisticsTopBar() {
       .then(([auth, providerState]) => {
         if (!active) return;
         setActor(auth?.actor ?? null);
+        setRequiresSignIn(auth?.signInRequired ?? true);
         setProviders(
           providerState
             ? { available: providerState.available, total: providerState.total }
@@ -46,7 +48,8 @@ export default function LogisticsTopBar() {
   };
 
   const demo = actor?.authProvider === 'presentation-demo';
-  const organization = demo ? 'Presentation demo (public)' : actor?.organizationId
+  const sharedAccess = requiresSignIn === false;
+  const organization = sharedAccess ? 'Ophanim shared workspace' : demo ? 'Presentation demo (public)' : actor?.organizationId
     ? `Organization ${actor.organizationId.slice(0, 8)}`
     : "Organization workspace";
   const health = providers
@@ -75,7 +78,7 @@ export default function LogisticsTopBar() {
         >
           <Bell aria-hidden="true" size={17} />
         </button>
-        <div className="ops-user-menu">
+        {sharedAccess ? <span className="ops-user-menu__trigger">Shared access · Full workspace</span> : requiresSignIn === true ? <div className="ops-user-menu">
           <button
             type="button"
             className="ops-user-menu__trigger"
@@ -94,7 +97,7 @@ export default function LogisticsTopBar() {
               </button>
             </div>
           )}
-        </div>
+        </div> : null}
       </div>
     </header>
   );

@@ -117,6 +117,19 @@ Installing an optional tool or configuring a provider is still necessary where
 required. A wrapper does not install the external tool or grant access to its
 data. Use active scanning only for targets you own or are authorized to assess.
 
+### Shodan
+
+Set server-only `SHODAN_API_KEY`, then sign in and open **Recon > Shodan**.
+The tool supports database search, counts/facets, batch IP lookups, DNS helpers,
+credit information, and scan status. Global search accepts `shodan: nginx` or
+filters such as `product:nginx country:AE port:443`. Observation dates are shown;
+Shodan results are not necessarily live or same-day.
+
+Active scans require workspace-owner permission, a target allowlist in
+`AUTHORIZED_SCAN_TARGETS`, an explicit authorization checkbox, and PostgreSQL
+audit storage. Empty allowlists disable scans. Scanning consumes Shodan credits;
+no active scans run automatically. See [Shodan setup and API usage](docs/SHODAN.md).
+
 ### Watchlists, Notifications and Operations
 
 - Persisted watchlists, entity pages and provider checks.

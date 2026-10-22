@@ -24,6 +24,9 @@ export interface CctvCamera {
   stream_type?: CctvStreamType;
   external_url?: string;
   source: string;
+  country_code?: string;
+  observation_time?: string;
+  media_kind?: 'live' | 'publisher_page';
   /** Added by Ophanim after source collection; never asserted by the upstream provider. */
   operational_category?: OperationalCameraCategory;
   operational_scope?: OperationalCameraScope;

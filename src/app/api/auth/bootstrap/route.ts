@@ -6,6 +6,8 @@ import { getClientIp, isRateLimited } from '@/lib/ssrf-guard';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { db } from '@/lib/watchlists/db';
+import { signInRequired } from '@/lib/auth/access-mode';
+import { SHARED_ORGANIZATION_ID } from '@/lib/auth/shared-workspace';
 
 interface BootstrapBody {
   token?: unknown;
@@ -38,7 +40,7 @@ async function bootstrapWithSupabase(body: BootstrapBody): Promise<NextResponse 
   try {
     await client.query('begin');
     await client.query(`select pg_advisory_xact_lock(hashtext('ophanim_bootstrap'))`);
-    const count = await client.query<{ count: string }>('select count(*)::text as count from ophanim_organizations');
+    const count = await client.query<{ count: string }>('select count(*)::text as count from ophanim_organizations where id <> $1', [SHARED_ORGANIZATION_ID]);
     if (Number(count.rows[0]?.count) > 0) {
       await client.query('rollback');
       return NextResponse.json({ error: 'Bootstrap has already been completed.' }, { status: 409 });
@@ -81,6 +83,7 @@ async function bootstrapWithSupabase(body: BootstrapBody): Promise<NextResponse 
 }
 
 export async function POST(request: NextRequest) {
+  if (!signInRequired()) return NextResponse.json({ ok: true, sharedWorkspace: true });
   if (isRateLimited(getClientIp(request), 10, 60_000)) return NextResponse.json({ error: 'Rate limit exceeded.' }, { status: 429 });
   const bootstrapToken = process.env.OPHANIM_BOOTSTRAP_TOKEN;
   if (!bootstrapToken) return NextResponse.json({ error: 'Bootstrap is not configured.' }, { status: 503 });
@@ -99,7 +102,7 @@ export async function POST(request: NextRequest) {
   try {
     await client.query('begin');
     await client.query(`select pg_advisory_xact_lock(hashtext('ophanim_bootstrap'))`);
-    const count = await client.query<{ count: string }>('select count(*)::text as count from ophanim_organizations');
+    const count = await client.query<{ count: string }>('select count(*)::text as count from ophanim_organizations where id <> $1', [SHARED_ORGANIZATION_ID]);
     if (Number(count.rows[0]?.count) > 0) {
       await client.query('rollback');
       return NextResponse.json({ error: 'Bootstrap has already been completed.' }, { status: 409 });

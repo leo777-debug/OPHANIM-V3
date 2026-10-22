@@ -19,10 +19,10 @@ describe('public AIS (Digitraffic + AISStream) and organization-licensed AIS iso
     vi.stubGlobal('shipsCache', new Map([[1, { mmsi: 1, name: 'STREAM SHIP', lat: 25, lng: 55, timestamp: Date.now() }]]));
     vi.stubGlobal('isAisConnecting', false);
     vi.stubGlobal('fetch', vi.fn(async (input: string) => input.endsWith('/locations')
-      ? Response.json({ features: [{ geometry: { coordinates: [24, 60] }, properties: { mmsi: 2, sog: 5 } }] })
+      ? Response.json({ features: [{ geometry: { coordinates: [24, 60] }, properties: { mmsi: 2, sog: 5, timestampExternal: Date.now() } }] })
       : Response.json([{ mmsi: 2, name: 'PUBLIC BALTIC', shipType: 70 }])));
     mocks.actor.mockResolvedValue({ organizationId: organization, userId: 'fixture-user', role: 'owner' });
-    mocks.transport.mockResolvedValue(JSON.stringify([{ mmsi: 3, name: 'PRIVATE CUSTOMER', lat: 26, lng: 56 }]));
+    mocks.transport.mockResolvedValue(JSON.stringify([{ mmsi: 3, name: 'PRIVATE CUSTOMER', lat: 26, lng: 56, timestamp: Date.now() }]));
   });
   afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
 

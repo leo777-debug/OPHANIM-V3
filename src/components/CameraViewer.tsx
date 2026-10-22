@@ -37,7 +37,7 @@ export default function CameraViewer({ camera, onClose, onLocate }: CameraViewer
   const externalFeedUrl = camera?.external_url || camera?.feed_url;
   const externalOnly = Boolean(camera?.external_url && !camera?.feed_url && !camera?.stream_url);
   const isLiveVideo = streamType !== 'jpg';
-  const feedLabel = isLiveVideo ? 'LIVE VIDEO' : 'REFRESHED PUBLIC IMAGE';
+  const feedLabel = externalOnly ? 'PUBLISHER PAGE' : isLiveVideo ? 'LIVE VIDEO' : 'REFRESHED PUBLIC IMAGE';
   const operationalLabel = camera?.operational_category
     ? camera.operational_category.replace(/_/g, ' ')
     : 'public camera';
@@ -165,6 +165,7 @@ export default function CameraViewer({ camera, onClose, onLocate }: CameraViewer
                     <h3 className="text-[12px] md:text-[13px] font-mono font-bold tracking-widest truncate text-white uppercase" style={{ textShadow: '0 0 10px rgba(255,255,255,0.3)' }}>{camera.name}</h3>
                     <p className="mt-1 text-[7px] font-mono uppercase tracking-wider text-[var(--text-muted)]">{operationalLabel} {camera.operational_context ? `• ${camera.operational_context}` : ''}</p>
                     <p className="text-[7px] md:text-[8px] font-mono text-[var(--gold-primary)] uppercase tracking-wider opacity-80">{camera.city}, {camera.country} • SOURCE: {camera.source}</p>
+                    {camera.source === 'Windy Webcams' && <p className="text-xs"><a href="https://www.windy.com" target="_blank" rel="noopener noreferrer">Webcams provided by windy.com</a> – <a href="https://www.windy.com/webcams/add" target="_blank" rel="noopener noreferrer">add new webcam</a></p>}
                   </div>
                 </div>
                 
@@ -220,8 +221,8 @@ export default function CameraViewer({ camera, onClose, onLocate }: CameraViewer
             {externalOnly ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-30 backdrop-blur-sm p-4 text-center">
                 <ExternalLink className="w-6 h-6 mb-3 opacity-50" style={{ color: 'var(--gold-primary)' }} />
-                <p className="text-[10px] font-mono uppercase tracking-widest" style={{ color: 'var(--gold-primary)' }}>SECURE FEED ENCRYPTED</p>
-                <p className="text-[8px] font-mono text-[var(--text-muted)] mt-2 max-w-[80%] uppercase">This feed requires external clearance</p>
+                <p className="text-[10px] font-mono uppercase tracking-widest" style={{ color: 'var(--gold-primary)' }}>PUBLISHER CAMERA PAGE</p>
+                <p className="text-[8px] font-mono text-[var(--text-muted)] mt-2 max-w-[80%] uppercase">Open the publisher for available images, timelapse or playback.</p>
                 <a 
                   href={externalFeedUrl} 
                   target="_blank" 
@@ -229,7 +230,7 @@ export default function CameraViewer({ camera, onClose, onLocate }: CameraViewer
                   className="mt-4 px-4 py-2 rounded text-[9px] font-mono font-bold tracking-widest transition-all hover:bg-white/10"
                   style={{ border: '1px solid var(--border-primary)', color: 'var(--gold-primary)' }}
                 >
-                  ACCESS TERMINAL
+                  OPEN PUBLISHER
                 </a>
               </div>
             ) : error ? (

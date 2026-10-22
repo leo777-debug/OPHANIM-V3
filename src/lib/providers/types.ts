@@ -19,7 +19,7 @@ export const SEARCH_INTENTS = [
   'forward_geocode', 'reverse_geocode', 'coordinate_lookup', 'ip_lookup', 'domain_lookup',
   'email_lookup', 'username_lookup', 'company_lookup', 'organization_lookup', 'person_lookup', 'vessel_lookup',
   'port_lookup', 'imo_lookup', 'mmsi_lookup', 'country_lookup', 'region_lookup', 'map_command',
-  'dark_web_lookup', 'natural_language',
+  'dark_web_lookup', 'shodan_search', 'natural_language',
 ] as const;
 export type SearchIntent = (typeof SEARCH_INTENTS)[number];
 
@@ -87,6 +87,7 @@ export interface NormalizedSearchResult {
 }
 
 export interface ProviderExecutionContext {
+  organizationId?: string;
   signal: AbortSignal;
   locale: string;
   origin?: string;
