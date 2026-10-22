@@ -54,6 +54,21 @@ describe('restored original public map feeds',()=>{
     expect(atlas.data.cameras).toHaveLength(1);
     expect(JSON.stringify(cameras)).not.toMatch(/NEVER|SECRET|PRIVATE|TENANT/);
   });
+  it('keeps openly published camera image and stream links for the player',()=>{
+    const cameras=live('cameras',{cameras:[
+      {id:'img',name:'Snapshot camera',lat:51.5,lng:-0.1,feed_url:'https://images.example.org/cam/1.jpg',source:'Test DOT'},
+      {id:'hls',name:'Stream camera',lat:42.5,lng:27.4,stream_url:'https://video.example.org/cam.m3u8',stream_type:'hls',source:'Test city'},
+      {id:'yt',name:'YouTube camera',lat:32,lng:34.8,stream_url:'https://www.youtube.com/embed/abc?autoplay=1&mute=1',stream_type:'iframe',source:'YouTube Live'},
+      {id:'bad',name:'Keyed camera',lat:40,lng:-74,stream_url:'https://video.example.org/cam.m3u8?token=NEVER',stream_type:'hls',feed_url:'https://user:pw@example.org/x.jpg'},
+    ]});
+    const [img,hls,yt,bad]=cameras.features.map(feature=>feature.properties!);
+    expect(img).toMatchObject({feed_url:'https://images.example.org/cam/1.jpg'});
+    expect(hls).toMatchObject({stream_url:'https://video.example.org/cam.m3u8',stream_type:'hls'});
+    expect(yt.sourceUrl).toBe('https://www.youtube.com/embed/abc?autoplay=1&mute=1');
+    expect(bad.stream_url).toBeUndefined();
+    expect(bad.feed_url).toBeUndefined();
+    expect(bad.stream_type).toBeUndefined();
+  });
   it('restores broadcaster and approximate news markers without asserting verified live video',()=>{
     const broadcasts=live('broadcasts',{feeds:[{name:'Test newsroom',city:'Test city',lat:25,lng:55,url:'https://example.invalid/news'}]});
     const news=live('news',{news:[{id:'a',title:'Test story',coords:[25,55],coords_default:true,link:'https://example.invalid/story'}]});

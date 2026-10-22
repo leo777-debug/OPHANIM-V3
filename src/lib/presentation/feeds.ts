@@ -126,10 +126,16 @@ export function normalizePublicFeed(id: FeedId, raw: unknown, fetchedAt = new Da
     // Do not relabel that timestamp as the source's position observation time.
     const observedAt=definition.reference?null:id==='fires'?fireObservationTime(item):publicTime(item.observedAt ?? (id==='flights'||id==='maritime'||id==='cameras' ? undefined : item.timestamp ?? item.time ?? item.date ?? item.updated_at));
     const name=text(item.name ?? item.label ?? item.callsign ?? item.title ?? item.place ?? item.malware ?? item.id,`${definition.name} ${index+1}`);
-    const properties:Record<string,unknown>={id:text(item.id ?? item.icao24 ?? item.mmsi,`${id}-${index}`),name,type:text(item.type,id),source:text(item.source,definition.source),sourceUrl:publicUrl(item.sourceUrl ?? item.external_url ?? item.url ?? item.reference ?? item.feed_url) || definition.url,observedAt,lat,lng,reference:result.reference};
+    const properties:Record<string,unknown>={id:text(item.id ?? item.icao24 ?? item.mmsi,`${id}-${index}`),name,type:text(item.type,id),source:text(item.source,definition.source),sourceUrl:publicUrl(item.sourceUrl ?? item.external_url ?? item.url ?? item.reference ?? item.feed_url ?? item.stream_url) || definition.url,observedAt,lat,lng,reference:result.reference};
     for (const key of ['mmsi','imo','registration','icao24','model','callsign','category','aircraft_category','heading','speed','speed_knots','alt','magnitude','depth','severity','country','city','destination','color','noradId','mission','brightness','ip','malware','status','threat_type','operational_category','vessel','classification','port']) {
       if (typeof item[key]==='string') properties[key]=text(item[key]);
       else if (typeof item[key]==='number' && Number.isFinite(item[key])) properties[key]=item[key];
+    }
+    // Camera image/stream links are published by each operator; publicUrl drops any URL carrying
+    // credentials or key/token parameters, so only openly shareable links reach the map.
+    if (id==='cameras') {
+      for (const key of ['feed_url','stream_url','external_url']) { const url=publicUrl(item[key]); if (url) properties[key]=url; }
+      if (properties.stream_url && ['hls','mp4','mjpeg','iframe','jpg'].includes(String(item.stream_type))) properties.stream_type=String(item.stream_type);
     }
     result.features.push({type:'Feature',geometry:{type:'Point',coordinates:[lng,lat]},properties});
   }

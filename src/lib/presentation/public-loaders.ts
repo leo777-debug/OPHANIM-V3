@@ -18,6 +18,28 @@ function marinePayload() {
   void promise.catch(()=>{if(maritime?.promise===promise)maritime=undefined;});
   return promise;
 }
+// Serverless instances start with an empty region cache, so returning the first warm
+// region showed only a handful of cameras. Aggregate every region (about 10 s), and
+// past the deadline fall back to the regions that have completed so far.
+const CAMERA_DEADLINE_MS=22000;
+let cameras: { until:number; promise:Promise<unknown> } | undefined;
+function cameraPayload() {
+  if (cameras && cameras.until>Date.now()) return cameras.promise;
+  const entry={until:Date.now()+5*60000,promise:Promise.resolve() as Promise<unknown>};
+  entry.promise=(async()=>{
+    const route=await import('@/app/api/cctv/route');
+    const {publicCameraSnapshot}=await import('@/app/api/cctv/region-cache');
+    const full=route.GET(new Request('http://ophanim.internal/api/cctv?region=all')).then(payload).then(value=>({value,complete:true}));
+    const partial=new Promise<{value:unknown;complete:boolean}>(resolve=>setTimeout(()=>resolve({value:publicCameraSnapshot(),complete:false}),CAMERA_DEADLINE_MS));
+    const {value,complete}=await Promise.race([full,partial]);
+    if (!(value as {cameras?:unknown[]}).cameras?.length) throw new Error('Public camera directories are still warming.');
+    if (!complete) entry.until=Date.now()+60000; // Retry the full set sooner.
+    return value;
+  })();
+  cameras=entry;
+  void entry.promise.catch(()=>{if(cameras===entry)cameras=undefined;});
+  return entry.promise;
+}
 
 // A fixed list of existing public feed handlers. No tenant, provider search,
 // SDK, account, AI, embed, arbitrary URL or request-cookie forwarding.
@@ -26,16 +48,7 @@ export async function loadPublicPayload(id:FeedId):Promise<unknown> {
   switch(id) {
     case 'flights': response=await (await import('@/app/api/flights/route')).GET();break;
     case 'maritime': case 'ports': case 'chokepoints': return marinePayload();
-    case 'cameras': {
-      await import('@/app/api/cctv/route');
-      const {publicCameraSnapshot}=await import('@/app/api/cctv/region-cache');
-      for(let attempt=0;attempt<36;attempt++) {
-        const snapshot=publicCameraSnapshot();
-        if(snapshot.cameras.length) return snapshot;
-        await new Promise(resolve=>setTimeout(resolve,500));
-      }
-      throw new Error('Public camera directories are still warming.');
-    }
+    case 'cameras': return cameraPayload();
     case 'broadcasts': response=await (await import('@/app/api/live-news/route')).GET();break;
     case 'conflicts': response=await (await import('@/app/api/conflicts/route')).GET();break;
     case 'infrastructure': response=await (await import('@/app/api/infrastructure/route')).GET();break;
