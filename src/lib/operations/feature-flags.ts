@@ -8,6 +8,7 @@ export const OPHANIM_FEATURES = [
   'cyber',
   'dark_web',
   'sandbox_research',
+  'job_files',
 ] as const;
 
 export type OphanimFeature = (typeof OPHANIM_FEATURES)[number];
@@ -24,7 +25,7 @@ const runtimeFeatureFlagEnvironment: FeatureFlagEnvironment = {
 
 const EDITION_FEATURES: Record<OphanimEdition, OphanimFeature[]> = {
   core: ['global_map', 'provider_registry', 'watchlists'],
-  logistics: ['global_map', 'provider_registry', 'watchlists', 'imports', 'logistics', 'route_intelligence'],
+  logistics: ['global_map', 'provider_registry', 'watchlists', 'imports', 'logistics', 'route_intelligence', 'job_files'],
   cyber: ['global_map', 'provider_registry', 'watchlists', 'imports', 'cyber'],
   maritime: ['global_map', 'provider_registry', 'watchlists', 'dark_web', 'route_intelligence'],
   full: [...OPHANIM_FEATURES],

@@ -33,6 +33,7 @@ export default function PlatformShell({ title, children }: { title: string; chil
         const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(`${item.href}/`));
         return <Link key={item.id} href={item.href} className={`platform-nav__item${active ? ' is-active' : ''}`}><Icon size={17} /><span>{configuration?.terminology[item.id] ?? item.label}</span></Link>;
       })}</nav>
+      <Link href="/jobs" className="platform-nav__item"><Activity size={17} /><span>Job files</span></Link>
       <Link href="/admin/health" className="platform-nav__health"><span />Platform health</Link>
     </aside>
     <section className="platform-main"><header className="platform-header"><div><p>Configured operational workspace</p><h1>{title}</h1></div><div className="platform-header__actions"><AdminEntry /><Link href="/onboarding">Configure workspace</Link><Link href="/">Open map</Link></div></header>{children}</section>
