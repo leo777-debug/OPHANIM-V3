@@ -319,7 +319,20 @@ from local commit `2a2b72e` (parity-and-reliability, unpushed). Read
    page; the bootstrap API still exists. Restore the mode from git history (commit
    that removed it: "feat(auth): pause organization sign-up on the login page") when
    self-serve sign-up should return.
-9. **Housekeeping.** Lint has 2 errors that predate this work in Codex's `UnifiedMap`
+9. **Show camera feeds on the map.** Camera markers show only a location today:
+   - The public feed normaliser (`src/lib/presentation/feeds.ts`) keeps an allow-list
+     of fields that excludes `feed_url`, `stream_url` and `stream_type`, on purpose
+     (`restored-feeds.test.ts`: "without stream credentials").
+   - `UnifiedMap` only opens a text details panel on click; `CameraViewer` is not
+     mounted there (only in Watchtower and the old `OphanimMap` handler).
+   - Production had 4 camera markers on 2026-10-22, all YouTube Live: the TfL and
+     other directory cameras live in a 15-minute in-memory cache
+     (`src/app/api/cctv/region-cache.ts`) that is usually empty on Vercel.
+   - Bug: camera `sourceUrl` falls back to `https://tfl.gov.uk/` even for YouTube cameras.
+   Fix: pass stream URLs only for official public streams with no keys in the URL,
+   open `CameraViewer` on camera click, persist the camera directory, and correct the
+   source link. Keep Watchtower's rule: lawful, verified public feeds only.
+10. **Housekeeping.** Lint has 2 errors that predate this work in Codex's `UnifiedMap`
    and route code. On this PC, the renamed Docker folders
    (`%LOCALAPPDATA%\Docker\run.stale-*`, `%LOCALAPPDATA%\docker-secrets-engine.stale-*`)
    can be deleted.
