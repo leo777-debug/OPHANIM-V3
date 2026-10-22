@@ -6,7 +6,7 @@ import { buildTimeline, filterNews, NEWS_WINDOWS, regionalCoverage, safeSourceUr
 import styles from './desk.module.css';
 
 export type ExplorerView = 'timeline' | 'regions' | 'sources' | 'clocks';
-export type ExplorerData = { news?: NewsItem[]; earthquakes?: Parameters<typeof buildTimeline>[1]; news_sources?: FeedHealth[] };
+export type ExplorerData = { news?: NewsItem[]; earthquakes?: Parameters<typeof buildTimeline>[1]; news_sources?: FeedHealth[]; fires?: Array<{ lat: number; lng: number; observedAt?: string | null; date?: string; time?: string; title?: string; type?: string }> };
 type Props = {
   view: ExplorerView;
   data: ExplorerData;
@@ -41,11 +41,12 @@ export default function IntelligenceExplorer({ view, data, onLocate }: Props) {
     const sources = data.news_sources ?? [];
     return <div className={styles.scroll}>
       {!sources.length ? <p className={styles.empty}>Source health is not available yet.</p> : <table className={styles.table}>
-        <thead><tr><th>Source</th><th>Status</th><th>Items</th><th>Latest publication (UTC)</th><th>Checked (UTC)</th></tr></thead>
+        <thead><tr><th>Source</th><th>Status / coverage gap</th><th>Items</th><th>Latest publication (UTC)</th><th>Last success / checked (UTC)</th><th>Update mode</th></tr></thead>
         <tbody>{sources.map((source) => <tr key={source.name}>
           <td><a href={safeSourceUrl(source.url)} target="_blank" rel="noopener noreferrer">{source.name}</a></td>
-          <td>{source.status === 'ok' ? 'Available' : source.status === 'empty' ? 'No items' : 'Unavailable'}</td>
-          <td>{source.count}</td><td>{source.latestPublished ?? 'Unknown'}</td><td>{source.checkedAt}</td>
+          <td>{source.mode === 'stale' ? `Stale since ${source.staleSince ?? 'unknown'}` : source.status === 'ok' ? 'Available; publication age shown separately' : source.status === 'empty' ? 'No items — coverage gap' : 'Unavailable — coverage gap'}{source.error ? ` · ${source.error}` : ''}</td>
+          <td>{source.count}</td><td>{source.latestPublished ?? 'No dated coverage'}</td><td>{source.lastSuccessAt ?? 'Never observed'} / {source.checkedAt}</td>
+          <td>{source.refresh ?? 'Periodic; interval unknown'}</td>
         </tr>)}</tbody>
       </table>}
     </div>;

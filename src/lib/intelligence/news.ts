@@ -13,6 +13,12 @@ export interface NewsItem {
   region?: string;
   evidence_tier?: string;
   machine_assessment?: string;
+  first_seen?: string;
+  first_seen_storage?: string;
+  first_seen_warning?: string | null;
+  source_data_mode?: 'fresh' | 'stale' | 'unavailable';
+  source_last_success?: string | null;
+  source_stale_since?: string | null;
 }
 
 export interface FeedHealth {
@@ -22,6 +28,12 @@ export interface FeedHealth {
   count: number;
   checkedAt: string;
   latestPublished: string | null;
+  lastSuccessAt?: string | null;
+  mode?: 'fresh' | 'stale' | 'unavailable';
+  staleSince?: string | null;
+  latencyMs?: number | null;
+  error?: string | null;
+  refresh?: string;
 }
 
 export const NEWS_WINDOWS = [1, 6, 24, 48, 168] as const;

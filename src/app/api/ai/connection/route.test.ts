@@ -1,8 +1,9 @@
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 vi.mock('@/lib/ssrf-guard', () => ({ isRateLimited: () => false, getClientIp: () => '192.0.2.1', validateHost: async () => ({ ok: true }) }));
 import { POST } from './route';
-afterEach(() => vi.unstubAllGlobals());
+beforeEach(() => { vi.stubEnv('AI_BASE_URL', 'https://api.mistral.ai/v1'); vi.stubEnv('AI_MODEL', 'mistral-small-2603'); vi.stubEnv('AI_API_KEY', 'secret-key'); });
+afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 
 it('tests with a small output budget and returns an actionable sanitized 429', async () => {
   const fetch = vi.fn()
@@ -15,7 +16,7 @@ it('tests with a small output budget and returns an actionable sanitized 429', a
   const body = await response.json();
   expect(JSON.stringify(body)).not.toContain('secret-key');
   expect(body).toMatchObject({ modelListSucceeded: true, stage: 'generation' });
-  expect(body.error).toContain('entered key');
+  expect(body.error).toContain('server credentials');
   expect(String(fetch.mock.calls[0][0])).toBe('https://api.mistral.ai/v1/models');
   expect(fetch.mock.calls[0][1].headers.Authorization).toBe('Bearer secret-key');
   expect(JSON.parse(fetch.mock.calls[1][1].body).max_tokens).toBe(64);

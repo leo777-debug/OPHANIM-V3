@@ -1,0 +1,16 @@
+{
+  "checkedAt": "2026-10-21T07:22:05.305Z",
+  "unitTests": {
+    "passed": 564,
+    "skipped": 5
+  },
+  "typecheck": "passed",
+  "targetedLint": "passed",
+  "productionBuild": "passed",
+  "combinedBrowserChecks": 34,
+  "composeConfiguration": "validated with .env.example and a synthetic process-only worker token; no private env file read",
+  "containerRuntime": "Not verified: Docker engine is stopped",
+  "liveSourceAudit": "research-source-audit.json",
+  "scope": "Own restricted official-feed worker, not general browser research. Local accounts/events are synthetic; fixed keyless source audit is separate. Full parity remains unfinished.",
+  "worldMonitorCodeUsed": false
+}

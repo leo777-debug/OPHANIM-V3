@@ -30,7 +30,7 @@ export function patchUnifiedWorkspace(state:UnifiedMapState,patch:Partial<MapWor
 }
 export function legacyAtlasDestination(query:Record<string,string|string[]|undefined>):string {
   const params=new URLSearchParams();
-  for(const key of ['view','tool','layers','lat','lng','lon','zoom']) {
+  for(const key of ['view','tool','layers','lat','lng','lon','zoom','projection','style','mapVersion']) {
     const value=query[key];
     if(typeof value!=='string' || value.length>1200)continue;
     if(key==='tool' && !parseAtlasTool(value))continue;

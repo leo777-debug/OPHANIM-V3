@@ -1,0 +1,104 @@
+{
+  "checkedAt": "2026-10-20T07:48:28.079Z",
+  "elapsedMs": 2628,
+  "connections": 12,
+  "results": [
+    {
+      "status": 200,
+      "notified": true,
+      "revision": "beb3658f7a81c9d45c29406299bd6f88a38806e2ec29e19c3054bb66717e8f05",
+      "mode": "polling",
+      "intervalSeconds": 300,
+      "privateFieldDetected": false
+    },
+    {
+      "status": 200,
+      "notified": true,
+      "revision": "beb3658f7a81c9d45c29406299bd6f88a38806e2ec29e19c3054bb66717e8f05",
+      "mode": "polling",
+      "intervalSeconds": 300,
+      "privateFieldDetected": false
+    },
+    {
+      "status": 200,
+      "notified": true,
+      "revision": "beb3658f7a81c9d45c29406299bd6f88a38806e2ec29e19c3054bb66717e8f05",
+      "mode": "polling",
+      "intervalSeconds": 300,
+      "privateFieldDetected": false
+    },
+    {
+      "status": 200,
+      "notified": true,
+      "revision": "beb3658f7a81c9d45c29406299bd6f88a38806e2ec29e19c3054bb66717e8f05",
+      "mode": "polling",
+      "intervalSeconds": 300,
+      "privateFieldDetected": false
+    },
+    {
+      "status": 200,
+      "notified": true,
+      "revision": "beb3658f7a81c9d45c29406299bd6f88a38806e2ec29e19c3054bb66717e8f05",
+      "mode": "polling",
+      "intervalSeconds": 300,
+      "privateFieldDetected": false
+    },
+    {
+      "status": 200,
+      "notified": true,
+      "revision": "beb3658f7a81c9d45c29406299bd6f88a38806e2ec29e19c3054bb66717e8f05",
+      "mode": "polling",
+      "intervalSeconds": 300,
+      "privateFieldDetected": false
+    },
+    {
+      "status": 200,
+      "notified": true,
+      "revision": "beb3658f7a81c9d45c29406299bd6f88a38806e2ec29e19c3054bb66717e8f05",
+      "mode": "polling",
+      "intervalSeconds": 300,
+      "privateFieldDetected": false
+    },
+    {
+      "status": 200,
+      "notified": true,
+      "revision": "beb3658f7a81c9d45c29406299bd6f88a38806e2ec29e19c3054bb66717e8f05",
+      "mode": "polling",
+      "intervalSeconds": 300,
+      "privateFieldDetected": false
+    },
+    {
+      "status": 200,
+      "notified": true,
+      "revision": "beb3658f7a81c9d45c29406299bd6f88a38806e2ec29e19c3054bb66717e8f05",
+      "mode": "polling",
+      "intervalSeconds": 300,
+      "privateFieldDetected": false
+    },
+    {
+      "status": 200,
+      "notified": true,
+      "revision": "beb3658f7a81c9d45c29406299bd6f88a38806e2ec29e19c3054bb66717e8f05",
+      "mode": "polling",
+      "intervalSeconds": 300,
+      "privateFieldDetected": false
+    },
+    {
+      "status": 200,
+      "notified": true,
+      "revision": "beb3658f7a81c9d45c29406299bd6f88a38806e2ec29e19c3054bb66717e8f05",
+      "mode": "polling",
+      "intervalSeconds": 300,
+      "privateFieldDetected": false
+    },
+    {
+      "status": 200,
+      "notified": true,
+      "revision": "beb3658f7a81c9d45c29406299bd6f88a38806e2ec29e19c3054bb66717e8f05",
+      "mode": "polling",
+      "intervalSeconds": 300,
+      "privateFieldDetected": false
+    }
+  ],
+  "limitation": "Twelve local HTTP clients, not twelve full browsers, not a multi-instance or throughput benchmark. One thousand listener fanout is separately unit tested. Source health can still fail independently."
+}

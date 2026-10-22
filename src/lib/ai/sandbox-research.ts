@@ -1,3 +1,5 @@
+import { requestIntegration } from '@/lib/integrations/probes';
+
 export const SANDBOX_RESEARCH_PURPOSES = ['confirm', 'assess_risk'] as const;
 
 export type SandboxResearchPurpose = (typeof SANDBOX_RESEARCH_PURPOSES)[number];
@@ -13,6 +15,8 @@ export interface SandboxResearchSource {
   url: string;
   publishedAt?: string;
   excerpt?: string;
+  attribution?: string;
+  licence?: string;
 }
 
 export interface SandboxResearchResult {
@@ -20,7 +24,8 @@ export interface SandboxResearchResult {
   riskIndicator: 'unknown' | 'low' | 'moderate' | 'high';
   uncertainty: string;
   sources: SandboxResearchSource[];
-  collectedAt: string;
+  collectedAt: string | null;
+  retrievedAt: string;
   limitations: string[];
 }
 
@@ -80,8 +85,11 @@ function normalizeResult(value: unknown): SandboxResearchResult {
     return url && title ? [{
       title,
       url,
-      ...(text(source.publishedAt, 80) ? { publishedAt: text(source.publishedAt, 80) } : {}),
+      ...(typeof source.publishedAt === 'string' && Number.isFinite(Date.parse(source.publishedAt)) && Date.parse(source.publishedAt) <= Date.now() + 300000
+        ? { publishedAt: new Date(source.publishedAt).toISOString() } : {}),
       ...(text(source.excerpt, 1_200) ? { excerpt: text(source.excerpt, 1_200) } : {}),
+      ...(text(source.attribution, 300) ? { attribution: text(source.attribution, 300) } : {}),
+      ...(text(source.licence, 300) ? { licence: text(source.licence, 300) } : {}),
     }] : [];
   }) : [];
   const riskIndicator = ['low', 'moderate', 'high'].includes(String(raw.riskIndicator))
@@ -94,7 +102,8 @@ function normalizeResult(value: unknown): SandboxResearchResult {
     riskIndicator,
     uncertainty: text(raw.uncertainty, 1_200) || 'This is a source-backed assessment, not a prediction or operational decision.',
     sources,
-    collectedAt: text(raw.collectedAt, 80) || new Date().toISOString(),
+    collectedAt: typeof raw.collectedAt === 'string' && Number.isFinite(Date.parse(raw.collectedAt)) && Date.parse(raw.collectedAt) <= Date.now() + 300000 ? new Date(raw.collectedAt).toISOString() : null,
+    retrievedAt: new Date().toISOString(),
     limitations: Array.isArray(raw.limitations) ? raw.limitations.map((item) => text(item, 300)).filter(Boolean).slice(0, 12) : [],
   };
 }
@@ -103,10 +112,11 @@ export async function researchInSandbox(request: SandboxResearchRequest): Promis
   const url = endpoint();
   const token = process.env.AI_SANDBOX_RESEARCH_TOKEN?.trim();
   if (!url || !token) throw new Error('Sandbox research is not configured');
-  const response = await fetch(url, {
+  // A worker must pass its authenticated health check before receiving research context.
+  const health = new URL(url); health.pathname = health.pathname.replace(/\/v1\/research$/, '/health');
+  await requestIntegration({ url: health.toString(), headers: { Authorization: `Bearer ${token}` }, expected: 'json' });
+  const response = await requestIntegration({ url: url.toString(),
     method: 'POST',
-    redirect: 'error',
-    signal: AbortSignal.timeout(45_000),
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
@@ -121,7 +131,7 @@ export async function researchInSandbox(request: SandboxResearchRequest): Promis
         riskAssessmentOnly: request.purpose === 'assess_risk',
       },
     }),
-  });
-  if (!response.ok) throw new Error(`Sandbox research service returned ${response.status}`);
-  return normalizeResult(await response.json());
+    expected: 'json',
+  }, process.env, 45000);
+  return normalizeResult(JSON.parse(response));
 }

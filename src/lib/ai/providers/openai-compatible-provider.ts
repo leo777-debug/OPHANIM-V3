@@ -1,6 +1,7 @@
 import { validateHost } from '@/lib/ssrf-guard';
 import { buildAiMessages } from '../task-policy';
 import type { AiGenerationRequest, AiProvider, AiProviderConfig } from './types';
+import { TASK_SCHEMAS } from '../task-schemas';
 import { providerError } from './provider-error';
 
 export function aiEndpoint(baseUrl: string, resource: 'chat/completions' | 'models' = 'chat/completions'): URL {
@@ -38,11 +39,11 @@ export const openAiCompatibleProvider: AiProvider = {
   async generate(config: AiProviderConfig, request: AiGenerationRequest): Promise<string> {
     const url = aiEndpoint(config.baseUrl);
     await validateAiBaseUrl(config.baseUrl);
+    const budget = typeof request.maxOutputTokens === 'number' && Number.isFinite(request.maxOutputTokens) ? Math.max(32, Math.min(2048, Math.floor(request.maxOutputTokens))) : 1024;
     const response = await fetch(url, {
       method: 'POST', redirect: 'error', signal: AbortSignal.timeout(120_000),
       headers: { 'Content-Type': 'application/json', ...aiAuthorization(config.apiKey) },
-      body: JSON.stringify({ model: config.model, messages: buildAiMessages(request), temperature: 0.2,
-        max_tokens: Number.isFinite(request.maxOutputTokens) ? Math.max(32, Math.min(2048, Math.floor(request.maxOutputTokens!))) : 1024 }),
+      body: JSON.stringify({ model: config.model, messages: buildAiMessages(request), temperature: 0.2, max_tokens: budget, ...(TASK_SCHEMAS[request.task] ? { response_format: { type: 'json_object' } } : {}) }),
     });
     if (!response.ok) throw await providerError(response);
     const payload = await response.json() as { choices?: Array<{ message?: { content?: string } }> };

@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, memo } from 'react';
 import { createPortal } from 'react-dom';
+import ReconObservation from '@/components/platform/ReconObservation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LocateFixed,
@@ -14,17 +15,17 @@ import {
 import { ipToNumber, numberToIp, calculateSubnetStart, classifyDevice, assessRisk, batchFetch, ShodanInternetDBResponse, SweepDevice } from '@/lib/osint-utils';
 
 const TABS = [
-  { id: 'scanner', label: 'PORT SCAN', icon: Radar, placeholder: 'IP or hostname', color: '#5BB6FF' },
+  { id: 'scanner', label: 'HTTPS CHECK', icon: Radar, placeholder: 'IP or hostname', color: '#5BB6FF' },
   { id: 'vuln', label: 'VULN SWEEP', icon: Bug, placeholder: 'IP or hostname', color: '#FF3D3D' },
 
   { id: 'dns', label: 'DNS', icon: Server, placeholder: 'Domain name', color: '#448AFF' },
   { id: 'whois', label: 'WHOIS', icon: FileText, placeholder: 'Domain name', color: '#FFD700' },
   { id: 'certs', label: 'CERTS', icon: Lock, placeholder: 'Domain name', color: '#E040FB' },
   { id: 'threats', label: 'THREATS', icon: AlertTriangle, placeholder: 'IP, domain, or hash', color: '#FF9500' },
-  { id: 'headers', label: 'HEADERS', icon: Code, placeholder: 'URL to inspect', color: '#87CEEB' },
+  { id: 'headers', label: 'HEADERS', icon: Code, placeholder: 'Approved hostname', color: '#87CEEB' },
   { id: 'ssl', label: 'SSL/TLS', icon: Shield, placeholder: 'Domain name', color: '#76FF03' },
   { id: 'subdomains', label: 'SUBDOMAINS', icon: Layers, placeholder: 'Domain to enumerate', color: '#00BCD4' },
-  { id: 'tech', label: 'TECH DETECT', icon: Code, placeholder: 'URL to fingerprint', color: '#9C27B0' },
+  { id: 'tech', label: 'TECH DETECT', icon: Code, placeholder: 'Approved hostname', color: '#9C27B0' },
   { id: 'shodan', label: 'SHODAN IOT', icon: Network, placeholder: 'IP address', color: '#FF3D3D' },
   { id: 'ip', label: 'IP LOOKUP', icon: LocateFixed, placeholder: 'IP address', color: '#5BB6FF' },
   { id: 'bgp', label: 'BGP ROUTE', icon: Globe, placeholder: 'IP or ASN', color: '#5BB6FF' },
@@ -44,6 +45,7 @@ function OsintPanelInner({ initialTab = 'scanner', isMobile, onSweepVisualize, o
   const [results, setResults] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [recoveryHref, setRecoveryHref] = useState<string | null>(null);
   const [scanType, setScanType] = useState('quick');
   const [expanded, setExpanded] = useState(true);
   const [history, setHistory] = useState<{tab:string;query:string;time:string}[]>([]);
@@ -198,14 +200,20 @@ function OsintPanelInner({ initialTab = 'scanner', isMobile, onSweepVisualize, o
         case 'leaks': url = `https://api.xposedornot.com/v1/breach-analytics?email=${encodeURIComponent(query)}`; break;
         case 'crypto': url = `/api/osint/crypto?address=${encodeURIComponent(query)}`; break;
         case 'github': url = `/api/osint/github?user=${encodeURIComponent(query)}`; break;
-        case 'scanner': url = `/api/scanner?target=${encodeURIComponent(query)}&type=${scanType}`; break;
-        case 'headers': url = `/api/scanner?target=${encodeURIComponent(query)}&type=headers`; break;
-        case 'ssl': url = `/api/scanner?target=${encodeURIComponent(query)}&type=ssl`; break;
-        case 'subdomains': url = `/api/scanner?target=${encodeURIComponent(query)}&type=subdomains`; break;
-        case 'tech': url = `/api/scanner?target=${encodeURIComponent(query)}&type=tech`; break;
+        case 'scanner': url = '/api/scanner'; break;
+        case 'headers': url = '/api/scanner'; break;
+        case 'ssl': url = '/api/scanner'; break;
+        case 'subdomains': url = '/api/scanner'; break;
+        case 'tech': url = '/api/scanner'; break;
         case 'shodan': url = `/api/osint/shodan?ip=${encodeURIComponent(query)}`; break;
       }
-      const res = await fetch(url, activeTab === 'shodan' ? { cache: 'no-store' } : undefined);
+      setRecoveryHref(null);
+      const inspectionMode = activeTab === 'scanner' ? scanType : activeTab;
+      const inspection = ['scanner', 'headers', 'ssl', 'subdomains', 'tech'].includes(activeTab);
+      const res = await fetch(inspection ? '/api/scanner' : url, inspection ? { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target: query.trim(), type: inspectionMode }), cache: 'no-store' } : activeTab === 'shodan' ? { cache: 'no-store' } : undefined);
+      if (inspection && res.status === 401) setRecoveryHref('/login?returnTo=%2Fatlas');
+      if (inspection && res.status === 503) setRecoveryHref('/admin/integrations');
       if (activeTab === 'shodan' && res.status === 404) {
         setResults({ ip: query, status: 'No Shodan InternetDB records found', ports: [], cpes: [], hostnames: [], tags: [], vulns: [] });
         setLoading(false);
@@ -249,7 +257,7 @@ function OsintPanelInner({ initialTab = 'scanner', isMobile, onSweepVisualize, o
           if (data.lat && data.lng && onScanGeolocate) {
              onScanGeolocate(query, { lat: data.lat, lng: data.lng, type: 'phone', region: data.region });
           }
-        } else if (activeTab !== 'sweep' && activeTab !== 'vuln' && activeTab !== 'crypto' && activeTab !== 'mac' && activeTab !== 'bgp' && activeTab !== 'github' && activeTab !== 'leaks' && activeTab !== 'phone') {
+        } else if (!inspection && activeTab !== 'sweep' && activeTab !== 'vuln' && activeTab !== 'crypto' && activeTab !== 'mac' && activeTab !== 'bgp' && activeTab !== 'github' && activeTab !== 'leaks' && activeTab !== 'phone') {
           fetch(`/api/osint/ip?ip=${encodeURIComponent(query)}`)
             .then(r => r.json())
             .then(locData => {
@@ -332,6 +340,8 @@ function OsintPanelInner({ initialTab = 'scanner', isMobile, onSweepVisualize, o
   const renderStructuredResults = () => {
     if (!results) return null;
     const r = results;
+
+    if (['scanner', 'headers', 'ssl', 'tech'].includes(activeTab) && r.mode && r.tls) return <ReconObservation observation={r} />;
 
     // ── PORT SCAN ──
     if (activeTab === 'scanner') {
@@ -760,7 +770,7 @@ function OsintPanelInner({ initialTab = 'scanner', isMobile, onSweepVisualize, o
         {activeTab === 'scanner' && (
           <select value={scanType} onChange={e => setScanType(e.target.value)}
             className="bg-[var(--bg-primary)]/60 border border-[var(--border-primary)] rounded-lg px-2 py-1.5 text-[10px] font-mono text-[var(--text-muted)] outline-none w-full">
-            <option value="quick">QUICK SCAN</option><option value="deep">DEEP SCAN</option><option value="ports">TOP 1000 PORTS</option>
+            <option value="quick">HTTPS CHECK</option><option value="headers">SECURITY HEADERS</option><option value="ssl">TLS METADATA</option><option value="tech">SERVER HEADER</option>
           </select>
         )}
         {(activeTab === 'sweep' || activeTab === 'vuln') && (
@@ -782,6 +792,7 @@ function OsintPanelInner({ initialTab = 'scanner', isMobile, onSweepVisualize, o
       {error && (
         <div className="p-2.5 rounded-lg border border-red-500/30 bg-red-500/10 text-[11px] font-mono text-red-400 flex items-center gap-2">
           <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />{error}
+          {recoveryHref && <a href={recoveryHref} className="underline">{recoveryHref.startsWith('/login') ? 'Sign in' : 'Open Integrations'}</a>}
         </div>
       )}
 

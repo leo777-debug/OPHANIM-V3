@@ -1,0 +1,9 @@
+# Windows/Linux CPU embedding server, bounded smoke training and export.
+# GPU Kaggle notebooks use requirements-training.txt instead.
+--extra-index-url https://download.pytorch.org/whl/cpu
+-r requirements.txt
+torch==2.9.1+cpu
+transformers==4.57.1
+peft==0.17.1
+accelerate==1.10.1
+safetensors==0.8.0

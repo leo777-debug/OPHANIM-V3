@@ -1,0 +1,40 @@
+{
+  "checkedAt": "2026-10-20T09:07:44.44Z",
+  "diagnostics": [
+    {
+      "providerId": "faa-public-status",
+      "status": "success",
+      "eventCount": 5,
+      "durationMs": 956
+    },
+    {
+      "providerId": "awc-us-metar",
+      "status": "success",
+      "eventCount": 3,
+      "durationMs": 1
+    },
+    {
+      "providerId": "awc-us-taf",
+      "status": "success",
+      "eventCount": 3,
+      "durationMs": 4
+    }
+  ],
+  "missingMetarStations": [],
+  "missingTafStations": [],
+  "eventTypeCounts": [
+    {
+      "count": 5,
+      "type": "airport_closure_notice"
+    },
+    {
+      "count": 3,
+      "type": "airport_weather_forecast"
+    },
+    {
+      "count": 3,
+      "type": "airport_weather_observation"
+    }
+  ],
+  "limitation": "Point-in-time FAA/NOAA parse audit for selected US stations. No ground-stop or ground-delay records occurred in this sample; their parser paths are fixture-tested. Not global coverage or flight-planning validation."
+}

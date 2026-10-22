@@ -21,11 +21,12 @@ describe('presentation proxy preserves the existing authentication boundary',()=
     const client={auth:{getClaims:async()=>({data:null,error:null})}} as unknown as NonNullable<Parameters<typeof getAuthenticatedActor>[1]>;
     expect(await getAuthenticatedActor(request(),client)).toBeNull();expect(mocks.client).not.toHaveBeenCalled();
   });
-  it('uses explicit temporary demo access for a visitor without a session',async()=>{
+  it('never substitutes a public demo owner for a visitor without a session',async()=>{
     mocks.client.mockResolvedValue(null);
     mocks.demo.mockResolvedValue({userId:'demo-u',organizationId:'demo-o',role:'owner',authProvider:'presentation-demo'});
-    expect((await getAuthenticatedActor(new NextRequest('http://localhost/api/auth/me')))?.authProvider).toBe('presentation-demo');
+    expect(await getAuthenticatedActor(new NextRequest('http://localhost/api/auth/me'))).toBeNull();
     expect(mocks.query).not.toHaveBeenCalled();
+    expect(mocks.demo).not.toHaveBeenCalled();
   });
   it('never replaces a real authenticated actor with demo access',async()=>{
     mocks.client.mockResolvedValue(null);

@@ -7,6 +7,8 @@ import {
   type ProviderCostType,
   type ProviderMode,
 } from "./event-provider";
+import researchSources from './research-sources.json';
+const usgsSource = researchSources.find(source => source.id === 'usgs-earthquakes')!;
 
 type UsgsFeature = {
   id?: string;
@@ -35,10 +37,12 @@ export const usgsEarthquakeProvider: IntelligenceEventProvider<UsgsResponse> = {
   supportedEventTypes: ["earthquake"],
   requiresCredentials: false,
   timeoutMs: 8000,
-  isConfigured: () => true,
+  isConfigured: () => usgsSource.commercialUse === 'yes',
+  compliance: () => ({ license: usgsSource.licence, commercialUse: usgsSource.commercialUse === 'yes' ? 'yes' : 'unknown',
+    attribution: usgsSource.attribution, rateLimits: usgsSource.rateLimits, termsUrl: usgsSource.termsUrl }),
   async fetch(context) {
     const response = await fetch(
-      "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_day.geojson",
+      usgsSource.url,
       {
         signal: context.signal,
         headers: { Accept: "application/geo+json, application/json" },

@@ -1,0 +1,27 @@
+# Restricted HTTPS diagnostics; exact authorized hosts only, never CIDRs/wildcards.
+# docker compose -f docker-compose.yml -f docker-compose.recon.yml --profile recon up -d --build
+services:
+  ophanim:
+    environment:
+      SCANNER_URL: http://ophanim-recon:8080
+      SCANNER_KEY: ${SCANNER_KEY:?Set a dedicated scanner token of at least 32 characters}
+      SCANNER_ORGANIZATION_ID: ${SCANNER_ORGANIZATION_ID:?Set the authorized organization UUID}
+      SCANNER_ALLOWED_TARGETS: ${SCANNER_ALLOWED_TARGETS:?Set exact authorized public hosts}
+      INTEGRATION_ALLOWED_ORIGINS: ${INTEGRATION_ALLOWED_ORIGINS:-},http://ophanim-recon:8080
+  ophanim-recon:
+    profiles: [recon]
+    build:
+      context: .
+      dockerfile: ops/recon/Dockerfile
+    environment:
+      SCANNER_KEY: ${SCANNER_KEY:?Set a dedicated scanner token of at least 32 characters}
+      SCANNER_ALLOWED_TARGETS: ${SCANNER_ALLOWED_TARGETS:?Set exact authorized public hosts}
+      NODE_ENV: production
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 32
+    mem_limit: 128m
+    cpus: 0.25
+    restart: unless-stopped
+    # No host port, env_file, database credentials, Docker socket or host filesystem.

@@ -1,10 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { GET } from './route';
+import { newsFeedCache } from '@/lib/intelligence/news-cache';
+vi.mock('@/lib/runtime/store', () => ({ recordRuntimeFirstSeen: async (_scope: string, ids: string[], time: string) => ({ items: Object.fromEntries(ids.map(id => [id, time])), storage: 'memory' }) }));
 
 const rss = `<rss version="2.0" xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#"><channel><title>Test</title>
   <item><title>Ukraine port update</title><link>https://example.com/update</link><pubDate>Thu, 08 Oct 2026 09:00:00 GMT</pubDate><description>Port report</description><geo:lat>46.5</geo:lat><geo:long>30.7</geo:long></item>
   <item><title>Unknown date</title><link>https://example.com/undated</link></item></channel></rss>`;
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => { vi.unstubAllGlobals(); newsFeedCache.clear(); });
 describe('news API', () => {
   it('keeps RSS available when Telegram fails, parses source coordinates, and exposes health', async () => {
     vi.stubGlobal('fetch', vi.fn(async (url: string) => {

@@ -1,0 +1,24 @@
+# Requires a dedicated token in the private .env; no upstream key or model required.
+# docker compose -f docker-compose.yml -f docker-compose.research.yml --profile research up -d --build
+services:
+  ophanim:
+    environment:
+      AI_SANDBOX_RESEARCH_URL: http://ophanim-research:8080
+      AI_SANDBOX_RESEARCH_TOKEN: ${AI_SANDBOX_RESEARCH_TOKEN:?Set the dedicated research token in the private environment}
+      INTEGRATION_ALLOWED_ORIGINS: ${INTEGRATION_ALLOWED_ORIGINS:-},http://ophanim-research:8080
+  ophanim-research:
+    profiles: [research]
+    build:
+      context: .
+      dockerfile: ops/research/Dockerfile
+    environment:
+      AI_SANDBOX_RESEARCH_TOKEN: ${AI_SANDBOX_RESEARCH_TOKEN:?Set the dedicated research token in the private environment}
+      NODE_ENV: production
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 64
+    mem_limit: 128m
+    cpus: 0.5
+    restart: unless-stopped
+    # No host port, env_file, database credentials, host filesystem or Docker socket.

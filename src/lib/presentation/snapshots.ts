@@ -18,6 +18,7 @@ export async function currentPublicFeed(id:FeedId):Promise<PublicFeed> {
       const budget=['maritime','ports','chokepoints'].includes(id)?40000:['cameras','war-sanctions'].includes(id)?22000:14000;
       const payload=await Promise.race([loadPublicPayload(id),new Promise<never>((_,reject)=>{timer=setTimeout(()=>reject(new Error('Public feed timed out.')),budget);})]);
       const data=normalizePublicFeed(id,payload);
+      if (['maritime','ports','chokepoints'].includes(id) && data.publicOnly !== true) throw new Error('Public-only maritime evidence is required.');
       const ttl=id==='cameras'?60000:data.reference?300000:30000;
       liveCache.set(id,{data,until:Date.now()+ttl});
       return data;
@@ -29,6 +30,7 @@ export async function currentPublicFeed(id:FeedId):Promise<PublicFeed> {
 export async function readSnapshot(id:FeedId):Promise<{data:PublicFeed;recordedAt:string}|null> {
   if(!process.env.DATABASE_URL)return null;
   const result=await db().query<{payload:PublicFeed;recorded_at:string|Date}>('select payload,recorded_at from ophanim_presentation_snapshots where feed_id=$1',[id]);
+  if (['maritime','ports','chokepoints'].includes(id) && result.rows[0]?.payload.publicOnly !== true) return null;
   return result.rows[0]?{data:result.rows[0].payload,recordedAt:new Date(result.rows[0].recorded_at).toISOString()}:null;
 }
 export async function presentationFeed(id:FeedId,replay:ReplayMode):Promise<PresentationFeed> {

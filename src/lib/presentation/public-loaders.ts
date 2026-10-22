@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import type { FeedId } from './types';
+import { NextRequest } from 'next/server';
 
 async function payload(response:Response) {
   if (!response.ok) throw new Error('Public feed unavailable.');
@@ -11,7 +12,8 @@ async function payload(response:Response) {
 let maritime: { until:number; promise:Promise<unknown> } | undefined;
 function marinePayload() {
   if (maritime && maritime.until>Date.now()) return maritime.promise;
-  const promise=import('@/app/api/maritime/route').then(route=>route.GET()).then(payload);
+  const promise=import('@/app/api/maritime/route')
+    .then(route=>route.GET(new NextRequest('http://ophanim.internal/api/maritime?public=1'))).then(payload);
   maritime={until:Date.now()+60000,promise};
   void promise.catch(()=>{if(maritime?.promise===promise)maritime=undefined;});
   return promise;

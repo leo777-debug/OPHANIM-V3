@@ -1,0 +1,28 @@
+{
+  "checkedAt": "2026-10-20T08:33:37.727Z",
+  "dataMode": "recorded source responses",
+  "diagnostics": [
+    {
+      "providerId": "usgs-earthquakes",
+      "status": "success",
+      "eventCount": 27,
+      "durationMs": 1144
+    },
+    {
+      "providerId": "nasa-eonet",
+      "status": "success",
+      "eventCount": 100,
+      "durationMs": 1861
+    },
+    {
+      "providerId": "gdacs-hazards",
+      "status": "skipped",
+      "eventCount": 0,
+      "durationMs": 0,
+      "message": "Commercial use is unknown or not allowed; provider is disabled."
+    }
+  ],
+  "groupCount": 127,
+  "matchedGroupCount": 0,
+  "limitation": "Point-in-time public collection audit; source selections are capped and incomplete. GDACS normalized connector is disabled by licence."
+}

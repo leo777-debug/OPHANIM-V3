@@ -1,0 +1,3 @@
+# Official API submission/download tools; install in a separate external-drive venv.
+kaggle==2.2.4
+filelock==4.1.0

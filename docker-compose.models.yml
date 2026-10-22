@@ -1,0 +1,72 @@
+# docker compose -f docker-compose.yml -f docker-compose.models.yml --profile local-models up -d
+# Requires the existing external models volume; does not pull model weights.
+services:
+  ophanim:
+    environment:
+      OPHANIM_MODELS_DIR: /models
+      OPHANIM_LOCAL_BASE_URL: http://ophanim-model:11434/v1
+      OPHANIM_LOCAL_MODEL: ${OPHANIM_LOCAL_MODEL:-ophanim-logistics:base}
+      EMBEDDING_BASE_URL: http://ophanim-embeddings:11434/v1
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-qwen3-embedding:0.6b}
+      AI_LOCAL_BASE_URLS: http://ophanim-model:11434,http://ophanim-embeddings:11434,http://ophanim-extractor:8088
+      KNOWLEDGE_EXTRACTOR_URL: http://ophanim-extractor:8088
+      KNOWLEDGE_STORAGE_DIR: /private-knowledge
+      KNOWLEDGE_CRON_SECRET: ${KNOWLEDGE_CRON_SECRET:?Set the knowledge worker secret}
+    volumes:
+      - type: bind
+        source: ${OPHANIM_MODELS_DIR:-D:/models}
+        target: /models
+        read_only: true
+        bind:
+          create_host_path: false
+      - knowledge-private:/private-knowledge
+  ophanim-extractor:
+    build:
+      context: ./ml
+      dockerfile: Dockerfile
+    profiles: [local-models]
+    environment:
+      KNOWLEDGE_CRON_SECRET: ${KNOWLEDGE_CRON_SECRET:?Set the knowledge worker secret}
+    restart: unless-stopped
+  ophanim-knowledge-worker:
+    build:
+      context: ./ml
+      dockerfile: Dockerfile
+    command: ["python", "knowledge_worker.py"]
+    profiles: [local-models]
+    environment:
+      KNOWLEDGE_CRON_SECRET: ${KNOWLEDGE_CRON_SECRET:?Set the knowledge worker secret}
+      KNOWLEDGE_WORKER_URL: http://ophanim:3000/api/knowledge/cron
+    restart: unless-stopped
+  ophanim-model:
+    image: ollama/ollama:0.12.6
+    profiles: [local-models]
+    environment:
+      OLLAMA_MODELS: /models/ollama
+      OLLAMA_NUM_PARALLEL: "1"
+      OLLAMA_MAX_LOADED_MODELS: "1"
+    volumes:
+      - type: bind
+        source: ${OPHANIM_MODELS_DIR:-D:/models}
+        target: /models
+        bind:
+          create_host_path: false
+    ports: ["127.0.0.1:11434:11434"]
+    restart: unless-stopped
+  ophanim-embeddings:
+    image: ollama/ollama:0.12.6
+    profiles: [local-models]
+    environment:
+      OLLAMA_MODELS: /models/ollama
+      OLLAMA_NUM_PARALLEL: "1"
+      OLLAMA_MAX_LOADED_MODELS: "1"
+    volumes:
+      - type: bind
+        source: ${OPHANIM_MODELS_DIR:-D:/models}
+        target: /models
+        bind:
+          create_host_path: false
+    ports: ["127.0.0.1:11435:11434"]
+    restart: unless-stopped
+volumes:
+  knowledge-private:

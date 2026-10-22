@@ -1,4 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { authorizeSdkRead } from '@/lib/integrations/sdk-access';
+import { sdkOrganizationId } from '@/lib/integrations/sdk-access';
+import { sdkState } from '@/lib/sdk/ingestion';
 
 /**
  * ╔══════════════════════════════════════════════════════════════════╗
@@ -10,21 +13,14 @@ import { NextResponse } from 'next/server';
  * ╚══════════════════════════════════════════════════════════════════╝
  */
 
-// In-memory entity store shared across the SDK endpoints
-const globalForSDK = globalThis as unknown as {
-  sdkEntityStore: Map<string, any>;
-  sdkLastUpdate: number;
-};
-
-if (!globalForSDK.sdkEntityStore) {
-  globalForSDK.sdkEntityStore = new Map();
-  globalForSDK.sdkLastUpdate = Date.now();
-}
-
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const denied = await authorizeSdkRead(request);
+  if (denied) return denied;
+  const state = sdkState(), organizationId = state.organizationId;
   const encoder = new TextEncoder();
+  let cleanup = () => {};
 
   const stream = new ReadableStream({
     start(controller) {
@@ -34,11 +30,10 @@ export async function GET() {
         timestamp: new Date().toISOString(),
         payload: {
           connected: true,
-          entityCount: globalForSDK.sdkEntityStore.size,
-          feedCount: 9,
+          entityCount: state.entities.size,
+          feedCount: null,
           latticeStatus: 'disconnected',
-          lastUpdate: new Date().toISOString(),
-          uptime: Date.now() - globalForSDK.sdkLastUpdate,
+          lastUpdate: state.lastUpdate ? new Date(state.lastUpdate).toISOString() : null,
         },
       };
       controller.enqueue(encoder.encode(`data: ${JSON.stringify(statusEvent)}\n\n`));
@@ -46,10 +41,11 @@ export async function GET() {
       // Send heartbeat every 15 seconds
       const heartbeat = setInterval(() => {
         try {
+          if (sdkOrganizationId() !== organizationId || !process.env.SDK_INGEST_KEY?.trim()) { cleanup(); controller.close(); return; }
           const hb = {
             type: 'heartbeat',
             timestamp: new Date().toISOString(),
-            payload: { entityCount: globalForSDK.sdkEntityStore.size },
+            payload: { entityCount: state.entities.size },
           };
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(hb)}\n\n`));
         } catch {
@@ -61,9 +57,10 @@ export async function GET() {
       let lastSentVersion = 0;
       const entityPush = setInterval(() => {
         try {
-          if (globalForSDK.sdkLastUpdate > lastSentVersion) {
-            lastSentVersion = globalForSDK.sdkLastUpdate;
-            const entities = Array.from(globalForSDK.sdkEntityStore.values()).slice(0, 500);
+          if (sdkOrganizationId() !== organizationId || !process.env.SDK_INGEST_KEY?.trim()) { cleanup(); controller.close(); return; }
+          if (state.revision > lastSentVersion) {
+            lastSentVersion = state.revision;
+            const entities = Array.from(state.entities.values()).slice(0, 500);
             const event = {
               type: 'entity_update',
               timestamp: new Date().toISOString(),
@@ -76,13 +73,19 @@ export async function GET() {
           clearInterval(heartbeat);
         }
       }, 5000);
+      const expiry = setTimeout(() => { cleanup(); try { controller.close(); } catch { /* Already closed. */ } }, 60000);
+      const abort = () => { cleanup(); try { controller.close(); } catch { /* Already closed. */ } };
+      cleanup = () => { clearInterval(entityPush); clearInterval(heartbeat); clearTimeout(expiry); request.signal.removeEventListener('abort', abort); };
+      request.signal.addEventListener('abort', abort, { once: true });
+      if (request.signal.aborted) abort();
     },
+    cancel() { cleanup(); },
   });
 
   return new Response(stream, {
     headers: {
       'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Cache-Control': 'private, no-cache, no-store, must-revalidate',
       'Connection': 'keep-alive',
       'X-Accel-Buffering': 'no',
     },

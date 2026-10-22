@@ -1,9 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import maplibregl from 'maplibre-gl';
+import * as maplibregl from 'maplibre-gl';
 import OphanimMap from '@/components/OphanimMap';
 import { atlasFallbackBasemap } from '@/lib/presentation/basemap';
+import { OPEN_FREE_MAP } from '@/lib/map/basemap-sources';
 import { atlasPresentationData, pickPublicMapPoint } from '@/lib/presentation/map-adapter';
 import type { ProviderMapLayer } from '@/lib/providers/types';
 import type { FeedId, PresentationFeed } from '@/lib/presentation/types';
@@ -33,7 +34,7 @@ export default function PresentationGlobe({ feeds, hidden, onSelect, locate, pro
   useEffect(() => {
     const controller = new AbortController();
     // Keep the original dark cartography without CARTO's API-key watermark.
-    void fetch('https://tiles.openfreemap.org/styles/dark', { signal: AbortSignal.any([controller.signal,AbortSignal.timeout(1800)]) })
+    void fetch(OPEN_FREE_MAP.styleUrl, { signal: AbortSignal.any([controller.signal,AbortSignal.timeout(1800)]) })
       .then(async response => { if (!response.ok) throw new Error('Style unavailable'); const style = await response.json(); if (style.version !== 8 || !Array.isArray(style.layers)) throw new Error('Invalid style'); if (!controller.signal.aborted) setBasemap(style); })
       .catch(() => { if (!controller.signal.aborted) { setBasemap(atlasFallbackBasemap); setFallback(true); } });
     return () => controller.abort();
@@ -51,7 +52,12 @@ export default function PresentationGlobe({ feeds, hidden, onSelect, locate, pro
         // Pick the nearest visible original observation without decoding tiles.
         const entity = pickPublicMapPoint(feeds,hidden,event.point,
           (lng,lat) => map.project([lng+360*Math.round((map.getCenter().lng-lng)/360),lat]),
-          (lng,lat) => map.transform.isLocationOccluded(new maplibregl.LngLat(lng,lat)));
+          (lng,lat) => {
+            // A back-side globe point projects onto the front hemisphere. Public
+            // unproject must return the original location before it is selectable.
+            const visible = map.unproject(map.project([lng,lat]));
+            return new maplibregl.LngLat(lng,lat).distanceTo(visible) > 10;
+          });
         if (entity) onSelect(entity);
       } catch { /* A tile replaced during a click is not an application failure. */ }
     };
@@ -80,7 +86,7 @@ export default function PresentationGlobe({ feeds, hidden, onSelect, locate, pro
     return () => { clearInterval(timer); for (const event of ['pointerdown','pointermove','wheel','keydown']) target.removeEventListener(event,pause); };
   }, [map,projection]);
   return <>
-    <div className={styles.globe} style={embedded?{position:'absolute',inset:0,width:'100%',height:'100%'}:undefined} aria-label="Live intelligence globe" data-testid="presentation-globe" data-ready={ready} data-renderer="ophanim-atlas" data-map-style={mapStyle} data-projection={projection}>
+    <div className={styles.globe} style={embedded?{position:'absolute',inset:0,width:'100%',height:'100%'}:undefined} aria-label="Operational intelligence globe" data-testid="presentation-globe" data-ready={ready} data-renderer="ophanim-atlas" data-map-style={mapStyle} data-projection={projection}>
       {publicPresentation && <OphanimMap providerLayers={providerLayers} onEntityClick={onSelect} data={atlas.data} activeLayers={activeLayers} initialView={initialView} projection={projection} mapStyle={mapStyle} flyToLocation={flyTo} publicPresentation={publicPresentation} onViewStateChange={onNativeViewport} />}
     </div>
     {!ready && <div className={styles.globePoster} style={embedded?{inset:0}:undefined} data-testid="globe-starter"><span>Starting Ophanim map...</span></div>}

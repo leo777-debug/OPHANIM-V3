@@ -1,0 +1,131 @@
+{
+  "results": [
+    {
+      "id": "cisa",
+      "url": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
+      "checkedAt": "2026-10-19T17:46:36.203Z",
+      "httpStatus": 200,
+      "reachable": true,
+      "latencyMs": 241,
+      "scope": "HTTP reachability only; content and freshness not validated"
+    },
+    {
+      "id": "digitraffic",
+      "url": "https://meri.digitraffic.fi/api/ais/v1/vessels",
+      "checkedAt": "2026-10-19T17:46:36.645Z",
+      "httpStatus": 200,
+      "reachable": true,
+      "latencyMs": 562,
+      "scope": "HTTP reachability only; content and freshness not validated"
+    },
+    {
+      "id": "usgs",
+      "url": "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_day.geojson",
+      "checkedAt": "2026-10-19T17:46:36.422Z",
+      "httpStatus": 200,
+      "reachable": true,
+      "latencyMs": 337,
+      "scope": "HTTP reachability only; content and freshness not validated"
+    },
+    {
+      "id": "nasa",
+      "url": "https://eonet.gsfc.nasa.gov/api/v3/events?status=open&limit=1",
+      "checkedAt": "2026-10-19T17:46:37.634Z",
+      "httpStatus": 200,
+      "reachable": true,
+      "latencyMs": 1547,
+      "scope": "HTTP reachability only; content and freshness not validated"
+    },
+    {
+      "id": "nws",
+      "url": "https://services.swpc.noaa.gov/products/noaa-scales.json",
+      "checkedAt": "2026-10-19T17:46:38.225Z",
+      "httpStatus": 200,
+      "reachable": true,
+      "latencyMs": 591,
+      "scope": "HTTP reachability only; content and freshness not validated"
+    },
+    {
+      "id": "news-bbc",
+      "url": "https://feeds.bbci.co.uk/news/world/rss.xml",
+      "checkedAt": "2026-10-19T17:46:37.993Z",
+      "httpStatus": 200,
+      "reachable": true,
+      "latencyMs": 356,
+      "scope": "HTTP reachability only; content and freshness not validated"
+    },
+    {
+      "id": "news-aljazeera",
+      "url": "https://www.aljazeera.com/xml/rss/all.xml",
+      "checkedAt": "2026-10-19T17:46:37.744Z",
+      "httpStatus": 200,
+      "reachable": true,
+      "latencyMs": 104,
+      "scope": "HTTP reachability only; content and freshness not validated"
+    },
+    {
+      "id": "news-gdacs",
+      "url": "https://www.gdacs.org/xml/rss.xml",
+      "checkedAt": "2026-10-19T17:46:38.509Z",
+      "httpStatus": 200,
+      "reachable": true,
+      "latencyMs": 867,
+      "scope": "HTTP reachability only; content and freshness not validated"
+    },
+    {
+      "id": "news-nasa",
+      "url": "https://www.nasa.gov/news-release/feed/",
+      "checkedAt": "2026-10-19T17:46:38.696Z",
+      "httpStatus": 200,
+      "reachable": true,
+      "latencyMs": 187,
+      "scope": "HTTP reachability only; content and freshness not validated"
+    },
+    {
+      "id": "news-cisa",
+      "url": "https://www.cisa.gov/cybersecurity-advisories/all.xml",
+      "checkedAt": "2026-10-19T17:46:38.572Z",
+      "httpStatus": 200,
+      "reachable": true,
+      "latencyMs": 61,
+      "scope": "HTTP reachability only; content and freshness not validated"
+    },
+    {
+      "id": "telegram-OSINTtechnical",
+      "url": "https://t.me/s/OSINTtechnical",
+      "checkedAt": "2026-10-19T17:46:39.027Z",
+      "httpStatus": 200,
+      "reachable": true,
+      "latencyMs": 513,
+      "scope": "HTTP reachability only; content and freshness not validated"
+    },
+    {
+      "id": "telegram-Faytuks",
+      "url": "https://t.me/s/Faytuks",
+      "checkedAt": "2026-10-19T17:46:38.983Z",
+      "httpStatus": 200,
+      "reachable": true,
+      "latencyMs": 468,
+      "scope": "HTTP reachability only; content and freshness not validated"
+    },
+    {
+      "id": "telegram-Liveuamap",
+      "url": "https://t.me/s/Liveuamap",
+      "checkedAt": "2026-10-19T17:46:39.221Z",
+      "httpStatus": 200,
+      "reachable": true,
+      "latencyMs": 194,
+      "scope": "HTTP reachability only; content and freshness not validated"
+    },
+    {
+      "id": "telegram-CyberKnow",
+      "url": "https://t.me/s/CyberKnow",
+      "checkedAt": "2026-10-19T17:46:39.441Z",
+      "httpStatus": 200,
+      "reachable": true,
+      "latencyMs": 413,
+      "scope": "HTTP reachability only; content and freshness not validated"
+    }
+  ],
+  "untested": "Other existing providers/cameras, configured/keyed sources and payload parsers still require an audit."
+}

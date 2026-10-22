@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { distanceKm } from '@/lib/watchtower/catalogue';
+import { distanceKm } from '@/lib/intelligence/analysis';
 import { MARITIME_NETWORK } from './reference';
 export { MARITIME_NETWORK } from './reference';
 
@@ -10,7 +10,7 @@ type Graph = { points: Point[]; edges: Edge[][] };
 type Collection = { features: Array<{ properties?: Record<string, unknown>; geometry: { type: string; coordinates: unknown } }> };
 export const PASSAGES: Record<string, string> = { ormuz: 'Strait of Hormuz', babalmandab: 'Bab el-Mandeb', suez: 'Suez Canal', malacca: 'Strait of Malacca', panama: 'Panama Canal', gibraltar: 'Strait of Gibraltar', bosporus: 'Bosporus', south_africa: 'Cape of Good Hope' };
 function validPoint(point: unknown): point is Point { return Array.isArray(point) && point.length === 2 && point.every(Number.isFinite) && Math.abs(point[0]) <= 180 && Math.abs(point[1]) <= 90; }
-const km = (a: Point, b: Point) => distanceKm({ lat: a[1], lon: a[0] }, { lat: b[1], lon: b[0] });
+const km = (a: Point, b: Point) => distanceKm({ lat: a[1], lng: a[0] }, { lat: b[1], lng: b[0] });
 const normalize = (point: Point): Point => [point[0] === 180 ? -180 : point[0], point[1]];
 export function buildSeaGraph(collection: Collection): Graph {
   const points: Point[] = [], edges: Edge[][] = [], ids = new Map<string, number>();

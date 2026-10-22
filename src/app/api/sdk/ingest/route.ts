@@ -1,153 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { authorizeSdkRead, sdkOrganizationId } from '@/lib/integrations/sdk-access';
+import { isRateLimited } from '@/lib/ssrf-guard';
+import { boundedJson } from '@/lib/http/body';
+import { ingestSdkEntities, sdkKeyMatches, sdkState } from '@/lib/sdk/ingestion';
+export const dynamic = 'force-dynamic';
+const headers = { 'Cache-Control': 'private, no-store' };
 
-/**
- * ╔══════════════════════════════════════════════════════════════════╗
- * ║  POLYBOLOS SDK — Ingestion Endpoint                             ║
- * ║  Secure webhook for external platform data push                 ║
- * ║                                                                 ║
- * ║  POST /api/sdk/ingest → Accepts Polybolos-format entities       ║
- * ║  from external systems (e.g., Anduril Lattice) and merges       ║
- * ║  them into the Common Operating Picture.                        ║
- * ║                                                                 ║
- * ║  GET  /api/sdk/ingest → Returns current SDK entity count        ║
- * ╚══════════════════════════════════════════════════════════════════╝
- */
-
-// Share the entity store with the stream endpoint
-const globalForSDK = globalThis as unknown as {
-  sdkEntityStore: Map<string, any>;
-  sdkLastUpdate: number;
-  sdkIngestLog: Array<{ source: string; count: number; timestamp: string }>;
-};
-
-if (!globalForSDK.sdkEntityStore) {
-  globalForSDK.sdkEntityStore = new Map();
-  globalForSDK.sdkLastUpdate = Date.now();
-}
-if (!globalForSDK.sdkIngestLog) {
-  globalForSDK.sdkIngestLog = [];
-}
-
-// Fail-closed: require SDK_INGEST_KEY env var, disable endpoint when unset
-const SDK_KEY = process.env.SDK_INGEST_KEY;
-const VALID_KEYS = SDK_KEY ? new Set([SDK_KEY]) : null;
-
+/** Machine-to-server ingestion. Diagnostic payloads exercise validation without adding map data. */
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-
-    // Validate structure
-    if (!body.source || !body.apiKey || !Array.isArray(body.entities)) {
-      return NextResponse.json({
-        accepted: 0,
-        rejected: 0,
-        errors: ['Invalid payload structure. Required: { source, apiKey, entities[] }'],
-        timestamp: new Date().toISOString(),
-      }, { status: 400 });
-    }
-
-    // Validate API key (fail-closed: endpoint disabled when SDK_INGEST_KEY is unset)
-    if (!VALID_KEYS) {
-      return NextResponse.json({
-        accepted: 0,
-        rejected: 0,
-        errors: ['Ingest endpoint disabled — SDK_INGEST_KEY not configured'],
-        timestamp: new Date().toISOString(),
-      }, { status: 503 });
-    }
-    if (!VALID_KEYS.has(body.apiKey)) {
-      return NextResponse.json({
-        accepted: 0,
-        rejected: 0,
-        errors: ['Invalid API key'],
-        timestamp: new Date().toISOString(),
-      }, { status: 401 });
-    }
-
-    let accepted = 0;
-    let rejected = 0;
-    const errors: string[] = [];
-
-    for (const entity of body.entities) {
-      // Validate minimum required fields
-      if (!entity.id || !entity.position?.lat || !entity.position?.lng) {
-        rejected++;
-        errors.push(`Entity missing required fields (id, position.lat, position.lng): ${entity.id || 'unknown'}`);
-        continue;
-      }
-
-      // Normalize and store
-      const normalized = {
-        id: `ext-${body.source}-${entity.id}`,
-        name: entity.name || `ENTITY-${entity.id}`,
-        domain: entity.domain || 'LAND',
-        entityType: entity.entityType || 'TRACK',
-        position: {
-          lat: entity.position.lat,
-          lng: entity.position.lng,
-          alt: entity.position.alt,
-          heading: entity.position.heading,
-          speed: entity.position.speed,
-        },
-        threat: entity.threat || 'NONE',
-        classification: entity.classification || 'UNCLASSIFIED',
-        source: {
-          provider: body.source,
-          feed: 'ingest-api',
-          originalId: entity.id,
-          confidence: entity.confidence || 0.8,
-        },
-        timestamp: entity.timestamp || new Date().toISOString(),
-        properties: entity.properties || {},
-        display: entity.display || {
-          color: '#D4AF37',
-          icon: 'dot-gold',
-          layerType: 'circle',
-          glow: false,
-          scale: 1.0,
-        },
-      };
-
-      globalForSDK.sdkEntityStore.set(normalized.id, normalized);
-      accepted++;
-    }
-
-    // Update timestamp to trigger SSE push
-    globalForSDK.sdkLastUpdate = Date.now();
-
-    // Log ingestion
-    globalForSDK.sdkIngestLog.push({
-      source: body.source,
-      count: accepted,
-      timestamp: new Date().toISOString(),
-    });
-    // Keep log to last 100 entries
-    if (globalForSDK.sdkIngestLog.length > 100) {
-      globalForSDK.sdkIngestLog = globalForSDK.sdkIngestLog.slice(-100);
-    }
-
-    return NextResponse.json({
-      accepted,
-      rejected,
-      errors: errors.slice(0, 10), // Limit error list
-      timestamp: new Date().toISOString(),
-    });
-  } catch (e) {
-    return NextResponse.json({
-      accepted: 0,
-      rejected: 0,
-      errors: [`Server error: ${e instanceof Error ? e.message : 'Unknown'}`],
-      timestamp: new Date().toISOString(),
-    }, { status: 500 });
-  }
+  if (!sdkOrganizationId() || !process.env.SDK_INGEST_KEY?.trim()) return NextResponse.json({ error: 'SDK service not configured. Add SDK settings in Admin → Integrations.' }, { status: 503, headers });
+  let input: unknown;
+  try { input = await boundedJson(request, 1000000); }
+  catch (error) { return NextResponse.json({ error: error instanceof Error && error.message.includes('size limit') ? 'Payload too large.' : 'Provide a valid JSON payload.' }, { status: error instanceof Error && error.message.includes('size limit') ? 413 : 400, headers }); }
+  const body = input !== null && typeof input === 'object' && !Array.isArray(input) ? input as Record<string, unknown> : {};
+  const key = request.headers.get('authorization')?.replace(/^Bearer /i, '') ?? body.apiKey;
+  if (!sdkKeyMatches(key)) return NextResponse.json({ error: 'Invalid API key.' }, { status: 401, headers });
+  if (isRateLimited(`sdk-ingest:${sdkOrganizationId()}`, 30)) return NextResponse.json({ error: 'Rate limit reached.' }, { status: 429, headers });
+  if (typeof body.source !== 'string' || !/^[a-z0-9_.-]{1,80}$/i.test(body.source) || !Array.isArray(body.entities) || body.entities.length > 500 || (body.diagnostic !== undefined && typeof body.diagnostic !== 'boolean')) return NextResponse.json({ error: 'Provide a source identifier and at most 500 entities; diagnostic must be boolean.' }, { status: 400, headers });
+  return NextResponse.json(ingestSdkEntities(body.source, body.entities, body.diagnostic === true), { headers });
 }
 
-export async function GET() {
-  return NextResponse.json({
-    sdk: 'polybolos',
-    version: '1.0.0',
-    entityCount: globalForSDK.sdkEntityStore.size,
-    recentIngestions: globalForSDK.sdkIngestLog.slice(-10),
-    timestamp: new Date().toISOString(),
-  });
+export async function GET(request: NextRequest) {
+  const denied = await authorizeSdkRead(request); if (denied) return denied;
+  const state = sdkState();
+  return NextResponse.json({ sdk: 'polybolos', version: '1.0.0', entityCount: state.entities.size, recentIngestions: state.log.slice(-10), lastObservationReceivedAt: state.lastUpdate ? new Date(state.lastUpdate).toISOString() : null, storage: 'process-local, one configured organization; cleared on restart', timestamp: new Date().toISOString() }, { headers });
 }

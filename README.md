@@ -29,6 +29,27 @@ See [presenter instructions](PRESENTATION.md) and the
 
 ## Features
 
+### Ophanim Verify (Milestone 0)
+
+Open `/verify` or use the atlas **Verify** link to review a public-event claim,
+correct its place/time/entities and run deterministic evidence checks. Optional
+configured AI assists with parsing and an **INFERENCE** summary, never verdicts
+or provider selection. Text/URL inputs, source timestamps, coverage limitations,
+re-checks, revocable shares and PNG downloads are included.
+
+Five **synthetic replay** cases are explicitly labelled, never presented as live.
+USGS and NASA EONET reuse the existing registry; airport movement, maritime,
+sanctions and trusted-news checks need suitable reviewed observations. New METAR
+and observations providers remain off until commercial-use rights are configured.
+
+Signed-in history and durable shares require the database and both additive
+migrations. Without a database, checks use a 30-minute temporary session; public
+shares use the server's temporary filesystem and do not work across instances.
+Live RLS tests skip when `DATABASE_URL` is absent, not silently pass.
+
+[Verdict rules, source configuration and safety](docs/VERIFY_RULES.md) |
+[Milestone 0 verification report](docs/VERIFY_MILESTONE_REPORT.md)
+
 ### Unified Operational Map
 
 `/logistics/map` and presentation Map view use one operational map implementation,
@@ -214,6 +235,12 @@ contains detailed checks and the remaining capability gaps. Full World Monitor
 parity is not claimed.
 
 ## Technology
+
+The Knowledge page adds private organization documents, shared sources, hybrid
+retrieval and cited answers. Setup: [Knowledge operations](docs/KNOWLEDGE.md).
+Local model/Kaggle tooling lives in ml/; see the [implementation and evaluation
+report](ml/FINAL_REPORT.md) and [founder runbook](ml/TRAINING_RUNBOOK.md). The custom
+model is optional and remains behind hardware/quality acceptance gates.
 
 Next.js 16 App Router, React 19, TypeScript, MapLibre GL, Framer Motion, Lucide,
 PostgreSQL, Resend and Vitest. See [`package.json`](package.json) for dependency

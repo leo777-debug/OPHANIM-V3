@@ -1,0 +1,18 @@
+{
+  "checkedAt": "2026-10-21T01:19:04.959Z",
+  "checks": [
+    {
+      "name": "Disposable local database: full migration chain, external APIs blocked"
+    },
+    {
+      "name": "Standalone map recovers from blocked remote tiles with attributed reference geography and 3,962 clustered source points"
+    },
+    {
+      "name": "Real Dubai–Rotterdam route/closure calculation renders beside clustered reference ports and exports CSV without source credentials"
+    },
+    {
+      "name": "Hazard and Aviation maps also recover to clearly labelled reference basemaps when public providers are unavailable"
+    }
+  ],
+  "syntheticFixturesOnly": true
+}

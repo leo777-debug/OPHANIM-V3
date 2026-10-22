@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { parseAiConfig } from '@/lib/ai/config';
+import { resolveAiConfig } from '@/lib/ai/config';
 import { openAiCompatibleProvider } from '@/lib/ai/providers/openai-compatible-provider';
 import { getClientIp, isRateLimited } from '@/lib/ssrf-guard';
 import { AiProviderError } from '@/lib/ai/providers/provider-error';
@@ -8,7 +8,7 @@ import { availableAiModels } from '@/lib/ai/providers/models';
 export async function POST(request: NextRequest) {
   if (isRateLimited(getClientIp(request), 5, 60_000)) return NextResponse.json({ error: 'Please wait before testing again.' }, { status: 429 });
   let config;
-  try { config = parseAiConfig(await request.json()); }
+  try { config = resolveAiConfig(await request.json()); }
   catch { return NextResponse.json({ error: 'Invalid connection settings.' }, { status: 400 }); }
   if (!config) return NextResponse.json({ error: 'Enter a base URL and model name.' }, { status: 400 });
   let modelListSucceeded = false;
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     await openAiCompatibleProvider.generate(config, { task: 'explain', input: 'Reply with: Connection successful.', maxOutputTokens: 64 });
     return NextResponse.json({ connected: true, model: config.model, modelListSucceeded });
   } catch (error) {
-    const prefix = modelListSucceeded ? 'Mistral model-list access succeeded with the entered key, but text generation failed. ' : stage === 'model_access' ? 'Mistral model-list access failed before text generation. ' : '';
+    const prefix = modelListSucceeded ? 'Mistral model-list access succeeded with server credentials, but text generation failed. ' : stage === 'model_access' ? 'Mistral model-list access failed before text generation. ' : '';
     if (error instanceof AiProviderError && error.status === 429) return NextResponse.json(
       { error: prefix + error.message, modelListSucceeded, stage }, { status: 429, headers: error.retryAfterSeconds ? { 'Retry-After': String(error.retryAfterSeconds) } : {} },
     );

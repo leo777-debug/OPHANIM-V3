@@ -125,19 +125,15 @@ export async function POST(
     );
   }
 
-  // Determine API key — user-provided header takes priority
-  const userKey = request.headers.get('x-gemini-key')?.trim();
+  // Credentials are centralized in the server environment.
   let apiKey: string;
-
-  if (userKey && userKey.length > 0) {
-    apiKey = userKey;
-  } else {
+  {
     const envKeys = getEnvApiKeys();
     if (envKeys.length === 0) {
       return NextResponse.json(
         {
           error:
-            'No Gemini API key configured. Set GEMINI_API_KEY_1 in environment or provide a key via the settings panel.',
+            'Add your Gemini key in Admin → Integrations using GEMINI_API_KEY_1 in the server environment.',
           code: 'NO_API_KEY',
         },
         { status: 503 }

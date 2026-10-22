@@ -43,6 +43,11 @@ describe('original atlas public-feed adapter', () => {
   it('does not invent observation timestamps when adapting position data', () => {
     expect(atlasPresentationData({flights:flights()},new Set()).data.flight_timestamp).toBeNull();
   });
+  it('retains numeric quake observation times and citations for timeline/convergence consumers', () => {
+    const time = '2026-10-20T00:10:00Z';
+    const earthquake = live(normalizePublicFeed('earthquakes', { earthquakes: [{ id:'q', place:'Fixture', magnitude:4, time:Date.parse(time), lat:25, lng:55, url:'https://example.invalid/quake' }] }));
+    expect(atlasPresentationData({earthquakes:earthquake},new Set()).data.earthquakes[0]).toMatchObject({time:Date.parse(time),place:'Fixture',url:'https://example.invalid/quake'});
+  });
   it('selects the original public evidence for details, not a lossy renderer property subset', () => {
     const project=(lng:number,lat:number)=>({x:lng*10,y:lat*10});
     expect(pickPublicMapPoint({flights:flights()},new Set(),{x:520,y:250},project,()=>false)).toMatchObject({name:'TEST01',provider:'flights',sourceUrl:'https://adsb.lol/'});
