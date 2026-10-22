@@ -12,6 +12,7 @@ export const hibpProvider:DarkWebProvider={
  async health(){return this.validateConfiguration().valid?{status:'healthy'}:{status:'misconfigured',detail:'Tenant-bound HIBP subscription required.'};},
  async search(query,context){
   if(context.organizationId!==process.env.HIBP_ORGANIZATION_ID)throw new Error('HIBP subscription is not bound to this organization.');
+  if(!context.allowedTerms?.some(t=>t.trim().toLowerCase()===query.query.trim().toLowerCase()))throw new Error('Registered tenant domain required.');
   if((cooldown.get('subscription')??0)>Date.now())throw new Error('HIBP rate limit cooldown; try later.');
   cooldown.set('subscription',Date.now()+60000);
   const response=await fetch(`https://haveibeenpwned.com/api/v3/breacheddomain/${encodeURIComponent(query.query)}`,{
@@ -22,10 +23,11 @@ export const hibpProvider:DarkWebProvider={
   if(!response.ok)throw new Error(`HIBP unavailable (${response.status}); domain verification/subscription may be required.`);
   const body=await response.text();if(body.length>2_000_000)throw new Error('HIBP metadata response too large.');
   const result=JSON.parse(body) as Record<string,unknown>;
-  const names=[...new Set(Object.values(result).flatMap(v=>Array.isArray(v)?v.filter((x):x is string=>typeof x==='string'&&/^[\w .-]{1,120}$/.test(x)):[]))].slice(0,query.limit);
+  const counts=new Map<string,number>();
+  for(const value of Object.values(result))if(Array.isArray(value))for(const name of new Set(value.filter((x):x is string=>typeof x==='string'&&/^[\w .-]{1,120}$/.test(x))))counts.set(name,(counts.get(name)??0)+1);
   const now=new Date().toISOString();
-  return names.map(name=>({providerDocumentId:`${query.query}:${name}`,sourceCategory:'licensed_intelligence',sourceName:'Have I Been Pwned',sourceReference:'https://haveibeenpwned.com/',
-   firstSeenAt:now,lastSeenAt:now,title:'Customer domain breach metadata',originalText:`${query.query} appears in HIBP breach metadata: ${name}. Account aliases and secrets are not retained.`,sourceReliability:75,matchedIdentifiers:[query.query],threatCategories:['credential_exposure']}));
+  return [...counts].slice(0,query.limit).map(([name,accounts])=>({providerDocumentId:`${query.query}:${name}`,sourceCategory:'licensed_intelligence',sourceName:'Have I Been Pwned',sourceReference:`https://haveibeenpwned.com/PwnedWebsites#${encodeURIComponent(name)}`,
+   firstSeenAt:now,lastSeenAt:now,title:`${accounts} account(s) at ${query.query} in breach metadata`,originalText:`${accounts} account(s) at ${query.query} appear in HIBP breach metadata: ${name}. Account aliases and secrets are not retained.`,sourceReliability:75,matchedIdentifiers:[query.query],threatCategories:['credential_exposure','credential_leak']}));
  },
  normalize(raw){return raw;},redact(raw){return {...raw,originalText:raw.originalText.slice(0,2000)};}
 };

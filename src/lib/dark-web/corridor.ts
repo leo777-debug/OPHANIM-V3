@@ -5,7 +5,7 @@ import type { OrganizationActor } from '@/lib/operations/types';
 export async function shipmentMentions(actor:OrganizationActor,shipmentId:string,asOf=new Date().toISOString()){
  requireOrganizationAccess(actor,actor.organizationId,'intelligence:read');
  return (await db().query(`select distinct m.id,m.title,m.provider_id,m.source_category,m.source_name,m.source_reference,m.source_reliability,
-  m.first_seen_at,m.review_status,m.threat_categories,x.match_method,x.confidence_contribution,x.requires_review,
+  m.first_seen_at,m.review_status,m.threat_categories,x.entity_id,x.match_method,x.matched_text,e.canonical_name,e.entity_type,x.confidence_contribution,x.requires_review,
   a.id as assessment_id,a.confidence_score,a.confidence_level,a.confidence_breakdown
  from ophanim_shipments s
  join ophanim_entities e on e.organization_id=s.organization_id and (

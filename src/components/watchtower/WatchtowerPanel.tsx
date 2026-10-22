@@ -23,7 +23,7 @@ export default function WatchtowerPanel({initialPort='',onLayers,onLocate}:{init
    {playable(c)&&<CameraTile camera={c}/>}
    {canOpenCamera(c)?<><button onClick={()=>setCamera(c)}>Open reviewed public player / fullscreen</button>{c.status!=='online'&&<p>Playback has not been checked recently. Open the publisher player to inspect it; conditions remain unknown.</p>}</>:<p>Playback unavailable or permission not verified.</p>}
    <p>Last online: {c.lastSeen?new Date(c.lastSeen).toLocaleString():'not verified'}</p><p>{c.coverage}</p>
-   <a href={c.sourceUrl} target="_blank" rel="noreferrer">Publisher camera page</a><details><summary>Source terms</summary><p>{c.terms}</p><a href={c.termsUrl} target="_blank" rel="noreferrer">Terms/source</a></details>
+   <a href={c.sourceUrl} target="_blank" rel="noreferrer">Publisher camera page</a>{c.attribution&&<a href="https://www.windy.com/webcams/add" target="_blank" rel="noreferrer">{c.attribution}</a>}<details><summary>Source terms</summary><p>{c.terms}</p><a href={c.termsUrl} target="_blank" rel="noreferrer">Terms/source</a></details>
   </article>)}</div></>}
   {camera&&<CameraViewer camera={{name:camera.name,lat:camera.lat,lng:camera.lon,stream_url:camera.streamUrl,stream_type:camera.embedType==='youtube'?'iframe':camera.embedType==='snapshot'?'jpg':camera.embedType,external_url:camera.sourceUrl}} onClose={()=>setCamera(null)}/>}
  </section>;

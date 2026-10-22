@@ -48,7 +48,7 @@ export async function registerShipmentEntity(actor: OrganizationActor, shipment:
   if (shipment.carrier) await registerEntity(actor, { entityType: 'carrier', canonicalName: shipment.carrier, attributes: { shipmentIds: [shipment.id] } });
 }
 
-export async function synchronizeOperationalEntities(actor: OrganizationActor): Promise<{ shipments: number; clients: number; assets: number; dependencies: number }> {
+export async function synchronizeOperationalEntities(actor: OrganizationActor): Promise<{ shipments: number; jobFiles:number; clients: number; assets: number; dependencies: number }> {
   requireOrganizationAccess(actor, actor.organizationId, 'intelligence:write');
   const [shipments, clients, assets, dependencies] = await Promise.all([listShipments(actor), listCyberClients(actor), listCyberAssets(actor), listVendorDependencies(actor)]);
   for (const shipment of shipments.filter(s => !['delivered','cancelled','archived'].includes(s.currentStatus ?? ''))) {
@@ -78,5 +78,29 @@ export async function synchronizeOperationalEntities(actor: OrganizationActor): 
   for (const item of clients) await registerEntity(actor, { entityType: 'client', canonicalName: item.name, normalizedKey: item.id, attributes: { clientId: item.id, serviceTier: item.serviceTier }, aliases: [{ alias: item.reference, identifierType: 'client_identifier', identifierValue: item.reference }] });
   for (const item of assets) await registerEntity(actor, { entityType: 'asset', canonicalName: item.assetName, normalizedKey: item.id, attributes: { assetId: item.id, clientId: item.customerId, product: item.product, version: item.productVersion }, aliases: [...(item.hostname ? [{ alias: item.hostname, identifierType: 'hostname', identifierValue: item.hostname }] : []), ...(item.domain ? [{ alias: item.domain, identifierType: 'domain', identifierValue: item.domain }] : []), ...(item.ipAddress ? [{ alias: item.ipAddress, identifierType: 'ip', identifierValue: item.ipAddress }] : [])] });
   for (const item of dependencies) await registerEntity(actor, { entityType: 'vendor_dependency', canonicalName: item.vendor, normalizedKey: item.id, attributes: { dependencyId: item.id, clientId: item.customerId, productOrService: item.productOrService }, aliases: item.productOrService ? [{ alias: `${item.vendor} ${item.productOrService}`, identifierType: 'vendor_product', identifierValue: `${item.vendor} ${item.productOrService}` }] : [] });
-  return { shipments: shipments.length, clients: clients.length, assets: assets.length, dependencies: dependencies.length };
+  const jobFiles=await synchronizeJobFileEntities(actor);
+  return { shipments: shipments.length,jobFiles, clients: clients.length, assets: assets.length, dependencies: dependencies.length };
+}
+
+/** Keep the job key ring on its linked shipment entity, including AWB/HAWB and
+ * references added after booking. No separate job watchlist or mention pipeline. */
+export async function synchronizeJobFileEntities(actor:OrganizationActor):Promise<number>{
+ requireOrganizationAccess(actor,actor.organizationId,'intelligence:write');
+ const jobs=(await db().query<{id:string;shipment_id:string|null;job_number:string;origin:string|null;destination:string|null;client_email:string|null}>(`select j.id,j.shipment_id,j.job_number,j.origin,j.destination,c.email as client_email
+  from ophanim_job_files j left join ophanim_counterparties c on c.id=j.client_counterparty_id and c.organization_id=j.organization_id
+  where j.organization_id=$1 and j.status not in ('closed','cancelled','delivered') and not j.is_synthetic order by j.created_at desc limit 500`,[actor.organizationId])).rows;
+ if(!jobs.length)return 0;
+ const references=(await db().query<{job_file_id:string;type:string;normalized_value:string}>(`select job_file_id,type,normalized_value from ophanim_job_references where organization_id=$1 and validated and job_file_id=any($2::uuid[]) and type in ('awb','hawb','bl','hbl','container','booking')`,[actor.organizationId,jobs.map(j=>j.id)])).rows;
+ for(const job of jobs){
+  const attributes={jobFileId:job.id,...(job.shipment_id?{shipmentId:job.shipment_id,shipmentIds:[job.shipment_id]}:{})};
+  await registerEntity(actor,{entityType:'shipment',canonicalName:job.job_number,normalizedKey:job.shipment_id??`job:${job.id}`,attributes,
+   aliases:[{alias:job.job_number,identifierType:'job_number',identifierValue:job.job_number},...references.filter(r=>r.job_file_id===job.id).map(r=>({alias:r.normalized_value,identifierType:r.type,identifierValue:r.normalized_value}))]});
+  for(const place of [job.origin,job.destination].filter((s):s is string=>Boolean(s))){
+   const code=/^[A-Z]{2}[A-Z0-9]{3}$/.test(place.trim())?place.trim():undefined;
+   await registerEntity(actor,{entityType:'port',canonicalName:place,normalizedKey:code??place,attributes,aliases:code?[{alias:code,identifierType:'unlocode',identifierValue:code}]:[]});
+  }
+  const domain=job.client_email?.match(/@([a-z0-9.-]+\.[a-z]{2,63})\b/i)?.[1]?.toLowerCase();
+  if(domain)await registerEntity(actor,{entityType:'domain',canonicalName:domain,attributes:{...attributes,source:'job_customer_contact'},aliases:[{alias:domain,identifierType:'domain',identifierValue:domain}]});
+ }
+ return jobs.length;
 }

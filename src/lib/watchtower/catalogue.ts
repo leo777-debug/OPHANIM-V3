@@ -7,12 +7,13 @@ export interface CameraFeed {
  embedType: 'hls'|'youtube'|'mjpeg'|'iframe'|'snapshot'; sourceUrl: string; terms: string; termsUrl: string;
  lastSeen: string|null; status: 'online'|'offline'|'unverified'; verifiedAt: string|null;
  publicViewingVerified: boolean; embedAllowed: boolean; healthCheckAllowed: boolean; coverage: string;
+ provider?: string; attribution?: string;
 }
 export const priorityPorts = ports;
 export const cameraCatalogue = catalogue as CameraFeed[];
 export function effectiveCamera(feed:CameraFeed,health?:{status:string;last_seen:string|null},now=Date.now()):CameraFeed{
  const lastSeen=health?.last_seen??feed.lastSeen;
- const status=health?.status==='offline'?'offline':feed.status==='online'&&(!lastSeen||!Number.isFinite(Date.parse(lastSeen))||Date.parse(lastSeen)>now+300000||now-Date.parse(lastSeen)>30*60*1000)?'unverified':feed.status;
+ const status=health?.status==='offline'?'offline':health?.status==='unverified'?'unverified':feed.status==='online'&&(!lastSeen||!Number.isFinite(Date.parse(lastSeen))||Date.parse(lastSeen)>now+300000||now-Date.parse(lastSeen)>30*60*1000)?'unverified':feed.status;
  return {...feed,status,lastSeen};
 }
 export function distanceKm(a: {lat:number;lon:number}, b:{lat:number;lon:number}) {

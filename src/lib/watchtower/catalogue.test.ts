@@ -1,6 +1,9 @@
 import {describe,it,expect} from 'vitest';
 import {cameraCatalogue,effectiveCamera,playable,canOpenCamera,searchCameraPorts} from './catalogue';
 describe('reviewed public camera playback and staleness',()=>{
+ it('preserves prior search aliases on canonical ports without merging distinct ports',()=>{
+  expect(searchCameraPorts('Shahid Rajaei')[0].code).toBe('IRBND');expect(searchCameraPorts('JAFZA')[0].code).toBe('AEJEA');expect(searchCameraPorts('ميناء جبل علي')[0].code).toBe('AEJEA');expect(searchCameraPorts('IRBUZ')[0].code).toBe('IRBUS');expect(searchCameraPorts('Shuaiba')).toEqual([]);expect(searchCameraPorts('Doha port')).toEqual([]);
+ });
  it('has a real reviewed publisher embed without assigning it to a priority cargo port',()=>{
   const camera=cameraCatalogue.find(c=>c.id==='muscat-aida-darglobal')!;
   expect(searchCameraPorts('Yiti')[0].code).toBe('OMMNQ');

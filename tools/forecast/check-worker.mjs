@@ -27,5 +27,21 @@ try{
  const scored=(await db.db.query('select brier,log_loss from ophanim_forecast_scores')).rows[0];
  assert.ok(Math.abs(scored.brier-.09)<1e-8);assert.ok(Math.abs(scored.log_loss+Math.log(.7))<1e-8);
  assert.equal((await request('/resolve',{})).status,200);assert.equal((await db.db.query('select count(*)::int as n from ophanim_forecast_scores')).rows[0].n,1);
- console.log('PASS: worker auth, tenant parent rejection, honest cold start, snapshot persistence, actual resolution, Brier/log loss, idempotent scoring.');
+ // The merged job-file and analyst ports share the same scoring cycle. Public
+ // questions have no shipment; rule forecasts and acted-on warnings must coexist.
+ const user='20000000-0000-4000-8000-000000000001';
+ for(const [type,source,intervention] of [['public_question','human',false],['paper_risk','rule',false],['paper_risk','rule',true]]){
+  const publicQuestion=type==='public_question';
+  const snapshot=(await db.db.query("insert into ophanim_feature_snapshots(organization_id,shipment_id,feature_set_version,features) values($1,$2,'integration-test',$3) returning id",[org,publicQuestion?null:shipment,JSON.stringify(publicQuestion?{scope:'public_question'}:{lane:'TEST ONLY'})])).rows[0].id;
+  const question=(await db.db.query("insert into ophanim_forecast_questions(organization_id,shipment_id,question_type,question_text,threshold,resolve_by) values($1,$2,$3,'SYNTHETIC compatibility question',$4,now()+interval '1 hour') returning id",[org,publicQuestion?null:shipment,type,JSON.stringify(publicQuestion?{scope:'public_question'}:{subjectKey:'test'})])).rows[0].id;
+  const forecast=(await db.db.query("insert into ophanim_forecasts(organization_id,shipment_id,question_id,source_type,user_id,probability,feature_snapshot_id,trigger) values($1,$2,$3,$4,$5,.8,$6,'{}') returning id",[org,publicQuestion?null:shipment,question,source,source==='human'?user:null,snapshot])).rows[0].id;
+  await db.db.query("insert into ophanim_forecast_outcomes(organization_id,question_id,outcome,resolution_source,reviewer_user_id,evidence,intervention) values($1,$2,true,'manual',$3,'{}',$4)",[org,question,user,intervention]);
+  await db.db.query("update ophanim_forecast_questions set status='resolved' where id=$1",[question]);
+  assert.equal((await request('/resolve',{})).status,200);
+  const scores=(await db.db.query('select brier from ophanim_forecast_scores where forecast_id=$1',[forecast])).rows;
+  if(intervention)assert.equal(scores.length,0);else assert.ok(Math.abs(scores[0].brier-.04)<1e-8);
+ }
+ const rollups=(await db.db.query('select source_type from ophanim_forecast_score_rollups')).rows.map(r=>r.source_type);
+ assert.ok(rollups.includes('human')&&rollups.includes('rule')&&rollups.includes('base_rate'));
+ console.log('PASS: worker auth, tenant parent rejection, honest cold start, snapshot persistence, actual resolution, Brier/log loss, idempotent scoring, analyst null-shipment questions, job-file rules and intervention exclusion on one ledger.');
 }finally{worker.kill();await new Promise(r=>worker.once('exit',r));await db.stop();}

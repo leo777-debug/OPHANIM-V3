@@ -20,6 +20,7 @@ describe('Panel migrations execute with tenant RLS and immutable evidence',()=>{
   for(const directory of ['db/migrations','supabase/migrations'])for(const name of await readdir(directory))if(name.endsWith('.sql'))files.push({directory,name});
   for(const f of files.sort((a,b)=>a.name.localeCompare(b.name)))await pg.exec(await readFile(`${f.directory}/${f.name}`,'utf8'));
   await pg.exec(await readFile('supabase/tests/forecast_tenant_isolation.test.sql','utf8'));
+  await pg.exec(await readFile('supabase/tests/camera_health_access.test.sql','utf8'));
  },60000);
  afterAll(async()=>{await pg?.close();});
  it('executes all SQL tenant and ledger assertions',async()=>{

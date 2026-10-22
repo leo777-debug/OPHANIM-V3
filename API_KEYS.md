@@ -77,6 +77,8 @@ Pricing/quotas vary by plan and may change. “Keyless” describes access, not 
 | Route Lens: sanctions screening sources | `ROUTE_SCREENING_TERMS_REVIEWED` | GUR / OpenSanctions route screening once commercial terms are reviewed | Public sources; reuse terms must be confirmed. | [Provider](https://github.com/leo777-debug/OPHANIM-V3/blob/codex/route-lens-panel/docs/ROUTE_LENS.md) | Screening layer withheld. |
 | Route Lens: local truck router (Valhalla) | `ROAD_ROUTER_URL` | Truck legs with dimensions/hazmat from a self-hosted router | Keyless self-hosted router; load a reviewed OSM extract. | [Provider](https://valhalla.github.io/valhalla/) | Road legs withheld; never sent to a demo server. |
 | Deep Watch: Have I Been Pwned | `HIBP_API_KEY`, `HIBP_ORGANIZATION_ID` | Breach metadata for one verified tenant domain subscription | Paid subscription; domains verified with HIBP. | [Provider](https://haveibeenpwned.com/API/Key) | Development fixtures only. |
+| Watchtower: Windy public webcam discovery | `WINDY_WEBCAMS_API_KEY`, `WINDY_WEBCAMS_TERMS_REVIEWED` | Optional public nearby webcams for one selected port; publisher attribution and terms retained | Windy plan and publisher terms apply; five-minute cache, no re-streaming. | [Provider](https://api4.windy.com/webcams/docs) | Reviewed seed catalogue with explicit coverage gaps. |
+| Deep Watch: licensed defensive metadata feed | `DEEPWATCH_FEED_URL`, `DEEPWATCH_FEED_TOKEN`, `DEEPWATCH_FEED_ORGANIZATION_ID`, `DEEPWATCH_FEED_SAFE_METADATA_ONLY`, `DEEPWATCH_FEED_TERMS_URL`, `DEEPWATCH_FEED_CATEGORY`, `DEEPWATCH_FEED_NAME` | Contracted safe summaries for one tenant’s registered entities; existing review/alert pipeline | Vendor contract; prohibited-content filtering must happen upstream; no raw dumps or attachments. | [Provider](https://github.com/leo777-debug/OPHANIM-V3/blob/feat/gdacs-weather-ai-overview/docs/DEEP_WATCH.md) | HIBP and explicit development fixtures remain independent. |
 | Job files: storage, links and schedules | `JOBFILE_STORAGE_DIR`, `JOBFILE_URL_SIGNING_SECRET`, `JOBFILE_CRON_SECRET`, `JOBFILE_AUTO_ACCEPT_CONFIDENCE`, `JOBFILE_HIGH_VALUE_AED`, `JOBFILE_ALERT_BUDGET` | Private job-file documents, expiring links, cron jobs and Paper Desk thresholds | No external cost. | [Provider](https://github.com/leo777-debug/OPHANIM-V3/blob/feat/job-files-on-panel/docs/JOB_FILE.md) | SYNTHETIC DEMO without a database; cron routes refuse requests. |
 | Job files: inbound email webhook | `INBOUND_EMAIL_SECRET`, `INBOUND_EMAIL_DOMAIN` | One signed inbound address per organization | Provider pricing varies. | [Provider](https://github.com/leo777-debug/OPHANIM-V3/blob/feat/job-files-on-panel/docs/JOB_FILE.md) | Stub: forward or upload in the app. |
 | Job files: IMAP mailbox | `IMAP_HOST`, `IMAP_PORT`, `IMAP_TLS`, `IMAP_USER`, `IMAP_PASSWORD`, `IMAP_MAILBOX`, `IMAP_ORGANIZATION_ID` | Polls one dedicated mailbox for one organization | Your mail server. | [Provider](https://github.com/leo777-debug/OPHANIM-V3/blob/feat/job-files-on-panel/docs/JOB_FILE.md) | Stub. |
@@ -106,6 +108,13 @@ This table includes credentials, local-service settings, safety gates and runtim
 | Maritime | `CUSTOMER_AIS_API_URL` | Customer-licensed vessel coverage for the configured organization |
 | Platform | `DARK_WEB_FIXTURES_ENABLED` | Optional runtime setting; leave empty to use the documented code default. |
 | Platform | `DATABASE_URL` | Organization data, audit records, watchlists |
+| Cyber | `DEEPWATCH_FEED_CATEGORY` | Contracted safe summaries for one tenant’s registered entities; existing review/alert pipeline |
+| Cyber | `DEEPWATCH_FEED_NAME` | Contracted safe summaries for one tenant’s registered entities; existing review/alert pipeline |
+| Cyber | `DEEPWATCH_FEED_ORGANIZATION_ID` | Contracted safe summaries for one tenant’s registered entities; existing review/alert pipeline |
+| Cyber | `DEEPWATCH_FEED_SAFE_METADATA_ONLY` | Contracted safe summaries for one tenant’s registered entities; existing review/alert pipeline |
+| Cyber | `DEEPWATCH_FEED_TERMS_URL` | Contracted safe summaries for one tenant’s registered entities; existing review/alert pipeline |
+| Cyber | `DEEPWATCH_FEED_TOKEN` | Contracted safe summaries for one tenant’s registered entities; existing review/alert pipeline |
+| Cyber | `DEEPWATCH_FEED_URL` | Contracted safe summaries for one tenant’s registered entities; existing review/alert pipeline |
 | Platform | `DISRUPTION_SYNC_CRON_SECRET` | Server-only credential; configure only for the associated optional feature. |
 | Hazards | `ECMWF_FORECAST_URL` | Configured forecast endpoint |
 | Job files | `EINVOICE_ASP_TOKEN` | PINT AE submission through an accredited provider after validation |
@@ -255,6 +264,8 @@ This table includes credentials, local-service settings, safety gates and runtim
 | Job files | `WHATSAPP_ORGANIZATION_ID` | Photos and messages to the business number become intake items; optional digest |
 | Job files | `WHATSAPP_PHONE_NUMBER_ID` | Photos and messages to the business number become intake items; optional digest |
 | Job files | `WHATSAPP_VERIFY_TOKEN` | Photos and messages to the business number become intake items; optional digest |
+| Media | `WINDY_WEBCAMS_API_KEY` | Optional public nearby webcams for one selected port; publisher attribution and terms retained |
+| Media | `WINDY_WEBCAMS_TERMS_REVIEWED` | Optional public nearby webcams for one selected port; publisher attribution and terms retained |
 
 ## Scope and configuration notes
 

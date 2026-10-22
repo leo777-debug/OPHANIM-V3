@@ -1,9 +1,11 @@
 {
   "syntheticFixturesOnly": true,
-  "checkedAt": "2026-10-21T18:59:36.409Z",
+  "checkedAt": "2026-10-22T14:17:23.011Z",
   "checks": [
     "Authenticated shipment → existing sea network → corridor layers",
     "Anonymous read and foreign-origin write rejected",
+    "Legacy analyst API and named analyst route create/list/resolve on the Panel ledger; Watchtower bookmark/detail contract and protected cron routes retained",
+    "Job key ring → shared entity graph → all corridor API contracts; source/match explanations and false-positive exclusion retained",
     "Browser Watchtower search displays Iranian coverage gap",
     "Reviewed Muscat coastal player opens with explicit non-berth coverage; live playback audited separately using public IFrame API",
     "Browser selects depot/gate → truck router stub → tenant route metadata → globe road layer; viewer and foreign-origin mutations denied",
