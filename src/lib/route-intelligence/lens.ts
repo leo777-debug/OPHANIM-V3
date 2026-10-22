@@ -3,7 +3,8 @@ import { db } from '@/lib/watchlists/db';
 import { getShipment } from '@/lib/logistics/shipments';
 import type { OrganizationActor } from '@/lib/operations/types';
 import type { ProviderMapLayer } from '@/lib/providers/types';
-import { priorityPorts,searchCameraPorts } from '@/lib/watchtower/catalogue';
+import { priorityPorts } from '@/lib/watchtower/catalogue';
+import { cameraPortsWithSources } from '@/lib/watchtower/search';
 import { shipmentMentions } from '@/lib/dark-web/corridor';
 import { exploreSeaRoute,findReferencePorts,type Point } from './open-network';
 import { corridorDistance,corridorPolygons } from './corridor';
@@ -65,11 +66,11 @@ export async function buildRouteLens(actor:OrganizationActor,shipmentId:string):
  if(corridors.length)layers.unshift({id:'route-lens-buffer',provider:'route-lens',name:'50 km evidence corridor',geometry:'polygon',visible:true,interactive:false,style:{color:'#38dfc4',opacity:.08},source:{type:'FeatureCollection',features:corridors.map(points=>({type:'Feature',geometry:{type:'MultiPolygon',coordinates:corridorPolygons(points)},properties:{}}))}});
  for(const side of ['origin','destination'])if(!roadLegs.some(r=>r.side===side))gaps.push(`${side} road leg unknown. Select a depot and accessible public port gate to calculate a truck route. Amber sea-network connectors remain unrouted.`);
  for(const port of ports){
-  const catalog=searchCameraPorts(port.code)[0];if(!catalog)continue;
+  const catalog=(await cameraPortsWithSources(port.code)).ports[0];if(!catalog)continue;
   if(!catalog.cameras.length)gaps.push(`${port.name}: public camera coverage unverified.`);
   for(const cam of catalog.cameras)evidence.push({id:`camera:${cam.id}`,layer:'cameras',title:cam.name,why:`${cam.distanceKm.toFixed(1)} km from ${port.name}; nearby waterfront association, not berth observation. ${cam.coverage}`,sourceUrl:cam.sourceUrl,lat:cam.lat,lon:cam.lon,confidence:cam.status,metadata:{port:port.code,lastSeen:cam.lastSeen,terms:cam.terms}});
  }
- for(const mention of await shipmentMentions(actor,shipmentId))evidence.push({id:`mention:${mention.id}:${mention.match_method}`,layer:'deep_watch',title:String(mention.title??'Unverified threat metadata'),why:`Matched route entity via ${mention.match_method}; ${mention.requires_review?'manual review required':'identity match still needs verification'}. Association has no reported physical location.`,sourceUrl:mention.source_reference??undefined,observedAt:String(mention.first_seen_at),confidence:`${mention.confidence_level??'unassessed'} / source reliability ${mention.source_reliability}`,metadata:{...mention,reviewUrl:'/operations'}});
+ for(const mention of await shipmentMentions(actor,shipmentId))evidence.push({id:`mention:${mention.id}:${mention.entity_id}:${mention.match_method}`,layer:'deep_watch',title:String(mention.title??'Unverified threat metadata'),why:`Matched ${mention.canonical_name} via ${mention.match_method} ("${mention.matched_text}"); ${mention.requires_review?'manual review required':'identity match still needs verification'}. Association has no reported physical location.`,sourceUrl:mention.source_reference??undefined,observedAt:String(mention.first_seen_at),confidence:`${mention.confidence_level??'unassessed'} / source reliability ${mention.source_reliability}`,metadata:{...mention,reviewUrl:'/operations'}});
  // Reuse normalized evidence rather than fetching a second news/weather pipeline.
  const events=await db().query(`select e.id,e.title,e.category,e.event_type,e.latitude,e.longitude,e.occurred_at,e.confidence,o.source_url
   from ophanim_events e left join lateral(select source_url from ophanim_observations where event_id=e.id and (organization_id=$1 or organization_id is null) order by retrieved_at desc limit 1)o on true

@@ -1,5 +1,5 @@
 import { safeMetadata } from './scope';
-import type { DarkWebProvider, DarkWebSearchQuery } from './types';
+import type { DarkWebProvider, DarkWebSearchQuery,DarkWebProviderContext } from './types';
 
 export class DarkWebProviderRegistry {
   constructor(private readonly providers: DarkWebProvider[]) {}
@@ -7,7 +7,7 @@ export class DarkWebProviderRegistry {
   select(query: DarkWebSearchQuery) { return this.providers.filter((provider) => provider.metadata.enabled && provider.validateConfiguration().valid && provider.supports(query)).sort((a, b) => a.metadata.id.localeCompare(b.metadata.id)); }
 }
 
-export async function searchDarkWeb(registry: DarkWebProviderRegistry, query: DarkWebSearchQuery, context: { signal: AbortSignal; organizationId: string }) {
+export async function searchDarkWeb(registry: DarkWebProviderRegistry, query: DarkWebSearchQuery, context: DarkWebProviderContext) {
   const providers = registry.select(query);
   const settled = await Promise.all(providers.map(async (provider) => {
     try { return { provider, mentions: await provider.search(query, context), error: undefined as string | undefined }; }

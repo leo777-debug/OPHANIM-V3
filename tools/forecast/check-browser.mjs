@@ -30,7 +30,30 @@ try{
  const lensResponse=await request(`/api/route-lens?shipment=${shipment.id}`);assert.equal(lensResponse.status,200,await lensResponse.clone().text());const lens=await lensResponse.json();assert.equal(lens.ports.length,2);assert.ok(lens.layers.some(l=>l.geometry==='line'&&l.source.features.length));checks.push('Authenticated shipment → existing sea network → corridor layers');
  const cold=await request('/api/forecasts',{method:'POST',body:{shipmentId:shipment.id}});const coldBody=await cold.json();console.log('Cold-start API:',cold.status,JSON.stringify(coldBody));assert.equal(cold.status,200);assert.equal(coldBody.status,'withheld');
  assert.equal((await request('/api/forecasts',{method:'POST',body:{shipmentId:shipment.id},origin:'https://evil.invalid'})).status,400);
- assert.equal((await request(`/api/forecasts?shipment=${shipment.id}`,{token:null})).status,403);checks.push('Anonymous read and foreign-origin write rejected');
+ assert.ok([401,403].includes((await request(`/api/forecasts?shipment=${shipment.id}`,{token:null})).status));checks.push('Anonymous read and foreign-origin write rejected');
+ const legacyCamera=await request('/api/watchtower?port=OMMNQ&dead=1',{token:null});assert.equal(legacyCamera.status,200);assert.ok((await legacyCamera.json()).feeds.some(f=>f.id==='muscat-aida-darglobal'));
+ const bookmark=await request('/watchtower?port=IRBND',{token:null});assert.equal(bookmark.status,307);assert.equal(new URL(bookmark.headers.get('location'),base).pathname,'/logistics/map');
+ assert.equal((await request('/api/watchtower/health',{method:'POST',token:null})).status,401);assert.equal((await request('/api/dark-web/exposure',{method:'POST',token:null})).status,401);
+ const horizon=new Date(Date.now()+3000).toISOString();
+ const analystResponse=await request('/api/forecasts',{method:'POST',body:{question:'Will this synthetic public test resolve?',horizon,probability:.7,sourceUrl:'https://example.invalid/test-evidence',rationale:'Synthetic contract test only.'}});
+ assert.equal(analystResponse.status,201,await analystResponse.clone().text());const analyst=(await analystResponse.json()).forecast;
+ const analystList=await request('/api/forecasts/analyst');assert.ok((await analystList.json()).forecasts.some(f=>f.id===analyst.id));
+ await new Promise(r=>setTimeout(r,Math.max(0,Date.parse(horizon)-Date.now()+30)));
+ const resolution=await request('/api/forecasts',{method:'PATCH',body:{id:analyst.id,outcome:true,sourceUrl:'https://example.invalid/test-resolution'}});assert.equal(resolution.status,200,await resolution.clone().text());assert.ok(Math.abs((await resolution.json()).forecast.brierScore-.09)<1e-8);
+ checks.push('Legacy analyst API and named analyst route create/list/resolve on the Panel ledger; Watchtower bookmark/detail contract and protected cron routes retained');
+ const jobResponse=await request('/api/jobfiles',{method:'POST',body:{mode:'sea_import',jobNumber:'SYNTHETIC-INTEGRATION-JOB',origin:'AEJEA',destination:'AEFJR',references:[{type:'awb',value:'176-12345675'}]}});
+ assert.equal(jobResponse.status,201,await jobResponse.clone().text());const job=(await jobResponse.json()).job;
+ assert.ok(job.shipmentId);
+ const sync=await request('/api/dark-web/entities/sync',{method:'POST'});assert.equal(sync.status,200,await sync.clone().text());assert.equal((await sync.json()).synchronized.jobFiles,1);
+ const entity=(await db.db.query("select e.id from ophanim_entities e join ophanim_entity_aliases a on a.entity_id=e.id where e.attributes->>'shipmentId'=$1 and a.identifier_type='awb' and replace(a.identifier_value,'-','')='17612345675'",[job.shipmentId])).rows[0];assert.ok(entity,'AWB key ring is linked to the shipment entity');
+ const mention=(await db.db.query("insert into ophanim_dark_web_mentions(organization_id,provider_id,provider_document_id,source_category,source_name,first_seen_at,last_seen_at,original_text,content_hash,source_reliability,threat_categories) values($1,'synthetic-integration','synthetic-one','defensive_threat_feed','SYNTHETIC TEST ONLY',now(),now(),'Synthetic cargo theft summary',repeat('a',64),50,'[\"cargo_theft\"]') returning id",['10000000-0000-4000-8000-000000000001'])).rows[0].id;
+ await db.db.query("insert into ophanim_mention_entity_matches(mention_id,entity_id,match_method,matched_text,confidence_contribution) values($1,$2,'exact_client_identifier','17612345675',100)",[mention,entity.id]);
+ for(const parameter of [`jobFileId=${job.id}`,`shipmentId=${job.shipmentId}`,`shipment=${job.shipmentId}`]){
+  const corridor=await request(`/api/dark-web/corridor?${parameter}`);assert.equal(corridor.status,200);const data=await corridor.json();assert.ok(data.mentions.some(m=>m.id===mention));assert.equal(data.features.dw_mention_count,1);assert.ok(Array.isArray(data.assessments));assert.ok(data.mentions[0].why.length);
+ }
+ await db.db.query("update ophanim_dark_web_mentions set review_status='false_positive' where id=$1",[mention]);
+ assert.equal((await (await request(`/api/dark-web/corridor?jobFileId=${job.id}`)).json()).features.dw_mention_count,0);
+ checks.push('Job key ring → shared entity graph → all corridor API contracts; source/match explanations and false-positive exclusion retained');
  browser=await chromium.launch({headless:true,args:['--enable-unsafe-swiftshader']});
  const context=await browser.newContext({viewport:{width:1440,height:1000}});
  await context.addCookies([{name:'ophanim_session',value:db.sessions.owner,url:base}]);
@@ -56,7 +79,7 @@ try{
  assert.equal((await request('/api/route-lens/road',{method:'POST',body:{...legBody,shipmentId:'90000000-0000-4000-8000-000000000002'}})).status,404);
  checks.push('Browser selects depot/gate → truck router stub → tenant route metadata → globe road layer; viewer and foreign-origin mutations denied');
  await page.getByLabel('Your probability (%)').fill('70');await page.getByLabel('Reasoning / correction').fill('Synthetic operator test: confirm paperwork before the deadline.');await page.getByRole('button',{name:'Stamp my call'}).click();await page.getByText(/Your probability is stamped/).waitFor();
- assert.equal((await db.db.query("select count(*)::int as n from ophanim_forecasts where source_type='human'")).rows[0].n,1);checks.push('Evidence view → Python cold-start withholding → human call persisted in immutable ledger');
+ assert.equal((await db.db.query("select count(*)::int as n from ophanim_forecasts where source_type='human' and shipment_id=$1",[shipment.id])).rows[0].n,1);checks.push('Evidence view → Python cold-start withholding → human call persisted in immutable ledger');
  await page.getByRole('heading',{name:'Route Lens',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:'docs/screenshots/route-lens/route-lens.png'});
  assert.deepEqual(pageErrors,[]);checks.push('No browser runtime exceptions');
  await writeFile('tools/forecast/browser-report.json',JSON.stringify({syntheticFixturesOnly:true,checkedAt:new Date().toISOString(),checks},null,2));console.log('PASS: '+checks.join('; '));

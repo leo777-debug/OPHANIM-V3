@@ -44,8 +44,10 @@ fullscreen is browser-native. There is no stream proxy or re-streaming service.
 
 The existing authenticated intelligence cron runs the catalogue health checker.
 Checks are opt-in per feed, HEAD-only, at most every thirty minutes, with six-second
-deadlines and no redirects. HTTP 404/410 marks a feed offline; other responses stay
-unverified. Reachability alone never promotes a feed to live. Health is persisted
+deadlines and no redirects. Three consecutive failed endpoint checks mark a feed
+offline; an earlier failure stays unverified. Recovery resets the failure count
+but remains unverified until playback is separately checked. Reachability alone
+never promotes a feed to live. Health is persisted
 in `ophanim_camera_health`; last-online is never fabricated from a page response.
 Offline feeds are excluded from playback, retained for source audit and not used
 as evidence of safe port conditions. Actual playback/fresh-frame verification
@@ -60,7 +62,24 @@ RTSP or credentials; never bypass login, geofencing, paywalls, robots or source
 terms. Review commercial use, embed permission, attribution, refresh limits and
 robots before enabling any automated access. Do not extract hidden stream URLs.
 The [Windy Webcams API](https://api4.windy.com/webcams/docs) requires its own key
-and has expiring image URLs; an automatic Windy adapter is not enabled here.
+and has expiring player/image URLs. Optional discovery is restored through the
+same catalogue search, registry and Route Lens, gated by `WINDY_WEBCAMS_API_KEY`
+and `WINDY_WEBCAMS_TERMS_REVIEWED=true`. Both remain blank by default. Review
+[API/publisher terms](https://api4.windy.com/webcams/terms) for your intended use.
+The adapter fetches only a selected, unambiguous port (25 km radius), at most ten
+requests/minute per process, with a five-minute cache (free URLs expire after ten
+minutes). Render Windy attribution and use the returned player/source URLs.
+No undocumented stream extraction or re-streaming. An active provider listing,
+including a day/time-lapse player, stays **unverified**, never automatically live.
+Distributed installations must coordinate their provider quota upstream.
+
+Existing `/watchtower?q=...` / `?port=...` bookmarks open the shared globe tool.
+`GET /api/watchtower?q=...` retains `ports[].cameras`; the earlier `?port=CODE`
+contract returns `feeds`, `live`, `warnings`, `policy` (`dead=1` includes offline
+entries). `POST /api/watchtower/health` accepts either existing camera/job cron
+secret and calls the same checker used by the intelligence cron. No second
+camera-status table is created. Apply `027_camera_health_retry.sql` and its
+matching Supabase security migration before deploying the retry-aware checker.
 
 Empty, old, offline or inaccessible cameras mean **unknown coverage**, never
 “all clear”. A camera is not a congestion measurement unless separately observed

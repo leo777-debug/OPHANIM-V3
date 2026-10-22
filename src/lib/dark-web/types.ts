@@ -26,7 +26,7 @@ export interface DarkWebProviderMetadata {
 }
 
 export interface DarkWebSearchQuery { query: string; entityTypes: DarkWebEntityType[]; limit: number; historical?: boolean; }
-export interface DarkWebProviderContext { signal: AbortSignal; organizationId: string; }
+export interface DarkWebProviderContext { signal: AbortSignal; organizationId: string; allowedTerms?: readonly string[]; }
 export interface DarkWebRawMention {
   providerDocumentId: string;
   sourceCategory: DarkWebSourceCategory;
