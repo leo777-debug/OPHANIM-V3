@@ -37,6 +37,12 @@ const request = async <T,>(url: string, init?: RequestInit): Promise<T> => {
   return body;
 };
 
+// A database that has not received every migration yet reports
+// `relation "..." does not exist`; that section stays empty instead of
+// replacing the whole workspace with a raw database error.
+export const isMissingTableError = (cause: unknown) =>
+  cause instanceof Error && /relation "[^"]+" does not exist/i.test(cause.message);
+
 const label = (value: string) => value.replaceAll("_", " ");
 
 export default function OperationsWorkspace({
@@ -63,39 +69,40 @@ export default function OperationsWorkspace({
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
-    try {
-      const [
-        summary,
-        reviews,
-        alertList,
-        taskList,
-        notificationSettings,
-        deliveryLog,
-      ] = await Promise.all([
-        request<{ dashboard: Dashboard }>("/api/intelligence/dashboard"),
-        request<{ items: IntelligenceQueueItem[] }>("/api/intelligence/queue"),
-        request<{ alerts: IntelligenceAlert[] }>("/api/intelligence/alerts"),
-        request<{ tasks: OperationalTask[] }>("/api/intelligence/tasks"),
-        request<{ settings: Settings }>("/api/intelligence/settings"),
-        request<{ deliveries: IntelligenceDeliveryLog[] }>(
-          "/api/intelligence/deliveries",
-        ),
-      ]);
-      setDashboard(summary.dashboard);
-      setQueue(reviews.items);
-      setAlerts(alertList.alerts);
-      setTasks(taskList.tasks);
-      setSettings(notificationSettings.settings);
-      setDeliveries(deliveryLog.deliveries);
-    } catch (cause) {
-      setError(
-        cause instanceof Error
-          ? cause.message
-          : "Operations data is unavailable.",
-      );
-    } finally {
-      setLoading(false);
+    // Each section loads independently so one failing source cannot blank the rest.
+    const results = await Promise.allSettled([
+      request<{ dashboard: Dashboard }>("/api/intelligence/dashboard").then(
+        (body) => setDashboard(body.dashboard),
+      ),
+      request<{ items: IntelligenceQueueItem[] }>("/api/intelligence/queue").then(
+        (body) => setQueue(body.items),
+      ),
+      request<{ alerts: IntelligenceAlert[] }>("/api/intelligence/alerts").then(
+        (body) => setAlerts(body.alerts),
+      ),
+      request<{ tasks: OperationalTask[] }>("/api/intelligence/tasks").then(
+        (body) => setTasks(body.tasks),
+      ),
+      request<{ settings: Settings }>("/api/intelligence/settings").then(
+        (body) => setSettings(body.settings),
+      ),
+      request<{ deliveries: IntelligenceDeliveryLog[] }>(
+        "/api/intelligence/deliveries",
+      ).then((body) => setDeliveries(body.deliveries)),
+    ]);
+    const failures = results.flatMap((result) =>
+      result.status === "rejected" ? [result.reason] : [],
+    );
+    for (const cause of failures.filter(isMissingTableError)) {
+      console.warn("[Ophanim] Operations section skipped:", cause.message);
     }
+    const shown = failures.find((cause) => !isMissingTableError(cause));
+    if (shown) {
+      setError(
+        shown instanceof Error ? shown.message : "Operations data is unavailable.",
+      );
+    }
+    setLoading(false);
   }, []);
 
   useEffect(() => {
