@@ -12,9 +12,13 @@ MapLibre integration follows its
 and [bundler documentation](https://maplibre.org/maplibre-gl-js/docs/):
 namespace imports, a same-origin hashed worker emitted by Next, native nested
 GeoJSON properties with legacy cache compatibility, and public projection APIs
-instead of the removed internal transform. The pinned Next/MapLibre combination
-fails in Turbopack's dynamic URL analysis, so dev/build explicitly use Next's
-supported Webpack path. No dependency source patch is applied. WebGL2 is required by MapLibre 6.
+instead of the removed internal transform. Turbopack cannot resolve MapLibre's
+`new URL(dynamic, import.meta.url)`, which builds a blob URL only for cross-origin
+workers; ours is same-origin, so `next.config.ts` ignores that one issue and production
+builds use Turbopack. They must: Vercel's adapter merges routes into shared functions only
+from Turbopack's per-file hashes, and a Webpack build exceeds the Hobby plan's
+12-function limit. Development still uses Webpack. No dependency source patch is
+applied. WebGL2 is required by MapLibre 6.
 Browser/device rendering validation remains required.
 
 `PARITY/dependency-production-audit.json` records zero production findings.
