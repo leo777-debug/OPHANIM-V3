@@ -108,6 +108,11 @@
     {
       "id": "P7-founder-questions",
       "status": "todo"
+    },
+    {
+      "id": "P8-restore-org-signup",
+      "status": "todo",
+      "reason": "Create-organization mode removed from /login on 2026-10-22; /api/auth/bootstrap kept. Restore from git history when self-serve sign-up returns."
     }
   ],
   "resumeInstruction": "Everything is merged into feat/gdacs-weather-ai-overview and live. Read 'Pending tasks' in PROGRESS.md; start with P2 then P1. Production builds must stay on Turbopack.",

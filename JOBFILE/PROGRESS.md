@@ -313,7 +313,13 @@ from local commit `2a2b72e` (parity-and-reliability, unpushed). Read
    (WorldMonitor's large count is hundreds of individual news feeds). Each new feed
    needs its terms, coverage and language checked before it is added.
 7. **Founder questions** above (papers, software, unloading, air/sea mix, pooling).
-8. **Housekeeping.** Lint has 2 errors that predate this work in Codex's `UnifiedMap`
+8. **Bring back organization sign-up.** Paused on 2026-10-22: `/login` only signs
+   in. Its "Set up the first organization" / "Create your organization" mode
+   (organization name, setup token, `POST /api/auth/bootstrap`) was removed from the
+   page; the bootstrap API still exists. Restore the mode from git history (commit
+   that removed it: "feat(auth): pause organization sign-up on the login page") when
+   self-serve sign-up should return.
+9. **Housekeeping.** Lint has 2 errors that predate this work in Codex's `UnifiedMap`
    and route code. On this PC, the renamed Docker folders
    (`%LOCALAPPDATA%\Docker\run.stale-*`, `%LOCALAPPDATA%\docker-secrets-engine.stale-*`)
    can be deleted.

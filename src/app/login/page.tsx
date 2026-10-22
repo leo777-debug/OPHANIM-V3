@@ -7,12 +7,11 @@ import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [setup, setSetup] = useState(false);
+  // Creating an organization from this page is paused (see JOBFILE/PROGRESS.md,
+  // pending tasks); /api/auth/bootstrap still exists for the setup-token flow.
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [organizationSlug, setOrganizationSlug] = useState("");
-  const [organizationName, setOrganizationName] = useState("");
-  const [token, setToken] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -21,18 +20,11 @@ export default function LoginPage() {
     setSaving(true);
     setError("");
     try {
-      const response = await fetch(
-        setup ? "/api/auth/bootstrap" : "/api/auth/login",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(
-            setup
-              ? { token, email, password, organizationName, organizationSlug }
-              : { email, password, organizationSlug },
-          ),
-        },
-      );
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, organizationSlug }),
+      });
       const body = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(body.error || "Sign-in failed.");
       const { safeReturnTo } = await import('@/lib/auth/return-to');
@@ -84,10 +76,8 @@ export default function LoginPage() {
               <LockKeyhole aria-hidden="true" size={16} />
             </span>
             <div>
-              <p>{setup ? "Workspace setup" : "Secure access"}</p>
-              <h2>
-                {setup ? "Create your organization" : "Sign in to Ophanim"}
-              </h2>
+              <p>Secure access</p>
+              <h2>Sign in to Ophanim</h2>
             </div>
           </div>
 
@@ -106,29 +96,6 @@ export default function LoginPage() {
               required
             />
           </label>
-          {setup && (
-            <>
-              <label>
-                Organization name
-                <input
-                  value={organizationName}
-                  onChange={(event) => setOrganizationName(event.target.value)}
-                  autoComplete="organization"
-                  required
-                />
-              </label>
-              <label>
-                Setup token
-                <input
-                  value={token}
-                  onChange={(event) => setToken(event.target.value)}
-                  type="password"
-                  autoComplete="one-time-code"
-                  required
-                />
-              </label>
-            </>
-          )}
           <label>
             Work email
             <input
@@ -145,26 +112,14 @@ export default function LoginPage() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               type="password"
-              autoComplete={setup ? "new-password" : "current-password"}
+              autoComplete="current-password"
               required
             />
           </label>
 
           <button type="submit" className="auth-submit" disabled={saving}>
-            {saving ? "Please wait" : setup ? "Create organization" : "Sign in"}
+            {saving ? "Please wait" : "Sign in"}
             {!saving && <ArrowRight aria-hidden="true" size={16} />}
-          </button>
-          <button
-            type="button"
-            className="auth-switch"
-            onClick={() => {
-              setSetup((value) => !value);
-              setError("");
-            }}
-          >
-            {setup
-              ? "Sign in to an existing organization"
-              : "Set up the first organization"}
           </button>
         </form>
       </section>
