@@ -116,8 +116,13 @@
     },
     {
       "id": "P9-camera-feeds-on-map",
-      "status": "todo",
+      "status": "done",
       "reason": "Markers show location only: public feed strips stream URLs, UnifiedMap has no CameraViewer, camera cache is in-memory (4 markers in production), sourceUrl falls back to tfl.gov.uk. See PROGRESS.md pending task 9."
+    },
+    {
+      "id": "P10-restore-aisstream-sign-in",
+      "status": "todo",
+      "reason": "AISStream ships shown publicly without sign-in since 2026-10-22. After the production migrations (P1), require sign-in again and drop AISStream from the public map branch. See PROGRESS.md pending task 10."
     }
   ],
   "resumeInstruction": "Everything is merged into feat/gdacs-weather-ai-overview and live. Read 'Pending tasks' in PROGRESS.md; start with P2 then P1. Production builds must stay on Turbopack.",
