@@ -39,8 +39,11 @@ export async function findRegisteredEntities(actor: OrganizationActor, id?: stri
   return entities.rows.map((entity) => entityFrom(entity, aliases.rows));
 }
 
-export async function registerShipmentEntity(actor: OrganizationActor, shipment: { id: string; shipmentReference: string; vesselName?: string; imoNumber?: string; mmsiNumber?: string; carrier?: string }): Promise<void> {
-  await registerEntity(actor, { entityType: 'shipment', canonicalName: shipment.shipmentReference, normalizedKey: shipment.id, attributes: { shipmentId: shipment.id }, aliases: [{ alias: shipment.shipmentReference, identifierType: 'shipment_reference', identifierValue: shipment.shipmentReference }] });
+export async function registerShipmentEntity(actor: OrganizationActor, shipment: { id: string; shipmentReference: string; vesselName?: string; imoNumber?: string; mmsiNumber?: string; carrier?: string; containerNumber?: string | null; billOfLadingReference?: string | null }): Promise<void> {
+  // Container and B/L numbers (also copied from job-file key rings) are watched as shipment aliases.
+  await registerEntity(actor, { entityType: 'shipment', canonicalName: shipment.shipmentReference, normalizedKey: shipment.id, attributes: { shipmentId: shipment.id }, aliases: [{ alias: shipment.shipmentReference, identifierType: 'shipment_reference', identifierValue: shipment.shipmentReference },
+    ...(shipment.containerNumber ? [{ alias: shipment.containerNumber, identifierType: 'container', identifierValue: shipment.containerNumber }] : []),
+    ...(shipment.billOfLadingReference ? [{ alias: shipment.billOfLadingReference, identifierType: 'bill_of_lading', identifierValue: shipment.billOfLadingReference }] : [])] });
   if (shipment.vesselName || shipment.imoNumber) await registerEntity(actor, { entityType: 'vessel', canonicalName: shipment.vesselName ?? `IMO ${shipment.imoNumber}`, normalizedKey: shipment.imoNumber ?? shipment.vesselName, attributes: { shipmentIds: [shipment.id] }, aliases: [...(shipment.vesselName ? [{ alias: shipment.vesselName }] : []), ...(shipment.imoNumber ? [{ alias: shipment.imoNumber, identifierType: 'imo', identifierValue: shipment.imoNumber }] : []), ...(shipment.mmsiNumber ? [{ alias: shipment.mmsiNumber, identifierType: 'mmsi', identifierValue: shipment.mmsiNumber }] : [])] });
   if (shipment.carrier) await registerEntity(actor, { entityType: 'carrier', canonicalName: shipment.carrier, attributes: { shipmentIds: [shipment.id] } });
 }

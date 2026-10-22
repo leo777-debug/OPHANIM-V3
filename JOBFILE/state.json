@@ -1,0 +1,83 @@
+{
+  "version": 1,
+  "branch": "feat/job-files-on-panel",
+  "baseCommit": "e17ad13 (codex/route-lens-panel, PR 27)",
+  "worktree": "D:/OPHANIM/worktrees/job-files-on-panel",
+  "current_phase": "combined",
+  "current_task": "review-and-merge-decision",
+  "last_commit": "76bd1e0",
+  "updated_at": "2026-10-21",
+  "tasks": [
+    {
+      "id": "00-baseline",
+      "status": "done"
+    },
+    {
+      "id": "01-data-model",
+      "status": "done"
+    },
+    {
+      "id": "4.1-core-intake",
+      "status": "done"
+    },
+    {
+      "id": "4.2-paper-desk",
+      "status": "done"
+    },
+    {
+      "id": "4.3-papers",
+      "status": "done"
+    },
+    {
+      "id": "4.4-milestones",
+      "status": "done"
+    },
+    {
+      "id": "4.5-connect",
+      "status": "done"
+    },
+    {
+      "id": "4.6-congestion",
+      "status": "done"
+    },
+    {
+      "id": "4.7-today",
+      "status": "done"
+    },
+    {
+      "id": "4.8-invoice-desk",
+      "status": "done"
+    },
+    {
+      "id": "4.9-ledger-receipts",
+      "status": "done"
+    },
+    {
+      "id": "4.10-demo-tests-docs",
+      "status": "done"
+    },
+    {
+      "id": "05-jobfile-finish",
+      "status": "done"
+    },
+    {
+      "id": "06-final-pr",
+      "status": "todo"
+    },
+    {
+      "id": "C1-port-job-files-onto-pr27",
+      "status": "done"
+    },
+    {
+      "id": "C2-parity-pr25-reconcile",
+      "status": "todo"
+    },
+    {
+      "id": "C3-production-deploy",
+      "status": "blocked",
+      "reason": "Waiting for founder go-ahead; merge order PR 27 -> this PR, then PR 25 reconcile; migrations must be applied to production."
+    }
+  ],
+  "resumeInstruction": "Job files now live on feat/job-files-on-panel, stacked on Codex PR 27, using The Panel ledger (025) with additive extension 20261022090000. feat/job-file-core (PR 26) is superseded. Do not merge or deploy without the founder.",
+  "pullRequest": null
+}

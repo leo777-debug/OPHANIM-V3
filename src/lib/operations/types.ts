@@ -27,4 +27,5 @@ export type OrganizationPermission =
   | 'intelligence:read'
   | 'intelligence:write'
   | 'research:run'
+  | 'jobfile:approve'
   | 'organization:manage';
