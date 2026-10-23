@@ -11,6 +11,9 @@ import type { FeedId, PresentationFeed } from '@/lib/presentation/types';
 import type { MapProjection, MapStyle, MapViewport } from '@/lib/map-workspaces';
 import styles from './presentation.module.css';
 
+/** How long to wait for the online map style before showing the offline basemap. */
+const BASEMAP_TIMEOUT_MS = 10_000;
+
 export default function PresentationGlobe({ feeds, hidden, onSelect, locate, projection, mapStyle, dayNight, embedded = false, initialViewport, onViewportChange, extraLayers, providerLayers }: {
   feeds: Partial<Record<FeedId, PresentationFeed>>; hidden: ReadonlySet<FeedId>;
   onSelect: (entity: Record<string, unknown>) => void;
@@ -35,11 +38,12 @@ export default function PresentationGlobe({ feeds, hidden, onSelect, locate, pro
     const controller = new AbortController();
     let settled = false;
     const useFallback = () => { if (settled || controller.signal.aborted) return; settled = true; setBasemap(atlasFallbackBasemap); setFallback(true); };
-    // A fetch wrapped by a browser extension can ignore its abort signal and hang;
-    // the offline basemap then still appears instead of a black map.
-    const guard = setTimeout(useFallback, 2500);
+    // Wait up to BASEMAP_TIMEOUT_MS for the online style, then use the offline
+    // basemap. The separate timer covers a fetch wrapped by a browser extension
+    // that ignores its abort signal and would otherwise hang.
+    const guard = setTimeout(useFallback, BASEMAP_TIMEOUT_MS);
     // Keep the original dark cartography without CARTO's API-key watermark.
-    void fetch(OPEN_FREE_MAP.styleUrl, { signal: AbortSignal.any([controller.signal,AbortSignal.timeout(1800)]) })
+    void fetch(OPEN_FREE_MAP.styleUrl, { signal: AbortSignal.any([controller.signal,AbortSignal.timeout(BASEMAP_TIMEOUT_MS)]) })
       .then(async response => { if (!response.ok) throw new Error('Style unavailable'); const style = await response.json(); if (style.version !== 8 || !Array.isArray(style.layers)) throw new Error('Invalid style'); if (!settled && !controller.signal.aborted) { settled = true; setBasemap(style); } })
       .catch(useFallback);
     return () => { clearTimeout(guard); controller.abort(); };
