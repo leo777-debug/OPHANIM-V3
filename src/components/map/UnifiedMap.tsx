@@ -70,7 +70,12 @@ export default function UnifiedMap({ publicSurface=false, settings: suppliedSett
   const data=useMemo(()=>({...feedData,...marketData}),[feedData,marketData]);
 
   useEffect(()=>{
-    const frame=requestAnimationFrame(()=>{
+    // Restore on a microtask, not an animation frame: frames pause whenever the
+    // page is not painting (busy, throttled or covered window), which left the
+    // globe unmounted and the map black even after every feed had loaded.
+    let cancelled=false;
+    void Promise.resolve().then(()=>{
+      if(cancelled)return;
       let restoredState=defaultUnifiedMapState();
       try { restoredState=restoreUnifiedMapState(localStorage.getItem(UNIFIED_MAP_STORAGE)); } catch { /* Storage is optional. */ }
       const params=new URLSearchParams(location.search);
@@ -84,7 +89,7 @@ export default function UnifiedMap({ publicSurface=false, settings: suppliedSett
       if(shared.mapStyle)restoredState=patchUnifiedWorkspace(restoredState,{mapStyle:shared.mapStyle});
       setState(restoredState);setRestored(true);
     });
-    return()=>cancelAnimationFrame(frame);
+    return()=>{cancelled=true;};
   },[]);
   useEffect(()=>{
     if(!restored)return;
