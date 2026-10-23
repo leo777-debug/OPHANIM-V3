@@ -56,8 +56,10 @@ export default function WatchlistPanel({ embedded = false }: { embedded?: boolea
 
   useEffect(() => {
     if (!embedded) return;
-    const frame=requestAnimationFrame(()=>void load());
-    return()=>cancelAnimationFrame(frame);
+    // A microtask, not an animation frame: frames pause when the page is not painting.
+    let cancelled=false;
+    void Promise.resolve().then(()=>{if(!cancelled)void load();});
+    return()=>{cancelled=true;};
   }, [embedded, load]);
 
   useEffect(() => {

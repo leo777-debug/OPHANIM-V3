@@ -33,11 +33,16 @@ export default function PresentationGlobe({ feeds, hidden, onSelect, locate, pro
   },[onViewportChange]);
   useEffect(() => {
     const controller = new AbortController();
+    let settled = false;
+    const useFallback = () => { if (settled || controller.signal.aborted) return; settled = true; setBasemap(atlasFallbackBasemap); setFallback(true); };
+    // A fetch wrapped by a browser extension can ignore its abort signal and hang;
+    // the offline basemap then still appears instead of a black map.
+    const guard = setTimeout(useFallback, 2500);
     // Keep the original dark cartography without CARTO's API-key watermark.
     void fetch(OPEN_FREE_MAP.styleUrl, { signal: AbortSignal.any([controller.signal,AbortSignal.timeout(1800)]) })
-      .then(async response => { if (!response.ok) throw new Error('Style unavailable'); const style = await response.json(); if (style.version !== 8 || !Array.isArray(style.layers)) throw new Error('Invalid style'); if (!controller.signal.aborted) setBasemap(style); })
-      .catch(() => { if (!controller.signal.aborted) { setBasemap(atlasFallbackBasemap); setFallback(true); } });
-    return () => controller.abort();
+      .then(async response => { if (!response.ok) throw new Error('Style unavailable'); const style = await response.json(); if (style.version !== 8 || !Array.isArray(style.layers)) throw new Error('Invalid style'); if (!settled && !controller.signal.aborted) { settled = true; setBasemap(style); } })
+      .catch(useFallback);
+    return () => { clearTimeout(guard); controller.abort(); };
   }, []);
   const onReady = useCallback((instance: maplibregl.Map) => {
     setMap(instance);
