@@ -1,6 +1,7 @@
 // Private document and photo storage. Bytes never go to a public path; reads
 // use short-lived signed URLs. Supabase Storage when configured, else the
-// private KNOWLEDGE_STORAGE_DIR, else (demo only) process memory.
+// private KNOWLEDGE_STORAGE_DIR, else the private database table, else (demo
+// only) process memory.
 import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { readPrivateFile, storePrivateFile } from './private-files';
@@ -13,6 +14,7 @@ export const sha256 = (bytes: Buffer | string) => createHash('sha256').update(by
 export function storageMode(demo: boolean) {
   if (createSupabaseAdminClient()) return 'supabase' as const;
   if (process.env.JOBFILE_STORAGE_DIR || process.env.KNOWLEDGE_STORAGE_DIR) return 'local' as const;
+  if (!demo && process.env.DATABASE_URL) return 'database' as const;
   return demo ? 'memory' as const : 'unavailable' as const;
 }
 export function storageKey(organizationId: string, jobOrIntake: string, fileName: string) {
