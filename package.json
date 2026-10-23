@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev --webpack",
     "build": "next build",
+    "vercel-build": "node db/deploy-migrations.mjs && next build",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
