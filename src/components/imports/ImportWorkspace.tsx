@@ -169,7 +169,7 @@ export default function ImportWorkspace() {
     imported?.status === "queued" || imported?.status === "running";
 
   const refreshImport = async (id: string) => {
-    const response = await fetch(`/api/imports/${id}`, { cache: "no-store" });
+    const response = await fetch(`/api/imports/${id}?id=${id}`, { cache: "no-store" });
     const payload = await responseJson<{ import: PersistedImport }>(response);
     setImported(payload.import);
   };
@@ -222,7 +222,7 @@ export default function ImportWorkspace() {
     setBusy(true);
     setError("");
     try {
-      const response = await fetch(`/api/imports/${imported.id}/confirm`, {
+      const response = await fetch(`/api/imports/${imported.id}/confirm?id=${imported.id}`, {
         method: "POST",
       });
       const payload = await responseJson<{ import: PersistedImport }>(response);
@@ -469,7 +469,7 @@ export default function ImportWorkspace() {
                     </button>
                     {imported && (
                       <a
-                        href={`/api/imports/${imported.id}/error-report`}
+                        href={`/api/imports/${imported.id}/error-report?id=${imported.id}`}
                         className="border border-[var(--border-secondary)] px-3 py-2 text-xs hover:border-[var(--cyan-primary)]"
                       >
                         <Download className="mr-1 inline h-3.5 w-3.5" />

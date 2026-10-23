@@ -3,12 +3,12 @@ import { requireAuthenticatedActor } from '@/lib/auth/actor';
 import { confirmImport } from '@/lib/imports/jobs';
 import { ImportError } from '@/lib/imports/types';
 import { OrganizationAccessError } from '@/lib/operations/authorization';
-import { importIdFrom } from '@/lib/imports/route-id';
+import { importIdDebug, importIdFrom } from '@/lib/imports/route-id';
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const id = await importIdFrom(request, params);
-    if (!id) return NextResponse.json({ error: 'Import id is invalid.' }, { status: 400 });
+    if (!id) return NextResponse.json({ error: 'Import id is invalid.' }, { status: 400, headers: { 'x-import-id-debug': await importIdDebug(request, params) } });
     const confirmation = await confirmImport(await requireAuthenticatedActor(request, 'import:write'), id);
     return NextResponse.json(confirmation);
   } catch (error) {
