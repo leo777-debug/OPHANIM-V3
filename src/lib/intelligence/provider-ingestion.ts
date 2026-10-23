@@ -45,6 +45,22 @@ export async function ingestIntelligenceEvents(
   try {
     await client.query("begin");
 
+    // Providers outside the production source catalog (GDACS, FAA, AWC,
+    // specialist feeds) still need a source row for the foreign keys below.
+    const unregisteredSources = new Map<string, { name: string; reliability: string }>();
+    for (const provider of intelligenceEventProviderRegistry.catalog())
+      unregisteredSources.set(provider.sourceId, { name: provider.name, reliability: "unverified" });
+    for (const normalized of collected.events)
+      for (const source of normalized.sources)
+        unregisteredSources.set(source.id, { name: source.name, reliability: source.sourceType });
+    for (const [id, source] of unregisteredSources)
+      await client.query(
+        `insert into public.ophanim_sources(id,name,category,reliability_level,metadata)
+         values($1,$2,'intelligence_provider',$3,'{"registeredBy":"provider_ingestion"}'::jsonb)
+         on conflict(id) do nothing`,
+        [id, source.name.slice(0, 240), source.reliability],
+      );
+
     for (const normalized of collected.events) {
       const scopedOrganizationId = organizationScope(actor, normalized);
       const visibility = scopedOrganizationId

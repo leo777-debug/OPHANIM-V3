@@ -10,6 +10,7 @@ import {
   ChevronRight,
   ClipboardList,
   Database,
+  FileCheck,
   FolderCheck,
   LifeBuoy,
   Map,
@@ -46,7 +47,7 @@ const navigation = [
     label: "Company data",
     items: [
       { href: "/imports", label: "Imports", icon: Database },
-      { href: "/evidence", label: "Evidence", icon: FolderCheck },
+      { href: "/evidence", label: "Evidence", icon: FileCheck },
     ],
   },
   {
