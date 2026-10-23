@@ -17,6 +17,10 @@ Optional settings include Resend credentials, AI defaults, provider-specific cre
 
 The import cron calls `/api/imports/cron`, which processes both legacy import jobs and generic entity imports. Do not expose cron secrets to browsers.
 
+## Intelligence refresh
+
+`GET /api/intelligence/providers/cron` runs the Intelligence "Refresh feeds" ingestion for the public providers. It requires `Authorization: Bearer <CRON_SECRET>`. On Vercel, set `CRON_SECRET` as a production variable: Vercel Cron (`vercel.json`, once a day on Hobby) sends it automatically, and `.github/workflows/intelligence-refresh.yml` calls the endpoint every 30 minutes with the same value stored as the `CRON_SECRET` repository secret. Set the `OPHANIM_URL` repository variable to point the workflow at another deployment.
+
 ## Containers
 
 `Dockerfile` builds the standalone Next.js output and runs as a non-root `nextjs` user. `docker-compose.yml` uses the `ophanim`, `ophanim-cache`, and `ophanim-intel` internal service names. Optional CLI providers remain backend-only and must be configured through environment variables.

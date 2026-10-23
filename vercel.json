@@ -4,5 +4,8 @@
     "deploymentEnabled": {
       "parity-and-reliability": false
     }
-  }
+  },
+  "crons": [
+    { "path": "/api/intelligence/providers/cron", "schedule": "0 5 * * *" }
+  ]
 }
