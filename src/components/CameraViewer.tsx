@@ -1,4 +1,5 @@
 'use client';
+import type { ProviderJson } from '@/lib/provider-json';
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -6,7 +7,7 @@ import { X, ExternalLink, RefreshCw, MapPin, Camera, Maximize2 } from 'lucide-re
 import Hls from 'hls.js';
 
 interface CameraViewerProps {
-  camera: any | null;
+  camera: ProviderJson | null;
   onClose: () => void;
   onLocate?: (lat: number, lng: number) => void;
 }
@@ -263,6 +264,7 @@ export default function CameraViewer({ camera, onClose, onLocate }: CameraViewer
                 playsInline
               />
             ) : streamType === 'mjpeg' && camera.stream_url ? (
+              // eslint-disable-next-line @next/next/no-img-element -- MJPEG stream from a third-party camera host
               <img
                 src={camera.stream_url}
                 alt={camera.name}
@@ -287,6 +289,7 @@ export default function CameraViewer({ camera, onClose, onLocate }: CameraViewer
                 allowFullScreen
               />
             ) : imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- snapshot from one of thousands of third-party camera hosts
               <img
                 src={imageUrl}
                 alt={camera.name}

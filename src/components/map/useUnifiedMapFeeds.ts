@@ -3,10 +3,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { feedIds, PRESENTATION_FEEDS } from '@/lib/presentation/feeds';
 import { atlasPresentationData } from '@/lib/presentation/map-adapter';
-import type { FeedId, PresentationFeed } from '@/lib/presentation/types';
+import { DEFAULT_PRESENTATION, type FeedId, type PresentationFeed } from '@/lib/presentation/types';
 
 export function useUnifiedMapFeeds(revision:number,refresh:number) {
   const [feeds,setFeeds]=useState<Partial<Record<FeedId,PresentationFeed>>>({});
+  // Settings arrive just after mount and replace the default revision. The feeds
+  // requested at mount already used the server's current settings, so only a
+  // later revision change reloads them (otherwise every map load fetched twice).
+  const [firstRevision,setFirstRevision]=useState<number|null>(null);
+  if(firstRevision===null && revision!==DEFAULT_PRESENTATION.revision)setFirstRevision(revision);
+  const reloadRevision=revision===firstRevision?DEFAULT_PRESENTATION.revision:revision;
   useEffect(()=>{
     const controller=new AbortController();
     const load=()=>{
@@ -24,7 +30,7 @@ export function useUnifiedMapFeeds(revision:number,refresh:number) {
     };
     load();const interval=setInterval(()=>{if(!document.hidden)load();},60000);
     return()=>{controller.abort();clearInterval(interval);};
-  },[revision,refresh]);
+  },[reloadRevision,refresh]);
   const allData=useMemo(()=>{
     const atlas=atlasPresentationData(feeds,new Set()).data;
     return {...atlas,

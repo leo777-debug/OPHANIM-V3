@@ -1,18 +1,18 @@
 'use client';
+import type { ProviderJson } from '@/lib/provider-json';
 
 import { useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ChevronDown, ChevronUp, MapPin, ExternalLink, AlertTriangle,
-  Newspaper, Clock, Radio, Maximize2, Minimize2
+  ChevronDown, ChevronUp, MapPin, AlertTriangle, Newspaper, Clock, Radio, Maximize2, Minimize2
 } from 'lucide-react';
 import AiOverview from './AiOverview';
 
 const subscribeNever = () => () => {};
 
 interface LiveAlertsProps {
-  data: any;
+  data: ProviderJson;
   onLocate: (lat: number, lng: number) => void;
   onWatchFeed?: (url: string, name: string) => void;
 }
@@ -64,11 +64,11 @@ export default function LiveAlerts({ data, onLocate, onWatchFeed }: LiveAlertsPr
   ];
 
   // Build unified alert feed
-  const alerts: any[] = [];
+  const alerts: ProviderJson[] = [];
 
   // OSINT Telegram News Feed (from /api/news)
   if (data.news) {
-    data.news.forEach((a: any) => {
+    data.news.forEach((a: ProviderJson) => {
       alerts.push({
         type: 'news', title: a.title, description: a.description, source: a.source,
         lat: a.coords?.[0], lng: a.coords?.[1], time: a.published,
@@ -80,7 +80,7 @@ export default function LiveAlerts({ data, onLocate, onWatchFeed }: LiveAlertsPr
 
   // Earthquakes
   if (data.earthquakes) {
-    data.earthquakes.slice(0, 5).forEach((eq: any) => {
+    data.earthquakes.slice(0, 5).forEach((eq: ProviderJson) => {
       alerts.push({
         type: 'quake', title: `M${eq.magnitude} - ${eq.place}`, source: 'USGS',
         lat: eq.lat, lng: eq.lng, time: eq.time,
@@ -91,7 +91,7 @@ export default function LiveAlerts({ data, onLocate, onWatchFeed }: LiveAlertsPr
 
   // CISA's publicly maintained Known Exploited Vulnerabilities catalog.
   if (data.cyberThreats) {
-    data.cyberThreats.slice(0, 10).forEach((threat: any) => {
+    data.cyberThreats.slice(0, 10).forEach((threat: ProviderJson) => {
       alerts.push({
         type: 'cyber',
         title: `${threat.id || 'CISA advisory'}: ${threat.name || 'Known exploited vulnerability'}`,

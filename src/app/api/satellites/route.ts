@@ -1,3 +1,4 @@
+import type { ProviderJson } from '@/lib/provider-json';
 
 import { NextResponse } from 'next/server';
 import { stealthFetch } from '@/lib/stealthFetch';
@@ -179,7 +180,7 @@ const CACHE_DIR = join(process.cwd(), '.next', 'cache');
 const CACHE_FILE = join(CACHE_DIR, 'satellites-tle-cache.json');
 
 /** Save TLE data to disk so it survives server restarts */
-function saveToDisk(sats: any[]) {
+function saveToDisk(sats: ProviderJson[]) {
   try {
     if (!existsSync(CACHE_DIR)) mkdirSync(CACHE_DIR, { recursive: true });
     writeFileSync(CACHE_FILE, JSON.stringify({ time: Date.now(), sats }));
@@ -187,7 +188,7 @@ function saveToDisk(sats: any[]) {
 }
 
 /** Load TLE data from disk (valid for 4 hours) */
-function loadFromDisk(): { sats: any[]; time: number } | null {
+function loadFromDisk(): { sats: ProviderJson[]; time: number } | null {
   try {
     if (!existsSync(CACHE_FILE)) return null;
     const data = JSON.parse(readFileSync(CACHE_FILE, 'utf-8'));
@@ -199,7 +200,7 @@ function loadFromDisk(): { sats: any[]; time: number } | null {
   return null;
 }
 
-let globalCachedSats: any[] = [];
+let globalCachedSats: ProviderJson[] = [];
 let globalCacheTime = 0;
 
 // On module load, try to restore from disk immediately
@@ -249,7 +250,7 @@ async function fetchCelesTrakGroup(url: string): Promise<{ name: string; line1: 
 export async function GET() {
   try {
     const nowTime = Date.now();
-    let allSats: any[] = globalCachedSats;
+    let allSats: ProviderJson[] = globalCachedSats;
     let source = 'memory-cache';
 
     if (globalCachedSats.length === 0 || globalCachedSats.length < 5000 || nowTime - globalCacheTime > 3600000) { // refresh if empty, too few, or stale
@@ -305,7 +306,7 @@ export async function GET() {
           
           if (res.ok) {
             const data = await res.json();
-            const fetchedSats: any[] = [];
+            const fetchedSats: ProviderJson[] = [];
             const seenNames = new Set<string>();
 
             for (const item of data) {

@@ -1,3 +1,4 @@
+import type { ProviderJson } from '@/lib/provider-json';
 /**
  * ═══════════════════════════════════════════════════════════════
  *  OPHANIM — One-Click AI Overview
@@ -45,7 +46,7 @@ function decodeEntities(s: string): string {
     .replace(/&#\d+;/g, '');
 }
 
-function digestMarkets(payload: any): Digest {
+function digestMarkets(payload: ProviderJson): Digest {
   const markets = payload?.markets || {};
   const space = payload?.spaceWeather;
   const facts: string[] = [];
@@ -56,7 +57,7 @@ function digestMarkets(payload: any): Digest {
   for (const section of Object.keys(markets)) {
     const group = markets[section];
     if (!group || typeof group !== 'object' || Array.isArray(group)) continue;
-    for (const [name, d] of Object.entries<any>(group)) {
+    for (const [name, d] of Object.entries<ProviderJson>(group)) {
       const pct = num(d?.change_percent);
       if (pct === null) continue;
       tickers.push({ name, pct, price: num(d?.price) });
@@ -106,14 +107,14 @@ function digestMarkets(payload: any): Digest {
   };
 }
 
-function digestAlerts(payload: any): Digest {
+function digestAlerts(payload: ProviderJson): Digest {
   const facts: string[] = [];
   const highlights: string[] = [];
 
-  const quakes: any[] = payload?.earthquakes || payload?.quakes || [];
-  const news: any[] = payload?.news || payload?.news_intel || [];
-  const weather: any[] = payload?.weather_events || [];
-  const conflicts: any[] = payload?.conflicts || payload?.conflict_zones || [];
+  const quakes: ProviderJson[] = payload?.earthquakes || payload?.quakes || [];
+  const news: ProviderJson[] = payload?.news || payload?.news_intel || [];
+  const weather: ProviderJson[] = payload?.weather_events || [];
+  const conflicts: ProviderJson[] = payload?.conflicts || payload?.conflict_zones || [];
 
   if (Array.isArray(quakes) && quakes.length) {
     const mags = quakes
@@ -182,7 +183,7 @@ async function geminiOverview(mode: Mode, digest: Digest, keys: string[]): Promi
 /* ─────────────────────────── Handler ─────────────────────────── */
 
 export async function POST(request: NextRequest) {
-  let body: { mode?: Mode; payload?: any };
+  let body: { mode?: Mode; payload?: ProviderJson };
   try {
     body = await request.json();
   } catch {

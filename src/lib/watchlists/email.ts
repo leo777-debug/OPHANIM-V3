@@ -1,3 +1,4 @@
+import type { ProviderJson } from '@/lib/provider-json';
 import { Resend } from 'resend';
 import { db } from './db';
 import { notificationLinks, type StoredWatchlist } from './service';
@@ -12,12 +13,12 @@ export async function sendPendingNotifications() {
   let sent = 0;
 
   for (const item of pending) {
-    const row = item as StoredWatchlist & any;
+    const row = item as StoredWatchlist;
     const links = notificationLinks(row, item.payload);
     const sources = links.sources.map((source) => String(source));
     const results = item.payload?.results || [];
     const summary = `${row.label || row.entity_value} has ${results.length} current provider result${results.length === 1 ? '' : 's'}.`;
-    const html = `<h2>Ophanim watchlist alert</h2><p>${escape(summary)}</p><p><a href="${links.watchlist}">Open watchlist</a> | <a href="${links.entity}">Open entity</a> | <a href="${links.map}">Open map</a></p><h3>Affected entities</h3><ul>${results.slice(0, 10).map((result: any) => `<li>${escape(result.label || result.id || 'Result')}</li>`).join('')}</ul><p>Provider sources: ${sources.map(escape).join(', ') || 'No source returned'}</p>`;
+    const html = `<h2>Ophanim watchlist alert</h2><p>${escape(summary)}</p><p><a href="${links.watchlist}">Open watchlist</a> | <a href="${links.entity}">Open entity</a> | <a href="${links.map}">Open map</a></p><h3>Affected entities</h3><ul>${results.slice(0, 10).map((result: ProviderJson) => `<li>${escape(result.label || result.id || 'Result')}</li>`).join('')}</ul><p>Provider sources: ${sources.map(escape).join(', ') || 'No source returned'}</p>`;
 
     try {
       const response = await resend.emails.send({

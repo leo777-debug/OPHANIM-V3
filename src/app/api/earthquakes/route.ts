@@ -1,3 +1,4 @@
+import type { ProviderJson } from '@/lib/provider-json';
 
 import { NextResponse } from 'next/server';
 
@@ -21,7 +22,7 @@ export async function GET() {
     const data = await res.json();
     const features = data.features || [];
 
-    const earthquakes = features.map((f: any) => {
+    const earthquakes = features.map((f: ProviderJson) => {
       const coords = f.geometry?.coordinates || [0, 0, 0];
       const props = f.properties || {};
       return {

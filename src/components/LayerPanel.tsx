@@ -1,17 +1,16 @@
 'use client';
+import type { ProviderJson } from '@/lib/provider-json';
 
 import { memo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Plane, Satellite, Sun, AlertTriangle, Camera,
-  CloudLightning, Ship, Network, Database, Ghost,
-  Flame, Tv, Radio, Mountain, Anchor, Radar
+  Plane, Satellite, Sun, AlertTriangle, Camera, CloudLightning, Ship, Network, Database, Ghost
 } from 'lucide-react';
 
 interface LayerPanelProps {
-  data: any;
-  activeLayers: any;
-  setActiveLayers: React.Dispatch<React.SetStateAction<any>>;
+  data: ProviderJson;
+  activeLayers: Record<string, boolean>;
+  setActiveLayers: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   isMobile?: boolean;
   theme?: 'core' | 'ghost';
   setTheme?: (theme: 'core' | 'ghost') => void;
@@ -149,12 +148,12 @@ function ToggleSwitch({ active, onClick }: { active: boolean; onClick: () => voi
 function LayerPanel({ data, activeLayers, setActiveLayers, isMobile, theme = 'core', setTheme }: LayerPanelProps) {
   const [hoveredGroup, setHoveredGroup] = useState<string | null>(null);
 
-  const toggle = (key: string) => setActiveLayers((prev: any) => ({ ...prev, [key]: !prev[key] }));
+  const toggle = (key: string) => setActiveLayers((prev) => ({ ...prev, [key]: !prev[key] }));
 
   const getCount = (dk: string, catKey?: string, cameraScope?: 'logistics' | 'transport'): number | null => {
     if (!dk) return null;
     if (cameraScope && dk === 'cameras' && Array.isArray(data.cameras)) {
-      return data.cameras.filter((camera: any) => cameraScope === 'logistics'
+      return data.cameras.filter((camera: ProviderJson) => cameraScope === 'logistics'
         ? camera.operational_scope === 'logistics'
         : camera.official_public_source).length;
     }

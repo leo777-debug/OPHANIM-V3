@@ -1,3 +1,4 @@
+import type { ProviderJson } from '@/lib/provider-json';
 import type { Provider, ProviderMapLayer } from '../types';
 
 export const infrastructureMapProvider: Provider = {
@@ -12,7 +13,7 @@ export const infrastructureMapProvider: Provider = {
     const response = await fetch(`${context.origin}/api/infrastructure`, { signal: context.signal, cache: 'no-store' });
     if (!response.ok) throw new Error(`Infrastructure source returned ${response.status}`);
     const data = await response.json();
-    const features = (data.infrastructure || []).filter((facility: any) => Number.isFinite(facility.lat) && Number.isFinite(facility.lng)).map((facility: any) => ({
+    const features = (data.infrastructure || []).filter((facility: ProviderJson) => Number.isFinite(facility.lat) && Number.isFinite(facility.lng)).map((facility: ProviderJson) => ({
       type: 'Feature' as const,
       geometry: { type: 'Point' as const, coordinates: [facility.lng, facility.lat] },
       properties: { ...facility, entityType: 'infrastructure' },

@@ -1,3 +1,4 @@
+import type { ProviderJson } from '@/lib/provider-json';
 import { NextResponse } from 'next/server';
 
 /**
@@ -24,13 +25,13 @@ export async function GET() {
       )
     );
 
-    const stations: any[] = [];
+    const stations: ProviderJson[] = [];
     for (const result of results) {
       if (result.status !== 'fulfilled') continue;
       const data = result.value;
       for (const loc of data.results || []) {
         if (!loc.coordinates?.latitude || !loc.coordinates?.longitude) continue;
-        const pm25 = loc.measurements?.find((m: any) => m.parameter === 'pm25');
+        const pm25 = loc.measurements?.find((m: ProviderJson) => m.parameter === 'pm25');
         if (!pm25) continue;
         
         // AQI color coding based on PM2.5 (WHO/EPA scale)

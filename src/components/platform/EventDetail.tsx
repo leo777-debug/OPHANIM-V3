@@ -3,8 +3,10 @@
 import { RefreshCw } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
+type Correlation = { id?: string; entityId: string; canonical_name?: string; confidence: number; explanation: string };
+
 export default function EventDetail({ id }: { id: string }) {
-  const [correlations, setCorrelations] = useState<any[]>([]);
+  const [correlations, setCorrelations] = useState<Correlation[]>([]);
   const [message, setMessage] = useState('');
   const load = useCallback(async () => { const response = await fetch(`/api/platform/events/${id}/correlations`, { cache: 'no-store' }); const body = await response.json(); if (!response.ok) throw new Error(body.error ?? 'Correlations unavailable.'); setCorrelations(body.correlations ?? []); }, [id]);
   useEffect(() => { void Promise.resolve().then(() => load()).catch((error) => setMessage(error.message)); }, [load]);

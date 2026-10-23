@@ -1,3 +1,4 @@
+import type { ProviderJson } from '@/lib/provider-json';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
@@ -47,12 +48,12 @@ export async function GET() {
     const events = json.data || [];
 
     const outages = events
-      .filter((e: any) => {
+      .filter((e: ProviderJson) => {
         // IODA uses "location" field like "country/RW"
         const code = e.location?.split('/')[1];
         return code && COUNTRY_CENTROIDS[code];
       })
-      .map((e: any, i: number) => {
+      .map((e: ProviderJson, i: number) => {
         const code = e.location.split('/')[1];
         const [lng, lat] = COUNTRY_CENTROIDS[code];
         // Jitter so overlapping events don't stack

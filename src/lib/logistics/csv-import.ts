@@ -5,7 +5,7 @@ import { MAX_IMPORT_BYTES, MAX_IMPORT_ROWS, parseCsv as parseSharedCsv } from '@
 import { previewImportCsv } from '@/lib/imports/pipeline';
 import { ImportError, type ImportPreviewRow } from '@/lib/imports/types';
 import { SHIPMENT_IMPORT_FIELDS } from './shipment-import-schema';
-import type { ShipmentColumnMapping, ShipmentImportField, ShipmentImportPreview } from './shipment-import-schema';
+import type { ShipmentColumnMapping, ShipmentImportPreview } from './shipment-import-schema';
 
 // Kept as a compatibility façade for the existing logistics workspace and tests.
 export const MAX_SHIPMENT_IMPORT_BYTES = MAX_IMPORT_BYTES;

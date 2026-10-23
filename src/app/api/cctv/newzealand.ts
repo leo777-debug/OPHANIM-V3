@@ -1,3 +1,4 @@
+import type { CctvCamera } from './types';
 import { stealthFetch } from '@/lib/stealthFetch';
 
 /**
@@ -6,7 +7,7 @@ import { stealthFetch } from '@/lib/stealthFetch';
  * ~300 state-highway cameras with coordinates — NO API KEY NEEDED.
  */
 
-export async function fetchNewZealandCameras(): Promise<any[]> {
+export async function fetchNewZealandCameras(): Promise<CctvCamera[]> {
   try {
     const res = await stealthFetch('https://trafficnz.info/service/traffic/rest/4/cameras/all', {
       signal: AbortSignal.timeout(12000),
@@ -14,7 +15,7 @@ export async function fetchNewZealandCameras(): Promise<any[]> {
     if (!res.ok) return [];
 
     const xml = await res.text();
-    const cams: any[] = [];
+    const cams: CctvCamera[] = [];
 
     // Each <camera> block has journey start/end lat (startLatitude/endLatitude) AND
     // a camera-level <latitude>/<longitude> — the plain tag is the camera position.

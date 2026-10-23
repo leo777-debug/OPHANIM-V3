@@ -1,4 +1,5 @@
 'use client';
+import type { ProviderJson } from '@/lib/provider-json';
 
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -15,7 +16,7 @@ import { readClientAiConfig } from '@/lib/ai/client-config';
 
 interface AiOverviewProps {
   mode: 'alerts' | 'markets';
-  payload: any;
+  payload: ProviderJson;
   accent?: string;
 }
 
@@ -45,8 +46,8 @@ export default function AiOverview({ mode, payload, accent = '#7C4DFF' }: AiOver
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setResult(config ? { overview: data.output, highlights: [], generatedBy: 'gemini', generatedAt: data.generatedAt } : data);
-    } catch (e: any) {
-      setError(e?.message || 'Failed to generate overview');
+    } catch (e) {
+      setError(e instanceof Error && e.message ? e.message : 'Failed to generate overview');
     } finally {
       setLoading(false);
     }

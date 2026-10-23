@@ -1,3 +1,4 @@
+import type { CctvCamera } from './types';
 import { stealthFetch } from '@/lib/stealthFetch';
 
 /**
@@ -6,7 +7,7 @@ import { stealthFetch } from '@/lib/stealthFetch';
  * ~160 road weather cameras with coordinates — NO API KEY NEEDED.
  */
 
-export async function fetchIcelandCameras(): Promise<any[]> {
+export async function fetchIcelandCameras(): Promise<CctvCamera[]> {
   try {
     const res = await stealthFetch('https://umferdin.is/en/cameras', {
       signal: AbortSignal.timeout(12000),
@@ -21,7 +22,7 @@ export async function fetchIcelandCameras(): Promise<any[]> {
     const cameras = data?.props?.pageProps?.cameras;
     if (!Array.isArray(cameras)) return [];
 
-    const cams: any[] = [];
+    const cams: CctvCamera[] = [];
     for (const cam of cameras) {
       const coords = cam.coordinates;
       const img = cam.images?.[0]?.url;

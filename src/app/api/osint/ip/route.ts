@@ -1,3 +1,4 @@
+import type { ProviderJson } from '@/lib/provider-json';
 import { NextResponse } from 'next/server';
 import { isRateLimited, getClientIp } from '@/lib/ssrf-guard';
 import { matchExact, type SanctionEntry } from '@/lib/sanctions';
@@ -23,7 +24,7 @@ export async function GET(req: Request) {
   }
 
   try {
-    const results: any = { ip, timestamp: new Date().toISOString() };
+    const results: ProviderJson = { ip, timestamp: new Date().toISOString() };
 
     // 1. ip-api.com — geolocation (free, no key)
     try {

@@ -1,3 +1,4 @@
+import type { ProviderJson } from '@/lib/provider-json';
 import { NextResponse } from 'next/server';
 import { isRateLimited, getClientIp } from '@/lib/ssrf-guard';
 
@@ -19,7 +20,7 @@ export async function GET(req: Request) {
 
   try {
     const types = ['A', 'AAAA', 'MX', 'NS', 'TXT', 'CNAME', 'SOA'];
-    const results: any = { domain, records: {}, timestamp: new Date().toISOString() };
+    const results: ProviderJson = { domain, records: {}, timestamp: new Date().toISOString() };
 
     const lookups = await Promise.allSettled(
       types.map(async (type) => {
@@ -38,7 +39,7 @@ export async function GET(req: Request) {
     for (const result of lookups) {
       if (result.status === 'fulfilled') {
         const { type, answers } = result.value;
-        results.records[type] = answers.map((a: any) => ({
+        results.records[type] = answers.map((a: ProviderJson) => ({
           name: a.name,
           type: a.type,
           ttl: a.TTL,
@@ -53,9 +54,9 @@ export async function GET(req: Request) {
     const nsRecords = results.records.NS || [];
     
     results.summary = {
-      ip_addresses: aRecords.map((r: any) => r.data),
-      mail_servers: mxRecords.map((r: any) => r.data),
-      nameservers: nsRecords.map((r: any) => r.data),
+      ip_addresses: aRecords.map((r: ProviderJson) => r.data),
+      mail_servers: mxRecords.map((r: ProviderJson) => r.data),
+      nameservers: nsRecords.map((r: ProviderJson) => r.data),
       total_records: Object.values(results.records).flat().length,
     };
 

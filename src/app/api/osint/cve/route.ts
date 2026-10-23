@@ -1,3 +1,4 @@
+import type { ProviderJson } from '@/lib/provider-json';
 import { NextResponse } from 'next/server';
 import { isRateLimited, getClientIp } from '@/lib/ssrf-guard';
 
@@ -59,7 +60,7 @@ export async function GET(req: Request) {
 
     // Parse the CVE 5.0 JSON format from MITRE
     const cna = data.containers?.cna;
-    const description = cna?.descriptions?.find((d: any) => d.lang === 'en')?.value
+    const description = cna?.descriptions?.find((d: ProviderJson) => d.lang === 'en')?.value
       || cna?.descriptions?.[0]?.value
       || 'No description available.';
 
@@ -95,13 +96,13 @@ export async function GET(req: Request) {
     }
 
     // Extract references
-    const references = (cna?.references || []).slice(0, 5).map((r: any) => r.url);
+    const references = (cna?.references || []).slice(0, 5).map((r: ProviderJson) => r.url);
 
     // Extract affected products
-    const affected = (cna?.affected || []).slice(0, 5).map((a: any) => ({
+    const affected = (cna?.affected || []).slice(0, 5).map((a: ProviderJson) => ({
       vendor: a.vendor || 'Unknown',
       product: a.product || 'Unknown',
-      versions: (a.versions || []).slice(0, 3).map((v: any) => v.version).filter(Boolean),
+      versions: (a.versions || []).slice(0, 3).map((v: ProviderJson) => v.version).filter(Boolean),
     }));
 
     return NextResponse.json({

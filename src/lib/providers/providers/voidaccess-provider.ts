@@ -1,4 +1,4 @@
-import type { NormalizedSearchResult, Provider, ProviderQuery } from '../types';
+import type { NormalizedSearchResult, Provider } from '../types';
 
 type VoidAccessStatus = 'pending' | 'processing' | 'completed' | 'completed_no_results' | 'failed' | 'cancelled';
 

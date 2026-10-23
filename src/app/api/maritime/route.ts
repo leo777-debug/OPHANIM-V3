@@ -1,3 +1,4 @@
+import type { ProviderJson } from '@/lib/provider-json';
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedActor } from '@/lib/auth/actor';
 import { requestIntegration } from '@/lib/integrations/probes';
@@ -115,8 +116,15 @@ const CHOKEPOINTS = [
 // Note: In a true serverless environment, this state would reset per invocation.
 // For Next.js dev server or Node.js Docker container, this will persist.
 
+/** A vessel position normalized from any AIS source. */
+type Vessel = { id: string | number; mmsi: string | number; lat: number; lng: number; speed: number; heading: number; name: string; destination: string; type: string; source: string; timestamp: number | null; observedAt: number | null; [extra: string]: unknown };
+/** An AIS stream entry: position and static data arrive in separate messages. */
+type StreamVessel = Partial<Vessel> & Pick<Vessel, "id" | "mmsi" | "timestamp">;
+// Entries are cached only after a position report, which also sets speed and heading.
+const hasPosition = (vessel: StreamVessel): vessel is Vessel => typeof vessel.lat === "number" && typeof vessel.lng === "number";
+
 const globalForAis = globalThis as unknown as {
-  shipsCache: Map<number, any>;
+  shipsCache: Map<number, StreamVessel>;
   isAisConnecting: boolean;
 };
 
@@ -142,13 +150,13 @@ function aisTypeToCategory(t: number): string {
   return 'other';
 }
 
-let dtCache: any[] = [];
+let dtCache: Vessel[] = [];
 let dtCacheAt = 0;
-let dtInflight: Promise<any[]> | null = null;
+let dtInflight: Promise<Vessel[]> | null = null;
 const DT_TTL = 45000;
 const DT_HEADERS = { 'Digitraffic-User': 'OSIRIS-OSINT', 'Accept-Encoding': 'gzip' };
 
-async function fetchDigitraffic(): Promise<any[]> {
+async function fetchDigitraffic(): Promise<Vessel[]> {
   if (Date.now() - dtCacheAt < DT_TTL) return dtCache;
   if (dtInflight) return dtInflight;
   dtInflight = (async () => {
@@ -159,12 +167,12 @@ async function fetchDigitraffic(): Promise<any[]> {
       ]);
       if (!locRes.ok) return dtCache;
       const loc = await locRes.json();
-      const meta = new Map<number, any>();
+      const meta = new Map<number, ProviderJson>();
       if (vesRes.ok) {
         const vs = await vesRes.json();
         if (Array.isArray(vs)) for (const v of vs) meta.set(v.mmsi, v);
       }
-      const ships: any[] = [];
+      const ships: Vessel[] = [];
       for (const f of (loc.features || [])) {
         const p = f.properties || {};
         const c = f.geometry?.coordinates;
@@ -194,12 +202,12 @@ async function fetchDigitraffic(): Promise<any[]> {
   return dtInflight;
 }
 
-let customerAisCache: any[] = [];
+let customerAisCache: Vessel[] = [];
 let customerAisCacheAt = 0;
-let customerAisInflight: Promise<any[]> | null = null;
+let customerAisInflight: Promise<Vessel[]> | null = null;
 const CUSTOMER_AIS_TTL = 60000;
 
-function normalizeCustomerAisVessel(value: any): any | null {
+function normalizeCustomerAisVessel(value: ProviderJson): Vessel | null {
   const coordinates = value?.geometry?.coordinates;
   const lat = Number(value?.lat ?? value?.latitude ?? value?.position?.lat ?? coordinates?.[1]);
   const lng = Number(value?.lng ?? value?.lon ?? value?.longitude ?? value?.position?.lng ?? coordinates?.[0]);
@@ -221,7 +229,7 @@ function normalizeCustomerAisVessel(value: any): any | null {
   };
 }
 
-async function fetchCustomerAis(): Promise<any[]> {
+async function fetchCustomerAis(): Promise<Vessel[]> {
   const url = process.env.CUSTOMER_AIS_API_URL;
   if (!url) return [];
   if (Date.now() - customerAisCacheAt < CUSTOMER_AIS_TTL) return customerAisCache;
@@ -235,7 +243,7 @@ async function fetchCustomerAis(): Promise<any[]> {
       }, process.env, 12000));
       const items = Array.isArray(payload) ? payload : payload.ships ?? payload.vessels ?? payload.features ?? [];
       if (!Array.isArray(items)) return customerAisCache;
-      const vessels = items.map(normalizeCustomerAisVessel).filter(Boolean);
+      const vessels = items.map(normalizeCustomerAisVessel).filter((vessel): vessel is Vessel => vessel !== null);
       if (vessels.length > 0) {
         customerAisCache = vessels;
         customerAisCacheAt = Date.now();
@@ -251,9 +259,9 @@ async function fetchCustomerAis(): Promise<any[]> {
   return customerAisInflight;
 }
 
-let marineTrafficCache: any[] = [];
+let marineTrafficCache: Vessel[] = [];
 let marineTrafficCacheAt = 0;
-let marineTrafficInflight: Promise<any[]> | null = null;
+let marineTrafficInflight: Promise<Vessel[]> | null = null;
 const MARINE_TRAFFIC_TTL = 60000;
 
 function marineTrafficCategory(value: unknown): string {
@@ -266,7 +274,7 @@ function marineTrafficCategory(value: unknown): string {
   return 'other';
 }
 
-function normalizeMarineTrafficVessel(value: any): any | null {
+function normalizeMarineTrafficVessel(value: ProviderJson): Vessel | null {
   const lat = Number(value?.LAT ?? value?.lat ?? value?.latitude ?? value?.POSITION?.LAT);
   const lng = Number(value?.LON ?? value?.lng ?? value?.lon ?? value?.longitude ?? value?.POSITION?.LON);
   const mmsi = String(value?.MMSI ?? value?.mmsi ?? value?.SHIP_ID ?? value?.shipId ?? '').trim();
@@ -288,7 +296,7 @@ function normalizeMarineTrafficVessel(value: any): any | null {
   };
 }
 
-async function fetchMarineTrafficOfficial(): Promise<any[]> {
+async function fetchMarineTrafficOfficial(): Promise<Vessel[]> {
   const endpoint = process.env.MARINETRAFFIC_AIS_API_URL;
   const apiKey = process.env.MARINETRAFFIC_API_KEY;
   if (!endpoint || !apiKey) return [];
@@ -307,7 +315,7 @@ async function fetchMarineTrafficOfficial(): Promise<any[]> {
       const payload = JSON.parse(await requestIntegration({ url, expected: 'json' }, process.env, 12000));
       const rows = Array.isArray(payload) ? payload : payload?.data ?? payload?.ships ?? payload?.vessels ?? [];
       if (!Array.isArray(rows)) return marineTrafficCache;
-      const vessels = rows.map(normalizeMarineTrafficVessel).filter(Boolean);
+      const vessels = rows.map(normalizeMarineTrafficVessel).filter((vessel): vessel is Vessel => vessel !== null);
       if (vessels.length > 0) {
         marineTrafficCache = vessels;
         marineTrafficCacheAt = Date.now();
@@ -341,9 +349,9 @@ const MT_HEADERS: Record<string, string> = {
   'Accept': 'application/json, text/plain, all-types',
   'Accept-Language': 'en-US,en;q=0.9',
 };
-let mtCache: any[] = [];
+let mtCache: Vessel[] = [];
 let mtCacheAt = 0;
-let mtInflight: Promise<any[]> | null = null;
+let mtInflight: Promise<Vessel[]> | null = null;
 const MT_TTL = 300000; // 5 min — fetch at most 4 tiles per 5 min (gentle)
 // If MarineTraffic rate-limits us (403), back off for 30 min rather than keep
 // hammering — this respects their limiter AND lets the IP leave the penalty box.
@@ -380,7 +388,7 @@ async function fetchMtTile(url: string): Promise<{ status: number; body: string 
   return { status: response.status, body: response.ok ? await response.text() : '' };
 }
 
-async function fetchMarineTraffic(): Promise<any[]> {
+async function fetchMarineTraffic(): Promise<Vessel[]> {
   if (Date.now() - mtCacheAt < MT_TTL) return mtCache;
   if (Date.now() < mtCooldownUntil) return mtCache; // backing off from a 403
   if (mtInflight) return mtInflight;
@@ -450,7 +458,7 @@ function connectAisStream() {
 
   try {
     ws = new WebSocket("wss://stream.aisstream.io/v0/stream");
-  } catch (e) {
+  } catch {
     globalForAis.isAisConnecting = false;
     return;
   }
@@ -493,7 +501,7 @@ function connectAisStream() {
       const mmsi = parsed.MetaData?.MMSI;
       if (!mmsi) return;
 
-      const existing = shipsCache.get(mmsi) || {
+      const existing: StreamVessel = shipsCache.get(mmsi) || {
         id: mmsi, mmsi: mmsi, timestamp: null
       };
 
@@ -528,7 +536,7 @@ function connectAisStream() {
         const firstKey = shipsCache.keys().next().value;
         if (firstKey) shipsCache.delete(firstKey);
       }
-    } catch (e) {
+    } catch {
       // ignore parse errors
     }
   });
@@ -545,12 +553,7 @@ function connectAisStream() {
 
 // Start connection process asynchronously
 // Start keyed streaming only for an authorized combined-feed request.
-
-// --- SCM Integration: VesselAPI Hybrid Fallback (Satellite AIS) ---
-async function fetchVesselApiFallback() {
-  // Mock data removed per user request. We only rely on real live stream data.
-}
-
+
 // Response cache — merging + congestion math over thousands of ships is O(ports×ships);
 // caching keeps it cheap at scale and lets Cloudflare's edge serve most requests.
 const responseCache = new Map<string, { payload: unknown; at: number }>();
@@ -599,7 +602,7 @@ export async function GET(request?: NextRequest) {
     }
   }
 
-  const byId = new Map<string, any>();
+  const byId = new Map<string, Vessel>();
   /*
   if (false) {
     // MarineTraffic is up → global coverage. Use it as the base.
@@ -612,7 +615,7 @@ export async function GET(request?: NextRequest) {
   for (const s of dtShips) byId.set(`dt-${s.mmsi}`, s);
   for (const s of customerShips) byId.set(`customer-${s.mmsi}`, s);
   for (const s of marineTrafficShips) byId.set(`marinetraffic-${s.mmsi}`, s);
-  for (const s of shipsCache.values()) byId.set(`ais-${s.mmsi}`, s); // aisstream (if keyed)
+  for (const s of shipsCache.values()) if (hasPosition(s)) byId.set(`ais-${s.mmsi}`, s); // aisstream (if keyed)
   const allShips = Array.from(byId.values());
   const freshShips = allShips.filter((ship) => isRecentObservation(ship.observedAt ?? ship.timestamp, POSITION_MAX_AGE_MS, now));
   let ships = freshShips;

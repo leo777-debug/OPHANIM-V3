@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, ChevronDown, ChevronUp, Crosshair, TrendingUp, TrendingDown, Minus, Orbit } from 'lucide-react';
+import { ChevronDown, ChevronUp, Crosshair, TrendingUp, TrendingDown, Minus, Orbit } from 'lucide-react';
 import { type Fusion, type Domain } from '@/lib/fusion';
 
 /**

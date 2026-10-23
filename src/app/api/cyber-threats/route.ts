@@ -1,3 +1,4 @@
+import type { ProviderJson } from '@/lib/provider-json';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
@@ -42,13 +43,13 @@ async function fetchJson(url: string) {
   return response.json();
 }
 
-function numericCvss(metrics: any): number | undefined {
+function numericCvss(metrics: ProviderJson): number | undefined {
   const metric = metrics?.cvssMetricV31?.[0] ?? metrics?.cvssMetricV30?.[0] ?? metrics?.cvssMetricV2?.[0];
   const score = Number(metric?.cvssData?.baseScore);
   return Number.isFinite(score) ? score : undefined;
 }
 
-function osvFixedVersions(vulnerability: any): string[] {
+function osvFixedVersions(vulnerability: ProviderJson): string[] {
   const versions = new Set<string>();
   for (const affected of vulnerability?.affected ?? []) {
     for (const range of affected?.ranges ?? []) {
@@ -85,7 +86,7 @@ async function enrichCve(cve: string) {
 
 async function buildPayload(): Promise<Record<string, unknown>> {
   const sources: SourceStatus[] = [];
-  let vulnerabilities: any[] = [];
+  let vulnerabilities: ProviderJson[] = [];
   try {
     const data = await fetchJson('https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json');
     vulnerabilities = data.vulnerabilities ?? [];

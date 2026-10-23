@@ -1,4 +1,4 @@
-import type { NormalizedSearchResult, Provider } from '../types';
+import type { Provider } from '../types';
 
 interface DomainRaw { domain: string; addresses: string[]; registrar?: string; created?: string; }
 

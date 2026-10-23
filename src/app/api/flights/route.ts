@@ -1,3 +1,4 @@
+import type { ProviderJson } from '@/lib/provider-json';
 
 import { NextResponse } from 'next/server';
 import { stealthFetch } from '@/lib/stealthFetch';
@@ -92,7 +93,7 @@ async function fetchRegionFrom(
   lat: number, lon: number,
   urlFn: (lat: number, lon: number, dist: number) => string,
   arrayKey: 'ac' | 'aircraft',
-): Promise<any[]> {
+): Promise<ProviderJson[]> {
   try {
     const res = await stealthFetch(urlFn(lat, lon, ADSB_MAX_DIST), {
       signal: AbortSignal.timeout(12000),
@@ -107,7 +108,7 @@ async function fetchRegionFrom(
   return [];
 }
 
-function classifyFlight(f: any) {
+function classifyFlight(f: ProviderJson) {
   const modelUpper = (f.t || '').toUpperCase();
   const flightStr = (f.flight || '').trim().toUpperCase();
   const dbFlags = (f.dbFlags || 0);
@@ -163,13 +164,13 @@ function classifyFlight(f: any) {
   };
 }
 
-let cachedData: any = null;
+let cachedData: ProviderJson = null;
 let lastFetchTime = 0;
 // 90s TTL keeps us well within the authenticated OpenSky budget (4000 credits/day,
 // 4 credits/call = 1000 calls/day ≈ one per 86s). The old 45s TTL at ~1920 calls/day
 // was what got the VPS IP rate-limited on the anonymous pool.
 const CACHE_TTL = 90000;
-let fetchPromise: Promise<any> | null = null;
+let fetchPromise: Promise<ProviderJson> | null = null;
 
 // Back off from OpenSky after a 429 so the daily quota can reset.
 // Re-poking a limited endpoint on every cache miss keeps the IP throttled.
@@ -213,7 +214,7 @@ async function getOpenSkyToken(): Promise<string | null> {
   }
 }
 
-function ingestAc(raw: any[], into: any[], seen: Set<string>) {
+function ingestAc(raw: ProviderJson[], into: ProviderJson[], seen: Set<string>) {
   for (const ac of raw) {
     const hex = (ac.hex || '').toLowerCase().trim();
     if (hex && !seen.has(hex)) { seen.add(hex); into.push(ac); }
@@ -243,7 +244,7 @@ export async function GET() {
   const JAMMING_NACAP_THRESHOLD = 4;
 
   fetchPromise = (async () => {
-    const allRaw: any[] = [];
+    const allRaw: ProviderJson[] = [];
     const seenHex = new Set<string>();
     let source: string;
 
@@ -350,11 +351,11 @@ export async function GET() {
     }
 
     // ── Classify ──────────────────────────────────────────────────────────────
-    const commercial: any[] = [];
-    const privateFl: any[] = [];
-    const jets: any[] = [];
-    const military: any[] = [];
-    const gpsJamming: any[] = [];
+    const commercial: ProviderJson[] = [];
+    const privateFl: ProviderJson[] = [];
+    const jets: ProviderJson[] = [];
+    const military: ProviderJson[] = [];
+    const gpsJamming: ProviderJson[] = [];
 
     for (const raw of allRaw) {
       const flight = classifyFlight(raw);
@@ -401,7 +402,7 @@ export async function GET() {
   }
 }
 
-function aggregateJamming(points: any[], threshold: number) {
+function aggregateJamming(points: ProviderJson[], threshold: number) {
   if (points.length === 0) return [];
   const grid = new Map<string, { lat: number; lng: number; count: number; total_nac_p: number }>();
   const GRID_SIZE = 2;

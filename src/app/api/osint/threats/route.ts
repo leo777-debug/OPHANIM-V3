@@ -1,3 +1,4 @@
+import type { ProviderJson } from '@/lib/provider-json';
 import { NextResponse } from 'next/server';
 import { isRateLimited, getClientIp } from '@/lib/ssrf-guard';
 
@@ -12,7 +13,7 @@ export async function GET(req: Request) {
   }
   
   try {
-    const results: any = { timestamp: new Date().toISOString() };
+    const results: ProviderJson = { timestamp: new Date().toISOString() };
 
     // 1. AlienVault OTX — public pulse feed (no key needed for public data)
     try {
@@ -27,7 +28,7 @@ export async function GET(req: Request) {
         });
         if (actRes.ok) {
           const data = await actRes.json();
-          results.pulses = (data.results || []).slice(0, 10).map((p: any) => ({
+          results.pulses = (data.results || []).slice(0, 10).map((p: ProviderJson) => ({
             name: p.name,
             description: p.description?.slice(0, 200),
             created: p.created,

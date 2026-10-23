@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { stealthFetch } from '@/lib/stealthFetch';
 
 export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
@@ -9,6 +8,20 @@ export const dynamic = 'force-dynamic';
  * Source: GDELT Project — completely free, no auth required
  * Replaces the old RSS scraper with actual GDELT geo-coded events.
  */
+
+type GdacsIncident = { id: string; lat: number; lng: number; name: string; url: string; html: string; type: string; date: string | null };
+
+// GDACS RSS text is XML-escaped ("MMI&gt;=VII", "&amp;eventid="); show and link the real characters.
+const decodeXml = (value: string) => value
+  .replace(/^<!\[CDATA\[([\s\S]*)\]\]>$/, '$1')
+  .replace(/&(lt|gt|quot|apos|#\d+|#x[0-9a-f]+);/gi, (entity, code: string) => {
+    const named: Record<string, string> = { lt: '<', gt: '>', quot: '"', apos: "'" };
+    if (named[code.toLowerCase()]) return named[code.toLowerCase()];
+    const point = code[1] === 'x' || code[1] === 'X' ? parseInt(code.slice(2), 16) : parseInt(code.slice(1), 10);
+    return Number.isFinite(point) ? String.fromCodePoint(point) : entity;
+  })
+  .replace(/&amp;/g, '&');
+const escapeHtml = (value: string) => value.replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]!));
 
 export async function GET() {
   try {
@@ -23,7 +36,7 @@ export async function GET() {
     const xml = await res.text();
     // Split by <item> instead of using regex to avoid ReDoS on large XML
     const rawItems = xml.split(/<item>/i).slice(1);
-    const allEvents: any[] = [];
+    const allEvents: GdacsIncident[] = [];
     let eventId = 0;
 
     for (const rawItem of rawItems) {
@@ -39,9 +52,9 @@ export async function GET() {
 
       if (!titleMatch || !latMatch || !lngMatch) continue;
 
-      const title = titleMatch[1];
-      const link = linkMatch ? linkMatch[1] : '';
-      const desc = descMatch ? descMatch[1] : '';
+      const title = decodeXml(titleMatch[1]);
+      const link = linkMatch ? decodeXml(linkMatch[1]) : '';
+      const desc = descMatch ? decodeXml(descMatch[1]) : '';
       const lat = parseFloat(latMatch[1]);
       const lng = parseFloat(lngMatch[1]);
       const eventType = typeMatch ? typeMatch[1] : 'UNK';
@@ -59,7 +72,7 @@ export async function GET() {
         lng,
         name: title,
         url: link,
-        html: `<a href="${link}" target="_blank">${title}</a><br/><i>${desc}</i>`,
+        html: `<a href="${escapeHtml(link)}" target="_blank">${escapeHtml(title)}</a><br/><i>${escapeHtml(desc)}</i>`,
         type,
         date: publishedMatch?.[1] || null,
       });
