@@ -14,6 +14,7 @@ export default function CommandDashboard() {
   const [events, setEvents] = useState<EventRecord[]>([]);
   const [entities, setEntities] = useState<EntityRecord[]>([]);
   const [error, setError] = useState('');
+  const [now, setNow] = useState(() => Date.now());
   const load = useCallback(async () => {
     setError('');
     try {
@@ -22,11 +23,12 @@ export default function CommandDashboard() {
       setCases((await caseResponse.json()).cases ?? []);
       setEvents((await eventResponse.json()).events ?? []);
       setEntities((await entityResponse.json()).entities ?? []);
+      setNow(Date.now());
     } catch (cause) { setError(cause instanceof Error ? cause.message : 'Workspace is unavailable.'); }
   }, []);
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { void Promise.resolve().then(load); }, [load]);
   const actionable = useMemo(() => cases.filter((item) => !['Closed', 'Resolved', 'Cancelled'].includes(item.case_status)), [cases]);
-  const overdue = useMemo(() => actionable.filter((item) => item.deadline_at && Date.parse(item.deadline_at) < Date.now()), [actionable]);
+  const overdue = useMemo(() => actionable.filter((item) => item.deadline_at && Date.parse(item.deadline_at) < now), [actionable, now]);
   return <div className="platform-content"><div className="platform-summary"><Metric icon={ListChecks} label="Cases needing attention" value={actionable.length} /><Metric icon={Clock3} label="Overdue deadlines" value={overdue.length} tone="danger" /><Metric icon={Radio} label="Recent events" value={events.length} /><Metric icon={Database} label="Monitored entities" value={entities.length} /></div>{error && <div className="platform-notice">{error} <Link href="/login">Sign in</Link></div>}<div className="platform-grid"><section className="platform-section"><div className="platform-section__heading"><div><p>Priority queue</p><h2>What needs attention</h2></div><Link href="/cases">View cases <ArrowRight size={15} /></Link></div>{actionable.length ? <div className="platform-list">{actionable.slice(0, 8).map((item) => <Link key={item.id} href={`/cases/${item.id}`} className="platform-row"><span className={`platform-priority platform-priority--${item.priority}`} /><div><strong>{item.title}</strong><small>{item.case_status}{item.deadline_at ? ` · Due ${new Date(item.deadline_at).toLocaleString()}` : ''}</small></div><ArrowRight size={16} /></Link>)}</div> : <Empty label="No active cases. Create one from an entity or event when follow-up work is needed." />}</section><section className="platform-section"><div className="platform-section__heading"><div><p>Incoming signals</p><h2>Recent events</h2></div><Link href="/events">View events <ArrowRight size={15} /></Link></div>{events.length ? <div className="platform-list">{events.slice(0, 8).map((item) => <Link key={item.id} href={`/events/${item.id}`} className="platform-row"><AlertTriangle size={16} /><div><strong>{item.title}</strong><small>{item.event_type}{item.severity !== null ? ` · Severity ${item.severity}` : ''}</small></div><ArrowRight size={16} /></Link>)}</div> : <Empty label="No platform events have been recorded yet." />}</section></div><ProviderHealthPanel /></div>;
 }
 

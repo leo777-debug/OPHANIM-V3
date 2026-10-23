@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -8,6 +8,8 @@ import {
   Newspaper, Clock, Radio, Maximize2, Minimize2
 } from 'lucide-react';
 import AiOverview from './AiOverview';
+
+const subscribeNever = () => () => {};
 
 interface LiveAlertsProps {
   data: any;
@@ -128,8 +130,7 @@ export default function LiveAlerts({ data, onLocate, onWatchFeed }: LiveAlertsPr
   };
 
   // Ensure portal only renders on client
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useSyncExternalStore(subscribeNever, () => true, () => false);
 
   const content = (
     <motion.div

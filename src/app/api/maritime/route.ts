@@ -547,7 +547,6 @@ function connectAisStream() {
 // Start keyed streaming only for an authorized combined-feed request.
 
 // --- SCM Integration: VesselAPI Hybrid Fallback (Satellite AIS) ---
-let lastVesselApiFetch = 0;
 async function fetchVesselApiFallback() {
   // Mock data removed per user request. We only rely on real live stream data.
 }

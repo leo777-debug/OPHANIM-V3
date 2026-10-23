@@ -1,7 +1,9 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { OrganizationAccessError } from '@/lib/operations/authorization';
+import { isSchemaPendingError, SCHEMA_PENDING_MESSAGE } from '@/lib/db/schema-pending';
 
 export function knowledgeError(error: unknown) {
+  if (isSchemaPendingError(error)) return NextResponse.json({ error: SCHEMA_PENDING_MESSAGE, setupPending: true }, { status: 503 });
   const message = error instanceof Error ? error.message : 'Knowledge request failed.';
   const status = error instanceof OrganizationAccessError ? 403 : /DATABASE_URL|Private storage|runtime missing/.test(message) ? 503 : 400;
   return NextResponse.json({ error: /password|connection string|postgres:\/\//i.test(message) ? 'Knowledge service unavailable.' : message },{status});

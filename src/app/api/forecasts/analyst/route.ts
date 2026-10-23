@@ -5,13 +5,17 @@ import { createForecast, listForecasts, resolveForecast, ForecastInputError } fr
 import { boundedJson } from '@/lib/http/body';
 import { sameOrigin } from '@/lib/http/origin';
 import { isRateLimited } from '@/lib/ssrf-guard';
+import { isSchemaPendingError, SCHEMA_PENDING_MESSAGE } from '@/lib/db/schema-pending';
 export const dynamic = 'force-dynamic';
 const headers = { 'Cache-Control': 'private, no-store' };
 function errorResponse(error: unknown) {
   return NextResponse.json({ error: error instanceof OrganizationAccessError ? 'Sign in with permission to access your organization’s forecasts.' : error instanceof ForecastInputError ? error.message : 'Forecast storage unavailable. Configure the database and apply the forecast migration.' }, { status: error instanceof OrganizationAccessError ? 403 : error instanceof ForecastInputError ? 400 : 503, headers });
 }
 export async function GET(request: NextRequest) {
-  try { const actor = await requireAuthenticatedActor(request, 'intelligence:read'); return NextResponse.json({ forecasts: await listForecasts(actor), writable: can(actor, 'intelligence:write'), label: 'Sourced probabilities, not facts', limit: 200, scoring: 'Binary Brier score = (probability − outcome)²; lower is better. Unresolved questions are not scored.' }, { headers }); } catch (error) { return errorResponse(error); }
+  try { const actor = await requireAuthenticatedActor(request, 'intelligence:read'); return NextResponse.json({ forecasts: await listForecasts(actor), writable: can(actor, 'intelligence:write'), label: 'Sourced probabilities, not facts', limit: 200, scoring: 'Binary Brier score = (probability − outcome)²; lower is better. Unresolved questions are not scored.' }, { headers }); } catch (error) {
+    if (isSchemaPendingError(error)) return NextResponse.json({ forecasts: [], writable: false, setupPending: true, notice: SCHEMA_PENDING_MESSAGE, label: 'Sourced probabilities, not facts', limit: 200 }, { headers });
+    return errorResponse(error);
+  }
 }
 async function mutate(request: NextRequest, resolve: boolean) {
   try {

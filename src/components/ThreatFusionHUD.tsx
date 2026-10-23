@@ -48,7 +48,7 @@ export default function ThreatFusionHUD({ onLocate }: Props) {
   }, []);
 
   useEffect(() => {
-    refresh();
+    void Promise.resolve().then(refresh);
     // Server payload is edge-cached (60s); polling every 60s just refreshes the read.
     const iv = setInterval(refresh, 60000);
     return () => clearInterval(iv);

@@ -68,6 +68,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
   const mapRef = useRef<maplibregl.Map | null>(null);
   const popupRef = useRef<maplibregl.Popup | null>(null);
   const [mapReady, setMapReady] = useState(false);
+  const [readyMap, setReadyMap] = useState<maplibregl.Map | null>(null);
   const [basemapFallback, setBasemapFallback] = useState(false);
   const prevStyleRef = useRef<'dark' | 'earth' | 'satellite'>('dark');
 
@@ -701,6 +702,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
         }});
       }
       setMapReady(true);
+      setReadyMap(map);
       publicPresentation?.onReady(map);
     });
 
@@ -1216,7 +1218,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     });
 
     }
-    return () => { releaseFallback(); map.remove(); mapRef.current = null; };
+    return () => { releaseFallback(); map.remove(); mapRef.current = null; setReadyMap(null); };
   }, []);
 
   // Day/Night
@@ -1833,7 +1835,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
   return <>
     <div ref={containerRef} className="absolute inset-0 w-full h-full" />
     {basemapFallback && <p role="status" className="absolute left-2 top-2 z-10 max-w-[80%] rounded bg-black/80 px-2 py-1 text-xs text-white">Natural Earth reference basemap · remote basemap unavailable. Operational data freshness is separate.</p>}
-    <DynamicProviderLayers map={mapReady ? mapRef.current : null} layers={providerLayers} onEntityClick={onEntityClick} />
+    <DynamicProviderLayers map={mapReady ? readyMap : null} layers={providerLayers} onEntityClick={onEntityClick} />
   </>;
 }
 

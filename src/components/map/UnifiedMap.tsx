@@ -122,7 +122,8 @@ export default function UnifiedMap({ publicSurface=false, settings: suppliedSett
     return()=>controller.abort();
   },[activeTool,replay.length]);
   const shipmentId=query.get('shipment'), disruptionId=query.get('disruption');
-  useEffect(()=>{setLensLayers([]);},[activeTool]);
+  const [lensTool,setLensTool]=useState(activeTool);
+  if(lensTool!==activeTool){setLensTool(activeTool);setLensLayers([]);}
   useEffect(()=>{
     if(publicSurface)return;
     let cancelled=false;
