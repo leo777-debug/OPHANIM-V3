@@ -1,3 +1,4 @@
+import type { ProviderJson } from '@/lib/provider-json';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
@@ -11,7 +12,7 @@ export async function GET() {
     }
 
     const data = await res.json();
-    const prices: any[] = [];
+    const prices: ProviderJson[] = [];
     
     if (data.bitcoin?.usd) prices.push({ symbol: 'BTC', price: data.bitcoin.usd });
     if (data.ethereum?.usd) prices.push({ symbol: 'ETH', price: data.ethereum.usd });

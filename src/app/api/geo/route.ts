@@ -1,3 +1,4 @@
+import type { ProviderJson } from '@/lib/provider-json';
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
@@ -54,7 +55,7 @@ export async function GET(request: NextRequest) {
 
   const hit = cache.get(key);
   if (hit && Date.now() < hit.expiry) {
-    if ((hit.data as any).__fail) {
+    if ((hit.data as ProviderJson).__fail) {
       return NextResponse.json({ error: 'All geolocation providers failed (cached)' }, { status: 502, headers: { 'Cache-Control': 'no-store' } });
     }
     return NextResponse.json(hit.data, { headers: { 'Cache-Control': 'private, max-age=3600' } });

@@ -1,3 +1,4 @@
+import type { ProviderJson } from '@/lib/provider-json';
 import { NextResponse } from 'next/server';
 
 /**
@@ -23,7 +24,7 @@ export async function GET(request: Request) {
 
     let countryName = '';
     let countryCode = '';
-    let locationInfo: any = {};
+    let locationInfo: ProviderJson = {};
 
     if (geoRes.ok) {
       const geoData = await geoRes.json();
@@ -128,7 +129,7 @@ export async function GET(request: Request) {
         subregion: countryData.subregion,
         languages: countryData.languages ? Object.values(countryData.languages) : [],
         currencies: countryData.currencies
-          ? Object.entries(countryData.currencies).map(([code, info]: [string, any]) => `${info.name} (${info.symbol || code})`)
+          ? Object.entries(countryData.currencies).map(([code, info]: [string, ProviderJson]) => `${info.name} (${info.symbol || code})`)
           : [],
         flag: countryData.flag,
         flag_url: countryData.flags?.svg,

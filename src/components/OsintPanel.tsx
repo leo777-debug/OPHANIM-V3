@@ -1,21 +1,20 @@
 'use client';
 
-import { useState, useCallback, useEffect, memo } from 'react';
+import { useState, useCallback, memo } from 'react';
 import { createPortal } from 'react-dom';
 import ReconObservation from '@/components/platform/ReconObservation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  LocateFixed,
-  Search, Radar, Globe, Shield, FileText, Radio,
-  ChevronDown, ChevronUp, Loader2, AlertTriangle, Server,
-  Wifi, Lock, MapPin, Bug, Code, Layers, Network, Fingerprint,
-  CheckCircle, XCircle, Clock, ExternalLink, Crosshair,
-  Maximize2, Minimize2, Gavel, Bitcoin, Phone, Terminal, ShieldAlert
+  LocateFixed, Search, Radar, Globe, Shield, FileText, ChevronDown, ChevronUp, Loader2, AlertTriangle, Server, Wifi, Lock, Bug, Code, Layers, Network, Fingerprint, CheckCircle, XCircle, Clock, ExternalLink, Crosshair, Maximize2, Minimize2, Phone, Terminal, ShieldAlert
 } from 'lucide-react';
 import { ipToNumber, numberToIp, calculateSubnetStart, classifyDevice, assessRisk, batchFetch, ShodanInternetDBResponse, SweepDevice } from '@/lib/osint-utils';
 import ShodanPanel from '@/components/ShodanPanel';
 import CameraIndexPanel from '@/components/CameraIndexPanel';
 import type { CctvCamera } from '@/app/api/cctv/types';
+import type { LucideIcon } from 'lucide-react';
+import type { ProviderJson } from '@/lib/provider-json';
+
+type SweepResult = { center: { lat: number; lng: number; city?: string; country?: string; isp?: string; asn?: string };  subnet: string; cidr: number; target_ip: string; devices: SweepDevice[]; summary: { total_hosts: number; total_responsive: number; device_breakdown: Record<string, number> }; sweep_time_ms: number };
 
 const TABS = [
   { id: 'cameras', label: 'CAMERAS', icon: Globe, placeholder: 'Published camera indexes', color: '#5BB6FF' },
@@ -40,23 +39,23 @@ const TABS = [
   { id: 'sweep', label: 'IP SWEEP', icon: Crosshair, placeholder: 'Enter IP address (e.g. 8.8.8.8)', color: '#FF3D3D' },
 ];
 
-interface OsintPanelProps { initialTab?: 'scanner' | 'shodan' | 'bgp' | 'ip' | 'cameras'; isOpen?: boolean; onClose?: () => void; isMobile?: boolean; onSweepVisualize?: (data: any) => void; onScanGeolocate?: (target: string, data: any) => void; onCameraSelect?: (camera: CctvCamera) => void; }
+interface OsintPanelProps { initialTab?: 'scanner' | 'shodan' | 'bgp' | 'ip' | 'cameras'; isOpen?: boolean; onClose?: () => void; isMobile?: boolean; onSweepVisualize?: (data: SweepResult) => void; onScanGeolocate?: (target: string, data: ProviderJson) => void; onCameraSelect?: (camera: CctvCamera) => void; }
 
 function OsintPanelInner({ initialTab = 'scanner', isMobile, onSweepVisualize, onScanGeolocate, onCameraSelect }: OsintPanelProps) {
   const [activeTab, setActiveTab] = useState(initialTab as string);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<any>(null);
+  const [results, setResults] = useState<ProviderJson>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [recoveryHref, setRecoveryHref] = useState<string | null>(null);
   const [scanType, setScanType] = useState('quick');
   const [expanded, setExpanded] = useState(true);
   const [history, setHistory] = useState<{tab:string;query:string;time:string}[]>([]);
-  const [sweepResult, setSweepResult] = useState<any>(null);
+  const [sweepResult, setSweepResult] = useState<SweepResult | null>(null);
   const [sweepProgress, setSweepProgress] = useState<{ current: number; total: number } | null>(null);
   const [sweepCidr, setSweepCidr] = useState(24);
-  const [cveCache, setCveCache] = useState<Record<string, any>>({});
+  const [cveCache, setCveCache] = useState<Record<string, ProviderJson>>({});
   const [expandedDevice, setExpandedDevice] = useState<string | null>(null);
 
   // Fetch CVE details when a device is expanded in full-screen mode
@@ -180,8 +179,8 @@ function OsintPanelInner({ initialTab = 'scanner', isMobile, onSweepVisualize, o
         });
         setSweepProgress(null);
         setHistory(prev => [{ tab: activeTab, query, time: new Date().toLocaleTimeString() }, ...prev.slice(0, 9)]);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : String(err));
         setSweepProgress(null);
       } finally {
         setLoading(false);
@@ -239,7 +238,7 @@ function OsintPanelInner({ initialTab = 'scanner', isMobile, onSweepVisualize, o
               breachList = data.BreachesSummary.site.split(';').filter(Boolean);
            }
            if (data.ExposedData && Array.isArray(data.ExposedData)) {
-              data.ExposedData.forEach((item: any) => {
+              data.ExposedData.forEach((item: ProviderJson) => {
                  if (item.data_classes && Array.isArray(item.data_classes)) {
                     item.data_classes.forEach((dc: string) => dataExposed.add(dc));
                  }
@@ -277,13 +276,13 @@ function OsintPanelInner({ initialTab = 'scanner', isMobile, onSweepVisualize, o
       }
     } catch { setError('Network error'); }
     finally { setLoading(false); }
-  }, [query, activeTab, scanType, loading, sweepCidr]);
+  }, [query, activeTab, scanType, loading, sweepCidr, onScanGeolocate]);
 
   const currentTab = TABS.find(t => t.id === activeTab);
 
   // ── Shodan-style structured result renderers ──
 
-  const ResultRow = ({ label, value, color, mono = true }: { label: string; value: any; color?: string; mono?: boolean }) => {
+  const ResultRow = ({ label, value, color, mono = true }: { label: string; value: unknown; color?: string; mono?: boolean }) => {
     if (value === undefined || value === null || value === '') return null;
     return (
       <div className="flex items-start gap-3 py-1.5 border-b border-[var(--border-secondary)]/20 last:border-0">
@@ -304,7 +303,7 @@ function OsintPanelInner({ initialTab = 'scanner', isMobile, onSweepVisualize, o
 
   // Surfaces an inline OFAC-SDN hit (used by the WHOIS and IP-intel routes
   // when their cross-check finds a sanctioned registrant / ASN owner).
-  const SanctionsBadge = ({ match }: { match: any }) => {
+  const SanctionsBadge = ({ match }: { match: ProviderJson }) => {
     if (!match || !Array.isArray(match.hits) || match.hits.length === 0) return null;
     return (
       <div className="mb-2 px-2 py-2 rounded border border-red-500/40 bg-red-500/15">
@@ -314,17 +313,17 @@ function OsintPanelInner({ initialTab = 'scanner', isMobile, onSweepVisualize, o
             SANCTIONED — {match.source || 'OFAC SDN'}
           </span>
         </div>
-        {match.hits.slice(0, 5).map((h: any, i: number) => (
+        {match.hits.slice(0, 5).map((h: ProviderJson, i: number) => (
           <div key={i} className="text-[9px] font-mono text-red-200 break-all leading-tight">
             <span className="text-[var(--text-muted)]">↳ {h.matched_value}:</span>{' '}
-            {(h.entries || []).slice(0, 2).map((e: any) => e.name).join('; ')}
+            {(h.entries || []).slice(0, 2).map((e: ProviderJson) => e.name).join('; ')}
           </div>
         ))}
       </div>
     );
   };
 
-  const SectionHeader = ({ title, icon: Icon, color }: { title: string; icon: any; color: string }) => (
+  const SectionHeader = ({ title, icon: Icon, color }: { title: string; icon: LucideIcon; color: string }) => (
     <div className="flex items-center gap-2 mt-3 mb-1.5 first:mt-0">
       <Icon className="w-3.5 h-3.5" style={{ color }} />
       <span className="text-[10px] font-mono font-bold tracking-widest" style={{ color }}>{title}</span>
@@ -361,7 +360,7 @@ function OsintPanelInner({ initialTab = 'scanner', isMobile, onSweepVisualize, o
             <>
               <SectionHeader title={`OPEN PORTS (${ports.length})`} icon={Wifi} color="#00E676" />
               <div className="space-y-0.5">
-                {ports.map((p: any, i: number) => (
+                {ports.map((p, i: number) => (
                   <PortRow key={i} port={p.port || p} state={p.state || 'open'} service={p.service || p.name} version={p.version} />
                 ))}
               </div>
@@ -375,8 +374,8 @@ function OsintPanelInner({ initialTab = 'scanner', isMobile, onSweepVisualize, o
     // ── VULN SCAN ──
     if (activeTab === 'vuln') {
       const vulns = r.vulnerabilities || r.vulns || r.cves || [];
-      const exploits = vulns.filter((v: any) => v.is_exploit);
-      const regularVulns = vulns.filter((v: any) => !v.is_exploit);
+      const exploits = vulns.filter((v: ProviderJson) => v.is_exploit);
+      const regularVulns = vulns.filter((v: ProviderJson) => !v.is_exploit);
 
       return (
         <div>
@@ -386,7 +385,7 @@ function OsintPanelInner({ initialTab = 'scanner', isMobile, onSweepVisualize, o
           <ResultRow label="Risk Level" value={r.risk_level || r.severity} />
           {Array.isArray(regularVulns) && regularVulns.length > 0 && (
             <div className="mt-2 space-y-1">
-              {regularVulns.slice(0, 20).map((v: any, i: number) => (
+              {regularVulns.slice(0, 20).map((v, i: number) => (
                 <div key={i} className="p-2 rounded-lg border border-red-500/20 bg-red-500/5 flex flex-col">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-mono font-bold text-red-400">{v.id || v.cve || v.name}</span>
@@ -403,7 +402,7 @@ function OsintPanelInner({ initialTab = 'scanner', isMobile, onSweepVisualize, o
             <div className="mt-4">
               <SectionHeader title={`POSSIBLE EXPLOITS (${exploits.length})`} icon={AlertTriangle} color="#FF9500" />
               <div className="mt-2 space-y-1">
-                {exploits.slice(0, 10).map((e: any, i: number) => (
+                {exploits.slice(0, 10).map((e: ProviderJson, i: number) => (
                   <div key={i} className="p-2 rounded-lg border border-orange-500/30 bg-orange-500/10 flex flex-col">
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] font-mono font-bold text-orange-400">{e.id}</span>
@@ -434,7 +433,7 @@ function OsintPanelInner({ initialTab = 'scanner', isMobile, onSweepVisualize, o
           <ResultRow label="Domain" value={r.domain || query} color="#448AFF" />
           {r.A && <ResultRow label="A Records" value={Array.isArray(r.A) ? r.A.join(', ') : r.A} />}
           {r.AAAA && <ResultRow label="AAAA" value={Array.isArray(r.AAAA) ? r.AAAA.join(', ') : r.AAAA} />}
-          {r.MX && <ResultRow label="MX" value={Array.isArray(r.MX) ? r.MX.map((m:any) => m.exchange || m).join(', ') : r.MX} />}
+          {r.MX && <ResultRow label="MX" value={Array.isArray(r.MX) ? r.MX.map((m: ProviderJson) => m.exchange || m).join(', ') : r.MX} />}
           {r.NS && <ResultRow label="NS" value={Array.isArray(r.NS) ? r.NS.join(', ') : r.NS} />}
           {r.TXT && <ResultRow label="TXT" value={Array.isArray(r.TXT) ? r.TXT.join(' | ') : r.TXT} />}
           {r.CNAME && <ResultRow label="CNAME" value={Array.isArray(r.CNAME) ? r.CNAME.join(', ') : r.CNAME} />}
@@ -495,7 +494,7 @@ function OsintPanelInner({ initialTab = 'scanner', isMobile, onSweepVisualize, o
           <ResultRow label="Query" value={r.query} color="#5BB6FF" />
           {r.type === 'ip' && r.ip && (
             <>
-              {r.ip.prefixes?.map((p: any, i: number) => (
+              {r.ip.prefixes?.map((p: ProviderJson, i: number) => (
                 <div key={i} className="mt-2 p-2 border border-[#5BB6FF]/20 bg-[#5BB6FF]/5 rounded">
                   <ResultRow label="ASN" value={`AS${p.asn.asn} - ${p.asn.name}`} color="#5BB6FF" />
                   <ResultRow label="Prefix" value={p.prefix} />
@@ -557,6 +556,7 @@ function OsintPanelInner({ initialTab = 'scanner', isMobile, onSweepVisualize, o
         <div>
           <SectionHeader title="GITHUB RECON" icon={Terminal} color="#87CEEB" />
           <div className="flex items-center gap-3 mb-2">
+            {/* eslint-disable-next-line @next/next/no-img-element -- remote GitHub avatar */}
             {r.avatar_url && <img src={r.avatar_url} alt="avatar" className="w-10 h-10 rounded-full border border-[#87CEEB]/30" />}
             <div>
               <div className="text-[12px] font-mono font-bold text-[#87CEEB]">{r.name || r.username}</div>
@@ -572,7 +572,7 @@ function OsintPanelInner({ initialTab = 'scanner', isMobile, onSweepVisualize, o
           {r.recent_repos?.length > 0 && (
             <div className="mt-2 p-2 border border-[#87CEEB]/20 bg-[#87CEEB]/5 rounded">
               <span className="text-[9px] font-mono text-[#87CEEB] block mb-1">RECENT REPOS</span>
-              {r.recent_repos.map((repo: any, i: number) => (
+              {r.recent_repos.map((repo: ProviderJson, i: number) => (
                 <div key={i} className="flex justify-between text-[9px] font-mono mb-0.5">
                   <span className="text-[#E8E6E0]">{repo.name}</span>
                   <span className="text-[var(--text-muted)]">{repo.language || 'Unknown'}</span>
@@ -628,7 +628,7 @@ function OsintPanelInner({ initialTab = 'scanner', isMobile, onSweepVisualize, o
           <SectionHeader title="CERTIFICATE TRANSPARENCY" icon={Lock} color="#E040FB" />
           <ResultRow label="Domain" value={query} color="#E040FB" />
           <ResultRow label="Certificates" value={Array.isArray(certs) ? certs.length : 0} />
-          {Array.isArray(certs) && certs.slice(0, 15).map((c: any, i: number) => (
+          {Array.isArray(certs) && certs.slice(0, 15).map((c, i: number) => (
             <div key={i} className="mt-1.5 p-2 rounded border border-[var(--border-secondary)]/30 bg-[var(--bg-tertiary)]/30">
               <ResultRow label="Issuer" value={c.issuer_name || c.issuer} />
               <ResultRow label="Common Name" value={c.common_name || c.name_value} />
@@ -832,14 +832,14 @@ function OsintPanelInner({ initialTab = 'scanner', isMobile, onSweepVisualize, o
             </div>
             {/* Breakdown Bar */}
             <div className="flex h-2 rounded-full overflow-hidden bg-[#1A1A18] mb-2">
-              {Object.entries(sweepResult.summary.device_breakdown).map(([type, count]: [string, any]) => {
-                const device = sweepResult.devices.find((d: any) => d.device_type === type);
+              {Object.entries(sweepResult.summary.device_breakdown).map(([type, count]: [string, number]) => {
+                const device = sweepResult.devices.find((d) => d.device_type === type);
                 return <div key={type} style={{ width: `${(count / sweepResult.summary.total_responsive) * 100}%`, backgroundColor: device?.device_color || '#666' }} title={`${type}: ${count}`} />;
               })}
             </div>
             <div className="flex flex-wrap gap-x-3 gap-y-1">
-              {Object.entries(sweepResult.summary.device_breakdown).map(([type, count]: [string, any]) => {
-                const device = sweepResult.devices.find((d: any) => d.device_type === type);
+              {Object.entries(sweepResult.summary.device_breakdown).map(([type, count]: [string, number]) => {
+                const device = sweepResult.devices.find((d) => d.device_type === type);
                 return (
                   <div key={type} className="flex items-center gap-1">
                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: device?.device_color || '#666' }} />
@@ -861,7 +861,7 @@ function OsintPanelInner({ initialTab = 'scanner', isMobile, onSweepVisualize, o
           </div>
           {/* Device List */}
           <div className={isFullScreen ? "flex flex-col gap-3 p-4" : "divide-y divide-[#2A2A28]"}>
-            {sweepResult.devices.map((device: any) => {
+            {sweepResult.devices.map((device) => {
               const isExpanded = expandedDevice === device.ip;
               return (
               <div key={device.ip} className={isFullScreen
@@ -997,7 +997,7 @@ function OsintPanelInner({ initialTab = 'scanner', isMobile, onSweepVisualize, o
                                     {info.cwe && <div className="text-[10px] font-mono text-[#5C5A54] mt-2">Weakness: {info.cwe}</div>}
                                     {info.affected && info.affected.length > 0 && (
                                       <div className="mt-2 flex flex-wrap gap-1.5">
-                                        {info.affected.map((a: any, i: number) => (
+                                        {info.affected.map((a: ProviderJson, i: number) => (
                                           <span key={i} className="text-[9px] font-mono px-1.5 py-0.5 bg-[#1A1A18] border border-[#2A2A28] rounded text-[#8A8880]">
                                             {a.vendor}/{a.product}
                                           </span>

@@ -1,8 +1,9 @@
+import type { ProviderJson } from '@/lib/provider-json';
 import type { Provider, ProviderMapLayer } from '../types';
 
 const emptyResults: never[] = [];
 
-function pointLayer(id: string, name: string, color: string, items: any[], properties: (item: any) => Record<string, unknown>): ProviderMapLayer {
+function pointLayer(id: string, name: string, color: string, items: ProviderJson[], properties: (item: ProviderJson) => Record<string, unknown>): ProviderMapLayer {
   return {
     id, provider: 'maritime-map', name, geometry: 'point',
     source: {

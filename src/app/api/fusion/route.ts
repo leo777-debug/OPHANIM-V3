@@ -1,3 +1,4 @@
+import type { ProviderJson } from '@/lib/provider-json';
 import { NextRequest, NextResponse } from 'next/server';
 import { computeFusion, type Fusion } from '@/lib/fusion';
 
@@ -28,7 +29,7 @@ let cachedAt = 0;
 let inflight: Promise<Fusion> | null = null;
 let lastOverall = 0;
 
-async function grab(origin: string, path: string, revalidate: number): Promise<any> {
+async function grab(origin: string, path: string, revalidate: number): Promise<ProviderJson> {
   try {
     const res = await fetch(`${origin}${path}`, { next: { revalidate } });
     return res.ok ? await res.json() : null;

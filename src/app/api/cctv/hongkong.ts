@@ -1,3 +1,4 @@
+import type { CctvCamera } from './types';
 /**
  * OSIRIS — Hong Kong CCTV Cameras (Transport Department)
  * Source: https://tdcctv.data.one.gov.hk/
@@ -57,7 +58,7 @@ const HK_CAMERAS = [
   { id: 'BC109', lat: 22.3485, lng: 114.1337, name: 'Tai Po Rd - Tsuen Wan', area: 'Tsuen Wan' },
 ];
 
-export async function fetchHongKongCameras(): Promise<any[]> {
+export async function fetchHongKongCameras(): Promise<CctvCamera[]> {
   return HK_CAMERAS.map(cam => ({
     id: `hk-${cam.id}`,
     lat: cam.lat,

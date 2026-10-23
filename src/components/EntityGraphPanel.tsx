@@ -1,4 +1,5 @@
 'use client';
+import type { ProviderJson } from '@/lib/provider-json';
 
 import { useState, useCallback, useRef, useEffect, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -10,6 +11,8 @@ import {
   RefreshCw, Network, Wifi
 } from 'lucide-react';
 
+import type { LinkObject, NodeObject } from 'react-force-graph-2d';
+
 const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), { ssr: false });
 
 // ── TYPES ──
@@ -18,7 +21,7 @@ interface EntityNode {
   id: string;
   label: string;
   type: 'aircraft' | 'vessel' | 'company' | 'person' | 'country' | 'event' | 'sanction' | 'ip';
-  properties?: Record<string, any>;
+  properties?: Record<string, ProviderJson>;
   x?: number; y?: number;
 }
 
@@ -47,7 +50,7 @@ const TYPE_ICONS: Record<string, typeof Plane> = {
 // ── PROPS ──
 
 interface Props {
-  entity: { type: string; id: string; label?: string; properties?: Record<string, any> } | null;
+  entity: { type: string; id: string; label?: string; properties?: Record<string, ProviderJson> } | null;
   onClose: () => void;
   embedded?: boolean;
 }
@@ -60,7 +63,6 @@ function EntityGraphPanel({ entity, onClose, embedded = false }: Props) {
   const [selectedNode, setSelectedNode] = useState<EntityNode | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
-  const graphRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const mergeGraph = useCallback((existing: GraphData, incoming: GraphData): GraphData => {
@@ -82,7 +84,7 @@ function EntityGraphPanel({ entity, onClose, embedded = false }: Props) {
     return { nodes: Array.from(nodeMap.values()), links: merged };
   }, []);
 
-  const expandEntity = useCallback(async (type: string, id: string, properties?: Record<string, any>) => {
+  const expandEntity = useCallback(async (type: string, id: string, properties?: Record<string, ProviderJson>) => {
     const key = `${type}:${id}`;
     if (expandedIds.has(key)) return;
     setLoading(true); setError(null); setRecoveryHref(null);
@@ -136,14 +138,14 @@ function EntityGraphPanel({ entity, onClose, embedded = false }: Props) {
     return () => observer.disconnect();
   }, [entity, expanded]);
 
-  const handleNodeClick = useCallback((node: any) => {
+  const handleNodeClick = useCallback((node: NodeObject) => {
     const n = node as EntityNode;
     setSelectedNode(n);
     const rawId = n.id.includes(':') ? n.id.split(':').slice(1).join(':') : n.id;
     if (!expandedIds.has(`${n.type}:${rawId}`)) expandEntity(n.type, rawId);
   }, [expandedIds, expandEntity]);
 
-  const paintNode = useCallback((node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
+  const paintNode = useCallback((node: NodeObject, ctx: CanvasRenderingContext2D, globalScale: number) => {
     const n = node as EntityNode;
     const isSelected = n === selectedNode;
     const color = TYPE_COLORS[n.type] || '#888';
@@ -196,9 +198,9 @@ function EntityGraphPanel({ entity, onClose, embedded = false }: Props) {
     }
   }, [selectedNode]);
 
-  const paintLink = useCallback((link: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
-    const { source: s, target: t } = link;
-    if (!s.x || !t.x) return;
+  const paintLink = useCallback((link: LinkObject, ctx: CanvasRenderingContext2D, globalScale: number) => {
+    const s = link.source as EntityNode; const t = link.target as EntityNode;
+    if (s.x == null || s.y == null || t.x == null || t.y == null) return;
     ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(t.x, t.y);
     // Smooth, thin, non-dashed lines
     ctx.strokeStyle = 'rgba(124,255,203,0.15)'; // faint gold
@@ -301,7 +303,7 @@ function EntityGraphPanel({ entity, onClose, embedded = false }: Props) {
         <div ref={containerRef} className="flex-1 relative overflow-hidden" style={{ minHeight: 300 }}>
           {graphData.nodes.length > 0 && (
               <ForceGraph2D
-              ref={graphRef} graphData={graphData} nodeId="id"
+              graphData={graphData} nodeId="id"
               nodeCanvasObject={paintNode} linkCanvasObject={paintLink}
               onNodeClick={handleNodeClick} backgroundColor="rgba(0,0,0,0)"
               width={graphSize.width}

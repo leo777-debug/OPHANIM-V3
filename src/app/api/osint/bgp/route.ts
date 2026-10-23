@@ -1,3 +1,4 @@
+import type { ProviderJson } from '@/lib/provider-json';
 import { NextResponse } from 'next/server';
 import { isRateLimited, getClientIp } from '@/lib/ssrf-guard';
 
@@ -13,7 +14,7 @@ export async function GET(req: Request) {
   }
 
   try {
-    const results: any = { query, timestamp: new Date().toISOString() };
+    const results: ProviderJson = { query, timestamp: new Date().toISOString() };
 
     // Detect query type
     const isIP = /^(\d{1,3}\.){3}\d{1,3}$/.test(query);

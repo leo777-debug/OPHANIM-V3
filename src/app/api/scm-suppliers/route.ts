@@ -1,4 +1,6 @@
+import type { ProviderJson } from '@/lib/provider-json';
 import { NextResponse } from 'next/server';
+import { withTimeout } from '@/lib/with-timeout';
 
 /**
  * OSIRIS — SCM Supplier Risk Overlay
@@ -45,25 +47,25 @@ export async function GET() {
       const eqData = await eqRes.json();
       const earthquakes = eqData.features || [];
       dynamicSuppliers.forEach(sup => {
-        const nearbyEq = earthquakes.filter((eq: any) => {
+        const nearbyEq = earthquakes.filter((eq: ProviderJson) => {
           const [lng, lat] = eq.geometry.coordinates;
           return getDistanceKm(sup.lat, sup.lng, lat, lng) < 150; // 150km impact zone
         });
         if (nearbyEq.length > 0) {
           sup.risk_level = 'CRITICAL';
-          sup.active_threats.push(`SEISMIC SHOCK (M${Math.max(...nearbyEq.map((eq: any) => eq.properties.mag)).toFixed(1)})`);
+          sup.active_threats.push(`SEISMIC SHOCK (M${Math.max(...nearbyEq.map((eq: ProviderJson) => eq.properties.mag)).toFixed(1)})`);
         }
       });
     }
 
     // 2. Fetch Active Fires (NASA FIRMS mock proxy from local or direct)
     // For performance, we'll fetch from the local fires endpoint since it already aggregates FIRMS
-    const fireRes = await fetch('http://127.0.0.1:3000/api/fires', { signal: AbortSignal.timeout(5000) });
-    if (fireRes.ok) {
+    const fireRes = await withTimeout(import('@/app/api/fires/route').then((route) => route.GET()), 5000);
+    if (fireRes?.ok) {
       const fireData = await fireRes.json();
       const fires = fireData.data || [];
       dynamicSuppliers.forEach(sup => {
-        const nearbyFires = fires.filter((f: any) => getDistanceKm(sup.lat, sup.lng, f.lat, f.lng) < 50); // 50km fire zone
+        const nearbyFires = fires.filter((f: ProviderJson) => getDistanceKm(sup.lat, sup.lng, f.lat, f.lng) < 50); // 50km fire zone
         if (nearbyFires.length > 0) {
           if (sup.risk_level === 'NORMAL') sup.risk_level = 'HIGH';
           sup.active_threats.push(`WILDFIRE PROXIMITY (${nearbyFires.length} hotspots)`);
@@ -72,12 +74,12 @@ export async function GET() {
     }
 
     // 3. Fetch Conflict Zones (GDELT)
-    const gdeltRes = await fetch('http://127.0.0.1:3000/api/gdelt', { signal: AbortSignal.timeout(5000) });
-    if (gdeltRes.ok) {
+    const gdeltRes = await withTimeout(import('@/app/api/gdelt/route').then((route) => route.GET()), 5000);
+    if (gdeltRes?.ok) {
       const gdeltData = await gdeltRes.json();
       const conflicts = gdeltData.events || [];
       dynamicSuppliers.forEach(sup => {
-        const nearbyConflicts = conflicts.filter((c: any) => getDistanceKm(sup.lat, sup.lng, c.lat, c.lng) < 100);
+        const nearbyConflicts = conflicts.filter((c: ProviderJson) => getDistanceKm(sup.lat, sup.lng, c.lat, c.lng) < 100);
         if (nearbyConflicts.length > 0) {
           sup.risk_level = 'CRITICAL';
           sup.active_threats.push(`ARMED CONFLICT / RIOT`);

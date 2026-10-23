@@ -14,9 +14,9 @@ import { LABEL_FONT, LABEL_FONT_BOLD, OPEN_FREE_MAP } from '@/lib/map/basemap-so
 maplibregl.setWorkerUrl(new URL('maplibre-gl/dist/maplibre-gl-worker.mjs', import.meta.url).toString());
 
 interface OphanimMapProps {
-  data: any;
+  data: OphanimMapData;
   activeLayers: Record<string, boolean>;
-  onEntityClick?: (entity: any) => void;
+  onEntityClick?: (entity: MapRecord) => void;
   onMouseCoords?: (coords: { lat: number; lng: number }) => void;
   onRightClick?: (coords: { lat: number; lng: number }) => void;
   onViewStateChange?: (vs: MapViewport) => void;
@@ -25,8 +25,8 @@ interface OphanimMapProps {
   flyToLocation?: { lat: number; lng: number; zoom?: number; ts: number } | null;
   projection?: 'mercator' | 'globe';
   mapStyle?: 'dark' | 'earth' | 'satellite';
-  sweepData?: any;
-  scanTargets?: any[];
+  sweepData?: MapRecord;
+  scanTargets?: MapRecord[];
   demoMode?: boolean;
   theme?: 'core' | 'ghost';
   providerLayers?: ProviderMapLayer[];
@@ -54,6 +54,19 @@ function computeSolarTerminator(): [number, number][] {
 }
 
 const EMPTY_FC = { type: 'FeatureCollection' as const, features: [] };
+type FeatureProps = NonNullable<GeoJSON.GeoJsonProperties>;
+const featureProps = (feature: GeoJSON.Feature): FeatureProps => feature.properties ?? {};
+const pointCoords = (feature: GeoJSON.Feature) => (feature.geometry as GeoJSON.Point).coordinates as [number, number];
+type SpinWindow = Window & { _globeSpinTimer?: ReturnType<typeof setInterval> };
+/** One feed record: coordinates plus provider fields that are copied into GeoJSON properties. */
+type MapRecord = FeatureProps;
+type MapRecordLayer = 'earthquakes' | 'satellites' | 'gdelt' | 'malware_threats' | 'gps_jamming' | 'cameras' | 'fires' | 'weather_events' | 'infrastructure' | 'maritime_ports' | 'maritime_chokepoints' | 'maritime_ships' | 'balloons' | 'radiation' | 'live_feeds' | 'news' | 'commercial_flights' | 'private_flights' | 'private_jets' | 'military_flights' | 'conflict_markers' | 'public_sanctions' | 'submarine_cables';
+export type OphanimMapData = Partial<Record<MapRecordLayer, MapRecord[]>> & {
+  flight_source?: string;
+  flight_timestamp?: string | null;
+  maritime_sources?: string[];
+  maritime_timestamp?: string | null;
+};
 
 function isExpectedMapTileAbort(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false;
@@ -177,8 +190,8 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     return () => {
       isSpinning = false;
       if (spinReq) cancelAnimationFrame(spinReq);
-      if (typeof window !== 'undefined' && (window as any)._globeSpinTimer) {
-        clearInterval((window as any)._globeSpinTimer);
+      if (typeof window !== 'undefined' && (window as SpinWindow)._globeSpinTimer) {
+        clearInterval((window as SpinWindow)._globeSpinTimer);
       }
     };
   }, [mapReady, demoMode]);
@@ -216,7 +229,6 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
       // Theme colors
       const isGhost = theme === 'ghost';
       const phantomPurple = '#B388FF';
-      const phantomDark = '#1A0040';
       const cameraColor = isGhost ? '#B388FF' : '#00E676';
       const cameraCategoryColor = ['match', ['get', 'operational_category'],
         'port_approach', '#00D4FF',
@@ -225,7 +237,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
         'freight_corridor', '#66BB6A',
         'canal_lock', '#40E0D0',
         cameraColor,
-      ] as any;
+      ] as maplibregl.ExpressionSpecification;
       const flightCom = isGhost ? phantomPurple : '#5BB6FF';
       const flightPriv = isGhost ? phantomPurple : '#FFD700';
       const flightGov = isGhost ? phantomPurple : '#FF9500';
@@ -359,7 +371,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
       const malwareColor = ['match', ['get', 'severity'],
         'critical', '#FF1744',
         'high', '#FF9500',
-        '#FFD54F' /* medium / default */] as any;
+        '#FFD54F' /* medium / default */] as maplibregl.ExpressionSpecification;
       map.addLayer({ id: 'malware-glow', type: 'circle', source: 'malware-nodes', paint: {
         'circle-radius': ['interpolate',['linear'],['zoom'], 1,6, 5,12, 10,22],
         'circle-color': malwareColor, 'circle-opacity': 0.07, 'circle-blur': 0.5,
@@ -656,11 +668,11 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
       const shipColor = ['match', ['get','type'],
         'military','#FF5252', 'tanker','#FF9100', 'cargo','#26C6DA',
         'passenger','#69F0AE', 'fishing','#E040FB', 'hsc','#FFD54F',
-        '#B0BEC5'] as any;
+        '#B0BEC5'] as maplibregl.ExpressionSpecification;
       const shipIcon = ['match', ['get','type'],
         'military','ship-military', 'tanker','ship-tanker', 'cargo','ship-cargo',
         'passenger','ship-passenger', 'fishing','ship-fishing', 'hsc','ship-hsc',
-        'ship-other'] as any;
+        'ship-other'] as maplibregl.ExpressionSpecification;
       createShipIcon(map, 'ship-military', '#FF5252');
       createShipIcon(map, 'ship-tanker', '#FF9100');
       createShipIcon(map, 'ship-cargo', '#26C6DA');
@@ -725,7 +737,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     // or legacy inline popup handlers. The map renderer and symbols stay shared.
     if (!publicPresentation) {
     // ── POPUP HELPER ──
-    const popup = (coords: any, html: string) => {
+    const popup = (coords: maplibregl.LngLatLike, html: string) => {
       popupRef.current?.remove();
       popupRef.current = new maplibregl.Popup({ closeButton: true, maxWidth: '420px', offset: 14 }).setLngLat(coords).setHTML(html).addTo(map);
     };
@@ -733,17 +745,17 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     const linkStyle = `display:inline-block;margin-top:8px;padding:5px 12px;font-size:10px;letter-spacing:0.12em;text-decoration:none;border-radius:5px;font-family:'IBM Plex Mono',monospace;`;
 
     // ── XSS PROTECTION HELPERS ──
-    const htmlEsc = (s: any): string => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-    const idSafe = (s: any): string => String(s ?? '').replace(/[^a-zA-Z0-9_\.\-]/g, '');
-    const urlSafe = (s: any): string => { const u = String(s ?? ''); return /^https?:\/\//i.test(u) ? u : '#'; };
-    const colorSafe = (s: any): string => /^#[0-9a-fA-F]{3,8}$/.test(String(s ?? '')) ? String(s) : '#aaa';
+    const htmlEsc = (s: unknown): string => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    const idSafe = (s: unknown): string => String(s ?? '').replace(/[^a-zA-Z0-9_\.\-]/g, '');
+    const urlSafe = (s: unknown): string => { const u = String(s ?? ''); return /^https?:\/\//i.test(u) ? u : '#'; };
+    const colorSafe = (s: unknown): string => /^#[0-9a-fA-F]{3,8}$/.test(String(s ?? '')) ? String(s) : '#aaa';
 
     // ── Flights (with FlightAware + ADS-B Exchange links) ──
     ['fl-commercial','fl-private','fl-jets','fl-military'].forEach(layer => {
       map.on('click', layer, e => {
         if (!e.features?.length) return;
-        const p = e.features[0].properties as any;
-        const coords = (e.features[0].geometry as any).coordinates;
+        const p = featureProps(e.features![0]);
+        const coords = pointCoords(e.features![0]);
         const cs = (p.callsign||'').trim();
         onEntityClick?.({
           type: 'aircraft',
@@ -792,8 +804,8 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     // ── CCTV (opens CameraViewer panel) ──
     map.on('click', 'cctv-dots', e => {
       if (!e.features?.length) return;
-      const p = e.features[0].properties as any;
-      const coords = (e.features[0].geometry as any).coordinates;
+      const p = featureProps(e.features![0]);
+      const coords = pointCoords(e.features![0]);
       // Emit the camera data so the CameraViewer opens
       onEntityClick?.({
         type: 'cctv',
@@ -820,8 +832,8 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     // ── Earthquakes (with USGS link) ──
     map.on('click', 'eq-circles', e => {
       if (!e.features?.length) return;
-      const p = e.features[0].properties as any;
-      const coords = (e.features[0].geometry as any).coordinates;
+      const p = featureProps(e.features![0]);
+      const coords = pointCoords(e.features![0]);
       popup(coords, `<div style="${pStyle}border:1px solid rgba(255,149,0,0.3);">
         <div style="color:#FF9500;font-size:14px;font-weight:700;margin-bottom:4px;">M${p.magnitude} EARTHQUAKE</div>
         <div style="font-size:9px;color:#E8E6E0;margin-bottom:8px;">${htmlEsc(p.place||'Unknown location')}</div>
@@ -836,8 +848,8 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     // ── Satellites (SatNOGS powered) ──
     map.on('click', 'sat-dots', e => {
       if (!e.features?.length) return;
-      const p = e.features[0].properties as any;
-      const coords = (e.features[0].geometry as any).coordinates;
+      const p = featureProps(e.features![0]);
+      const coords = pointCoords(e.features![0]);
       popup(coords, `<div style="${pStyle}border:1px solid rgba(124,255,203,0.3);">
         <div style="color:#7CFFCB;font-size:12px;font-weight:700;letter-spacing:0.1em;margin-bottom:4px;">🛰️ ${htmlEsc(p.name)}</div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;font-size:9px;margin-bottom:8px;">
@@ -852,8 +864,8 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     // ── Fires (with NASA FIRMS link) ──
     map.on('click', 'fires-heat', e => {
       if (!e.features?.length) return;
-      const p = e.features[0].properties as any;
-      const coords = (e.features[0].geometry as any).coordinates;
+      const p = featureProps(e.features![0]);
+      const coords = pointCoords(e.features![0]);
       popup(coords, `<div style="${pStyle}border:1px solid rgba(255,107,0,0.3);">
         <div style="color:#FF6B00;font-size:12px;font-weight:700;margin-bottom:6px;">🔥 ACTIVE FIRE DETECTED</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:9px;margin-bottom:8px;">
@@ -867,8 +879,8 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     // ── Malware Threats (abuse.ch — Feodo C2 + URLhaus distribution) ──
     map.on('click', 'malware-dots', e => {
       if (!e.features?.length) return;
-      const p = e.features[0].properties as any;
-      const coords = (e.features[0].geometry as any).coordinates;
+      const p = featureProps(e.features![0]);
+      const coords = pointCoords(e.features![0]);
       const sev = (p.severity || 'high') as string;
       const accent = sev === 'critical' ? '#FF1744' : sev === 'high' ? '#FF9500' : '#FFD54F';
       const typeLabel = ({ botnet_c2: 'BOTNET C2', malware_download: 'MALWARE DOWNLOAD', payload_delivery: 'PAYLOAD DELIVERY', malware: 'MALWARE' } as Record<string,string>)[p.threat_type] || 'MALWARE';
@@ -901,8 +913,8 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     // ── GDELT Conflicts (with source article) ──
     map.on('click', 'gdelt-dots', e => {
       if (!e.features?.length) return;
-      const p = e.features[0].properties as any;
-      const coords = (e.features[0].geometry as any).coordinates;
+      const p = featureProps(e.features![0]);
+      const coords = pointCoords(e.features![0]);
 
       // Map coordinates to Liveuamap regions
       let sourceUrl = p.url || '';
@@ -927,8 +939,8 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     // ── Global Event / Conflict Markers ──
     map.on('click', 'conflict-icons', e => {
       if (!e.features?.length) return;
-      const p = e.features[0].properties as any;
-      const coords = (e.features[0].geometry as any).coordinates;
+      const p = featureProps(e.features![0]);
+      const coords = pointCoords(e.features![0]);
       const color = p.severity === 'war' ? '#FF1744' : p.severity === 'high' ? '#FF9500' : '#FFD500';
       popup(coords, `<div style="${pStyle}border:1px solid ${color}40;">
         <div style="color:${color};font-size:12px;font-weight:700;margin-bottom:6px;">⚠️ ${htmlEsc(p.label || 'WARNING EVENT')}</div>
@@ -954,7 +966,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     ['sdk-sea','sdk-sea-glow','sdk-air','sdk-air-glow','sdk-intel','sdk-intel-glow'].forEach(layer => {
       map.on('click', layer, e => {
         if (!e.features?.length) return;
-        const p = e.features[0].properties as any;
+        const p = featureProps(e.features![0]);
         const coords = e.lngLat;
         const srcUrl = p.url || SDK_SOURCE_URLS[p.source] || 'https://ophanim.live';
         const domainLabel = p.domain === 'SEA' ? '⚓ MARITIME' : p.domain === 'AIR' ? '✈ AIR CORRIDOR' : '🛡 NAVAL INTEL';
@@ -980,10 +992,10 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     // Stream updates can invalidate those symbol indexes, so interactions are click-only.
 
     // ── Scan Targets click ──
-    map.on('click', 'scan-targets-dots', (e: any) => {
+    map.on('click', 'scan-targets-dots', (e: maplibregl.MapLayerMouseEvent) => {
       const p = e.features?.[0]?.properties;
       if (!p) return;
-      const coords = e.features[0].geometry.coordinates.slice();
+      const coords = pointCoords(e.features![0]);
       popup(coords, `<div style="${pStyle}border:1px solid rgba(255,61,61,0.5);">
         <div style="color:#FF3D3D;font-size:12px;font-weight:700;margin-bottom:6px;">🎯 TARGET: ${htmlEsc(p.id)}</div>
         <div style="font-size:9px;color:#E8E6E0;margin-bottom:8px;">${htmlEsc(p.city || 'Unknown')}, ${htmlEsc(p.country || 'Unknown')} — ${htmlEsc(p.isp || 'Unknown ISP')}</div>
@@ -998,8 +1010,8 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     // ── SCM Suppliers ──
     map.on('click', 'scm-dots', e => {
       if (!e.features?.length) return;
-      const p = e.features[0].properties as any;
-      const coords = (e.features[0].geometry as any).coordinates;
+      const p = featureProps(e.features![0]);
+      const coords = pointCoords(e.features![0]);
       const color = p.risk_level === 'CRITICAL' ? '#FF1744' : p.risk_level === 'HIGH' ? '#FF9500' : '#00BCD4';
       const activeThreats = geoJsonArray(p.active_threats);
 
@@ -1021,10 +1033,10 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     });
 
     // ── IP Sweep device click ──
-    map.on('click', 'sweep-device-dots', (e: any) => {
+    map.on('click', 'sweep-device-dots', (e: maplibregl.MapLayerMouseEvent) => {
       const p = e.features?.[0]?.properties;
       if (!p) return;
-      const coords = e.features[0].geometry.coordinates.slice();
+      const coords = pointCoords(e.features![0]);
       const ports = geoJsonArray(p.ports);
       const vulns = geoJsonArray(p.vulns);
       const hostnames = geoJsonArray(p.hostnames);
@@ -1046,8 +1058,8 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     // ── Balloons / Sondes ──
     map.on('click', 'balloon-dots', e => {
       if (!e.features?.length) return;
-      const p = e.features[0].properties as any;
-      const coords = (e.features[0].geometry as any).coordinates;
+      const p = featureProps(e.features![0]);
+      const coords = pointCoords(e.features![0]);
       popup(coords, `<div style="${pStyle}border:1px solid ${p.color}40;">
         <div style="color:${p.color};font-size:12px;font-weight:700;letter-spacing:0.1em;margin-bottom:4px;">🎈 ${p.callsign}</div>
         <div style="font-size:9px;color:#aaa;margin-bottom:8px;">${p.type.toUpperCase()} / STATUS: ${p.status.toUpperCase()}</div>
@@ -1063,8 +1075,8 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     // ── Radiation ──
     map.on('click', 'rad-dots', e => {
       if (!e.features?.length) return;
-      const p = e.features[0].properties as any;
-      const coords = (e.features[0].geometry as any).coordinates;
+      const p = featureProps(e.features![0]);
+      const coords = pointCoords(e.features![0]);
       const color = p.status === 'DANGER' ? '#FF1744' : p.status === 'WARNING' ? '#FF9500' : '#AB47BC';
       popup(coords, `<div style="${pStyle}border:1px solid ${color}40;">
         <div style="color:${color};font-size:12px;font-weight:700;margin-bottom:4px;">☢️ ${p.name}</div>
@@ -1080,8 +1092,8 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     // ── Maritime Ships ──
     map.on('click', 'ship-dots', e => {
       if (!e.features?.length) return;
-      const p = e.features[0].properties as any;
-      const coords = (e.features[0].geometry as any).coordinates;
+      const p = featureProps(e.features![0]);
+      const coords = pointCoords(e.features![0]);
       const shipColors: Record<string,string> = { military:'#FF1744', tanker:'#FF9500', cargo:'#5BB6FF', passenger:'#66BB6A', fishing:'#AB47BC', hsc:'#FFD54F' };
       const shipIcons: Record<string,string> = { military:'⚔️', tanker:'🛢️', cargo:'🚢', passenger:'🛳️', fishing:'🎣', hsc:'⚡' };
       const color = shipColors[p.type] || '#5BB6FF';
@@ -1127,8 +1139,8 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     // ── Weather Events (NASA EONET + NOAA/NWS + GDACS) ──
     map.on('click', 'weather-dots', e => {
       if (!e.features?.length) return;
-      const p = e.features[0].properties as any;
-      const coords = (e.features[0].geometry as any).coordinates;
+      const p = featureProps(e.features![0]);
+      const coords = pointCoords(e.features![0]);
       const iconEmoji = p.icon === 'cyclone' ? '🌀' : p.icon === 'volcano' ? '🌋' : p.icon === 'flood' ? '🌊' : p.icon === 'drought' ? '🏜️' : p.icon === 'ice' ? '🧊' : p.icon === 'weather' ? '⚠️' : '⚡';
       popup(coords, `<div style="${pStyle}border:1px solid rgba(224,64,251,0.3);">
         <div style="color:#E040FB;font-size:14px;font-weight:700;margin-bottom:6px;">${iconEmoji} ${p.type || 'Weather Event'}</div>
@@ -1146,8 +1158,8 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     // ── Nuclear Infrastructure ──
     map.on('click', 'infra-dots', e => {
       if (!e.features?.length) return;
-      const p = e.features[0].properties as any;
-      const coords = (e.features[0].geometry as any).coordinates;
+      const p = featureProps(e.features![0]);
+      const coords = pointCoords(e.features![0]);
       const statusColor = p.status.includes('SEISMIC RISK') ? '#FF9500' : p.status === 'Active Conflict Zone' ? '#FF1744' : p.status === 'Operational' ? '#76FF03' : '#757575';
       popup(coords, `<div style="${pStyle}border:1px solid rgba(118,255,3,0.3);">
         <div style="color:#76FF03;font-size:14px;font-weight:700;margin-bottom:4px;">☢️ ${p.name || 'Nuclear Facility'}</div>
@@ -1167,7 +1179,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     map.on('click', 'maritime-dots', e => {
       const p = e.features?.[0]?.properties;
       if (!p) return;
-      const coords = (e.features![0].geometry as any).coordinates;
+      const coords = pointCoords(e.features![0]);
       const typeColor = p.type === 'naval' ? '#FF3D3D' : p.type === 'energy' ? '#FF9500' : '#00BCD4';
       const typeLabel = p.type === 'naval' ? 'NAVAL BASE' : p.type === 'energy' ? 'ENERGY PORT' : 'CONTAINER PORT';
 
@@ -1193,7 +1205,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     map.on('click', 'choke-dots', e => {
       const p = e.features?.[0]?.properties;
       if (!p) return;
-      const coords = (e.features![0].geometry as any).coordinates;
+      const coords = pointCoords(e.features![0]);
       const riskCol = p.risk === 'CRITICAL' ? '#FF1744' : p.risk === 'HIGH' ? '#FF9500' : p.risk === 'ELEVATED' ? '#FFD700' : '#00E676';
       popup(coords, `<div style="${pStyle}border:1px solid ${riskCol}40;">
         <div style="color:#FF9500;font-weight:bold;font-size:11px;margin-bottom:4px;">${p.name}</div>
@@ -1219,6 +1231,8 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
 
     }
     return () => { releaseFallback(); map.remove(); mapRef.current = null; setReadyMap(null); };
+    // The map is created once; later prop changes are applied by the effects below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Day/Night
@@ -1226,7 +1240,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     if (!mapReady || !mapRef.current) return;
     const map = mapRef.current;
     const update = () => {
-      const src = map.getSource('day-night') as any;
+      const src = map.getSource('day-night') as maplibregl.GeoJSONSource | undefined;
       if (!src) return;
       if (!activeLayers.day_night) { src.setData(EMPTY_FC); return; }
       src.setData({ type: 'FeatureCollection', features: [{ type: 'Feature', geometry: { type: 'Polygon', coordinates: [computeSolarTerminator()] }, properties: {} }] });
@@ -1237,8 +1251,8 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
   }, [mapReady, activeLayers.day_night]);
 
   // Helper to set GeoJSON
-  const setGeo = useCallback((source: string, features: any[]) => {
-    const src = mapRef.current?.getSource(source) as any;
+  const setGeo = useCallback((source: string, features: GeoJSON.Feature[]) => {
+    const src = mapRef.current?.getSource(source) as maplibregl.GeoJSONSource | undefined;
     if (src) src.setData({ type: 'FeatureCollection', features });
   }, []);
 
@@ -1251,12 +1265,12 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
   // Flight data → GeoJSON (GPU rendered)
   useEffect(() => {
     if (!mapReady) return;
-    const toFeatures = (arr: any[], decimate: number = 1) => {
+    const toFeatures = (arr: MapRecord[] | undefined, decimate: number = 1) => {
       let filtered = arr || [];
       if (decimate > 1) {
         filtered = filtered.filter((_, i) => i % decimate === 0);
       }
-      return filtered.map((f: any) => ({
+      return filtered.map((f: MapRecord) => ({
         type: 'Feature' as const, geometry: { type: 'Point' as const, coordinates: [f.lng, f.lat] },
         properties: {
           callsign: f.callsign,
@@ -1278,7 +1292,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     setGeo('private-fl', activeLayers.private ? toFeatures(data.private_flights, publicPresentation ? 1 : 2) : []);
     setGeo('jets', activeLayers.jets ? toFeatures(data.private_jets, publicPresentation ? 1 : 2) : []);
     setGeo('military', activeLayers.military ? toFeatures(data.military_flights) : []);
-  }, [mapReady, data.commercial_flights, data.private_flights, data.private_jets, data.military_flights, data.flight_source, data.flight_timestamp, activeLayers.flights, activeLayers.private, activeLayers.jets, activeLayers.military, publicPresentation]);
+  }, [mapReady, data.commercial_flights, data.private_flights, data.private_jets, data.military_flights, data.flight_source, data.flight_timestamp, activeLayers.flights, activeLayers.private, activeLayers.jets, activeLayers.military, publicPresentation, setGeo]);
 
     // Update aircraft icon colors dynamically on theme switch
     useEffect(() => {
@@ -1329,23 +1343,23 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
 
   useEffect(() => {
     if (!mapReady || !publicPresentation) return;
-    setGeo('conflict-zones',(data.conflict_markers || []).map((p: Record<string,unknown>)=>({type:'Feature',geometry:{type:'Point',coordinates:[p.lng,p.lat]},properties:{...p,label:p.name}})));
-    setGeo('public-sanctions',(data.public_sanctions || []).map((p: Record<string,unknown>)=>({type:'Feature',geometry:{type:'Point',coordinates:[p.lng,p.lat]},properties:p})));
+    setGeo('conflict-zones',(data.conflict_markers || []).map((p: MapRecord)=>({type:'Feature',geometry:{type:'Point',coordinates:[p.lng,p.lat]},properties:{...p,label:p.name}})));
+    setGeo('public-sanctions',(data.public_sanctions || []).map((p: MapRecord)=>({type:'Feature',geometry:{type:'Point',coordinates:[p.lng,p.lat]},properties:p})));
   }, [mapReady,publicPresentation,data.conflict_markers,data.public_sanctions,setGeo]);
 
   useEffect(() => {
     if (!mapReady) return;
-    setGeo('earthquakes', activeLayers.earthquakes && data.earthquakes ? data.earthquakes.map((eq: any) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [eq.lng, eq.lat] }, properties: { magnitude: eq.magnitude, place: eq.place } })) : []);
+    setGeo('earthquakes', activeLayers.earthquakes && data.earthquakes ? data.earthquakes.map((eq: MapRecord) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [eq.lng, eq.lat] }, properties: { magnitude: eq.magnitude, place: eq.place } })) : []);
   }, [mapReady, data.earthquakes, activeLayers.earthquakes, setGeo]);
 
   useEffect(() => {
     if (!mapReady) return;
     const sats = data.satellites || [];
-    const al = activeLayers as any;
+    const al = activeLayers;
 
     // If 'All Satellites' is on, show everything
     if (al.satellites) {
-      setGeo('satellites', sats.map((s: any) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [s.lng, s.lat] }, properties: { name: s.name, color: s.color, mission: s.mission, alt: s.alt, noradId: s.noradId, category: s.category } })));
+      setGeo('satellites', sats.map((s: MapRecord) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [s.lng, s.lat] }, properties: { name: s.name, color: s.color, mission: s.mission, alt: s.alt, noradId: s.noradId, category: s.category } })));
       return;
     }
 
@@ -1362,25 +1376,25 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
       return;
     }
 
-    const filtered = sats.filter((s: any) => enabledCategories.includes(s.category));
-    setGeo('satellites', filtered.map((s: any) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [s.lng, s.lat] }, properties: { name: s.name, color: s.color, mission: s.mission, alt: s.alt, noradId: s.noradId, category: s.category } })));
-  }, [mapReady, data.satellites, activeLayers.satellites, (activeLayers as any).sat_comms, (activeLayers as any).sat_military, (activeLayers as any).sat_navigation, (activeLayers as any).sat_earth, (activeLayers as any).sat_science, setGeo]);
+    const filtered = sats.filter((s: MapRecord) => enabledCategories.includes(s.category));
+    setGeo('satellites', filtered.map((s: MapRecord) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [s.lng, s.lat] }, properties: { name: s.name, color: s.color, mission: s.mission, alt: s.alt, noradId: s.noradId, category: s.category } })));
+  }, [mapReady, data.satellites, activeLayers, setGeo]);
 
   useEffect(() => {
     if (!mapReady) return;
-    setGeo('gdelt', activeLayers.global_incidents && data.gdelt ? data.gdelt.map((e: any) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [e.lng, e.lat] }, properties: { name: e.name } })) : []);
+    setGeo('gdelt', activeLayers.global_incidents && data.gdelt ? data.gdelt.map((e: MapRecord) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [e.lng, e.lat] }, properties: { name: e.name } })) : []);
   }, [mapReady, data.gdelt, activeLayers.global_incidents, setGeo]);
 
   // Malware Threats
   useEffect(() => {
     if (!mapReady) return;
-    setGeo('malware-nodes', activeLayers.malware && data.malware_threats ? data.malware_threats.map((t: any) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [t.lng, t.lat] }, properties: { ip: t.ip, malware: t.malware, status: t.status, threat_type: t.threat_type, severity: t.severity, country: t.country, city: t.city, isp: t.isp, asn: t.asn, port: t.port, first_seen: t.first_seen, last_online: t.last_online, reference: t.reference } })) : []);
+    setGeo('malware-nodes', activeLayers.malware && data.malware_threats ? data.malware_threats.map((t: MapRecord) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [t.lng, t.lat] }, properties: { ip: t.ip, malware: t.malware, status: t.status, threat_type: t.threat_type, severity: t.severity, country: t.country, city: t.city, isp: t.isp, asn: t.asn, port: t.port, first_seen: t.first_seen, last_online: t.last_online, reference: t.reference } })) : []);
   }, [mapReady, data.malware_threats, activeLayers.malware, setGeo]);
 
   // Network Mesh Generation (Nearest Neighbor Lattice)
   useEffect(() => {
     if (!mapReady) return;
-    const meshLinks: any[] = [];
+    const meshLinks: GeoJSON.Feature[] = [];
 
     // Generate Malware Botnet Mesh
     if (activeLayers.malware && data.malware_threats && data.malware_threats.length > 1) {
@@ -1403,7 +1417,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
 
   useEffect(() => {
     if (!mapReady) return;
-    setGeo('gps-jamming', activeLayers.gps_jamming && data.gps_jamming ? data.gps_jamming.map((z: any) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [z.lng, z.lat] }, properties: { severity: z.severity } })) : []);
+    setGeo('gps-jamming', activeLayers.gps_jamming && data.gps_jamming ? data.gps_jamming.map((z: MapRecord) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [z.lng, z.lat] }, properties: { severity: z.severity } })) : []);
   }, [mapReady, data.gps_jamming, activeLayers.gps_jamming, setGeo]);
 
   useEffect(() => {
@@ -1411,32 +1425,32 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     const showAll = activeLayers.cctv;
     const showLogistics = activeLayers.camera_logistics;
     const showTransport = activeLayers.camera_transport;
-    const cameras = data.cameras?.filter((camera: any) => showAll
+    const cameras = data.cameras?.filter((camera: MapRecord) => showAll
       || (showLogistics && camera.operational_scope === 'logistics')
       || (showTransport && camera.official_public_source));
-    setGeo('cctv', cameras ? cameras.map((c: any) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [c.lng, c.lat] }, properties: { id: c.id, name: c.name, city: c.city, country: c.country, source: c.source, feed_url: c.feed_url, stream_url: c.stream_url, stream_type: c.stream_type, external_url: c.external_url, operational_category: c.operational_category, operational_scope: c.operational_scope, operational_context: c.operational_context, official_public_source: c.official_public_source } })) : []);
+    setGeo('cctv', cameras ? cameras.map((c: MapRecord) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [c.lng, c.lat] }, properties: { id: c.id, name: c.name, city: c.city, country: c.country, source: c.source, feed_url: c.feed_url, stream_url: c.stream_url, stream_type: c.stream_type, external_url: c.external_url, operational_category: c.operational_category, operational_scope: c.operational_scope, operational_context: c.operational_context, official_public_source: c.official_public_source } })) : []);
   }, [mapReady, data.cameras, activeLayers.cctv, activeLayers.camera_logistics, activeLayers.camera_transport, setGeo]);
 
   useEffect(() => {
     if (!mapReady) return;
-    setGeo('fires', activeLayers.fires && data.fires ? data.fires.map((f: any) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [f.lng, f.lat] }, properties: { brightness: f.brightness } })) : []);
+    setGeo('fires', activeLayers.fires && data.fires ? data.fires.map((f: MapRecord) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [f.lng, f.lat] }, properties: { brightness: f.brightness } })) : []);
   }, [mapReady, data.fires, activeLayers.fires, setGeo]);
 
   useEffect(() => {
     if (!mapReady) return;
-    setGeo('weather', activeLayers.weather && data.weather_events ? data.weather_events.map((w: any) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [w.lng, w.lat] }, properties: { title: w.title, type: w.type, icon: w.icon, severity: w.severity, source: w.source, id: w.id } })) : []);
+    setGeo('weather', activeLayers.weather && data.weather_events ? data.weather_events.map((w: MapRecord) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [w.lng, w.lat] }, properties: { title: w.title, type: w.type, icon: w.icon, severity: w.severity, source: w.source, id: w.id } })) : []);
   }, [mapReady, data.weather_events, activeLayers.weather, setGeo]);
 
   useEffect(() => {
     if (!mapReady) return;
-    setGeo('infrastructure', activeLayers.infrastructure && data.infrastructure ? data.infrastructure.map((i: any) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [i.lng, i.lat] }, properties: { name: i.name, city: i.city, country: i.country, status: i.status, reactors: i.reactors, capacityMW: i.capacityMW, owner: i.owner } })) : []);
+    setGeo('infrastructure', activeLayers.infrastructure && data.infrastructure ? data.infrastructure.map((i: MapRecord) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [i.lng, i.lat] }, properties: { name: i.name, city: i.city, country: i.country, status: i.status, reactors: i.reactors, capacityMW: i.capacityMW, owner: i.owner } })) : []);
   }, [mapReady, data.infrastructure, activeLayers.infrastructure, setGeo]);
 
   useEffect(() => {
     if (!mapReady) return;
-    setGeo('maritime', activeLayers.maritime && data.maritime_ports ? data.maritime_ports.map((p: any) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [p.lng, p.lat] }, properties: { name: p.name, country: p.country, type: p.type, volume: p.volume, fleet: p.fleet, rank: p.rank } })) : []);
-    setGeo('maritime-choke', activeLayers.maritime && data.maritime_chokepoints ? data.maritime_chokepoints.map((c: any) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [c.lng, c.lat] }, properties: { name: c.name, traffic: c.traffic, risk: c.risk } })) : []);
-    setGeo('maritime-ships', activeLayers.maritime && data.maritime_ships ? data.maritime_ships.map((s: any) => ({
+    setGeo('maritime', activeLayers.maritime && data.maritime_ports ? data.maritime_ports.map((p: MapRecord) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [p.lng, p.lat] }, properties: { name: p.name, country: p.country, type: p.type, volume: p.volume, fleet: p.fleet, rank: p.rank } })) : []);
+    setGeo('maritime-choke', activeLayers.maritime && data.maritime_chokepoints ? data.maritime_chokepoints.map((c: MapRecord) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [c.lng, c.lat] }, properties: { name: c.name, traffic: c.traffic, risk: c.risk } })) : []);
+    setGeo('maritime-ships', activeLayers.maritime && data.maritime_ships ? data.maritime_ships.map((s: MapRecord) => ({
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [s.lng, s.lat] },
       properties: {
@@ -1466,7 +1480,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     if (activeLayers.ship_passenger) enabled.push('passenger');
     if (activeLayers.ship_fishing) enabled.push('fishing');
     if (activeLayers.ship_military) enabled.push('military');
-    const filter = ['in', ['get', 'type'], ['literal', enabled]] as any;
+    const filter = ['in', ['get', 'type'], ['literal', enabled]] as maplibregl.ExpressionSpecification;
     for (const id of ['ship-dots', 'ship-vessels', 'ship-label']) {
       if (map.getLayer(id)) map.setFilter(id, filter);
     }
@@ -1474,12 +1488,12 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
 
   useEffect(() => {
     if (!mapReady) return;
-    setGeo('balloons', activeLayers.balloons && data.balloons ? data.balloons.map((b: any) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [b.lng, b.lat] }, properties: { callsign: b.callsign, type: b.type, status: b.status, altitude: b.altitude, speed: b.speed, verticalRate: b.verticalRate, temperature: b.temperature, color: b.color } })) : []);
+    setGeo('balloons', activeLayers.balloons && data.balloons ? data.balloons.map((b: MapRecord) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [b.lng, b.lat] }, properties: { callsign: b.callsign, type: b.type, status: b.status, altitude: b.altitude, speed: b.speed, verticalRate: b.verticalRate, temperature: b.temperature, color: b.color } })) : []);
   }, [mapReady, data.balloons, activeLayers.balloons, setGeo]);
 
   useEffect(() => {
     if (!mapReady) return;
-    setGeo('radiation', activeLayers.radiation && data.radiation ? data.radiation.map((r: any) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [r.lng, r.lat] }, properties: { name: r.name, city: r.city, country: r.country, reading: r.reading, status: r.status, network: r.network } })) : []);
+    setGeo('radiation', activeLayers.radiation && data.radiation ? data.radiation.map((r: MapRecord) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [r.lng, r.lat] }, properties: { name: r.name, city: r.city, country: r.country, reading: r.reading, status: r.status, network: r.network } })) : []);
   }, [mapReady, data.radiation, activeLayers.radiation, setGeo]);
 
   // ══ OPHANIM SDK — Lattice Sensor Mesh ══
@@ -1494,7 +1508,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
       return;
     }
 
-    const links: any[] = [];
+    const links: GeoJSON.Feature[] = [];
 
     // ── SEA DOMAIN: Real submarine cable data (1-for-1 Match) ──
     if (activeLayers.sdk_sea && data.submarine_cables) {
@@ -1526,14 +1540,14 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
 
   useEffect(() => {
     if (!mapReady) return;
-    setGeo('live-news', activeLayers.live_news && data.live_feeds ? data.live_feeds.map((f: any) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [f.lng, f.lat] }, properties: { name: f.name, city: f.city, country: f.country, url: f.url, category: f.category, embed_allowed: f.embed_allowed !== false } })) : []);
+    setGeo('live-news', activeLayers.live_news && data.live_feeds ? data.live_feeds.map((f: MapRecord) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [f.lng, f.lat] }, properties: { name: f.name, city: f.city, country: f.country, url: f.url, category: f.category, embed_allowed: f.embed_allowed !== false } })) : []);
   }, [mapReady, data.live_feeds, activeLayers.live_news, setGeo]);
 
   useEffect(() => {
     if (!mapReady) return;
     const items = data.news || [];
     setGeo('sigint-news', activeLayers.news_intel && items.length > 0
-      ? items.filter((n: any) => n.coords?.length === 2).map((n: any) => ({
+      ? items.filter((n: MapRecord) => n.coords?.length === 2).map((n: MapRecord) => ({
           type: 'Feature',
           geometry: { type: 'Point', coordinates: [n.coords[1], n.coords[0]] },
           properties: { title: n.title, source: n.source, risk_score: n.risk_score, link: n.link }
@@ -1556,7 +1570,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
         if (cancelled) return;
 
         // Zone anchor markers (war/high/elevated labels)
-        const zoneFeatures = (conflictData.zones || []).map((z: any) => ({
+        const zoneFeatures = (conflictData.zones || []).map((z: MapRecord) => ({
           type: 'Feature' as const,
           geometry: { type: 'Point' as const, coordinates: [z.lng, z.lat] },
           properties: {
@@ -1570,8 +1584,8 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
 
         // Only source-reported points; no synthetic coordinate offsets.
         const eventFeatures = (conflictData.liveEvents || [])
-          .filter((e: any) => e.locationPrecision === 'reported' && Number.isFinite(e.lat) && Number.isFinite(e.lng))
-          .map((e: any) => ({
+          .filter((e: MapRecord) => e.locationPrecision === 'reported' && Number.isFinite(e.lat) && Number.isFinite(e.lng))
+          .map((e: MapRecord) => ({
             type: 'Feature' as const,
             geometry: { type: 'Point' as const, coordinates: [e.lng, e.lat] },
             properties: {
@@ -1583,7 +1597,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
           }));
 
         setGeo('conflict-zones', [...zoneFeatures, ...eventFeatures]);
-      } catch (e) {
+      } catch {
         if (!cancelled) setGeo('conflict-zones', []);
       }
     })();
@@ -1595,7 +1609,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
   useEffect(() => {
     if (!mapReady) return;
     setVis(['eq-circles','eq-label'], activeLayers.earthquakes);
-    const anySat = activeLayers.satellites || (activeLayers as any).sat_comms || (activeLayers as any).sat_military || (activeLayers as any).sat_navigation || (activeLayers as any).sat_earth || (activeLayers as any).sat_science;
+    const anySat = activeLayers.satellites || activeLayers.sat_comms || activeLayers.sat_military || activeLayers.sat_navigation || activeLayers.sat_earth || activeLayers.sat_science;
     setVis(['sat-glow','sat-dots'], anySat);
     setVis(['gdelt-dots'], activeLayers.global_incidents);
 
@@ -1640,12 +1654,12 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     const map = mapRef.current;
     if (!map) return;
 
-    const { center, devices } = sweepData;
+    const { center, devices } = sweepData as { center: { lat: number; lng: number }; devices: MapRecord[] };
     const centerCoord: [number, number] = [center.lng, center.lat];
 
     // Switch to globe and fly to the sweep location
     try {
-      (map as any).setProjection({ type: 'globe' });
+      map.setProjection({ type: 'globe' });
       map.setSky({ 'sky-color': '#0A0A0F', 'sky-horizon-blend': 0.02, 'horizon-color': '#0A0A0F', 'horizon-fog-blend': 0.02 });
     } catch { /* projection may not be supported */ }
 
@@ -1659,7 +1673,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     }]);
 
     // Build device features spread in a circle around center
-    const allDeviceFeatures = devices.map((d: any, i: number) => {
+    const allDeviceFeatures = devices.map((d: MapRecord, i: number) => {
       const angle = (i / devices.length) * Math.PI * 2;
       const radius = 0.001 + ((i % 7 + 1) * 0.0004);
       const dLng = centerCoord[0] + Math.cos(angle) * radius * (1 / Math.cos(center.lat * Math.PI / 180));
@@ -1677,7 +1691,7 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     });
 
     // Connection lines from center to each device
-    const connectionFeatures = allDeviceFeatures.map((f: any) => ({
+    const connectionFeatures = allDeviceFeatures.map((f) => ({
       type: 'Feature' as const,
       geometry: { type: 'LineString' as const, coordinates: [centerCoord, f.geometry.coordinates] },
       properties: { color: f.properties.color },
@@ -1730,11 +1744,11 @@ function OphanimMap({ data, activeLayers, onEntityClick, onMouseCoords, onRightC
     if (!mapReady || !mapRef.current) return;
     const map = mapRef.current;
     try {
-      (map as any).setProjection({ type: projection });
+      map.setProjection({ type: projection });
       if (projection === 'globe') {
         map.easeTo({ pitch: 20, duration: 1200 });
         try {
-          (map as any).setSky({
+          map.setSky({
             'sky-color': '#04040A',
             'sky-horizon-blend': 0.5,
             'horizon-color': '#0a0a1a',

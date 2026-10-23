@@ -1,4 +1,5 @@
 'use client';
+import type { ProviderJson } from '@/lib/provider-json';
 
 import { useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
@@ -11,7 +12,7 @@ import AiOverview from './AiOverview';
 
 const subscribeNever = () => () => {};
 
-interface MarketsPanelProps { data: any; spaceWeather?: any; embedded?: boolean; }
+interface MarketsPanelProps { data: ProviderJson; spaceWeather?: ProviderJson; embedded?: boolean; }
 
 const SECTIONS = [
   { key: 'indices', label: 'INDICES', icon: LineChart },
@@ -21,7 +22,7 @@ const SECTIONS = [
   { key: 'crypto', label: 'CRYPTO', icon: Bitcoin },
 ];
 
-function Ticker({ name, data: d }: { name: string; data: any }) {
+function Ticker({ name, data: d }: { name: string; data: ProviderJson }) {
   if (!d) return null;
   return (
     <div className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-[var(--hover-accent)] transition-colors">

@@ -1,3 +1,4 @@
+import type { ProviderJson } from '@/lib/provider-json';
 import { NextResponse } from 'next/server';
 import { safeFetch, isRateLimited, getClientIp } from '@/lib/ssrf-guard';
 import { matchExact, type SanctionEntry } from '@/lib/sanctions';
@@ -22,7 +23,7 @@ export async function GET(req: Request) {
   }
 
   try {
-    const results: any = { domain, timestamp: new Date().toISOString() };
+    const results: ProviderJson = { domain, timestamp: new Date().toISOString() };
 
     // RDAP (Registration Data Access Protocol) — successor to WHOIS
     try {
@@ -36,24 +37,24 @@ export async function GET(req: Request) {
           handle: data.handle,
           name: data.ldhName,
           status: data.status,
-          events: (data.events || []).map((e: any) => ({
+          events: (data.events || []).map((e: ProviderJson) => ({
             action: e.eventAction,
             date: e.eventDate,
           })),
-          nameservers: (data.nameservers || []).map((ns: any) => ns.ldhName),
-          entities: (data.entities || []).map((e: any) => ({
+          nameservers: (data.nameservers || []).map((ns: ProviderJson) => ns.ldhName),
+          entities: (data.entities || []).map((e: ProviderJson) => ({
             handle: e.handle,
             roles: e.roles,
-            name: e.vcardArray?.[1]?.find((v: any) => v[0] === 'fn')?.[3],
-            org: e.vcardArray?.[1]?.find((v: any) => v[0] === 'org')?.[3],
-          })).filter((e: any) => e.name || e.org),
+            name: e.vcardArray?.[1]?.find((v: ProviderJson) => v[0] === 'fn')?.[3],
+            org: e.vcardArray?.[1]?.find((v: ProviderJson) => v[0] === 'org')?.[3],
+          })).filter((e: ProviderJson) => e.name || e.org),
         };
 
         // Extract key dates
         const events = results.rdap.events || [];
-        results.registration = events.find((e: any) => e.action === 'registration')?.date;
-        results.expiration = events.find((e: any) => e.action === 'expiration')?.date;
-        results.last_changed = events.find((e: any) => e.action === 'last changed')?.date;
+        results.registration = events.find((e: ProviderJson) => e.action === 'registration')?.date;
+        results.expiration = events.find((e: ProviderJson) => e.action === 'expiration')?.date;
+        results.last_changed = events.find((e: ProviderJson) => e.action === 'last changed')?.date;
       }
     } catch (e) { console.warn('[OSIRIS] Suppressed error:', e instanceof Error ? e.message : e); }
 

@@ -1,3 +1,4 @@
+import type { ProviderJson } from '@/lib/provider-json';
 
 import { NextResponse } from 'next/server';
 import { sourceTime } from '@/lib/atlas-freshness';
@@ -11,7 +12,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    let fires: any[] = [];
+    let fires: ProviderJson[] = [];
     let source = '';
 
     // Source 1: NASA FIRMS Open Data (Global 24h CSV) - no API key needed
@@ -47,7 +48,7 @@ export async function GET() {
       });
       if (volcRes.ok) {
         const volcData = await volcRes.json();
-        const volcanoes = (volcData.events || []).map((e: any) => {
+        const volcanoes = (volcData.events || []).map((e: ProviderJson) => {
           const geo = e.geometry?.[e.geometry.length - 1];
           if (!geo?.coordinates) return null;
           return {
@@ -84,7 +85,7 @@ export async function GET() {
   }
 }
 
-function parseCSV(csv: string): any[] {
+function parseCSV(csv: string): ProviderJson[] {
   const lines = csv.trim().split('\n');
   if (lines.length < 2) return [];
 
@@ -97,7 +98,7 @@ function parseCSV(csv: string): any[] {
   const timeIdx = header.indexOf('acq_time');
   const frpIdx = header.indexOf('frp');
 
-  const fires: any[] = [];
+  const fires: ProviderJson[] = [];
   // Sample the data if there are too many rows to avoid browser lag. Limit to ~2000 points globally.
   const maxPoints = 2000;
   const step = lines.length > maxPoints ? Math.ceil(lines.length / maxPoints) : 1;

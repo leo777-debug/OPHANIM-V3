@@ -5,6 +5,8 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  // CommonJS scripts (Playwright helpers) load modules with require().
+  { files: ["**/*.cjs"], rules: { "@typescript-eslint/no-require-imports": "off" } },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

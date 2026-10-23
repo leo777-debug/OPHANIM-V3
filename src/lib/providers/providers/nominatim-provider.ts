@@ -1,5 +1,5 @@
 import { safeFetch } from '@/lib/ssrf-guard';
-import type { NormalizedSearchResult, Provider, ProviderQuery } from '../types';
+import type { NormalizedSearchResult, Provider } from '../types';
 
 interface NominatimRecord {
   place_id?: number;

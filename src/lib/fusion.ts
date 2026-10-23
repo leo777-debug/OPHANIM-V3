@@ -1,3 +1,4 @@
+import type { ProviderJson } from '@/lib/provider-json';
 /**
  * OSIRIS — Global Threat Fusion (client-side)
  *
@@ -46,12 +47,12 @@ export interface Fusion {
 }
 
 export interface FusionInputs {
-  malware?: any;
-  quakes?: any;
-  weather?: any;
-  conflicts?: any;
-  flights?: any;
-  news?: any;
+  malware?: ProviderJson;
+  quakes?: ProviderJson;
+  weather?: ProviderJson;
+  conflicts?: ProviderJson;
+  flights?: ProviderJson;
+  news?: ProviderJson;
 }
 
 const WEIGHTS: Record<Domain, number> = {
@@ -61,7 +62,7 @@ const LEVELS = ['', 'GUARDED', 'ELEVATED', 'HIGH', 'SEVERE', 'CRITICAL'];
 const COLORS = ['', '#00E676', '#FFD54F', '#FF9500', '#FF5252', '#FF1744'];
 
 const clamp = (n: number, lo = 0, hi = 100) => Math.round(Math.max(lo, Math.min(hi, n)));
-const num = (v: any): number => (typeof v === 'number' && !Number.isNaN(v) ? v : 0);
+const num = (v: ProviderJson): number => (typeof v === 'number' && !Number.isNaN(v) ? v : 0);
 const decode = (s: string): string => s.replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#\d+;/g, '');
 
 function push(domains: DomainScore[], d: Omit<DomainScore, 'weight' | 'contribution'>) {
@@ -76,7 +77,7 @@ export function computeFusion(input: FusionInputs, prevOverall = 0): Fusion {
 
   // CONFLICT — weighted by active war zones + escalation + live event tempo
   {
-    const zones: any[] = conflicts?.zones || [];
+    const zones: ProviderJson[] = conflicts?.zones || [];
     const wars = zones.filter(z => z.severity === 'war');
     const highs = zones.filter(z => z.severity === 'high' || z.severity === 'elevated');
     const live = num(conflicts?.totalLiveEvents);
@@ -102,9 +103,9 @@ export function computeFusion(input: FusionInputs, prevOverall = 0): Fusion {
   }
   // CYBER — botnet C2 weighted heavily over bulk distribution hosts
   {
-    const threats: any[] = malware?.threats || [];
+    const threats: ProviderJson[] = malware?.threats || [];
     const c2 = num(malware?.stats?.by_type?.botnet_c2);
-    const families: any[] = malware?.stats?.top_families || [];
+    const families: ProviderJson[] = malware?.stats?.top_families || [];
     const score = clamp(c2 * 9 + threats.length * 0.15);
     const drivers: DomainDriver[] = [];
     if (c2 > 0) drivers.push({ label: `${c2} live botnet C2 server${c2 > 1 ? 's' : ''}`, sub: 'active command & control', sev: 90 });
@@ -121,7 +122,7 @@ export function computeFusion(input: FusionInputs, prevOverall = 0): Fusion {
   }
   // SIGNALS — high-priority OSINT news tempo
   {
-    const items: any[] = news?.news || [];
+    const items: ProviderJson[] = news?.news || [];
     const scores = items.map(n => num(n.risk_score));
     const hot = scores.filter(s => s >= 8).length;
     const avg = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
@@ -142,7 +143,7 @@ export function computeFusion(input: FusionInputs, prevOverall = 0): Fusion {
   }
   // SEISMIC — driven by the strongest event + count of major quakes
   {
-    const eq: any[] = quakes?.earthquakes || [];
+    const eq: ProviderJson[] = quakes?.earthquakes || [];
     const mags = eq.map(q => num(q.magnitude));
     const maxMag = mags.length ? Math.max(...mags) : 0;
     const strong = mags.filter(m => m >= 5).length;
@@ -163,9 +164,9 @@ export function computeFusion(input: FusionInputs, prevOverall = 0): Fusion {
   }
   // AVIATION — military air activity + GPS-denial (jamming) zones
   {
-    const milFlights: any[] = flights?.military_flights || [];
+    const milFlights: ProviderJson[] = flights?.military_flights || [];
     const mil = milFlights.length;
-    const jam: any[] = flights?.gps_jamming || [];
+    const jam: ProviderJson[] = flights?.gps_jamming || [];
     const score = clamp(mil * 0.28 + jam.length * 8);
     const drivers: DomainDriver[] = [];
     if (mil > 0) drivers.push({ label: `${mil} military aircraft airborne`, sub: 'ADS-B tracked', sev: clamp(mil * 0.5) });
@@ -184,7 +185,7 @@ export function computeFusion(input: FusionInputs, prevOverall = 0): Fusion {
   }
   // ATMOSPHERIC — active severe-weather events, high-severity weighted
   {
-    const events: any[] = weather?.events || [];
+    const events: ProviderJson[] = weather?.events || [];
     const highEvents = events.filter(e => (e.severity || '').toLowerCase() === 'high');
     const score = clamp(highEvents.length * 11 + events.length * 0.4);
     const drivers: DomainDriver[] = highEvents.slice(0, 5).map(e => ({ label: e.type || 'Severe weather', sub: e.area || e.title || '', sev: 70 }));

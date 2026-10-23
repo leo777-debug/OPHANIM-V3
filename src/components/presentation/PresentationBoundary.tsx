@@ -58,7 +58,9 @@ export default function PresentationBoundary({ children }: { children: ReactNode
           const viewResponse = await fetch('/api/presentation/view', { cache: 'no-store', signal: controller.signal });
           if (viewResponse.ok && (await viewResponse.json()).view === 'map') router.replace('/presentation');
         }
-        if (previous.revision !== next.revision) router.refresh();
+        // Only refresh for a change seen after this page loaded. Refreshing on the
+        // first read made a 404 page hard-reload itself in a loop.
+        if (previous !== DEFAULT_PRESENTATION && previous.revision !== next.revision) router.refresh();
       } catch { /* Keep the current page usable during a temporary settings failure. */ }
     }
     void refresh();

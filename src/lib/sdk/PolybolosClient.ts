@@ -1,3 +1,4 @@
+import type { ProviderJson } from '@/lib/provider-json';
 /**
  * ╔══════════════════════════════════════════════════════════════════╗
  * ║  POLYBOLOS SDK — Client Controller                              ║
@@ -10,20 +11,13 @@
  */
 
 import {
-  type PolybolosEntity,
-  type PolybolosClientConfig,
-  type SDKStatus,
-  type LatticeConnectionStatus,
-  Domain,
-  EntityType,
-  ThreatLevel,
-  Classification,
+  type PolybolosEntity, type PolybolosClientConfig, type SDKStatus, Domain, EntityType, ThreatLevel, Classification
 } from './types';
 import { LatticeAdapter } from './LatticeAdapter';
 
 // ── OSIRIS Feed → Entity Translators ───────────────────────────────
 
-function translateFlights(flights: any[], subtype: string): PolybolosEntity[] {
+function translateFlights(flights: ProviderJson[], subtype: string): PolybolosEntity[] {
   if (!flights?.length) return [];
   const colorMap: Record<string, string> = {
     commercial: '#00E5FF', private: '#00E676', jets: '#FF69B4', military: '#FF3D3D',
@@ -32,7 +26,7 @@ function translateFlights(flights: any[], subtype: string): PolybolosEntity[] {
     commercial: ThreatLevel.NONE, private: ThreatLevel.NONE,
     jets: ThreatLevel.LOW, military: ThreatLevel.ELEVATED,
   };
-  return flights.map((f: any) => ({
+  return flights.map((f: ProviderJson) => ({
     id: `osiris-air-${f.icao24 || f.callsign || Math.random().toString(36).slice(2)}`,
     name: f.callsign?.trim() || 'UNKNOWN',
     domain: Domain.AIR,
@@ -47,9 +41,9 @@ function translateFlights(flights: any[], subtype: string): PolybolosEntity[] {
   }));
 }
 
-function translateMaritime(ships: any[]): PolybolosEntity[] {
+function translateMaritime(ships: ProviderJson[]): PolybolosEntity[] {
   if (!ships?.length) return [];
-  return ships.map((s: any) => ({
+  return ships.map((s: ProviderJson) => ({
     id: `osiris-sea-${s.mmsi || s.id || Math.random().toString(36).slice(2)}`,
     name: s.name || `MMSI-${s.mmsi}`,
     domain: Domain.SEA,
@@ -67,9 +61,9 @@ function translateMaritime(ships: any[]): PolybolosEntity[] {
   }));
 }
 
-function translateEarthquakes(events: any[]): PolybolosEntity[] {
+function translateEarthquakes(events: ProviderJson[]): PolybolosEntity[] {
   if (!events?.length) return [];
-  return events.map((eq: any) => ({
+  return events.map((eq: ProviderJson) => ({
     id: `osiris-event-eq-${eq.id || Math.random().toString(36).slice(2)}`,
     name: `M${eq.magnitude} ${eq.place || 'Earthquake'}`,
     domain: Domain.LAND,
@@ -84,9 +78,9 @@ function translateEarthquakes(events: any[]): PolybolosEntity[] {
   }));
 }
 
-function translateSatellites(sats: any[]): PolybolosEntity[] {
+function translateSatellites(sats: ProviderJson[]): PolybolosEntity[] {
   if (!sats?.length) return [];
-  return sats.map((s: any) => ({
+  return sats.map((s: ProviderJson) => ({
     id: `osiris-space-${s.noradId || Math.random().toString(36).slice(2)}`,
     name: s.name || 'UNKNOWN SAT',
     domain: Domain.SPACE,
@@ -101,9 +95,9 @@ function translateSatellites(sats: any[]): PolybolosEntity[] {
   }));
 }
 
-function translateFires(fires: any[]): PolybolosEntity[] {
+function translateFires(fires: ProviderJson[]): PolybolosEntity[] {
   if (!fires?.length) return [];
-  return fires.map((f: any, i: number) => ({
+  return fires.map((f: ProviderJson, i: number) => ({
     id: `osiris-event-fire-${i}`,
     name: 'Active Fire',
     domain: Domain.LAND,
@@ -118,9 +112,9 @@ function translateFires(fires: any[]): PolybolosEntity[] {
   }));
 }
 
-function translateCCTV(cameras: any[]): PolybolosEntity[] {
+function translateCCTV(cameras: ProviderJson[]): PolybolosEntity[] {
   if (!cameras?.length) return [];
-  return cameras.map((c: any) => ({
+  return cameras.map((c: ProviderJson) => ({
     id: `osiris-sensor-cctv-${c.id || Math.random().toString(36).slice(2)}`,
     name: c.name || 'Camera',
     domain: Domain.LAND,
@@ -135,9 +129,9 @@ function translateCCTV(cameras: any[]): PolybolosEntity[] {
   }));
 }
 
-function translateRadiation(stations: any[]): PolybolosEntity[] {
+function translateRadiation(stations: ProviderJson[]): PolybolosEntity[] {
   if (!stations?.length) return [];
-  return stations.map((r: any) => ({
+  return stations.map((r: ProviderJson) => ({
     id: `osiris-sensor-rad-${r.name || Math.random().toString(36).slice(2)}`,
     name: r.name || 'Radiation Monitor',
     domain: Domain.LAND,
@@ -223,7 +217,7 @@ export class PolybolosClient {
    * Ingest raw OSIRIS data and translate it into Polybolos entities.
    * This is the primary method called by page.tsx to feed data into the SDK.
    */
-  ingestOsirisData(data: Record<string, any>): void {
+  ingestOsirisData(data: Record<string, ProviderJson>): void {
     const entities: PolybolosEntity[] = [];
 
     // Air domain
@@ -347,9 +341,7 @@ export class PolybolosClient {
     // Count OSIRIS feeds that have data
     const feeds = ['commercial_flights', 'private_flights', 'military_flights', 'maritime_ships',
       'satellites', 'earthquakes', 'fires', 'cameras', 'radiation'];
-    for (const feed of feeds) {
-      if (this.entityStore.size > 0) count++; // Simplified: if store has data, feeds are active
-    }
+    if (this.entityStore.size > 0) count += feeds.length; // Simplified: if store has data, feeds are active
     if (this.latticeAdapter && this.latticeAdapter.getEntityCount() > 0) count++;
     return Math.min(count, feeds.length);
   }
