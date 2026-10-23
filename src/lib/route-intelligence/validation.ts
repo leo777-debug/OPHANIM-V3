@@ -1,6 +1,6 @@
 import type { RouteWaypointInput, SelectedPort, ValidatedRouteDraft } from './types';
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const PROVIDER_ID = /^[a-zA-Z0-9_-]{2,120}$/;
 const UNLOCODE = /^[A-Z]{2}[A-Z0-9]{3}$/;
 const COUNTRY_CODE = /^[A-Z]{2}$/;

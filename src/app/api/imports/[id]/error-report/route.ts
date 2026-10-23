@@ -4,12 +4,12 @@ import { assertImportFeature } from '@/lib/imports/access';
 import { buildImportErrorReport } from '@/lib/imports/error-report';
 import { getImport, getImportRows } from '@/lib/imports/repository';
 import { OrganizationAccessError } from '@/lib/operations/authorization';
-import { importIdDebug, importIdFrom } from '@/lib/imports/route-id';
+import { importIdFrom } from '@/lib/imports/route-id';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const id = await importIdFrom(request, params);
-    if (!id) return NextResponse.json({ error: 'Import id is invalid.' }, { status: 400, headers: { 'x-import-id-debug': await importIdDebug(request, params) } });
+    if (!id) return NextResponse.json({ error: 'Import id is invalid.' }, { status: 400 });
     const actor = await requireAuthenticatedActor(request, 'import:read');
     const imported = await getImport(actor, id);
     if (!imported) return NextResponse.json({ error: 'Import was not found.' }, { status: 404 });
