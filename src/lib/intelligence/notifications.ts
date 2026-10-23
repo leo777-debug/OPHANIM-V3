@@ -1,6 +1,7 @@
 import { Resend } from 'resend';
 import { appUrl, mapLink } from '@/lib/intelligence/urls';
 import { db } from '@/lib/watchlists/db';
+import { tableExists } from '@/lib/db/schema-pending';
 
 export interface AlertDeliveryCandidate {
   id: string;
@@ -53,15 +54,17 @@ function message(items: DeliveryRow[]) {
 
 export async function sendPendingIntelligenceDeliveries() {
   if (!process.env.RESEND_API_KEY || !process.env.RESEND_FROM) return { sent: 0, skipped: true };
+  // Forecast-linked alerts exist only after db/migrations/025_forecast_panel.sql.
+  const forecasts = await tableExists(db(), 'ophanim_forecasts');
   const pending = await db().query<DeliveryRow>(
     `select delivery.id, delivery.setting_id, delivery.kind, delivery.attempts, setting.email, setting.digest_minutes,
             alert.id as alert_id, alert.alert_category, alert.title, alert.summary, coalesce(assessment.confidence_score,55) as confidence_score,
-            coalesce(assessment.subject_label,shipment.shipment_reference) as subject_label, coalesce(mention.source_name,'The Panel · local validated model') as source_name, mention.source_reference
+            ${forecasts ? 'coalesce(assessment.subject_label,shipment.shipment_reference)' : 'assessment.subject_label'} as subject_label, coalesce(mention.source_name,'The Panel · local validated model') as source_name, mention.source_reference
        from ophanim_intelligence_deliveries delivery
        join ophanim_intelligence_notification_settings setting on setting.id = delivery.setting_id
        join ophanim_intelligence_alerts alert on alert.id = delivery.alert_id
-       left join ophanim_forecasts forecast on forecast.id=alert.forecast_id and forecast.organization_id=alert.organization_id
-       left join ophanim_shipments shipment on shipment.id=forecast.shipment_id and shipment.organization_id=alert.organization_id
+       ${forecasts ? `left join ophanim_forecasts forecast on forecast.id=alert.forecast_id and forecast.organization_id=alert.organization_id
+       left join ophanim_shipments shipment on shipment.id=forecast.shipment_id and shipment.organization_id=alert.organization_id` : ''}
        left join ophanim_signal_assessments assessment on assessment.id = alert.assessment_id
        left join ophanim_dark_web_mentions mention on mention.id = assessment.mention_id
       where delivery.status = 'pending' and delivery.next_attempt_at <= now() and setting.enabled

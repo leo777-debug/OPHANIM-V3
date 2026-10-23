@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedActor } from '@/lib/auth/actor';
 import { getClientIp, isRateLimited } from '@/lib/ssrf-guard';
 import { VERIFY_CONFIG } from './types';
+import { isSchemaPendingError, SCHEMA_PENDING_MESSAGE } from '@/lib/db/schema-pending';
 
 export const SESSION_COOKIE = 'ophanim_verify_session';
 export class VerifyHttpError extends Error { constructor(message: string, readonly status: number) { super(message); } }
@@ -35,5 +36,6 @@ export async function readBody(request: Request): Promise<Record<string, unknown
   return body as Record<string, unknown>;
 }
 export function errorResponse(error: unknown) {
+  if (isSchemaPendingError(error)) return NextResponse.json({ error: SCHEMA_PENDING_MESSAGE, setupPending: true }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
   return NextResponse.json({ error: error instanceof Error ? error.message : 'Check unavailable.' }, { status: error instanceof VerifyHttpError ? error.status : 400, headers: { 'Cache-Control': 'no-store' } });
 }

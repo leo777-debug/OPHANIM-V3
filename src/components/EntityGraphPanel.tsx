@@ -105,18 +105,36 @@ function EntityGraphPanel({ entity, onClose, embedded = false }: Props) {
     finally { setLoading(false); }
   }, [expandedIds, mergeGraph]);
 
+  // Reset the graph during render when a new entity arrives, then enrich it.
+  const [shownEntity, setShownEntity] = useState<Props['entity']>(null);
+  if (entity !== shownEntity) {
+    setShownEntity(entity);
+    if (entity) {
+      const root: EntityNode = {
+        id: `${entity.type}:${entity.id}`, label: entity.label || entity.id,
+        type: entity.type as EntityNode['type'], properties: entity.properties,
+      };
+      setGraphData({ nodes: [root], links: [] });
+      setExpandedIds(new Set());
+      setSelectedNode(root);
+      setError(null);
+    }
+  }
   useEffect(() => {
-    if (!entity) return;
-    const root: EntityNode = {
-      id: `${entity.type}:${entity.id}`, label: entity.label || entity.id,
-      type: entity.type as EntityNode['type'], properties: entity.properties,
-    };
-    setGraphData({ nodes: [root], links: [] });
-    setExpandedIds(new Set());
-    setSelectedNode(root);
-    setError(null);
-    if (supportsEntityEnrichment(entity.type)) expandEntity(entity.type, entity.id, entity.properties);
+    if (entity && supportsEntityEnrichment(entity.type)) void Promise.resolve().then(() => expandEntity(entity.type, entity.id, entity.properties));
   }, [entity]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Size the canvas from the container without reading the ref during render.
+  const [graphSize, setGraphSize] = useState({ width: 480, height: 400 });
+  useEffect(() => {
+    const element = containerRef.current;
+    if (!element) return;
+    const observer = new ResizeObserver(([entry]) => {
+      setGraphSize({ width: Math.round(entry.contentRect.width) || 480, height: Math.round(entry.contentRect.height) || 400 });
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [entity, expanded]);
 
   const handleNodeClick = useCallback((node: any) => {
     const n = node as EntityNode;
@@ -286,8 +304,8 @@ function EntityGraphPanel({ entity, onClose, embedded = false }: Props) {
               ref={graphRef} graphData={graphData} nodeId="id"
               nodeCanvasObject={paintNode} linkCanvasObject={paintLink}
               onNodeClick={handleNodeClick} backgroundColor="rgba(0,0,0,0)"
-              width={containerRef.current?.clientWidth || 480}
-              height={containerRef.current?.clientHeight || 400}
+              width={graphSize.width}
+              height={graphSize.height}
               d3AlphaDecay={0.05} d3VelocityDecay={0.4} cooldownTicks={100}
               linkDirectionalParticles={1} linkDirectionalParticleWidth={1.5}
               linkDirectionalParticleSpeed={0.003}

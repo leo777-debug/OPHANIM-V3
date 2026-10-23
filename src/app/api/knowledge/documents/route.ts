@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuthenticatedActor } from '@/lib/auth/actor';
 import { addDocument, listDocuments,type PrivateDocumentMetadata } from '@/lib/knowledge/documents';
 import { assertSameOrigin, knowledgeError } from '@/lib/knowledge/http';
+import { isSchemaPendingError, SCHEMA_PENDING_MESSAGE } from '@/lib/db/schema-pending';
 
 export const runtime='nodejs';
 export async function GET(request: NextRequest) {
   try { return NextResponse.json(await listDocuments(await requireAuthenticatedActor(request,'import:read'))); }
-  catch(error) { return knowledgeError(error); }
+  catch(error) { return isSchemaPendingError(error) ? NextResponse.json({ documents: [], storageBytes: 0, setupPending: true, notice: SCHEMA_PENDING_MESSAGE }) : knowledgeError(error); }
 }
 export async function POST(request: NextRequest) {
   try {

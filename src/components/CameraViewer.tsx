@@ -44,9 +44,13 @@ export default function CameraViewer({ camera, onClose, onLocate }: CameraViewer
 
   useEffect(() => {
     if (!camera) return;
-    setLoading(true);
-    setError(false);
-    setImageUrl(null);
+    let cancelled = false;
+    const update = (apply: () => void) => { void Promise.resolve().then(() => { if (!cancelled) apply(); }); };
+    update(() => {
+      setLoading(true);
+      setError(false);
+      setImageUrl(null);
+    });
 
     // Cleanup previous HLS instance
     if (hlsRef.current) {
@@ -54,8 +58,9 @@ export default function CameraViewer({ camera, onClose, onLocate }: CameraViewer
       hlsRef.current = null;
     }
 
+    const start = () => {
     if (externalOnly) {
-      setLoading(false);
+      update(() => setLoading(false));
       return;
     }
 
@@ -83,12 +88,12 @@ export default function CameraViewer({ camera, onClose, onLocate }: CameraViewer
     }
 
     if (streamType === 'mjpeg' && camera.stream_url) {
-      setLoading(false);
+      update(() => setLoading(false));
       return;
     }
 
     if ((streamType === 'iframe' || streamType === 'mp4') && camera.stream_url) {
-      setLoading(false);
+      update(() => setLoading(false));
       return;
     }
 
@@ -96,11 +101,16 @@ export default function CameraViewer({ camera, onClose, onLocate }: CameraViewer
     const targetUrl = camera.feed_url || camera.stream_url;
     if (targetUrl) {
       const url = targetUrl.includes('?') ? `${targetUrl}&_t=${Date.now()}` : `${targetUrl}?_t=${Date.now()}`;
-      setImageUrl(url);
+      update(() => setImageUrl(url));
     } else {
-      setError(true);
-      setLoading(false);
+      update(() => {
+        setError(true);
+        setLoading(false);
+      });
     }
+    };
+    start();
+    return () => { cancelled = true; };
   }, [camera, streamType, externalOnly, retryCount]);
 
   // Auto-refresh for JPGs

@@ -5,6 +5,7 @@ import { createRescueCase, type RescueCase } from '@/lib/logistics/rescue';
 import { requireOrganizationAccess } from '@/lib/operations/authorization';
 import type { OrganizationActor } from '@/lib/operations/types';
 import { db } from '@/lib/watchlists/db';
+import { tableExists } from '@/lib/db/schema-pending';
 import { assessConfidence, type ConfidenceAssessment } from './confidence';
 import { correlateCyber, correlateShipment, type CorrelationCandidate, type CorrelationSubjectType } from './correlation';
 import { queueIntelligenceAlertDeliveries, type AlertDeliveryCandidate } from './notifications';
@@ -166,9 +167,18 @@ export async function startRemediationForSignal(actor: OrganizationActor, assess
   return { remediationRoomId: room.rows[0].id, communicationDraft: draft };
 }
 
+// Alerts link to Panel forecasts once db/migrations/025_forecast_panel.sql is
+// applied; before that, alerts come only from signal assessments.
+async function alertForecastJoin() {
+  return await tableExists(db(), 'ophanim_forecasts')
+    ? { join: 'left join ophanim_forecasts forecast on forecast.id=alert.forecast_id and forecast.organization_id=alert.organization_id left join ophanim_shipments shipment on shipment.id=forecast.shipment_id and shipment.organization_id=alert.organization_id', subject: 'coalesce(assessment.subject_label,shipment.shipment_reference)' }
+    : { join: '', subject: 'assessment.subject_label' };
+}
+
 export async function listIntelligenceAlerts(actor: OrganizationActor): Promise<IntelligenceAlert[]> {
   requireOrganizationAccess(actor, actor.organizationId, 'intelligence:read');
-  const result = await db().query<{ id: string; assessment_id: string; alert_category: 'logistics' | 'cyber'; title: string; summary: string; alert_status: IntelligenceAlertStatus; snoozed_until: string | null; subject_label: string; confidence_score: number; confidence_level: ConfidenceAssessment['level']; source_name: string; source_reference: string | null; updated_at: string }>(`select alert.id,alert.assessment_id,alert.alert_category,alert.title,alert.summary,alert.alert_status,alert.snoozed_until,coalesce(assessment.subject_label,shipment.shipment_reference) as subject_label,coalesce(assessment.confidence_score,55) as confidence_score,coalesce(assessment.confidence_level,'low') as confidence_level,coalesce(mention.source_name,'The Panel · local validated model') as source_name,mention.source_reference,alert.updated_at from ophanim_intelligence_alerts alert left join ophanim_forecasts forecast on forecast.id=alert.forecast_id and forecast.organization_id=alert.organization_id left join ophanim_shipments shipment on shipment.id=forecast.shipment_id and shipment.organization_id=alert.organization_id left join ophanim_signal_assessments assessment on assessment.id=alert.assessment_id left join ophanim_dark_web_mentions mention on mention.id=assessment.mention_id where alert.organization_id=$1 and (alert.alert_status <> 'snoozed' or alert.snoozed_until is null or alert.snoozed_until <= now()) order by alert.alert_status='closed',assessment.confidence_score desc,alert.updated_at desc`, [actor.organizationId]);
+  const forecastJoin = await alertForecastJoin();
+  const result = await db().query<{ id: string; assessment_id: string; alert_category: 'logistics' | 'cyber'; title: string; summary: string; alert_status: IntelligenceAlertStatus; snoozed_until: string | null; subject_label: string; confidence_score: number; confidence_level: ConfidenceAssessment['level']; source_name: string; source_reference: string | null; updated_at: string }>(`select alert.id,alert.assessment_id,alert.alert_category,alert.title,alert.summary,alert.alert_status,alert.snoozed_until,${forecastJoin.subject} as subject_label,coalesce(assessment.confidence_score,55) as confidence_score,coalesce(assessment.confidence_level,'low') as confidence_level,coalesce(mention.source_name,'The Panel · local validated model') as source_name,mention.source_reference,alert.updated_at from ophanim_intelligence_alerts alert ${forecastJoin.join} left join ophanim_signal_assessments assessment on assessment.id=alert.assessment_id left join ophanim_dark_web_mentions mention on mention.id=assessment.mention_id where alert.organization_id=$1 and (alert.alert_status <> 'snoozed' or alert.snoozed_until is null or alert.snoozed_until <= now()) order by alert.alert_status='closed',assessment.confidence_score desc,alert.updated_at desc`, [actor.organizationId]);
   return result.rows.map((row) => ({ id: row.id, assessmentId: row.assessment_id, category: row.alert_category, title: row.title, summary: row.summary, status: row.alert_status, snoozedUntil: row.snoozed_until ?? undefined, subjectLabel: row.subject_label, confidenceScore: row.confidence_score, confidenceLevel: row.confidence_level, sourceName: row.source_name, sourceReference: row.source_reference ?? undefined, updatedAt: row.updated_at }));
 }
 
@@ -187,7 +197,8 @@ export async function listOperationalTasks(actor: OrganizationActor): Promise<Op
 
 export async function listIntelligenceDeliveryLogs(actor: OrganizationActor): Promise<IntelligenceDeliveryLog[]> {
   requireOrganizationAccess(actor, actor.organizationId, 'intelligence:read');
-  const result = await db().query<{ id: string; kind: IntelligenceDeliveryLog['kind']; status: IntelligenceDeliveryLog['status']; attempts: number; email: string; title: string; subject_label: string; error: string | null; created_at: string; sent_at: string | null }>(`select delivery.id,delivery.kind,delivery.status,delivery.attempts,setting.email,alert.title,coalesce(assessment.subject_label,shipment.shipment_reference) as subject_label,delivery.error,delivery.created_at,delivery.sent_at from ophanim_intelligence_deliveries delivery join ophanim_intelligence_notification_settings setting on setting.id=delivery.setting_id join ophanim_intelligence_alerts alert on alert.id=delivery.alert_id left join ophanim_forecasts forecast on forecast.id=alert.forecast_id and forecast.organization_id=alert.organization_id left join ophanim_shipments shipment on shipment.id=forecast.shipment_id and shipment.organization_id=alert.organization_id left join ophanim_signal_assessments assessment on assessment.id=alert.assessment_id where delivery.organization_id=$1 order by delivery.created_at desc limit 100`, [actor.organizationId]);
+  const forecastJoin = await alertForecastJoin();
+  const result = await db().query<{ id: string; kind: IntelligenceDeliveryLog['kind']; status: IntelligenceDeliveryLog['status']; attempts: number; email: string; title: string; subject_label: string; error: string | null; created_at: string; sent_at: string | null }>(`select delivery.id,delivery.kind,delivery.status,delivery.attempts,setting.email,alert.title,${forecastJoin.subject} as subject_label,delivery.error,delivery.created_at,delivery.sent_at from ophanim_intelligence_deliveries delivery join ophanim_intelligence_notification_settings setting on setting.id=delivery.setting_id join ophanim_intelligence_alerts alert on alert.id=delivery.alert_id ${forecastJoin.join} left join ophanim_signal_assessments assessment on assessment.id=alert.assessment_id where delivery.organization_id=$1 order by delivery.created_at desc limit 100`, [actor.organizationId]);
   return result.rows.map((row) => ({ id: row.id, kind: row.kind, status: row.status, attempts: row.attempts, email: row.email, title: row.title, subjectLabel: row.subject_label, error: row.error ?? undefined, createdAt: row.created_at, sentAt: row.sent_at ?? undefined }));
 }
 

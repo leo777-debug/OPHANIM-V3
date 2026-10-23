@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuthenticatedActor } from '@/lib/auth/actor';
 import { OrganizationAccessError } from '@/lib/operations/authorization';
 import { createShipment, listShipments } from '@/lib/logistics/shipments';
+import { isSchemaPendingError, SCHEMA_PENDING_MESSAGE } from '@/lib/db/schema-pending';
 
 function failure(error: unknown): NextResponse {
   if (error instanceof OrganizationAccessError) return NextResponse.json({ error: error.message }, { status: 401 });
+  if (isSchemaPendingError(error)) return NextResponse.json({ error: SCHEMA_PENDING_MESSAGE, setupPending: true }, { status: 503 });
   return NextResponse.json({ error: error instanceof Error ? error.message : 'Shipment request failed.' }, { status: 400 });
 }
 

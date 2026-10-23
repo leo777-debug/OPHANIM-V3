@@ -5,7 +5,8 @@ import { knowledgeTransaction } from '@/lib/knowledge/database';
 import { assertSameOrigin,knowledgeError } from '@/lib/knowledge/http';
 import { validateAiBaseUrl } from '@/lib/ai/providers/openai-compatible-provider';
 import { embedTexts } from '@/lib/knowledge/embeddings';
-export async function GET(request:NextRequest){try{const actor=await requireAuthenticatedActor(request,'import:read');const settings=await getEmbeddingSettings(actor.organizationId,actor);return NextResponse.json({baseUrl:settings.baseUrl,model:settings.model,dimensions:1024});}catch(e){return knowledgeError(e);}}
+import { isSchemaPendingError, SCHEMA_PENDING_MESSAGE } from '@/lib/db/schema-pending';
+export async function GET(request:NextRequest){try{const actor=await requireAuthenticatedActor(request,'import:read');const settings=await getEmbeddingSettings(actor.organizationId,actor);return NextResponse.json({baseUrl:settings.baseUrl,model:settings.model,dimensions:1024});}catch(e){return isSchemaPendingError(e)?NextResponse.json({baseUrl:process.env.EMBEDDING_BASE_URL ?? '',model:process.env.EMBEDDING_MODEL ?? '',dimensions:1024,setupPending:true,notice:SCHEMA_PENDING_MESSAGE}):knowledgeError(e);}}
 export async function PUT(request:NextRequest){try{
   assertSameOrigin(request);const actor=await requireAuthenticatedActor(request,'organization:manage');const body=await request.json();
   if(typeof body.baseUrl!=='string' || typeof body.model!=='string' || !body.model.trim() || body.model.length>200)throw new Error('Embedding URL and model are required.');

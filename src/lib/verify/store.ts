@@ -6,6 +6,7 @@ import { db } from '@/lib/db/pool';
 import type { OrganizationActor } from '@/lib/operations/types';
 import type { ArticleSnapshot } from './url-fetch';
 import type { VerifyResult } from './types';
+import { tableExists } from '@/lib/db/schema-pending';
 
 export type SharedResult = Omit<VerifyResult, 'id' | 'previousId' | 'aiSummary' | 'inputUrl'>;
 export function publicSnapshot(result: VerifyResult): SharedResult {
@@ -45,12 +46,14 @@ function cleanup() {
 export function remember(result: VerifyResult, owner: string, article: ArticleSnapshot | null = null) { cleanup(); temporary.set(result.id, { owner, result, article, expires: Date.now() + ttl }); }
 export async function saveRun(result: VerifyResult, actor: OrganizationActor | null, article: ArticleSnapshot | null) {
   if (!actor || !process.env.DATABASE_URL) return false;
+  // Before db/migrations/024_verify.sql is applied, checks stay in temporary storage.
+  if (!await tableExists(db(), 'ophanim_verify_runs')) return false;
   await db().query('insert into ophanim_verify_runs (id, organization_id, user_id, previous_id, result, article_snapshot, checked_at) values ($1,$2,$3,$4,$5,$6,$7)', [result.id, actor.organizationId, actor.userId, result.previousId ?? null, JSON.stringify(result), article ? JSON.stringify(article) : null, result.checkedAt]);
   return true;
 }
 export async function readRun(id: string, actor: OrganizationActor | null, owner: string): Promise<VerifyResult | null> {
   if (!/^[0-9a-f-]{36}$/.test(id)) return null;
-  if (actor && process.env.DATABASE_URL) {
+  if (actor && process.env.DATABASE_URL && await tableExists(db(), 'ophanim_verify_runs')) {
     const rows = await db().query<{ result: VerifyResult }>('select result from ophanim_verify_runs where id=$1 and organization_id=$2 and user_id=$3', [id, actor.organizationId, actor.userId]);
     if (rows.rows[0]) return rows.rows[0].result;
   }
