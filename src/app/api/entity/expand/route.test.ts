@@ -1,10 +1,11 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 import { OrganizationAccessError } from '@/lib/operations/authorization';
-const mocks=vi.hoisted(()=>({actor:vi.fn(),request:vi.fn()}));
+const mocks=vi.hoisted(()=>({actor:vi.fn(),request:vi.fn(),resolve:vi.fn()}));
 vi.mock('@/lib/auth/actor',()=>({requireAuthenticatedActor:mocks.actor}));
 vi.mock('@/lib/integrations/probes',()=>({requestIntegration:mocks.request}));
 vi.mock('@/lib/ssrf-guard',()=>({isRateLimited:()=>false}));
+vi.mock('../../../../../intel/resolvers.mjs',()=>({RESOLVERS:{aircraft:mocks.resolve,vessel:mocks.resolve,company:mocks.resolve,country:mocks.resolve},sanitizeId:(value:string)=>value}));
 import {GET} from './route';
 const organizationId='11111111-1111-4111-8111-111111111111';
 const request=(type='company')=>new NextRequest(`http://ophanim.example/api/entity/expand?type=${type}&id=Test%20Company`);
@@ -13,6 +14,7 @@ beforeEach(()=>{
  for(const [key,value] of Object.entries({INTEL_URL:'http://worker:4000',INTEL_API_TOKEN:'synthetic-dedicated-entity-token-long-enough',INTEL_ORGANIZATION_ID:organizationId}))vi.stubEnv(key,value);
  mocks.actor.mockResolvedValue({organizationId,userId:'fixture',authProvider:'legacy'});
  mocks.request.mockResolvedValue(JSON.stringify({nodes:[],links:[]}));
+ mocks.resolve.mockResolvedValue({nodes:[{id:'company:child',label:'Child',type:'company',properties:{source:'Wikidata'}}],links:[{source:'company:Test Company',target:'company:child',label:'PARENT ORG'}]});
 });
 afterEach(()=>vi.unstubAllEnvs());
 it('requires a real matching-tenant session and intelligence permission',async()=>{
@@ -22,8 +24,9 @@ it('requires a real matching-tenant session and intelligence permission',async()
  mocks.actor.mockResolvedValueOnce({organizationId,authProvider:'presentation-demo'});expect((await GET(request())).status).toBe(403);
  expect(mocks.request).not.toHaveBeenCalled();expect(mocks.actor).toHaveBeenCalledWith(expect.anything(),'intelligence:read');
 });
-it('keeps missing configuration and direct person/IP lookup unavailable',async()=>{
- vi.stubEnv('INTEL_API_TOKEN','');expect((await GET(request())).status).toBe(503);
+it('resolves in process without a worker and keeps direct person/IP lookup unavailable',async()=>{
+ vi.stubEnv('INTEL_API_TOKEN','');const local=await GET(request());expect(local.status).toBe(200);
+ expect((await local.json()).nodes).toHaveLength(1);expect(mocks.resolve).toHaveBeenCalledWith('Test Company',{});
  vi.stubEnv('INTEL_API_TOKEN','synthetic-dedicated-entity-token-long-enough');
  for(const type of ['person','ip','unknown'])expect((await GET(request(type))).status).toBe(400);
  expect(mocks.request).not.toHaveBeenCalled();
@@ -48,7 +51,7 @@ it('sanitizes worker configuration and transport failures',async()=>{
 
 it('retains the serverless missing-URL regression without trying a Docker hostname',async()=>{
  vi.stubEnv('VERCEL','1');vi.stubEnv('INTEL_URL','');
- const response=await GET(request());expect(response.status).toBe(503);
- expect((await response.json()).setupHref).toBe('/admin/integrations');
+ const response=await GET(request());expect(response.status).toBe(200);
+ expect(mocks.resolve).toHaveBeenCalled();
  expect(mocks.request).not.toHaveBeenCalled();
 });
