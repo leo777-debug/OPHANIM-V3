@@ -1,0 +1,27 @@
+name: Intelligence refresh
+
+# Vercel Hobby crons run at most once a day, so this keeps Intelligence
+# events fresh between the daily Vercel run.
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: intelligence-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Refresh public intelligence feeds
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          APP_URL: ${{ vars.OPHANIM_URL || 'https://ophanim-v3.vercel.app' }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then echo "::error::CRON_SECRET repository secret is not set"; exit 1; fi
+          curl --fail-with-body -sS --max-time 300 \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "$APP_URL/api/intelligence/providers/cron"
